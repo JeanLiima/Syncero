@@ -1,18 +1,23 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { Layout } from '../components/Layout'
 
 // ── Guards ───────────────────────────────────────────────────
 
 function RequireAuth() {
   const { user, loading } = useAuth()
-  if (loading) return <div>Carregando...</div>
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
+      <div className="h-6 w-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+    </div>
+  )
   if (!user) return <Navigate to="/login" replace />
-  return <Outlet />
+  return <Layout><Outlet /></Layout>
 }
 
 function RequireAccountant() {
   const { isAccountant, loading } = useAuth()
-  if (loading) return <div>Carregando...</div>
+  if (loading) return null
   if (!isAccountant) return <Navigate to="/dashboard" replace />
   return <Outlet />
 }

@@ -16,7 +16,7 @@ import type { Company, CompanyMember, AccountantCompany, MemberRole } from '@/ty
 const companySchema = z.object({
   name: z.string().min(2, 'Nome muito curto'),
   cnpj: z.string().optional(),
-  tax_regime: z.enum(['simples_nacional', 'lucro_presumido', 'lucro_real']).optional(),
+  tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
 })
 
 type CompanyForm = z.infer<typeof companySchema>
@@ -82,7 +82,7 @@ function CompanyTab() {
             onChange={(v) => field.onChange(v || undefined)}
             onBlur={field.onBlur}
             options={[
-              { value: 'simples_nacional', label: t('settings_simplesNacional') },
+              { value: 'simples', label: t('settings_simplesNacional') },
               { value: 'lucro_presumido',  label: t('settings_lucroPresumido') },
               { value: 'lucro_real',       label: t('settings_lucroReal') },
             ]}

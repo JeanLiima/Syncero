@@ -12,7 +12,7 @@ import { Button, Card, Input, Select, Avatar } from '@/components/ui'
 const schema = z.object({
   name: z.string().min(2),
   cnpj: z.string().optional(),
-  tax_regime: z.enum(['simples_nacional', 'lucro_presumido', 'lucro_real']).optional(),
+  tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
 })
 type FormData = z.infer<typeof schema>
 
@@ -124,7 +124,7 @@ export function NoCompanyShell() {
                   onChange={(v) => field.onChange(v || undefined)}
                   onBlur={field.onBlur}
                   options={[
-                    { value: 'simples_nacional', label: t('settings_simplesNacional') },
+                    { value: 'simples', label: t('settings_simplesNacional') },
                     { value: 'lucro_presumido',  label: t('settings_lucroPresumido') },
                     { value: 'lucro_real',       label: t('settings_lucroReal') },
                   ]}

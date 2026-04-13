@@ -2,7 +2,7 @@
 
 export type UserType = 'company_user' | 'accountant'
 export type TransactionType = 'income' | 'expense'
-export type TaxRegime = 'simples_nacional' | 'lucro_presumido' | 'lucro_real'
+export type TaxRegime = 'simples' | 'lucro_presumido' | 'lucro_real'
 export type MemberRole = 'admin' | 'member' | 'viewer'
 export type MemberStatus = 'active' | 'invited' | 'inactive'
 export type AccountantStatus = 'pending' | 'accepted' | 'rejected'

@@ -35,7 +35,7 @@ export function Component() {
             { value: '90d',   label: 'Últimos 90 dias' },
           ]}
           value={period}
-          onChange={(e) => setPeriod(e.target.value as Period)}
+          onChange={(v) => setPeriod(v as Period)}
           className="w-44"
         />
       </div>

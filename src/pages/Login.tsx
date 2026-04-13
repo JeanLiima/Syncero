@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { useT } from '@/i18n'
 import { Button, Card } from '@/components/ui'
 
 function GoogleIcon() {
@@ -14,6 +15,7 @@ function GoogleIcon() {
 }
 
 export function Component() {
+  const t = useT()
   const { signInWithGoogle } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -42,9 +44,7 @@ export function Component() {
         <Card>
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">Finflow</h1>
-            <p className="text-sm text-[var(--text-muted)]">
-              Controle financeiro empresarial
-            </p>
+            <p className="text-sm text-[var(--text-muted)]">{t('login_subtitle')}</p>
           </div>
 
           {error && (
@@ -58,7 +58,7 @@ export function Component() {
             className="w-full gap-3 h-11 text-sm font-medium"
           >
             {!loading && <GoogleIcon />}
-            Entrar com Google
+            {t('login_google')}
           </Button>
 
           <p className="text-xs text-[var(--text-muted)] text-center mt-6 leading-relaxed">

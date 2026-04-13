@@ -52,7 +52,7 @@ export function Component() {
       label: 'Impostos do mês',
       value: (summary?.taxTotal ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
       icon: <Calculator className="h-6 w-6 text-[var(--success)]" />,
-      to: 'impostos',
+      to: 'taxes',
     },
   ]
 

@@ -3,33 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { Building2, Calculator } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuth } from '@/hooks/useAuth'
+import { useT } from '@/i18n'
 import { Button, Card, Avatar, useToast } from '@/components/ui'
 
 type UserType = 'company_user' | 'accountant'
 
-interface TypeOption {
-  value: UserType
-  label: string
-  description: string
-  icon: React.ReactNode
-}
-
-const options: TypeOption[] = [
-  {
-    value: 'company_user',
-    label: 'Empresa',
-    description: 'Gerencio as finanças de uma ou mais empresas',
-    icon: <Building2 className="h-7 w-7" />,
-  },
-  {
-    value: 'accountant',
-    label: 'Contador',
-    description: 'Acesso fiscal e contábil das empresas dos meus clientes',
-    icon: <Calculator className="h-7 w-7" />,
-  },
-]
-
 export function Component() {
+  const t = useT()
   const { user, createProfile } = useAuth()
   const navigate = useNavigate()
   const { success, error: toastError } = useToast()
@@ -44,6 +24,21 @@ export function Component() {
 
   const avatarUrl: string | null =
     user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null
+
+  const options = [
+    {
+      value: 'company_user' as UserType,
+      label: t('onboarding_companyLabel'),
+      description: t('onboarding_companyDesc'),
+      icon: <Building2 className="h-7 w-7" />,
+    },
+    {
+      value: 'accountant' as UserType,
+      label: t('onboarding_accountantLabel'),
+      description: t('onboarding_accountantDesc'),
+      icon: <Calculator className="h-7 w-7" />,
+    },
+  ]
 
   const handleContinue = async () => {
     if (!selected) return
@@ -75,7 +70,7 @@ export function Component() {
             <div>
               <p className="text-sm font-medium text-[var(--text-primary)]">Olá, {name.split(' ')[0]}!</p>
               <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-                Bem-vindo ao Finflow. Como você vai usar a plataforma?
+                {t('onboarding_welcome')} {t('onboarding_title')}
               </p>
             </div>
           </div>
@@ -122,7 +117,7 @@ export function Component() {
             disabled={!selected}
             className="w-full"
           >
-            Continuar
+            {t('onboarding_continue')}
           </Button>
         </Card>
       </div>

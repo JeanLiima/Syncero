@@ -48,7 +48,7 @@ export function Component() {
             const company = ac.companies as unknown as { id: string; name: string; cnpj: string | null; tax_regime: string | null } | null
             if (!company) return null
             return (
-              <Link key={ac.id} to={`/contador/empresa/${company.id}`}>
+              <Link key={ac.id} to={`/accountant/company/${company.id}`}>
                 <Card className="hover:border-[var(--accent)] transition-colors cursor-pointer group">
                   <div className="flex items-start justify-between mb-3">
                     <div className="h-10 w-10 rounded-lg bg-[var(--accent-subtle)] flex items-center justify-center">

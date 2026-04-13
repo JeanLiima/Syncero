@@ -51,7 +51,7 @@ export function Component() {
               { value: 'nfce', label: 'NFC-e' },
             ]}
             value={filterType}
-            onChange={(e) => setFilterType(e.target.value as FiscalDocType | '')}
+            onChange={(v) => setFilterType(v as FiscalDocType | '')}
             className="w-36"
           />
           <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />

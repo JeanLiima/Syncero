@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import { Card, Badge, Button } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
+import { useT } from '@/i18n'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -103,11 +104,14 @@ function useRecentTransactions() {
 }
 
 export function Component() {
+  const t = useT()
   const { data: summary } = useMonthSummary()
   const { data: chartData = [] } = useLast30Days()
   const { data: recent = [] } = useRecentTransactions()
   const activeCompany = useAuthStore((s) => s.activeCompany)
 
+  // This case is now handled by NoCompanyShell in the router,
+  // but kept as a fallback
   if (!activeCompany) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
@@ -115,11 +119,11 @@ export function Component() {
           <TrendingUp className="h-6 w-6 text-[var(--text-muted)]" />
         </div>
         <div>
-          <p className="text-sm font-medium text-[var(--text-primary)]">Nenhuma empresa criada</p>
-          <p className="text-xs text-[var(--text-muted)] mt-1">Crie sua empresa para começar a usar o Finflow</p>
+          <p className="text-sm font-medium text-[var(--text-primary)]">{t('dashboard_noCompany')}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{t('dashboard_noCompanyHint')}</p>
         </div>
-        <Link to="/configuracoes">
-          <Button size="sm">Criar empresa</Button>
+        <Link to="/settings">
+          <Button size="sm">{t('dashboard_createCompany')}</Button>
         </Link>
       </div>
     )
@@ -128,16 +132,16 @@ export function Component() {
   const net = (summary?.income ?? 0) - (summary?.expense ?? 0)
 
   const metrics = [
-    { label: 'Receita do mês', value: summary?.income ?? 0, icon: <TrendingUp className="h-5 w-5 text-[var(--success)]" />, color: 'text-[var(--success)]' },
-    { label: 'Despesas do mês', value: summary?.expense ?? 0, icon: <TrendingDown className="h-5 w-5 text-[var(--danger)]" />, color: 'text-[var(--danger)]' },
-    { label: 'Resultado', value: net, icon: <DollarSign className="h-5 w-5 text-[var(--accent)]" />, color: net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]' },
-    { label: 'A receber', value: summary?.toReceive ?? 0, icon: <Clock className="h-5 w-5 text-[var(--warning)]" />, color: 'text-[var(--warning)]' },
+    { labelKey: 'dashboard_monthIncome'  as const, value: summary?.income ?? 0,    icon: <TrendingUp  className="h-5 w-5 text-[var(--success)]" />, color: 'text-[var(--success)]' },
+    { labelKey: 'dashboard_monthExpense' as const, value: summary?.expense ?? 0,   icon: <TrendingDown className="h-5 w-5 text-[var(--danger)]" />,  color: 'text-[var(--danger)]' },
+    { labelKey: 'dashboard_netResult'    as const, value: net,                      icon: <DollarSign  className="h-5 w-5 text-[var(--accent)]" />,   color: net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]' },
+    { labelKey: 'dashboard_toReceive'    as const, value: summary?.toReceive ?? 0,  icon: <Clock       className="h-5 w-5 text-[var(--warning)]" />,   color: 'text-[var(--warning)]' },
   ]
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">Dashboard</h1>
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dashboard_title')}</h1>
         <p className="text-sm text-[var(--text-muted)]">
           {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
         </p>
@@ -146,9 +150,9 @@ export function Component() {
       {/* Metric cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((m) => (
-          <Card key={m.label}>
+          <Card key={m.labelKey}>
             <div className="flex items-start justify-between mb-3">
-              <p className="text-xs text-[var(--text-muted)]">{m.label}</p>
+              <p className="text-xs text-[var(--text-muted)]">{t(m.labelKey)}</p>
               {m.icon}
             </div>
             <p className={`text-xl font-semibold font-mono ${m.color}`}>{fmt(m.value)}</p>
@@ -158,10 +162,10 @@ export function Component() {
 
       {/* Chart */}
       <Card>
-        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">Últimos 30 dias</h2>
+        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">{t('dashboard_cashFlowChart')}</h2>
         {chartData.length === 0 ? (
           <div className="h-48 flex items-center justify-center text-[var(--text-muted)] text-sm">
-            Nenhum lançamento no período
+            {t('dashboard_noTransactions')}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
@@ -183,8 +187,8 @@ export function Component() {
                 contentStyle={{ background: '#111827', border: '1px solid #1e2d45', borderRadius: 8 }}
                 formatter={(v: number) => fmt(v)}
               />
-              <Area type="monotone" dataKey="income"  name="Receitas" stroke="#10b981" fill="url(#gi)" strokeWidth={2} />
-              <Area type="monotone" dataKey="expense" name="Despesas" stroke="#f43f5e" fill="url(#ge)" strokeWidth={2} />
+              <Area type="monotone" dataKey="income"  name={t('cashFlow_income')}  stroke="#10b981" fill="url(#gi)" strokeWidth={2} />
+              <Area type="monotone" dataKey="expense" name={t('cashFlow_expense')} stroke="#f43f5e" fill="url(#ge)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         )}
@@ -192,26 +196,28 @@ export function Component() {
 
       {/* Recent transactions */}
       <Card>
-        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">Últimos lançamentos</h2>
+        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">{t('dashboard_recentTransactions')}</h2>
         {recent.length === 0 ? (
-          <p className="text-sm text-[var(--text-muted)] text-center py-4">Nenhum lançamento ainda</p>
+          <p className="text-sm text-[var(--text-muted)] text-center py-4">{t('dashboard_noTransactions')}</p>
         ) : (
           <div className="flex flex-col divide-y divide-[var(--bg-border)]">
-            {recent.map((t) => (
-              <div key={t.id} className="flex items-center justify-between py-3">
+            {recent.map((tx) => (
+              <div key={tx.id} className="flex items-center justify-between py-3">
                 <div className="flex items-center gap-3">
-                  <div className={`h-2 w-2 rounded-full ${t.type === 'income' ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}`} />
+                  <div className={`h-2 w-2 rounded-full ${tx.type === 'income' ? 'bg-[var(--success)]' : 'bg-[var(--danger)]'}`} />
                   <div>
-                    <p className="text-sm text-[var(--text-primary)]">{t.description}</p>
+                    <p className="text-sm text-[var(--text-primary)]">{tx.description}</p>
                     <p className="text-xs text-[var(--text-muted)]">
-                      {format(new Date(t.date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
+                      {format(new Date(tx.date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR })}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant={t.is_paid ? 'success' : 'warning'}>{t.is_paid ? 'Pago' : 'Pendente'}</Badge>
-                  <span className={`font-mono text-sm font-medium ${t.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
-                    {t.type === 'income' ? '+' : '-'} {fmt(t.amount)}
+                  <Badge variant={tx.is_paid ? 'success' : 'warning'}>
+                    {tx.is_paid ? t('transactions_paid') : t('transactions_pending')}
+                  </Badge>
+                  <span className={`font-mono text-sm font-medium ${tx.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                    {tx.type === 'income' ? '+' : '-'} {fmt(tx.amount)}
                   </span>
                 </div>
               </div>

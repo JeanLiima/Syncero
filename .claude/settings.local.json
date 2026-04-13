@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/generate-icons.mjs)",
+      "Bash(npm run:*)",
+      "mcp__8907826f-daeb-4102-9cda-30885e2a4bd5__deploy_to_vercel",
+      "Bash(where vercel:*)",
+      "Bash(vercel whoami:*)",
+      "Bash(vercel ls:*)",
+      "Read(//j/Users/Jean/Projetos/finflow/**)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(vercel env:*)",
+      "Bash(vercel deploy:*)",
+      "mcp__8907826f-daeb-4102-9cda-30885e2a4bd5__get_runtime_logs",
+      "WebFetch(domain:finflow-swart-delta.vercel.app)"
+    ]
+  }
+}

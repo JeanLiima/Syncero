@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format } from 'date-fns'
@@ -40,6 +40,7 @@ export function Component() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -105,7 +106,7 @@ export function Component() {
               { value: 'expense', label: 'Despesas' },
             ]}
             value={filters.type ?? ''}
-            onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value as TransactionFilters['type'] || undefined }))}
+            onChange={(v) => setFilters((f) => ({ ...f, type: v as TransactionFilters['type'] || undefined }))}
             className="w-40"
           />
           <Select
@@ -115,7 +116,7 @@ export function Component() {
               { value: 'false', label: 'Pendente' },
             ]}
             value={filters.is_paid === undefined ? '' : String(filters.is_paid)}
-            onChange={(e) => setFilters((f) => ({ ...f, is_paid: e.target.value === '' ? undefined : e.target.value === 'true' }))}
+            onChange={(v) => setFilters((f) => ({ ...f, is_paid: v === '' ? undefined : v === 'true' }))}
             className="w-44"
           />
           <Input
@@ -225,20 +226,36 @@ export function Component() {
             <Input label="Data" type="date" error={errors.date?.message} {...register('date')} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Select
-              label="Tipo"
-              options={[
-                { value: 'income', label: 'Receita' },
-                { value: 'expense', label: 'Despesa' },
-              ]}
-              error={errors.type?.message}
-              {...register('type')}
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <Select
+                  label="Tipo"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.type?.message}
+                  options={[
+                    { value: 'income',  label: 'Receita' },
+                    { value: 'expense', label: 'Despesa' },
+                  ]}
+                />
+              )}
             />
-            <Select
-              label="Categoria"
-              placeholder="Sem categoria"
-              options={categoryOptions}
-              {...register('category_id')}
+            <Controller
+              control={control}
+              name="category_id"
+              render={({ field }) => (
+                <Select
+                  label="Categoria"
+                  placeholder="Sem categoria"
+                  value={field.value ?? ''}
+                  onChange={(v) => field.onChange(v || undefined)}
+                  onBlur={field.onBlur}
+                  options={categoryOptions}
+                />
+              )}
             />
           </div>
           <Input label="Observações" {...register('notes')} />

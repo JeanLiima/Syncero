@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
+import { NoCompanyShell } from '../components/NoCompanyShell'
 
 // ── Guards ───────────────────────────────────────────────────
 
@@ -11,11 +12,12 @@ const Loader = () => (
 )
 
 function RequireAuth() {
-  const { user, loading, needsOnboarding } = useAuth()
+  const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
   if (loading) return <Loader />
   if (!user) return <Navigate to="/login" replace />
-  // Novo usuário Google ainda sem perfil → onboarding
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
+  // company_user without a company → show focused create-company screen
+  if (!isAccountant && !activeCompany) return <NoCompanyShell />
   return <Layout><Outlet /></Layout>
 }
 
@@ -37,12 +39,12 @@ function RequireAccountant() {
 // ── Roteador ────────────────────────────────────────────────
 
 export const router = createBrowserRouter([
-  // Públicas
-  { path: '/login',          lazy: () => import('../pages/Login') },
-  { path: '/cadastro',       lazy: () => import('../pages/Register') },
-  { path: '/convite/:token', lazy: () => import('../pages/AcceptInvite') },
+  // Public
+  { path: '/login',         lazy: () => import('../pages/Login') },
+  { path: '/register',      lazy: () => import('../pages/Register') },
+  { path: '/invite/:token', lazy: () => import('../pages/AcceptInvite') },
 
-  // Onboarding — usuário Google autenticado sem perfil
+  // Onboarding — Google user without profile
   {
     element: <RequireOnboarding />,
     children: [
@@ -50,26 +52,27 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Área autenticada (com Layout)
+  // Authenticated (with Layout or NoCompanyShell)
   {
     element: <RequireAuth />,
     children: [
       { path: '/',              element: <Navigate to="/dashboard" replace /> },
       { path: '/dashboard',     lazy: () => import('../pages/Dashboard') },
-      { path: '/lancamentos',   lazy: () => import('../pages/Lancamentos') },
-      { path: '/fluxo-caixa',   lazy: () => import('../pages/FluxoCaixa') },
-      { path: '/contas',        lazy: () => import('../pages/Contas') },
+      { path: '/transactions',  lazy: () => import('../pages/Lancamentos') },
+      { path: '/cash-flow',     lazy: () => import('../pages/FluxoCaixa') },
+      { path: '/accounts',      lazy: () => import('../pages/Contas') },
       { path: '/dre',           lazy: () => import('../pages/DRE') },
-      { path: '/configuracoes', lazy: () => import('../pages/Settings') },
+      { path: '/settings',      lazy: () => import('../pages/Settings') },
+      { path: '/preferences',   lazy: () => import('../pages/Preferences') },
 
       {
         element: <RequireAccountant />,
         children: [
-          { path: '/contador',                             lazy: () => import('../pages/contador/Dashboard') },
-          { path: '/contador/empresa/:companyId',          lazy: () => import('../pages/contador/EmpresaFiscal') },
-          { path: '/contador/empresa/:companyId/nfe',      lazy: () => import('../pages/contador/NFe') },
-          { path: '/contador/empresa/:companyId/sped',     lazy: () => import('../pages/contador/SPED') },
-          { path: '/contador/empresa/:companyId/impostos', lazy: () => import('../pages/contador/Impostos') },
+          { path: '/accountant',                                    lazy: () => import('../pages/contador/Dashboard') },
+          { path: '/accountant/company/:companyId',                 lazy: () => import('../pages/contador/EmpresaFiscal') },
+          { path: '/accountant/company/:companyId/nfe',             lazy: () => import('../pages/contador/NFe') },
+          { path: '/accountant/company/:companyId/sped',            lazy: () => import('../pages/contador/SPED') },
+          { path: '/accountant/company/:companyId/taxes',           lazy: () => import('../pages/contador/Impostos') },
         ],
       },
     ],

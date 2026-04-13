@@ -39,13 +39,13 @@ export function Component() {
           <Select
             options={MONTHS}
             value={String(month)}
-            onChange={(e) => setMonth(Number(e.target.value))}
+            onChange={(v) => setMonth(Number(v))}
             className="w-36"
           />
           <Select
             options={yearOptions}
             value={String(year)}
-            onChange={(e) => setYear(Number(e.target.value))}
+            onChange={(v) => setYear(Number(v))}
             className="w-24"
           />
         </div>

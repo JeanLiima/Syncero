@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format } from 'date-fns'
@@ -7,6 +7,7 @@ import { ptBR } from 'date-fns/locale'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
+import { useT } from '@/i18n'
 import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar } from '@/components/ui'
 import type { Company, CompanyMember, AccountantCompany, MemberRole } from '@/types'
 
@@ -21,6 +22,7 @@ const companySchema = z.object({
 type CompanyForm = z.infer<typeof companySchema>
 
 function CompanyTab() {
+  const t = useT()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
   const qc = useQueryClient()
@@ -39,7 +41,7 @@ function CompanyTab() {
     enabled: !!activeCompany?.id,
   })
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<CompanyForm>({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<CompanyForm>({
     resolver: zodResolver(companySchema),
   })
 
@@ -63,20 +65,28 @@ function CompanyTab() {
 
   return (
     <form onSubmit={handleSubmit((d) => save.mutateAsync(d))} className="flex flex-col gap-4 max-w-lg">
-      <Input label="Nome da empresa" error={errors.name?.message} {...register('name')} />
-      <Input label="CNPJ" placeholder="00.000.000/0000-00" {...register('cnpj')} />
-      <Select
-        label="Regime tributário"
-        placeholder="Selecionar"
-        options={[
-          { value: 'simples_nacional', label: 'Simples Nacional' },
-          { value: 'lucro_presumido',  label: 'Lucro Presumido' },
-          { value: 'lucro_real',       label: 'Lucro Real' },
-        ]}
-        {...register('tax_regime')}
+      <Input label={t('settings_companyName')} error={errors.name?.message} {...register('name')} />
+      <Input label={t('settings_cnpj')} placeholder="00.000.000/0000-00" {...register('cnpj')} />
+      <Controller
+        control={control}
+        name="tax_regime"
+        render={({ field }) => (
+          <Select
+            label={t('settings_taxRegime')}
+            placeholder={t('common_select')}
+            value={field.value ?? ''}
+            onChange={(v) => field.onChange(v || undefined)}
+            onBlur={field.onBlur}
+            options={[
+              { value: 'simples_nacional', label: t('settings_simplesNacional') },
+              { value: 'lucro_presumido',  label: t('settings_lucroPresumido') },
+              { value: 'lucro_real',       label: t('settings_lucroReal') },
+            ]}
+          />
+        )}
       />
       <div className="flex gap-3 mt-2">
-        <Button type="submit" loading={isSubmitting}>Salvar alterações</Button>
+        <Button type="submit" loading={isSubmitting}>{t('settings_save')}</Button>
       </div>
     </form>
   )
@@ -85,6 +95,7 @@ function CompanyTab() {
 // ── Members tab ───────────────────────────────────────────────
 
 function MembersTab() {
+  const t = useT()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<MemberRole>('member')
@@ -140,7 +151,7 @@ function MembersTab() {
     <div className="flex flex-col gap-6 max-w-2xl">
       {/* Invite form */}
       <Card>
-        <h3 className="text-sm font-medium text-[var(--text-primary)] mb-4">Convidar membro</h3>
+        <h3 className="text-sm font-medium text-[var(--text-primary)] mb-4">{t('settings_inviteMember')}</h3>
         <div className="flex gap-2 flex-wrap">
           <Input
             placeholder="email@exemplo.com"
@@ -151,12 +162,12 @@ function MembersTab() {
           />
           <Select
             options={[
-              { value: 'admin',  label: 'Administrador' },
-              { value: 'member', label: 'Membro' },
-              { value: 'viewer', label: 'Visualizador' },
+              { value: 'admin',  label: t('settings_admin') },
+              { value: 'member', label: t('settings_member') },
+              { value: 'viewer', label: t('settings_viewer') },
             ]}
             value={inviteRole}
-            onChange={(e) => setInviteRole(e.target.value as MemberRole)}
+            onChange={(v) => setInviteRole(v as MemberRole)}
             className="w-40"
           />
           <Button
@@ -164,7 +175,7 @@ function MembersTab() {
             loading={invite.isPending}
             disabled={!inviteEmail}
           >
-            Convidar
+            {t('settings_invite')}
           </Button>
         </div>
       </Card>
@@ -175,17 +186,17 @@ function MembersTab() {
           loading={isLoading}
           data={members}
           rowKey={(r) => r.id}
-          emptyMessage="Nenhum membro ainda"
+          emptyMessage={t('settings_noMembers')}
           columns={[
-            { key: 'email', header: 'E-mail' },
+            { key: 'email', header: t('settings_email') },
             {
               key: 'role',
-              header: 'Papel',
+              header: t('settings_role'),
               render: (r) => <Badge>{r.role}</Badge>,
             },
             {
               key: 'status',
-              header: 'Status',
+              header: t('accountant_status'),
               render: (r) => (
                 <Badge variant={r.status === 'active' ? 'success' : r.status === 'invited' ? 'warning' : 'default'}>
                   {r.status}
@@ -204,7 +215,7 @@ function MembersTab() {
                     onClick={() => revoke.mutate(r.id)}
                     loading={revoke.isPending}
                   >
-                    Revogar
+                    {t('settings_revoke')}
                   </Button>
                 ) : null,
             },
@@ -218,6 +229,7 @@ function MembersTab() {
 // ── Accountant tab ────────────────────────────────────────────
 
 function AccountantTab() {
+  const t = useT()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const [inviteEmail, setInviteEmail] = useState('')
   const qc = useQueryClient()
@@ -259,7 +271,7 @@ function AccountantTab() {
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <Card>
-        <h3 className="text-sm font-medium text-[var(--text-primary)] mb-4">Convidar contador</h3>
+        <h3 className="text-sm font-medium text-[var(--text-primary)] mb-4">{t('settings_inviteAccountant')}</h3>
         <div className="flex gap-2 flex-wrap">
           <Input
             placeholder="contador@escritorio.com"
@@ -273,7 +285,7 @@ function AccountantTab() {
             loading={invite.isPending}
             disabled={!inviteEmail}
           >
-            Enviar convite
+            {t('settings_sendInvite')}
           </Button>
         </div>
         {invite.isSuccess && (
@@ -288,11 +300,11 @@ function AccountantTab() {
           loading={isLoading}
           data={accountants}
           rowKey={(r) => r.id}
-          emptyMessage="Nenhum contador vinculado"
+          emptyMessage={t('settings_noAccountants')}
           columns={[
             {
               key: 'accountant',
-              header: 'Contador',
+              header: t('settings_accountant'),
               render: (r) => {
                 const p = r.profiles as unknown as { full_name: string; email: string; avatar_url: string | null } | null
                 return p ? (
@@ -310,16 +322,16 @@ function AccountantTab() {
             },
             {
               key: 'status',
-              header: 'Status',
+              header: t('accountant_status'),
               render: (r) => (
                 <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'danger'}>
-                  {r.status === 'accepted' ? 'Ativo' : r.status === 'pending' ? 'Aguardando' : 'Rejeitado'}
+                  {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_rejected')}
                 </Badge>
               ),
             },
             {
               key: 'invited_at',
-              header: 'Convidado em',
+              header: t('settings_invitedAt'),
               render: (r) => format(new Date(r.invited_at), 'dd/MM/yyyy', { locale: ptBR }),
             },
           ]}
@@ -331,79 +343,17 @@ function AccountantTab() {
 
 // ── Page ──────────────────────────────────────────────────────
 
-// ── Create company ────────────────────────────────────────────
-
-const createCompanySchema = z.object({
-  name: z.string().min(2, 'Nome muito curto'),
-  cnpj: z.string().optional(),
-  tax_regime: z.enum(['simples_nacional', 'lucro_presumido', 'lucro_real']).optional(),
-})
-type CreateCompanyForm = z.infer<typeof createCompanySchema>
-
-function CreateCompanyView() {
-  const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<CreateCompanyForm>({
-    resolver: zodResolver(createCompanySchema),
-  })
-
-  const create = async (data: CreateCompanyForm) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data: company, error } = await supabase
-      .from('companies')
-      .insert({ ...data, owner_id: user.id })
-      .select('id, name')
-      .single()
-    if (!error && company) {
-      setActiveCompany({ id: company.id, name: company.name, role: 'admin' })
-    }
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-[var(--text-primary)]">Configurações</h1>
-      <div className="max-w-lg">
-        <p className="text-sm text-[var(--text-secondary)] mb-6">
-          Você ainda não tem uma empresa. Crie a primeira para começar.
-        </p>
-        <form onSubmit={handleSubmit(create)} className="flex flex-col gap-4">
-          <Input label="Nome da empresa" error={errors.name?.message} {...register('name')} />
-          <Input label="CNPJ" placeholder="00.000.000/0000-00" {...register('cnpj')} />
-          <Select
-            label="Regime tributário"
-            placeholder="Selecionar"
-            options={[
-              { value: 'simples_nacional', label: 'Simples Nacional' },
-              { value: 'lucro_presumido',  label: 'Lucro Presumido' },
-              { value: 'lucro_real',       label: 'Lucro Real' },
-            ]}
-            {...register('tax_regime')}
-          />
-          <div className="mt-2">
-            <Button type="submit" loading={isSubmitting}>Criar empresa</Button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
 export function Component() {
-  const activeCompany = useAuthStore((s) => s.activeCompany)
-
-  if (!activeCompany) {
-    return <CreateCompanyView />
-  }
-
+  const t = useT()
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-[var(--text-primary)]">Configurações</h1>
+      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_title')}</h1>
 
       <Tabs defaultTab="company">
         <TabList className="mb-6">
-          <Tab id="company">Empresa</Tab>
-          <Tab id="members">Membros</Tab>
-          <Tab id="accountant">Contador</Tab>
+          <Tab id="company">{t('settings_company')}</Tab>
+          <Tab id="members">{t('settings_members')}</Tab>
+          <Tab id="accountant">{t('settings_accountant')}</Tab>
         </TabList>
         <TabPanel id="company"><CompanyTab /></TabPanel>
         <TabPanel id="members"><MembersTab /></TabPanel>

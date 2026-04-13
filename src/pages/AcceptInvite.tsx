@@ -66,7 +66,14 @@ export function Component() {
   }
 
   const acceptInvite = async () => {
-    if (!user) { navigate(`/login?redirect=/convite/${token}`); return }
+    if (!user) {
+      // Inicia Google OAuth e retorna para esta página do convite após o login
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.href },
+      })
+      return
+    }
 
     setStatus('loading')
 

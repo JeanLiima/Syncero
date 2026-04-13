@@ -1,18 +1,37 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { Layout } from '../components/Layout'
+import { NoCompanyShell } from '../components/NoCompanyShell'
 
 // ── Guards ───────────────────────────────────────────────────
 
+const Loader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
+    <div className="h-6 w-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+  </div>
+)
+
 function RequireAuth() {
-  const { user, loading } = useAuth()
-  if (loading) return <div>Carregando...</div>
+  const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
+  if (loading) return <Loader />
   if (!user) return <Navigate to="/login" replace />
+  if (needsOnboarding) return <Navigate to="/onboarding" replace />
+  // company_user without a company → show focused create-company screen
+  if (!isAccountant && !activeCompany) return <NoCompanyShell />
+  return <Layout><Outlet /></Layout>
+}
+
+function RequireOnboarding() {
+  const { user, loading, needsOnboarding } = useAuth()
+  if (loading) return <Loader />
+  if (!user) return <Navigate to="/login" replace />
+  if (!needsOnboarding) return <Navigate to="/dashboard" replace />
   return <Outlet />
 }
 
 function RequireAccountant() {
   const { isAccountant, loading } = useAuth()
-  if (loading) return <div>Carregando...</div>
+  if (loading) return null
   if (!isAccountant) return <Navigate to="/dashboard" replace />
   return <Outlet />
 }
@@ -20,36 +39,40 @@ function RequireAccountant() {
 // ── Roteador ────────────────────────────────────────────────
 
 export const router = createBrowserRouter([
-  // Públicas
-  { path: '/login',    lazy: () => import('../pages/Login') },
-  { path: '/cadastro', lazy: () => import('../pages/Register') },
-  { path: '/convite/:token', lazy: () => import('../pages/AcceptInvite') },
+  // Public
+  { path: '/login',         lazy: () => import('../pages/Login') },
+  { path: '/register',      lazy: () => import('../pages/Register') },
+  { path: '/invite/:token', lazy: () => import('../pages/AcceptInvite') },
 
-  // Área autenticada
+  // Onboarding — Google user without profile
+  {
+    element: <RequireOnboarding />,
+    children: [
+      { path: '/onboarding', lazy: () => import('../pages/Onboarding') },
+    ],
+  },
+
+  // Authenticated (with Layout or NoCompanyShell)
   {
     element: <RequireAuth />,
     children: [
+      { path: '/',              element: <Navigate to="/dashboard" replace /> },
+      { path: '/dashboard',     lazy: () => import('../pages/Dashboard') },
+      { path: '/transactions',  lazy: () => import('../pages/Lancamentos') },
+      { path: '/cash-flow',     lazy: () => import('../pages/FluxoCaixa') },
+      { path: '/accounts',      lazy: () => import('../pages/Contas') },
+      { path: '/dre',           lazy: () => import('../pages/DRE') },
+      { path: '/settings',      lazy: () => import('../pages/Settings') },
+      { path: '/preferences',   lazy: () => import('../pages/Preferences') },
 
-      // ── Usuários da empresa ──────────────────────────────
-      { path: '/',          element: <Navigate to="/dashboard" replace /> },
-      { path: '/dashboard', lazy: () => import('../pages/Dashboard') },
-      { path: '/lancamentos', lazy: () => import('../pages/Lancamentos') },
-      { path: '/fluxo-caixa', lazy: () => import('../pages/FluxoCaixa') },
-      { path: '/contas',      lazy: () => import('../pages/Contas') },
-      { path: '/dre',         lazy: () => import('../pages/DRE') },
-      { path: '/configuracoes', lazy: () => import('../pages/Settings') },
-
-      // ── Área do contador ─────────────────────────────────
       {
         element: <RequireAccountant />,
         children: [
-          // Lista de empresas vinculadas ao contador
-          { path: '/contador', lazy: () => import('../pages/contador/Dashboard') },
-          // Acessa empresa específica (fiscal readonly)
-          { path: '/contador/empresa/:companyId', lazy: () => import('../pages/contador/EmpresaFiscal') },
-          { path: '/contador/empresa/:companyId/nfe',   lazy: () => import('../pages/contador/NFe') },
-          { path: '/contador/empresa/:companyId/sped',  lazy: () => import('../pages/contador/SPED') },
-          { path: '/contador/empresa/:companyId/impostos', lazy: () => import('../pages/contador/Impostos') },
+          { path: '/accountant',                                    lazy: () => import('../pages/contador/Dashboard') },
+          { path: '/accountant/company/:companyId',                 lazy: () => import('../pages/contador/EmpresaFiscal') },
+          { path: '/accountant/company/:companyId/nfe',             lazy: () => import('../pages/contador/NFe') },
+          { path: '/accountant/company/:companyId/sped',            lazy: () => import('../pages/contador/SPED') },
+          { path: '/accountant/company/:companyId/taxes',           lazy: () => import('../pages/contador/Impostos') },
         ],
       },
     ],

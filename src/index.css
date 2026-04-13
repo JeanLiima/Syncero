@@ -12,8 +12,8 @@
     --bg-border:   #1e2d45;
 
     --text-primary:   #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted:     #475569;
+    --text-secondary: #a8bdd4;   /* era #94a3b8 — mais legível no dark */
+    --text-muted:     #64748b;   /* era #475569 — contraste mínimo 4.5:1 */
 
     --accent:        #3b82f6;
     --accent-hover:  #2563eb;

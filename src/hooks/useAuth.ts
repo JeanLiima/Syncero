@@ -28,34 +28,38 @@ export function useAuth() {
       .select('id, full_name, email, user_type, avatar_url')
       .eq('id', userId)
       .single()
+    // data é null quando o usuário acabou de entrar pelo Google e ainda não tem perfil
     setProfile(data)
     setLoading(false)
   }
 
-  const signIn = (email: string, password: string) =>
-    supabase.auth.signInWithPassword({ email, password })
-
-  const signUp = async (
-    email: string,
-    password: string,
-    fullName: string,
-    userType: 'company_user' | 'accountant' = 'company_user'
-  ) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, user_type: userType } },
+  // Inicia fluxo OAuth com Google — Supabase redireciona de volta para redirectTo
+  const signInWithGoogle = (redirectTo?: string) =>
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: redirectTo ?? window.location.origin },
     })
-    if (error) return { data, error }
-    if (data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        full_name: fullName,
-        email,
-        user_type: userType,
-      })
-    }
-    return { data, error }
+
+  // Chamado no Onboarding, após o primeiro login Google sem perfil
+  const createProfile = async (userType: 'company_user' | 'accountant') => {
+    if (!user) return { error: new Error('Usuário não autenticado') }
+    const fullName =
+      user.user_metadata?.full_name ??
+      user.user_metadata?.name ??
+      user.email?.split('@')[0] ??
+      'Usuário'
+    const avatarUrl: string | null =
+      user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null
+
+    const { error } = await supabase.from('profiles').upsert({
+      id: user.id,
+      full_name: fullName,
+      email: user.email ?? '',
+      user_type: userType,
+      avatar_url: avatarUrl,
+    }, { onConflict: 'id' })
+    if (!error) await fetchProfile(user.id)
+    return { error }
   }
 
   const signOut = async () => {
@@ -64,8 +68,15 @@ export function useAuth() {
   }
 
   return {
-    user, profile, activeCompany, setActiveCompany, loading,
+    user,
+    profile,
+    activeCompany,
+    setActiveCompany,
+    loading,
     isAccountant: profile?.user_type === 'accountant',
-    signIn, signUp, signOut,
+    needsOnboarding: !!user && !loading && profile === null,
+    signInWithGoogle,
+    createProfile,
+    signOut,
   }
 }

@@ -51,9 +51,13 @@ function CompanyTab() {
 
   const save = useMutation({
     mutationFn: async (data: CompanyForm) => {
+      const payload: Record<string, unknown> = { name: data.name }
+      if (data.cnpj !== undefined) payload.cnpj = data.cnpj || null
+      if (data.tax_regime) payload.tax_regime = data.tax_regime
+      else payload.tax_regime = null
       const { error } = await supabase
         .from('companies')
-        .update(data)
+        .update(payload)
         .eq('id', activeCompany!.id)
       if (error) throw error
     },

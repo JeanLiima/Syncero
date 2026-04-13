@@ -40,9 +40,16 @@ export function NoCompanyShell() {
       const { data: { user: currentUser } } = await supabase.auth.getUser()
       if (!currentUser) return
 
+      const payload: Record<string, unknown> = {
+        name: data.name,
+        owner_id: currentUser.id,
+      }
+      if (data.cnpj) payload.cnpj = data.cnpj
+      if (data.tax_regime) payload.tax_regime = data.tax_regime
+
       const { data: company, error } = await supabase
         .from('companies')
-        .insert({ ...data, owner_id: currentUser.id })
+        .insert(payload)
         .select('id, name')
         .single()
 

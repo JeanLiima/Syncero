@@ -331,17 +331,68 @@ function AccountantTab() {
 
 // ── Page ──────────────────────────────────────────────────────
 
+// ── Create company ────────────────────────────────────────────
+
+const createCompanySchema = z.object({
+  name: z.string().min(2, 'Nome muito curto'),
+  cnpj: z.string().optional(),
+  tax_regime: z.enum(['simples_nacional', 'lucro_presumido', 'lucro_real']).optional(),
+})
+type CreateCompanyForm = z.infer<typeof createCompanySchema>
+
+function CreateCompanyView() {
+  const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<CreateCompanyForm>({
+    resolver: zodResolver(createCompanySchema),
+  })
+
+  const create = async (data: CreateCompanyForm) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: company, error } = await supabase
+      .from('companies')
+      .insert({ ...data, owner_id: user.id })
+      .select('id, name')
+      .single()
+    if (!error && company) {
+      setActiveCompany({ id: company.id, name: company.name, role: 'admin' })
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <h1 className="text-xl font-semibold text-[var(--text-primary)]">Configurações</h1>
+      <div className="max-w-lg">
+        <p className="text-sm text-[var(--text-secondary)] mb-6">
+          Você ainda não tem uma empresa. Crie a primeira para começar.
+        </p>
+        <form onSubmit={handleSubmit(create)} className="flex flex-col gap-4">
+          <Input label="Nome da empresa" error={errors.name?.message} {...register('name')} />
+          <Input label="CNPJ" placeholder="00.000.000/0000-00" {...register('cnpj')} />
+          <Select
+            label="Regime tributário"
+            placeholder="Selecionar"
+            options={[
+              { value: 'simples_nacional', label: 'Simples Nacional' },
+              { value: 'lucro_presumido',  label: 'Lucro Presumido' },
+              { value: 'lucro_real',       label: 'Lucro Real' },
+            ]}
+            {...register('tax_regime')}
+          />
+          <div className="mt-2">
+            <Button type="submit" loading={isSubmitting}>Criar empresa</Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 export function Component() {
   const activeCompany = useAuthStore((s) => s.activeCompany)
 
   if (!activeCompany) {
-    return (
-      <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">Configurações</h1>
-        <p className="text-sm text-[var(--text-muted)]">Nenhuma empresa ativa. Crie uma empresa para continuar.</p>
-        {/* TODO: create company form */}
-      </div>
-    )
+    return <CreateCompanyView />
   }
 
   return (

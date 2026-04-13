@@ -3,7 +3,8 @@ import { format, startOfMonth, endOfMonth, subDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { TrendingUp, TrendingDown, DollarSign, Clock } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { Card, Badge } from '@/components/ui'
+import { Link } from 'react-router-dom'
+import { Card, Badge, Button } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 
@@ -109,9 +110,17 @@ export function Component() {
 
   if (!activeCompany) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-[var(--text-muted)] text-sm">Nenhuma empresa selecionada.</p>
-        <p className="text-[var(--text-muted)] text-xs">Vá em Configurações para criar ou vincular uma empresa.</p>
+      <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
+        <div className="h-12 w-12 rounded-xl bg-[var(--bg-elevated)] flex items-center justify-center">
+          <TrendingUp className="h-6 w-6 text-[var(--text-muted)]" />
+        </div>
+        <div>
+          <p className="text-sm font-medium text-[var(--text-primary)]">Nenhuma empresa criada</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Crie sua empresa para começar a usar o Finflow</p>
+        </div>
+        <Link to="/configuracoes">
+          <Button size="sm">Criar empresa</Button>
+        </Link>
       </div>
     )
   }

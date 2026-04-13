@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,6 +9,15 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/Toast'
 import { useT } from '@/i18n'
 import { Button, Card, Input, Select, Avatar } from '@/components/ui'
+
+function formatCNPJ(value: string): string {
+  const d = value.replace(/\D/g, '').slice(0, 14)
+  if (d.length <= 2)  return d
+  if (d.length <= 5)  return `${d.slice(0,2)}.${d.slice(2)}`
+  if (d.length <= 8)  return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5)}`
+  if (d.length <= 12) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8)}`
+  return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`
+}
 
 const schema = z.object({
   name: z.string().min(2),
@@ -21,12 +31,13 @@ export function NoCompanyShell() {
   const { user, profile, signOut } = useAuth()
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
   const { success, error: toastError } = useToast()
+  const [cnpjDisplay, setCnpjDisplay] = useState('')
 
-  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
-  const name =
+  const displayName =
     user?.user_metadata?.full_name ??
     user?.user_metadata?.name ??
     user?.email?.split('@')[0] ??
@@ -35,41 +46,45 @@ export function NoCompanyShell() {
   const avatarUrl: string | null =
     profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? null
 
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCNPJ(e.target.value)
+    setCnpjDisplay(formatted)
+    setValue('cnpj', formatted.replace(/\D/g, '') || undefined)
+  }
+
   const onSubmit = async (data: FormData) => {
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (!currentUser) return
+    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
+    if (authError || !currentUser) {
+      toastError('Usuário não autenticado.')
+      return
+    }
 
-      const payload: Record<string, unknown> = {
-        name: data.name,
-        owner_id: currentUser.id,
-      }
-      if (data.cnpj) payload.cnpj = data.cnpj
-      if (data.tax_regime) payload.tax_regime = data.tax_regime
+    const payload: Record<string, unknown> = {
+      name: data.name,
+      owner_id: currentUser.id,
+    }
+    if (data.cnpj) payload.cnpj = data.cnpj
+    if (data.tax_regime) payload.tax_regime = data.tax_regime
 
-      const { data: company, error } = await supabase
-        .from('companies')
-        .insert(payload)
-        .select('id, name')
-        .single()
+    const { data: company, error } = await supabase
+      .from('companies')
+      .insert(payload)
+      .select('id, name')
+      .single()
 
-      if (error) {
-        toastError(error.message ?? t('noCompany_error'))
-        return
-      }
-      if (company) {
-        setActiveCompany({ id: company.id, name: company.name, role: 'admin' })
-        success(t('noCompany_success'))
-      }
-    } catch {
-      toastError(t('noCompany_error'))
+    if (error) {
+      toastError(error.message)
+      return
+    }
+    if (company) {
+      setActiveCompany({ id: company.id, name: company.name, role: 'admin' })
+      success(t('noCompany_success'))
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)] p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center shadow-lg">
             <span className="text-white font-bold text-xl">FF</span>
@@ -77,12 +92,11 @@ export function NoCompanyShell() {
         </div>
 
         <Card>
-          {/* User info */}
           <div className="flex items-center gap-3 mb-6 pb-6 border-b border-[var(--bg-border)]">
-            <Avatar name={name} src={avatarUrl} size="md" />
+            <Avatar name={displayName} src={avatarUrl} size="md" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                {name.split(' ')[0]}
+                {displayName.split(' ')[0]}
               </p>
               <p className="text-xs text-[var(--text-secondary)] truncate">{user?.email}</p>
             </div>
@@ -95,13 +109,11 @@ export function NoCompanyShell() {
             </button>
           </div>
 
-          {/* Heading */}
           <div className="mb-5">
             <h1 className="text-base font-semibold text-[var(--text-primary)]">{t('noCompany_title')}</h1>
             <p className="text-sm text-[var(--text-secondary)] mt-1">{t('noCompany_subtitle')}</p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input
               label={t('noCompany_nameLabel')}
@@ -110,8 +122,9 @@ export function NoCompanyShell() {
             />
             <Input
               label={t('noCompany_cnpjLabel')}
-              placeholder={t('noCompany_cnpjPlaceholder')}
-              {...register('cnpj')}
+              placeholder="00.000.000/0000-00"
+              value={cnpjDisplay}
+              onChange={handleCnpjChange}
             />
             <Controller
               control={control}
@@ -124,9 +137,9 @@ export function NoCompanyShell() {
                   onChange={(v) => field.onChange(v || undefined)}
                   onBlur={field.onBlur}
                   options={[
-                    { value: 'simples', label: t('settings_simplesNacional') },
-                    { value: 'lucro_presumido',  label: t('settings_lucroPresumido') },
-                    { value: 'lucro_real',       label: t('settings_lucroReal') },
+                    { value: 'simples',         label: t('settings_simplesNacional') },
+                    { value: 'lucro_presumido', label: t('settings_lucroPresumido') },
+                    { value: 'lucro_real',      label: t('settings_lucroReal') },
                   ]}
                 />
               )}

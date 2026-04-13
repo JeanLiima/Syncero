@@ -51,13 +51,13 @@ export function useAuth() {
     const avatarUrl: string | null =
       user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null
 
-    const { error } = await supabase.from('profiles').insert({
+    const { error } = await supabase.from('profiles').upsert({
       id: user.id,
       full_name: fullName,
       email: user.email ?? '',
       user_type: userType,
       avatar_url: avatarUrl,
-    })
+    }, { onConflict: 'id' })
     if (!error) await fetchProfile(user.id)
     return { error }
   }

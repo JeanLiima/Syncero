@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Building2, Calculator } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useAuth } from '@/hooks/useAuth'
-import { Button, Card } from '@/components/ui'
-import { Avatar } from '@/components/ui'
+import { Button, Card, Avatar, useToast } from '@/components/ui'
 
 type UserType = 'company_user' | 'accountant'
 
@@ -33,9 +32,9 @@ const options: TypeOption[] = [
 export function Component() {
   const { user, createProfile } = useAuth()
   const navigate = useNavigate()
+  const { success, error: toastError } = useToast()
   const [selected, setSelected] = useState<UserType | null>(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
   const name =
     user?.user_metadata?.full_name ??
@@ -49,12 +48,12 @@ export function Component() {
   const handleContinue = async () => {
     if (!selected) return
     setLoading(true)
-    setError('')
     const { error: err } = await createProfile(selected)
     if (err) {
-      setError('Erro ao criar perfil. Tente novamente.')
+      toastError(err.message ?? 'Erro ao criar perfil. Tente novamente.')
       setLoading(false)
     } else {
+      success('Perfil criado com sucesso!')
       navigate('/', { replace: true })
     }
   }
@@ -75,8 +74,8 @@ export function Component() {
             <Avatar name={name} src={avatarUrl} size="md" />
             <div>
               <p className="text-sm font-medium text-[var(--text-primary)]">Olá, {name.split(' ')[0]}!</p>
-              <p className="text-xs text-[var(--text-muted)]">
-                Bem-vindo ao Finflow. Como você vai usar?
+              <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+                Bem-vindo ao Finflow. Como você vai usar a plataforma?
               </p>
             </div>
           </div>
@@ -88,10 +87,10 @@ export function Component() {
                 key={opt.value}
                 onClick={() => setSelected(opt.value)}
                 className={clsx(
-                  'flex items-center gap-4 p-4 rounded-[var(--radius-md)] border text-left transition-all',
+                  'cursor-pointer flex items-center gap-4 p-4 rounded-[var(--radius-md)] border text-left transition-all',
                   selected === opt.value
                     ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
-                    : 'border-[var(--bg-border)] hover:border-[var(--text-muted)]'
+                    : 'border-[var(--bg-border)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'
                 )}
               >
                 <div
@@ -111,15 +110,11 @@ export function Component() {
                   )}>
                     {opt.label}
                   </p>
-                  <p className="text-xs text-[var(--text-muted)] mt-0.5">{opt.description}</p>
+                  <p className="text-sm text-[var(--text-secondary)] mt-0.5">{opt.description}</p>
                 </div>
               </button>
             ))}
           </div>
-
-          {error && (
-            <p className="text-xs text-[var(--danger)] text-center mb-4">{error}</p>
-          )}
 
           <Button
             onClick={handleContinue}

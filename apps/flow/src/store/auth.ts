@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>()(
       clear: () => set({ user: null, profile: null, activeCompany: null }),
     }),
     {
-      name: 'finflow-auth',
+      name: 'syncero-auth',
       partialize: (s) => ({ activeCompany: s.activeCompany }),
     }
   )

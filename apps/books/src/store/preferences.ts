@@ -14,6 +14,6 @@ export const usePreferencesStore = create<PreferencesState>()(
       language: 'pt',
       setLanguage: (language) => set({ language }),
     }),
-    { name: 'finflow-prefs' }
+    { name: 'syncero-prefs' }
   )
 )

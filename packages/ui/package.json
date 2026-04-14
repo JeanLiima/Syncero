@@ -1,0 +1,7 @@
+{
+  "name": "@syncero/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared UI components for Syncero apps — to be extracted from apps/flow in a future sprint"
+}

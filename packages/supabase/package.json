@@ -1,0 +1,7 @@
+{
+  "name": "@syncero/supabase",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared Supabase client and TypeScript types for Syncero apps — to be extracted from apps/flow in a future sprint"
+}

@@ -47,10 +47,12 @@ function WrongApp() {
   )
 }
 
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
+
 function RequireAccountant() {
   const { user, loading, isAccountant, needsOnboarding } = useAuth()
   if (loading) return <Loader />
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) { window.location.replace(LANDING_URL); return null }
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (!isAccountant) return <WrongApp />
   return <Layout><Outlet /></Layout>
@@ -59,7 +61,7 @@ function RequireAccountant() {
 function RequireOnboarding() {
   const { user, loading, needsOnboarding } = useAuth()
   if (loading) return <Loader />
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) { window.location.replace(LANDING_URL); return null }
   if (!needsOnboarding) return <Navigate to="/" replace />
   return <Outlet />
 }
@@ -67,8 +69,7 @@ function RequireOnboarding() {
 // ── Router ────────────────────────────────────────────────────
 
 export const router = createBrowserRouter([
-  // Public
-  { path: '/login', lazy: () => import('../pages/Login') },
+  // No public login — auth is centralized at syncero.vercel.app
 
   // Onboarding
   {

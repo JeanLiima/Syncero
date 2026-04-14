@@ -21,9 +21,6 @@ export const en: Record<TranslationKey, string> = {
   dashboard_monthExpense: 'Monthly expenses',
   dashboard_netResult: 'Net result',
   dashboard_toReceive: 'To receive',
-  dashboard_noCompany: 'No company created',
-  dashboard_noCompanyHint: 'Create your company to start using Syncero Books',
-  dashboard_createCompany: 'Create company',
   dashboard_recentTransactions: 'Recent transactions',
   dashboard_noTransactions: 'No transactions yet',
   dashboard_cashFlowChart: 'Last 30 days cash flow',
@@ -132,18 +129,6 @@ export const en: Record<TranslationKey, string> = {
   settings_waiting: 'Waiting',
   settings_rejected: 'Rejected',
   settings_invitedAt: 'Invited at',
-
-  // No Company Shell
-  noCompany_title: 'Create company',
-  noCompany_subtitle: 'Set up your company to start using Syncero Books',
-  noCompany_nameLabel: 'Company name',
-  noCompany_cnpjLabel: 'Tax ID',
-  noCompany_cnpjPlaceholder: '00.000.000/0000-00',
-  noCompany_taxRegimeLabel: 'Tax regime',
-  noCompany_taxRegimePlaceholder: 'Select',
-  noCompany_submit: 'Create company',
-  noCompany_success: 'Company created successfully!',
-  noCompany_error: 'Error creating company. Please try again.',
 
   // Preferences
   preferences_title: 'Preferences',

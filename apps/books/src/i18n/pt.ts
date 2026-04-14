@@ -19,9 +19,6 @@ export const pt = {
   dashboard_monthExpense: 'Despesas do mês',
   dashboard_netResult: 'Resultado',
   dashboard_toReceive: 'A receber',
-  dashboard_noCompany: 'Nenhuma empresa criada',
-  dashboard_noCompanyHint: 'Crie sua empresa para começar a usar o Syncero Books',
-  dashboard_createCompany: 'Criar empresa',
   dashboard_recentTransactions: 'Últimos lançamentos',
   dashboard_noTransactions: 'Nenhum lançamento ainda',
   dashboard_cashFlowChart: 'Fluxo dos últimos 30 dias',
@@ -130,18 +127,6 @@ export const pt = {
   settings_waiting: 'Aguardando',
   settings_rejected: 'Rejeitado',
   settings_invitedAt: 'Convidado em',
-
-  // No Company Shell
-  noCompany_title: 'Criar empresa',
-  noCompany_subtitle: 'Configure sua empresa para começar a usar o Syncero Books',
-  noCompany_nameLabel: 'Nome da empresa',
-  noCompany_cnpjLabel: 'CNPJ',
-  noCompany_cnpjPlaceholder: '00.000.000/0000-00',
-  noCompany_taxRegimeLabel: 'Regime tributário',
-  noCompany_taxRegimePlaceholder: 'Selecionar',
-  noCompany_submit: 'Criar empresa',
-  noCompany_success: 'Empresa criada com sucesso!',
-  noCompany_error: 'Erro ao criar empresa. Tente novamente.',
 
   // Preferences
   preferences_title: 'Preferências',

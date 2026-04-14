@@ -21,9 +21,6 @@ export const en: Record<TranslationKey, string> = {
   dashboard_monthExpense: 'Monthly expenses',
   dashboard_netResult: 'Net result',
   dashboard_toReceive: 'To receive',
-  dashboard_noCompany: 'No company created',
-  dashboard_noCompanyHint: 'Create your company to start using Finflow',
-  dashboard_createCompany: 'Create company',
   dashboard_recentTransactions: 'Recent transactions',
   dashboard_noTransactions: 'No transactions yet',
   dashboard_cashFlowChart: 'Last 30 days cash flow',
@@ -133,18 +130,6 @@ export const en: Record<TranslationKey, string> = {
   settings_rejected: 'Rejected',
   settings_invitedAt: 'Invited at',
 
-  // No Company Shell
-  noCompany_title: 'Create company',
-  noCompany_subtitle: 'Set up your company to start using Finflow',
-  noCompany_nameLabel: 'Company name',
-  noCompany_cnpjLabel: 'Tax ID',
-  noCompany_cnpjPlaceholder: '00.000.000/0000-00',
-  noCompany_taxRegimeLabel: 'Tax regime',
-  noCompany_taxRegimePlaceholder: 'Select',
-  noCompany_submit: 'Create company',
-  noCompany_success: 'Company created successfully!',
-  noCompany_error: 'Error creating company. Please try again.',
-
   // Preferences
   preferences_title: 'Preferences',
   preferences_language: 'Language',
@@ -165,13 +150,13 @@ export const en: Record<TranslationKey, string> = {
   accountant_back: 'Back',
 
   // Login
-  login_title: 'Welcome to Finflow',
-  login_subtitle: 'Business financial control',
+  login_title: 'Welcome to Syncero Books',
+  login_subtitle: 'Accounting platform',
   login_google: 'Sign in with Google',
 
   // Onboarding
   onboarding_title: 'How will you use the platform?',
-  onboarding_welcome: 'Welcome to Finflow.',
+  onboarding_welcome: 'Welcome to Syncero Books.',
   onboarding_companyLabel: 'Company',
   onboarding_companyDesc: 'I manage finances for one or more companies',
   onboarding_accountantLabel: 'Accountant',

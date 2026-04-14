@@ -11,10 +11,12 @@ const Loader = () => (
   </div>
 )
 
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
+
 function RequireAuth() {
   const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
   if (loading) return <Loader />
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) { window.location.replace(LANDING_URL); return null }
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   // company_user without a company → show focused create-company screen
   if (!isAccountant && !activeCompany) return <NoCompanyShell />
@@ -24,7 +26,7 @@ function RequireAuth() {
 function RequireOnboarding() {
   const { user, loading, needsOnboarding } = useAuth()
   if (loading) return <Loader />
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) { window.location.replace(LANDING_URL); return null }
   if (!needsOnboarding) return <Navigate to="/dashboard" replace />
   return <Outlet />
 }
@@ -40,8 +42,6 @@ function RequireAccountant() {
 
 export const router = createBrowserRouter([
   // Public
-  { path: '/login',         lazy: () => import('../pages/Login') },
-  { path: '/register',      lazy: () => import('../pages/Register') },
   { path: '/invite/:token', lazy: () => import('../pages/AcceptInvite') },
 
   // Onboarding — Google user without profile

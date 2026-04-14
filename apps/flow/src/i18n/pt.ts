@@ -20,7 +20,7 @@ export const pt = {
   dashboard_netResult: 'Resultado',
   dashboard_toReceive: 'A receber',
   dashboard_noCompany: 'Nenhuma empresa criada',
-  dashboard_noCompanyHint: 'Crie sua empresa para começar a usar o Finflow',
+  dashboard_noCompanyHint: 'Crie sua empresa para começar a usar o Syncero Flow',
   dashboard_createCompany: 'Criar empresa',
   dashboard_recentTransactions: 'Últimos lançamentos',
   dashboard_noTransactions: 'Nenhum lançamento ainda',
@@ -133,7 +133,7 @@ export const pt = {
 
   // No Company Shell
   noCompany_title: 'Criar empresa',
-  noCompany_subtitle: 'Configure sua empresa para começar a usar o Finflow',
+  noCompany_subtitle: 'Configure sua empresa para começar a usar o Syncero Flow',
   noCompany_nameLabel: 'Nome da empresa',
   noCompany_cnpjLabel: 'CNPJ',
   noCompany_cnpjPlaceholder: '00.000.000/0000-00',
@@ -163,13 +163,13 @@ export const pt = {
   accountant_back: 'Voltar',
 
   // Login
-  login_title: 'Bem-vindo ao Finflow',
+  login_title: 'Bem-vindo ao Syncero Flow',
   login_subtitle: 'Controle financeiro empresarial',
   login_google: 'Entrar com Google',
 
   // Onboarding
   onboarding_title: 'Como você vai usar a plataforma?',
-  onboarding_welcome: 'Bem-vindo ao Finflow.',
+  onboarding_welcome: 'Bem-vindo ao Syncero Flow.',
   onboarding_companyLabel: 'Empresa',
   onboarding_companyDesc: 'Gerencio as finanças de uma ou mais empresas',
   onboarding_accountantLabel: 'Contador',

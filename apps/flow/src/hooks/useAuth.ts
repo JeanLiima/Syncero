@@ -37,7 +37,7 @@ export function useAuth() {
   const signInWithGoogle = (redirectTo?: string) =>
     supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: redirectTo ?? window.location.origin },
+      options: { redirectTo: redirectTo ?? import.meta.env.VITE_APP_URL ?? window.location.origin },
     })
 
   // Chamado no Onboarding, após o primeiro login Google sem perfil

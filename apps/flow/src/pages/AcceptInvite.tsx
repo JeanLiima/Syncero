@@ -106,7 +106,7 @@ export function Component() {
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
           <div className="h-12 w-12 rounded-xl bg-[var(--accent)] flex items-center justify-center">
-            <span className="text-white font-bold text-lg">FF</span>
+            <span className="text-white font-bold text-lg">SF</span>
           </div>
         </div>
 

@@ -19,9 +19,6 @@ export const pt = {
   dashboard_monthExpense: 'Despesas do mês',
   dashboard_netResult: 'Resultado',
   dashboard_toReceive: 'A receber',
-  dashboard_noCompany: 'Nenhuma empresa criada',
-  dashboard_noCompanyHint: 'Crie sua empresa para começar a usar o Finflow',
-  dashboard_createCompany: 'Criar empresa',
   dashboard_recentTransactions: 'Últimos lançamentos',
   dashboard_noTransactions: 'Nenhum lançamento ainda',
   dashboard_cashFlowChart: 'Fluxo dos últimos 30 dias',
@@ -131,18 +128,6 @@ export const pt = {
   settings_rejected: 'Rejeitado',
   settings_invitedAt: 'Convidado em',
 
-  // No Company Shell
-  noCompany_title: 'Criar empresa',
-  noCompany_subtitle: 'Configure sua empresa para começar a usar o Finflow',
-  noCompany_nameLabel: 'Nome da empresa',
-  noCompany_cnpjLabel: 'CNPJ',
-  noCompany_cnpjPlaceholder: '00.000.000/0000-00',
-  noCompany_taxRegimeLabel: 'Regime tributário',
-  noCompany_taxRegimePlaceholder: 'Selecionar',
-  noCompany_submit: 'Criar empresa',
-  noCompany_success: 'Empresa criada com sucesso!',
-  noCompany_error: 'Erro ao criar empresa. Tente novamente.',
-
   // Preferences
   preferences_title: 'Preferências',
   preferences_language: 'Idioma',
@@ -163,13 +148,13 @@ export const pt = {
   accountant_back: 'Voltar',
 
   // Login
-  login_title: 'Bem-vindo ao Finflow',
-  login_subtitle: 'Controle financeiro empresarial',
+  login_title: 'Bem-vindo ao Syncero Books',
+  login_subtitle: 'Plataforma para contadores',
   login_google: 'Entrar com Google',
 
   // Onboarding
   onboarding_title: 'Como você vai usar a plataforma?',
-  onboarding_welcome: 'Bem-vindo ao Finflow.',
+  onboarding_welcome: 'Bem-vindo ao Syncero Books.',
   onboarding_companyLabel: 'Empresa',
   onboarding_companyDesc: 'Gerencio as finanças de uma ou mais empresas',
   onboarding_accountantLabel: 'Contador',

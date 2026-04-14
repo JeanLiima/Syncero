@@ -15,7 +15,7 @@ export function PWABanner() {
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-          Instale o Finflow
+          Instale o Syncero Books
         </p>
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
           Acesso rápido, notificações e uso offline

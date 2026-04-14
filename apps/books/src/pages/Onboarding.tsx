@@ -59,7 +59,7 @@ export function Component() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-xl">FF</span>
+            <span className="text-white font-bold text-xl">SB</span>
           </div>
         </div>
 

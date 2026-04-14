@@ -37,13 +37,13 @@ export function Component() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-xl">FF</span>
+            <span className="text-white font-bold text-xl">SB</span>
           </div>
         </div>
 
         <Card>
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">Finflow</h1>
+            <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">Syncero Books</h1>
             <p className="text-sm text-[var(--text-muted)]">{t('login_subtitle')}</p>
           </div>
 

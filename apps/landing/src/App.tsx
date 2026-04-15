@@ -15,8 +15,8 @@ import {
 } from 'lucide-react'
 import { supabase } from './lib/supabase'
 
-const FLOW_URL  = 'https://syncero-flow.vercel.app'
-const BOOKS_URL = 'https://syncero-books.vercel.app'
+const FLOW_URL  = import.meta.env.VITE_FLOW_URL  ?? 'https://syncero-flow.vercel.app'
+const BOOKS_URL = import.meta.env.VITE_BOOKS_URL ?? 'https://syncero-books.vercel.app'
 
 type UserType = 'company_user' | 'accountant'
 

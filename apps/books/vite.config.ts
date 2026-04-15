@@ -46,4 +46,5 @@ export default defineConfig({
   resolve: {
     alias: { '@': '/src' },
   },
+  server: { port: 5175 },
 })

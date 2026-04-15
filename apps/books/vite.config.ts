@@ -6,12 +6,13 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
 
-  // VERCEL_BRANCH_URL ex: "syncero-books-git-fix-branch-jeanliimas-projects.vercel.app"
-  // Deriva a landing URL removendo o prefixo "syncero-books" e mantendo o sufixo "-git-..."
-  const branchHost = process.env.VERCEL_BRANCH_URL ?? env.VERCEL_BRANCH_URL ?? ''
+  // VERCEL_ENV é "production" | "preview" | "development" — fonte confiável para distinguir ambientes.
+  // VERCEL_BRANCH_URL só é usado em preview para derivar as URLs dos apps irmãos.
+  const vercelEnv  = process.env.VERCEL_ENV ?? env.VERCEL_ENV ?? ''
+  const isPreview  = vercelEnv === 'preview'
+  const branchHost = isPreview ? (process.env.VERCEL_BRANCH_URL ?? env.VERCEL_BRANCH_URL ?? '') : ''
   const gitIdx     = branchHost.indexOf('-git-')
   const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
-  const isPreview  = gitSuffix !== ''
 
   const landingUrl = env.VITE_LANDING_URL ?? (isPreview ? `https://syncero${gitSuffix}`      : 'https://syncero.vercel.app')
   const flowUrl    = env.VITE_FLOW_URL    ?? (isPreview ? `https://syncero-flow${gitSuffix}` : 'https://syncero-flow.vercel.app')

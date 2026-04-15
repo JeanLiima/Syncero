@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
 
   // VERCEL_BRANCH_URL ex: "syncero-books-git-fix-branch-jeanliimas-projects.vercel.app"
   // Deriva a landing URL removendo o prefixo "syncero-books" e mantendo o sufixo "-git-..."
-  const branchHost = env.VERCEL_BRANCH_URL ?? ''
+  const branchHost = process.env.VERCEL_BRANCH_URL ?? env.VERCEL_BRANCH_URL ?? ''
   const gitIdx     = branchHost.indexOf('-git-')
   const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
   const isPreview  = gitSuffix !== ''

@@ -20,13 +20,13 @@ const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T
 
 // Tela de carregamento brandada — aparece durante a inicialização da sessão
 // (ex: ao chegar via redirect da landing com #access_token no hash).
-// Mais informativa que um spinner genérico.
-const Loader = () => (
+const Loader = ({ message = 'Verificando sessão...' }: { message?: string }) => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
     <div className="h-10 w-10 rounded-xl bg-[var(--success)] flex items-center justify-center shadow-lg shadow-green-500/20">
       <BookOpen className="h-5 w-5 text-white" />
     </div>
     <div className="h-5 w-5 border-2 border-[var(--success)] border-t-transparent rounded-full animate-spin" />
+    <p className="text-xs text-[var(--text-muted)] tracking-wide">{message}</p>
   </div>
 )
 

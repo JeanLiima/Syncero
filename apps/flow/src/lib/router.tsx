@@ -21,12 +21,13 @@ const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T
 
 // ── Guards ───────────────────────────────────────────────────
 
-const Loader = () => (
+const Loader = ({ message = 'Verificando sessão...' }: { message?: string }) => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
     <div className="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg shadow-blue-500/20">
       <TrendingUp className="h-5 w-5 text-white" />
     </div>
     <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+    <p className="text-xs text-[var(--text-muted)] tracking-wide">{message}</p>
   </div>
 )
 
@@ -57,7 +58,7 @@ function RequireAuth() {
   if (loading) return <Loader />
   if (!user) { window.location.replace(LANDING_URL); return null }
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
-  if (isAccountant) return <Loader /> // redirect para Books em andamento
+  if (isAccountant) return <Loader message="Redirecionando para o Syncero Books..." />
   if (!activeCompany) return <NoCompanyShell />
   return <Layout><Outlet /></Layout>
 }

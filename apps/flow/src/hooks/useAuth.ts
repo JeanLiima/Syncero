@@ -30,6 +30,22 @@ export function useAuth() {
       .single()
     // data é null quando o usuário acabou de entrar pelo Google e ainda não tem perfil
     setProfile(data)
+
+    // Auto-restore active company when localStorage is empty (new domain/device)
+    if (data?.user_type === 'company_user' && !useAuthStore.getState().activeCompany) {
+      const { data: membership } = await supabase
+        .from('company_members')
+        .select('role, companies(id, name)')
+        .eq('user_id', userId)
+        .eq('status', 'accepted')
+        .limit(1)
+        .single()
+      if (membership?.companies) {
+        const co = membership.companies as unknown as { id: string; name: string }
+        setActiveCompany({ id: co.id, name: co.name, role: membership.role })
+      }
+    }
+
     setLoading(false)
   }
 

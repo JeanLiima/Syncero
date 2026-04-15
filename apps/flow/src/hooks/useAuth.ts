@@ -8,49 +8,57 @@ export function useAuth() {
 
   // ── Como funciona o auth cross-domínio neste monorepo ────────
   //
-  // 1. Usuário clica "Entrar com Google" na landing (syncero.vercel.app).
-  // 2. Supabase redireciona para o Google e volta para a landing com:
-  //    landing.app/#access_token=X&refresh_token=Y&token_type=bearer&...
-  // 3. O cliente Supabase da landing lê o hash (detectSessionInUrl: true,
-  //    flowType: 'implicit'), cria a sessão em memória (persistSession: false)
-  //    e dispara SIGNED_IN.
-  // 4. A landing consulta o perfil do usuário, determina o app destino
-  //    (Flow para company_user, Books para accountant) e redireciona:
+  // 1. Usuário loga na landing com Google OAuth (PKCE ou implicit).
+  // 2. Landing detecta a sessão, consulta o perfil e redireciona:
   //    window.location.replace('https://flow.app/#access_token=X&refresh_token=Y&...')
-  // 5. O Flow carrega com o hash na URL. O cliente Supabase do Flow lê o hash
-  //    (detectSessionInUrl: true, flowType: 'implicit'), salva a sessão no
-  //    localStorage DESTE domínio (sb-{projectId}-auth-token) e dispara SIGNED_IN.
-  // 6. O hook abaixo detecta a sessão, busca o perfil e exibe o dashboard.
+  // 3. Flow carrega com o hash na URL.
   //
-  // Não há escrita manual no localStorage — o Supabase faz isso automaticamente
-  // ao processar o hash. O localStorage não é compartilhado entre origens.
+  // PROBLEMA: o projeto Supabase pode estar em modo PKCE. Nesse modo,
+  // detectSessionInUrl procura por ?code= na query string, NÃO por
+  // #access_token= no hash. O hash enviado pela landing é ignorado.
+  //
+  // SOLUÇÃO: ler o hash manualmente e chamar supabase.auth.setSession()
+  // antes de qualquer coisa. Isso funciona independentemente do flowType
+  // e da versão do @supabase/supabase-js instalada.
 
-  // Guard: getSession() e SIGNED_IN (onAuthStateChange) podem disparar
-  // fetchProfile para o mesmo userId em sequência rápida. O ref evita
-  // duas queries simultâneas ao banco para o mesmo usuário.
   const lastFetchedUserId = useRef<string | null>(null)
 
   useEffect(() => {
-    // getSession() captura a sessão já em memória/localStorage.
-    // Problema: quando a página carrega com #access_token=... (redirect da landing),
-    // o Supabase ainda pode estar processando o hash de forma assíncrona. Nesse caso,
-    // getSession() retorna null — mas o evento SIGNED_IN do onAuthStateChange virá
-    // logo em seguida com a sessão real. Por isso, NÃO setamos loading=false quando
-    // há access_token no hash: deixamos o SIGNED_IN resolver.
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const bootstrapAuth = async () => {
+      // 1. Se há #access_token no hash, aplicar a sessão manualmente.
+      //    Contorna a diferença de comportamento entre PKCE e implicit
+      //    no detectSessionInUrl.
+      const hash = window.location.hash
+      if (hash.includes('access_token=')) {
+        const params = new URLSearchParams(hash.substring(1))
+        const accessToken  = params.get('access_token')  ?? ''
+        const refreshToken = params.get('refresh_token') ?? ''
+
+        if (accessToken) {
+          // setSession() valida os tokens, salva no localStorage desta
+          // origem e dispara SIGNED_IN no onAuthStateChange.
+          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+          // Limpar o hash para não expor os tokens na URL após o login.
+          window.history.replaceState(null, '', window.location.pathname)
+        }
+      }
+
+      // 2. Buscar a sessão atual (que pode ter sido acabou de ser setada acima,
+      //    ou já existia no localStorage desta origem de um login anterior).
+      const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser(session.user)
         fetchProfile(session.user.id)
-      } else if (!window.location.hash.includes('access_token=')) {
-        // Sem sessão E sem hash para processar → definitivamente não autenticado
+      } else {
         setLoading(false)
       }
-      // Se há hash mas getSession retornou null: aguardar SIGNED_IN abaixo
-    })
+    }
+
+    bootstrapAuth()
 
     // onAuthStateChange cobre mudanças após a inicialização:
-    // SIGNED_IN dispara depois do Supabase processar o hash da URL.
-    // INITIAL_SESSION é descartado — getSession() acima já o cobre.
+    // TOKEN_REFRESHED, SIGNED_OUT, e outros eventos do ciclo de vida.
+    // INITIAL_SESSION é descartado — bootstrapAuth + getSession() já cobrem.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return
       setUser(session?.user ?? null)
@@ -67,6 +75,8 @@ export function useAuth() {
   }, [])
 
   const fetchProfile = async (userId: string) => {
+    // Guard: bootstrapAuth e onAuthStateChange podem disparar fetchProfile
+    // para o mesmo userId em sequência. Apenas uma query por usuário.
     if (lastFetchedUserId.current === userId) return
     lastFetchedUserId.current = userId
 
@@ -81,7 +91,6 @@ export function useAuth() {
 
     // Restaurar activeCompany do banco quando o localStorage do Flow está vazio
     // (primeiro acesso neste domínio/dispositivo via hash redirect da landing).
-    // O router trata o caso de company_user sem empresa (NoCompanyShell).
     if (data?.user_type === 'company_user' && !useAuthStore.getState().activeCompany) {
       const { data: membership } = await supabase
         .from('company_members')
@@ -97,19 +106,16 @@ export function useAuth() {
     }
 
     setLoading(false)
-    // Nota: se o usuário for accountant, o RequireAuth no router redireciona
-    // para o Books. A lógica de redirecionamento não fica aqui para manter
-    // fetchProfile como função de leitura pura.
+    // Redirect de accountant→Books fica no RequireAuth (router.tsx),
+    // mantendo fetchProfile como função de leitura pura.
   }
 
-  // Inicia fluxo OAuth com Google — Supabase redireciona de volta para redirectTo
   const signInWithGoogle = (redirectTo?: string) =>
     supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: redirectTo ?? import.meta.env.VITE_APP_URL ?? window.location.origin },
     })
 
-  // Chamado no Onboarding, após o primeiro login Google sem perfil
   const createProfile = async (userType: 'company_user' | 'accountant') => {
     if (!user) return { error: new Error('Usuário não autenticado') }
     const fullName =
@@ -129,7 +135,6 @@ export function useAuth() {
     }, { onConflict: 'id' })
 
     if (!error) {
-      // Permite re-fetch após criação do perfil (o guard já tem este userId)
       lastFetchedUserId.current = null
       await fetchProfile(user.id)
     }

@@ -78,17 +78,6 @@ export function Layout({ children }: { children: ReactNode }) {
           <SidebarLink key={item.to} item={item} />
         ))}
       </nav>
-
-      {/* Sign out */}
-      <div className="px-3 py-4 border-t border-[var(--bg-border)]">
-        <button
-          onClick={handleSignOut}
-          className="cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 rounded-[var(--radius-md)] text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--danger)] transition-colors"
-        >
-          <LogOut className="h-4 w-4" />
-          {t('nav_signOut')}
-        </button>
-      </div>
     </aside>
   )
 

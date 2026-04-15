@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   // VERCEL_BRANCH_URL é injetado pela Vercel em todo build de preview
   // ex: "syncero-git-fix-post-auth-7-issues-jeanliimas-projects.vercel.app"
   // A partir dele derivamos as URLs dos apps irmãos sem configuração manual.
-  const branchHost = env.VERCEL_BRANCH_URL ?? ''
+  const branchHost = process.env.VERCEL_BRANCH_URL ?? env.VERCEL_BRANCH_URL ?? ''
   const gitIdx     = branchHost.indexOf('-git-')
   const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : '' // "-git-{branch}-{team}.vercel.app"
   const isPreview  = gitSuffix !== ''

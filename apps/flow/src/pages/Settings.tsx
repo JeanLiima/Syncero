@@ -70,7 +70,7 @@ function CompanyTab() {
   return (
     <form onSubmit={handleSubmit((d) => save.mutateAsync(d))} className="flex flex-col gap-4 max-w-lg">
       <Input label={t('settings_companyName')} error={errors.name?.message} {...register('name')} />
-      <Input label={t('settings_cnpj')} placeholder="00.000.000/0000-00" {...register('cnpj')} />
+      <Input label={t('settings_cnpj')} {...register('cnpj')} />
       <Controller
         control={control}
         name="tax_regime"
@@ -128,7 +128,7 @@ function MembersTab() {
           company_id: activeCompany!.id,
           email: inviteEmail,
           role: inviteRole,
-          status: 'invited',
+          status: 'pending',
           invite_token: token,
         })
       if (error) throw error
@@ -144,7 +144,7 @@ function MembersTab() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('company_members')
-        .update({ status: 'inactive' })
+        .update({ status: 'revoked' })
         .eq('id', id)
       if (error) throw error
     },
@@ -202,7 +202,7 @@ function MembersTab() {
               key: 'status',
               header: t('accountant_status'),
               render: (r) => (
-                <Badge variant={r.status === 'active' ? 'success' : r.status === 'invited' ? 'warning' : 'default'}>
+                <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'default'}>
                   {r.status}
                 </Badge>
               ),
@@ -212,7 +212,7 @@ function MembersTab() {
               header: '',
               align: 'right',
               render: (r) =>
-                r.status !== 'inactive' ? (
+                r.status !== 'revoked' ? (
                   <Button
                     variant="danger"
                     size="sm"

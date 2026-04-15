@@ -3,11 +3,30 @@ import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
 import { LogOut, BookOpen } from 'lucide-react'
 
+// Recovers from stale chunk errors after Vercel redeploys
+const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T> => {
+  try {
+    return await fn()
+  } catch (e) {
+    if (e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('dynamically imported module'))) {
+      window.location.reload()
+      return {} as T
+    }
+    throw e
+  }
+}
+
 // ── Guards ───────────────────────────────────────────────────
 
-const Loader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
-    <div className="h-6 w-6 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+// Tela de carregamento brandada — aparece durante a inicialização da sessão
+// (ex: ao chegar via redirect da landing com #access_token no hash).
+const Loader = ({ message = 'Verificando sessão...' }: { message?: string }) => (
+  <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
+    <div className="h-10 w-10 rounded-xl bg-[var(--success)] flex items-center justify-center shadow-lg shadow-green-500/20">
+      <BookOpen className="h-5 w-5 text-white" />
+    </div>
+    <div className="h-5 w-5 border-2 border-[var(--success)] border-t-transparent rounded-full animate-spin" />
+    <p className="text-xs text-[var(--text-muted)] tracking-wide">{message}</p>
   </div>
 )
 
@@ -29,7 +48,7 @@ function WrongApp() {
         </p>
         <div className="flex flex-col gap-3">
           <a
-            href="https://syncero-flow.vercel.app"
+            href={FLOW_URL}
             className="inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
           >
             Acessar Syncero Flow
@@ -48,6 +67,7 @@ function WrongApp() {
 }
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
+const FLOW_URL    = import.meta.env.VITE_FLOW_URL    ?? 'https://syncero-flow.vercel.app'
 
 function RequireAccountant() {
   const { user, loading, isAccountant, needsOnboarding } = useAuth()
@@ -75,7 +95,7 @@ export const router = createBrowserRouter([
   {
     element: <RequireOnboarding />,
     children: [
-      { path: '/onboarding', lazy: () => import('../pages/Onboarding') },
+      { path: '/onboarding', lazy: lazyLoad(() => import('../pages/Onboarding')) },
     ],
   },
 
@@ -84,12 +104,12 @@ export const router = createBrowserRouter([
     element: <RequireAccountant />,
     children: [
       { path: '/',                                              element: <Navigate to="/accountant" replace /> },
-      { path: '/preferences',                                   lazy: () => import('../pages/Preferences') },
-      { path: '/accountant',                                    lazy: () => import('../pages/accountant/Dashboard') },
-      { path: '/accountant/company/:companyId',                 lazy: () => import('../pages/accountant/EmpresaFiscal') },
-      { path: '/accountant/company/:companyId/nfe',             lazy: () => import('../pages/accountant/NFe') },
-      { path: '/accountant/company/:companyId/sped',            lazy: () => import('../pages/accountant/SPED') },
-      { path: '/accountant/company/:companyId/taxes',           lazy: () => import('../pages/accountant/Impostos') },
+      { path: '/preferences',                                   lazy: lazyLoad(() => import('../pages/Preferences')) },
+      { path: '/accountant',                                    lazy: lazyLoad(() => import('../pages/accountant/Dashboard')) },
+      { path: '/accountant/company/:companyId',                 lazy: lazyLoad(() => import('../pages/accountant/EmpresaFiscal')) },
+      { path: '/accountant/company/:companyId/nfe',             lazy: lazyLoad(() => import('../pages/accountant/NFe')) },
+      { path: '/accountant/company/:companyId/sped',            lazy: lazyLoad(() => import('../pages/accountant/SPED')) },
+      { path: '/accountant/company/:companyId/taxes',           lazy: lazyLoad(() => import('../pages/accountant/Impostos')) },
     ],
   },
 

@@ -3,16 +3,9 @@ import { usePreferencesStore, type Language } from '@/store/preferences'
 import { useT } from '@/i18n'
 import { Card } from '@/components/ui'
 
-interface LangOption {
-  value: Language
-  flag: string
-  label: string
-  labelKey: 'preferences_portuguese' | 'preferences_english'
-}
-
-const options: LangOption[] = [
-  { value: 'pt', flag: '🇧🇷', label: 'Português', labelKey: 'preferences_portuguese' },
-  { value: 'en', flag: '🇺🇸', label: 'English',   labelKey: 'preferences_english' },
+const options: { value: Language; flag: string; code: string }[] = [
+  { value: 'pt', flag: '🇧🇷', code: 'PT' },
+  { value: 'en', flag: '🇺🇸', code: 'EN' },
 ]
 
 export function Component() {
@@ -24,30 +17,29 @@ export function Component() {
       <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('preferences_title')}</h1>
 
       <Card>
-        <p className="text-sm font-medium text-[var(--text-primary)] mb-1">{t('preferences_language')}</p>
-        <p className="text-xs text-[var(--text-secondary)] mb-4">{t('preferences_languageHint')}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-[var(--text-primary)]">{t('preferences_language')}</p>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">{t('preferences_languageHint')}</p>
+          </div>
 
-        <div className="flex flex-col gap-2">
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setLanguage(opt.value)}
-              className={clsx(
-                'cursor-pointer flex items-center gap-3 p-3 rounded-[var(--radius-md)] border text-left transition-all',
-                language === opt.value
-                  ? 'border-[var(--accent)] bg-[var(--accent-subtle)]'
-                  : 'border-[var(--bg-border)] hover:border-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'
-              )}
-            >
-              <span className="text-xl">{opt.flag}</span>
-              <span className={clsx(
-                'text-sm font-medium',
-                language === opt.value ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'
-              )}>
-                {t(opt.labelKey)}
-              </span>
-            </button>
-          ))}
+          <div className="flex items-center gap-1 p-1 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)]">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setLanguage(opt.value)}
+                className={clsx(
+                  'cursor-pointer flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-sm)] text-xs font-medium transition-all',
+                  language === opt.value
+                    ? 'bg-[var(--accent)] text-white shadow-sm'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-border)]'
+                )}
+              >
+                <span>{opt.flag}</span>
+                <span>{opt.code}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </Card>
     </div>

@@ -1,39 +1,73 @@
-# CLAUDE.md — Finflow Codebase Guide
+# CLAUDE.md — Syncero Monorepo Guide
 
-> Read this entire document before writing any code.
-> Last updated to reflect actual implemented state (post-PR #1 merge).
+> Read this before writing any code.
 
 ---
 
 ## What This Project Is
 
-**Finflow** — Multi-tenant business financial management PWA with an accounting module for tax professionals.
+**Syncero** — Financial management platform connecting businesses and accountants.
 
-**Stack:** React 18 + Vite + TypeScript + Tailwind CSS v4 + Supabase + vite-plugin-pwa
-
-**Repository:** `JeanLiima/Syncero` on GitHub (local folder is `/home/user/Syncero`)
+**Stack:** React 18 + Vite + TypeScript + Tailwind CSS v4 + Supabase + vite-plugin-pwa  
+**Repository:** `JeanLiima/Syncero` on GitHub
 
 ---
 
-## Provisioned Infrastructure
+## Monorepo Structure
+
+```
+Syncero/
+├── apps/
+│   ├── landing/          ← Public hub — Google OAuth entry point (port 5173)
+│   ├── flow/             ← Private app for company_user (port 5174)
+│   └── books/            ← Private app for accountants (port 5175)
+├── supabase/
+│   └── migrations/
+│       ├── 001_initial_schema.sql
+│       └── 002_fix_rls_recursion.sql
+└── package.json          ← Root: workspaces + turbo
+```
+
+Each app is fully independent: its own `package.json`, `vite.config.ts`, `tsconfig.json`, `vercel.json`.
+
+---
+
+## Infrastructure
 
 ### Supabase (production)
 - **Project ID:** `kmcwjilzhiyooacdpfdo`
 - **URL:** `https://kmcwjilzhiyooacdpfdo.supabase.co`
 - **Region:** sa-east-1 (São Paulo)
-- **Anon key:** in `.env` file — never commit it
+- **Anon key:** in each app's `.env` file — never commit
 
-### Database — fully applied (single migration)
+### Vercel (production URLs)
+| App     | URL                              |
+|---------|----------------------------------|
+| landing | `https://syncero.vercel.app`     |
+| flow    | `https://syncero-flow.vercel.app`|
+| books   | `https://syncero-books.vercel.app`|
 
-**Migration file:** `supabase/migrations/001_initial_schema.sql`
+Preview URLs are derived automatically from `VERCEL_BRANCH_URL` in each `vite.config.ts`.
 
-**Tables (10):**
+---
+
+## Database
+
+### Migrations applied
+
+| File | Description |
+|------|-------------|
+| `001_initial_schema.sql` | All tables, indexes, RLS policies, helper functions, triggers |
+| `002_fix_rls_recursion.sql` | Fixes infinite RLS recursion on `company_members`; adds `is_company_admin()` SECURITY DEFINER function; adds missing INSERT policies |
+
+### Tables (10)
+
 | Table | Purpose |
-|---|---|
-| `profiles` | User profiles — type: `company_user` or `accountant` |
+|-------|---------|
+| `profiles` | User profiles — `user_type`: `company_user` or `accountant` |
 | `companies` | Company data (name, CNPJ, tax regime) |
 | `company_members` | Membership with roles + invite tokens |
-| `accountant_companies` | Accountant↔company links with accept/reject status |
+| `accountant_companies` | Accountant↔company links (accept/reject status) |
 | `categories` | Transaction categories (income/expense) |
 | `transactions` | Income and expense entries |
 | `payables_receivables` | Accounts payable/receivable |
@@ -41,262 +75,198 @@
 | `fiscal_books` | SPED, ECF, ECD books |
 | `tax_calculations` | Tax calculations by period |
 
-**DB helper functions:**
-- `is_company_member(company_id)` → boolean
-- `is_accountant_of(company_id)` → boolean
+### Helper functions (SECURITY DEFINER — bypass RLS safely)
 
-**RLS:** Enabled on all tables. Accountants have read access on `fiscal_documents`, `fiscal_books`, and `tax_calculations` via `accountant_companies` where `status = 'accepted'`.
+| Function | Returns | Purpose |
+|----------|---------|---------|
+| `is_company_member(company_id)` | boolean | User is accepted member of company |
+| `is_company_admin(company_id)` | boolean | User is admin member of company |
+| `is_accountant_of(company_id)` | boolean | User is accepted accountant of company |
+
+### RLS summary
+
+- **profiles** — user sees/edits own row; INSERT allowed for onboarding upsert
+- **companies** — member or owner sees; owner inserts/updates
+- **company_members** — member sees; admin manages via `is_company_admin()`; owner inserts self as admin
+- **accountant_companies** — accountant sees own links; admin inserts; accountant updates (accept)
+- **categories / transactions / payables_receivables** — member CRUD
+- **fiscal_documents / fiscal_books / tax_calculations** — member or accountant reads; member inserts
 
 ---
 
-## Full Source Tree (current state)
+## Auth Flow (cross-domain)
+
+Login lives **only on landing**. Flow and Books have no login page.
 
 ```
-finflow/
-├── index.html
-├── package.json
-├── vite.config.ts         ← React + Tailwind v4 + PWA (NetworkFirst for Supabase REST)
-├── tsconfig.json          ← ES2020, strict, path alias @ = /src
-├── tsconfig.node.json
-├── vercel.json            ← SPA rewrites (all paths → index.html)
-├── .env                   ← real credentials (never commit)
-├── .env.example
-├── .gitignore
-│
+landing (OAuth hub)
+  │
+  ├─ Google OAuth → callback to landing
+  ├─ getProfileType() → DB query
+  ├─ redirectWithSession(session, type)
+  │     builds: window.location.replace(`${appUrl}#access_token=X&refresh_token=Y`)
+  │
+  ├─→ flow/#access_token=...   (company_user)
+  └─→ books/#access_token=...  (accountant)
+
+flow / books (useAuth bootstrapAuth)
+  │
+  ├─ reads hash manually → supabase.auth.setSession()  ← bypasses PKCE detectSessionInUrl
+  ├─ history.replaceState (cleans tokens from URL)
+  └─ getSession() → fetchProfile() → app ready
+```
+
+**Why manual hash reading?** Supabase project uses PKCE mode where `detectSessionInUrl` looks for `?code=`, not `#access_token=`. Manual `setSession()` works regardless of flowType.
+
+---
+
+## App Structure (flow and books — identical pattern)
+
+```
+apps/{flow|books}/
 ├── public/
 │   ├── favicon.svg
-│   └── icons/
-│       ├── icon-192.png
-│       └── icon-512.png
-│
-├── supabase/
-│   └── migrations/
-│       └── 001_initial_schema.sql
-│
-└── src/
-    ├── main.tsx            ← React root: QueryClient + ToastProvider + RouterProvider
-    ├── index.css           ← design tokens (dark theme, DM Sans + JetBrains Mono)
-    ├── vite-env.d.ts
-    │
-    ├── lib/
-    │   ├── supabase.ts     ← createClient with typed DB, persistent sessions
-    │   └── router.tsx      ← createBrowserRouter with guards below
-    │
-    ├── store/
-    │   ├── auth.ts         ← Zustand: user, profile, activeCompany (activeCompany persisted)
-    │   └── preferences.ts  ← Zustand: language (persisted to localStorage as 'finflow-prefs')
-    │
-    ├── hooks/
-    │   ├── useAuth.ts      ← Google OAuth: signInWithGoogle, createProfile, signOut, fetchProfile
-    │   └── usePWAInstall.ts ← install prompt + resize detection
-    │
-    ├── i18n/
-    │   ├── index.ts        ← useT() hook — reads from preferences store
-    │   ├── pt.ts           ← Portuguese translation dictionary
-    │   └── en.ts           ← English translation dictionary
-    │
-    ├── types/
-    │   └── index.ts        ← All enums + interfaces derived from DB schema
-    │
-    ├── components/
-    │   ├── Layout.tsx      ← Shell: sidebar (role-adaptive) + topbar + mobile nav
-    │   ├── NoCompanyShell.tsx ← Focused UI for authenticated users without a company
-    │   ├── PWABanner.tsx   ← Install banner (native prompt + iOS manual)
-    │   └── ui/
-    │       ├── index.ts    ← barrel export
-    │       ├── Avatar.tsx  ← Image with initials fallback
-    │       ├── Badge.tsx   ← variants: default | success | danger | warning | info
-    │       ├── Button.tsx  ← variants: primary | ghost | danger; loading spinner built-in
-    │       ├── Card.tsx    ← Surface container
-    │       ├── ConfirmDialog.tsx ← Confirmation modal
-    │       ├── Input.tsx   ← Form input with label, error state, icon support
-    │       ├── Modal.tsx   ← Dialog with overlay
-    │       ├── Select.tsx  ← Custom dropdown with search
-    │       ├── Spinner.tsx ← Loading spinner
-    │       ├── Table.tsx   ← Responsive striped table
-    │       ├── Tabs.tsx    ← Tab switcher
-    │       └── Toast.tsx   ← Toast context + Toaster component
-    │
-    ├── pages/
-    │   ├── Login.tsx           ← Google OAuth sign-in page
-    │   ├── Register.tsx        ← Registration (minimal — primary flow is OAuth)
-    │   ├── AcceptInvite.tsx    ← Accepts member or accountant invite via token URL
-    │   ├── Onboarding.tsx      ← First-login type selection: company_user or accountant
-    │   ├── Dashboard.tsx       ← Metrics cards + 30-day chart + recent transactions
-    │   ├── Lancamentos.tsx     ← Transactions list + create/edit form
-    │   ├── FluxoCaixa.tsx      ← Cash flow chart (Recharts) + period selector
-    │   ├── Contas.tsx          ← Payables/receivables with due-date grouping
-    │   ├── DRE.tsx             ← Income statement table by category and period
-    │   ├── Settings.tsx        ← Company info, members management, accountant invite
-    │   ├── Preferences.tsx     ← Language toggle (PT/EN)
-    │   └── contador/           ← Accountant-only section (read-only throughout)
-    │       ├── Dashboard.tsx   ← List of linked companies via accountant_companies
-    │       ├── EmpresaFiscal.tsx ← Fiscal summary for a given company
-    │       ├── NFe.tsx         ← fiscal_documents list filtered by company
-    │       ├── SPED.tsx        ← fiscal_books list
-    │       └── Impostos.tsx    ← tax_calculations by period
-    │
-    └── modules/
-        ├── lancamentos/
-        │   ├── queries.ts      ← useTransactions(filters, page, pageSize), useCategories()
-        │   ├── mutations.ts    ← useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction
-        │   └── types.ts        ← TransactionFormData, TransactionFilters
-        ├── contas/
-        │   ├── queries.ts      ← usePayables(type: PayableType)
-        │   └── mutations.ts    ← CRUD for payables_receivables
-        ├── fluxo/
-        │   └── queries.ts      ← useCashFlow(period: 'month'|'30d'|'90d') → DailyFlow[]
-        └── dre/
-            └── queries.ts      ← useDRE(year, month) → DRERow[] aggregated by category
+│   └── icons/{icon-192,icon-512}.png
+├── src/
+│   ├── main.tsx            ← QueryClient + ToastProvider + RouterProvider
+│   ├── index.css           ← Design tokens (dark theme)
+│   ├── lib/
+│   │   ├── supabase.ts     ← createClient (persistSession: true, flowType: implicit)
+│   │   └── router.tsx      ← Route guards: RequireAuth / RequireAccountant / RequireOnboarding
+│   ├── store/
+│   │   ├── auth.ts         ← Zustand: user, profile, activeCompany (activeCompany persisted)
+│   │   └── preferences.ts  ← Zustand: language, sidebarCollapsed (persisted as 'syncero-prefs')
+│   ├── hooks/
+│   │   ├── useAuth.ts      ← bootstrapAuth, fetchProfile, signOut, createProfile
+│   │   └── usePWAInstall.ts
+│   ├── i18n/
+│   │   ├── index.ts        ← useT() hook
+│   │   ├── pt.ts           ← PT dictionary (source of truth for keys)
+│   │   └── en.ts           ← EN dictionary
+│   ├── types/
+│   │   └── index.ts        ← Enums + interfaces from DB schema
+│   ├── components/
+│   │   ├── Layout.tsx      ← Collapsible sidebar + topbar + mobile nav
+│   │   ├── NoCompanyShell.tsx  ← (flow only) UI for users without a company
+│   │   ├── PWABanner.tsx
+│   │   └── ui/             ← Avatar, Badge, Button, Card, Input, Modal, Select, Table, Tabs, Toast…
+│   └── pages/
+│       └── …               ← Lazy-loaded via router
+├── vite.config.ts          ← Derives sibling URLs from VERCEL_BRANCH_URL
+├── vercel.json             ← SPA rewrite: all paths → index.html
+└── .env                    ← VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (never commit)
 ```
+
+**Path alias:** `@` → `src/` — always use `@/` imports.
 
 ---
 
-## Architecture Conventions
+## Route Guards
 
-### Router Guards (`src/lib/router.tsx`)
+### Flow (`apps/flow/src/lib/router.tsx`)
 
-Three guards wrap routes:
+| Guard | Passes when | Otherwise |
+|-------|------------|-----------|
+| `RequireAuth` | authenticated + onboarded | → landing (not logged in) or `/onboarding` |
+| `RequireAuth` | `company_user` has `activeCompany` | → `<NoCompanyShell />` |
+| `RequireAuth` | not accountant | → redirect to Books with session hash |
+| `RequireOnboarding` | `profile === null` | → `/dashboard` if already profiled |
+| `RequireAccountant` | `user_type === 'accountant'` | → `/dashboard` |
 
-| Guard | Condition | Redirects |
-|---|---|---|
-| `RequireAuth` | Must be authenticated + onboarded | → `/login` or `/onboarding` |
-| `RequireAuth` | `company_user` must have `activeCompany` | → renders `<NoCompanyShell />` inline |
-| `RequireOnboarding` | Must have null profile (first login) | → `/dashboard` if already has profile |
-| `RequireAccountant` | Must have `user_type === 'accountant'` | → `/dashboard` |
+### Books (`apps/books/src/lib/router.tsx`)
 
-Routes use **English URL paths** (`/transactions`, `/cash-flow`, `/accounts`, `/dre`, `/accountant`).
+| Guard | Passes when | Otherwise |
+|-------|------------|-----------|
+| `RequireAccountant` | authenticated + accountant | → landing or `<WrongApp />` |
+| `RequireOnboarding` | `profile === null` | → `/` if already profiled |
 
-### State Management
+---
 
-Two Zustand stores:
+## State Management
 
-**`useAuthStore`** (`store/auth.ts`) — transient + partially persisted:
-- `user` — Supabase `User` object (not persisted)
-- `profile` — `Profile` interface (not persisted)
-- `activeCompany` — `ActiveCompany` interface (persisted to localStorage as `'finflow-auth'`)
+### `useAuthStore` (per-app, partially persisted)
+- `user` — Supabase `User` (in-memory)
+- `profile` — `Profile` from DB (in-memory)
+- `activeCompany` — `{ id, name, role }` (persisted as `'syncero-auth'`)
 
-**`usePreferencesStore`** (`store/preferences.ts`) — fully persisted:
-- `language: 'pt' | 'en'` (persisted as `'finflow-prefs'`)
-
-### Data Fetching
-
-React Query (TanStack Query v5). All queries:
-- Use `activeCompany?.id` in `queryKey` to scope per company
-- Use `enabled: !!activeCompany?.id` to skip when no company is selected
-- Default stale time: React Query defaults (not overridden globally)
-
-Query invalidation uses `queryKey` prefixes: `['transactions', companyId]`, `['categories', companyId]`, `['payables', companyId, type]`, `['cashflow', companyId, period]`, `['dre', companyId, year, month]`.
-
-### Authentication Flow
-
-1. User hits `/login` → clicks "Entrar com Google" → `signInWithGoogle()` starts OAuth
-2. Supabase redirects back with session → `onAuthStateChange` fires
-3. `fetchProfile(userId)` runs — returns `null` for brand-new users
-4. If `profile === null` and `user` exists → `needsOnboarding = true` → router sends to `/onboarding`
-5. User selects type (company/accountant) → `createProfile(type)` upserts to `profiles` table
-6. On success, `fetchProfile` runs again → `profile` populated → router sends to `/dashboard`
-
-### i18n
-
-`useT()` from `src/i18n/index.ts` returns a translation lookup function:
-```tsx
-const t = useT()
-// t('dashboard') → 'Painel' (PT) or 'Dashboard' (EN)
-```
-Keys are typed via `TranslationKey` exported from `i18n/pt.ts`. Add new keys to both `pt.ts` and `en.ts`.
-
-### Component Conventions
-
-- Path alias `@` maps to `/src` — always use `@/` imports instead of relative `../../`
-- UI components re-exported from `@/components/ui` (barrel index)
-- Toast notifications: `useToast()` from `@/components/ui/Toast`
-- All financial values use `JetBrains Mono` font — apply via `font-mono` Tailwind class
-- Buttons with async actions get `loading={isPending}` prop
+### `usePreferencesStore` (per-app, fully persisted as `'syncero-prefs'`)
+- `language: 'pt' | 'en'`
+- `sidebarCollapsed: boolean`
 
 ---
 
 ## Design System
 
-**Theme:** Dark by default (no light mode toggle)  
-**Fonts:** DM Sans (body) + JetBrains Mono (numeric values)
+**Theme:** Dark only. **Fonts:** DM Sans (body) + JetBrains Mono (numbers).
 
-**CSS variables** (`src/index.css`):
 ```css
 --bg-base:        #0b0f19   /* page background */
 --bg-surface:     #111827   /* cards */
 --bg-elevated:    #1a2236   /* inputs, dropdowns */
 --bg-border:      #1e2d45   /* borders */
-
 --text-primary:   #f1f5f9
 --text-secondary: #94a3b8
 --text-muted:     #475569
-
---accent:         #3b82f6   /* primary blue */
---success:        #10b981   /* income / paid */
---danger:         #f43f5e   /* expense / overdue */
---warning:        #f59e0b   /* pending / upcoming */
+--accent:         #3b82f6   /* blue — Flow brand */
+--success:        #10b981   /* green — Books brand / income */
+--danger:         #f43f5e
+--warning:        #f59e0b
 ```
 
 ---
 
 ## Business Rules
 
-1. **All financial data has `company_id`** — always filter by `activeCompany.id` from the auth store
-2. **Accountants are read-only** — never create mutations in pages under `src/pages/contador/`
-3. **`accountant_companies.status` must be `'accepted'`** for accountant RLS to allow access
-4. **Accountant invite flow** — company admin creates a record in `accountant_companies`; invite delivered via token URL (`/invite/:token`)
-5. **Company switching** — stored in Zustand `activeCompany`, persisted in localStorage; changing it should invalidate all company-scoped queries
-6. **PWA banner** — shown when `window.innerWidth < 768` and app is not installed as standalone
-7. **CNPJ formatting** — mask as `00.000.000/0000-00` in the UI; store raw digits in DB
-8. **Tax regime values in DB:** `'simples'`, `'lucro_presumido'`, `'lucro_real'` — send empty string as `null`/undefined (the DB rejects empty string due to enum constraint)
+1. All financial data scoped by `company_id` — always use `activeCompany.id` from auth store
+2. Accountants are **read-only** — never add mutations to `pages/accountant/` in Books
+3. `accountant_companies.status = 'accepted'` required for RLS to allow accountant access
+4. Company switching invalidates all React Query keys prefixed with `companyId`
+5. CNPJ stored as raw digits in DB; formatted as `00.000.000/0000-00` in UI
+6. Tax regime enum values: `'simples'` | `'lucro_presumido'` | `'lucro_real'` (empty string → send null)
 
 ---
 
 ## What Still Needs Implementing
 
-Items below are verified as not yet done:
-
 ### High priority
-- [ ] **Tests** — no unit, integration, or e2e tests exist yet
-- [ ] **Error boundaries** — uncaught React errors will white-screen the app
-- [ ] **Real-time subscriptions** — currently polling via React Query; Supabase Realtime not wired up
-- [ ] **Category management UI** — `categories` table exists and is queried, but no CRUD UI in Settings
-- [ ] **Create company flow** — `NoCompanyShell` shows the UI but the actual Supabase insert + `setActiveCompany` may need completion/verification
+- [ ] **Error boundaries** — white-screen on unhandled React errors
+- [ ] **Tests** — no unit/integration/e2e tests
+- [ ] **Real-time subscriptions** — polling only; Supabase Realtime not wired
+- [ ] **Category management UI** — table exists, no CRUD in Settings
+- [ ] **Create company flow** — `NoCompanyShell` needs verification of full insert + `setActiveCompany`
 
 ### Medium priority
-- [ ] **Export to PDF/Excel** — DRE and transactions have no export feature
-- [ ] **Advanced transaction filtering** — date range picker, multi-category filter in Lancamentos
-- [ ] **Batch mark as paid** — selecting multiple payables and bulk-updating status
-- [ ] **Dashboard metrics** — verify the revenue/expense/result/pending calculations against real data
-- [ ] **Accountant module data** — pages exist but may show empty states without seed data
+- [ ] **Export PDF/Excel** — DRE and transactions
+- [ ] **Advanced filtering** — date range + multi-category in Lancamentos
+- [ ] **Batch mark as paid** — bulk payables update
+- [ ] **Multi-company selector** — fetchProfile restores first company only; selector needed for users with 2+
 
 ### Lower priority
-- [ ] **Tooltip.tsx UI component** — listed in original plan but not yet created
-- [ ] **Deploy to Vercel** — `vercel.json` exists but project not connected to Vercel yet
-- [ ] **Register.tsx** — minimal implementation; full sign-up flow with email/password not needed if Google-only
+- [ ] **Retry limit on sessionHandled** in landing (`App.tsx`) — currently resets on any network error
 
 ---
 
-## Useful Commands
+## Dev Commands
 
 ```bash
-# Run dev server
+# From repo root
+npm install
+
+# Run all apps in parallel
 npm run dev
 
-# Production build (runs tsc first)
-npm run build
+# Or individually (from each app dir)
+cd apps/landing && npm run dev   # → localhost:5173
+cd apps/flow    && npm run dev   # → localhost:5174
+cd apps/books   && npm run dev   # → localhost:5175
 
-# Type check only
+# Type check
 npm run typecheck
 
-# Lint
-npm run lint
-
-# Sync types from live DB schema
+# Sync DB types
 npx supabase gen types typescript \
   --project-id kmcwjilzhiyooacdpfdo \
-  --schema public > src/types/database.types.ts
+  --schema public > apps/flow/src/types/database.types.ts
 ```
 
 ---
@@ -304,16 +274,13 @@ npx supabase gen types typescript \
 ## Getting Started (new session)
 
 ```bash
-# From the repo root
 npm install
 
-# Create .env if missing
-cp .env.example .env
-# Fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+# Each app needs its own .env:
+cp apps/flow/.env.example    apps/flow/.env
+cp apps/books/.env.example   apps/books/.env
+cp apps/landing/.env.example apps/landing/.env
+# Fill VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in each
 
 npm run dev
-# → http://localhost:5173
 ```
-
-> In Claude Code, start with:
-> _"Read CLAUDE.md and implement the next item from the pending list"_

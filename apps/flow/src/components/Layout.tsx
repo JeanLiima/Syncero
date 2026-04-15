@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from 'react'
-import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import {
   LayoutDashboard,
   ArrowUpDown,
@@ -59,9 +59,10 @@ function SidebarLink({ item }: { item: NavItem }) {
   )
 }
 
+const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
+
 export function Layout({ children }: { children: ReactNode }) {
   const { profile, activeCompany, signOut, isAccountant } = useAuth()
-  const navigate = useNavigate()
   const t = useT()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -70,7 +71,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const handleSignOut = async () => {
     await signOut()
-    navigate('/login', { replace: true })
+    window.location.replace(LANDING_URL)
   }
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (

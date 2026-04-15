@@ -32,40 +32,39 @@ function redirectWithSession(session: Session, type: UserType) {
   window.location.replace(`${base}#${hash.toString()}`)
 }
 
+async function getProfileType(session: Session): Promise<UserType | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('user_type')
+    .eq('id', session.user.id)
+    .single()
+  return data ? (data.user_type as UserType) : null
+}
+
 // ── Login Modal ───────────────────────────────────────────────
 
-function LoginModal({ onClose }: { onClose: () => void }) {
-  const [mode, setMode]                   = useState<'login' | 'onboarding'>('login')
-  const [email, setEmail]                 = useState('')
-  const [password, setPassword]           = useState('')
-  const [loading, setLoading]             = useState(false)
-  const [error, setError]                 = useState<string | null>(null)
-  const [pendingSession, setPendingSession] = useState<Session | null>(null)
-  const [userType, setUserType]           = useState<UserType | null>(null)
+function LoginModal({ onClose, callbackSession }: { onClose: () => void; callbackSession?: Session | null }) {
+  const [mode, setMode]         = useState<'login' | 'register' | 'onboarding' | 'email_sent'>(
+    callbackSession ? 'onboarding' : 'login'
+  )
+  const [name, setName]         = useState('')
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState<string | null>(null)
+  const [pendingSession, setPendingSession] = useState<Session | null>(callbackSession ?? null)
+  const [userType, setUserType] = useState<UserType | null>(null)
   const [onboardingLoading, setOnboardingLoading] = useState(false)
 
-  // Capture OAuth callback when Supabase redirects back to landing
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session) await checkProfileAndRedirect(session)
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
   async function checkProfileAndRedirect(session: Session) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_type')
-      .eq('id', session.user.id)
-      .single()
-
-    if (!profile) {
+    const type = await getProfileType(session)
+    if (!type) {
       setPendingSession(session)
       setMode('onboarding')
       setLoading(false)
       return
     }
-    redirectWithSession(session, profile.user_type as UserType)
+    redirectWithSession(session, type)
   }
 
   const handleGoogle = async () => {
@@ -88,6 +87,28 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       return
     }
     await checkProfileAndRedirect(session)
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    const { data: { session, user }, error: err } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: name } },
+    })
+    if (err) {
+      setError(err.message)
+      setLoading(false)
+      return
+    }
+    if (session) {
+      await checkProfileAndRedirect(session)
+    } else if (user) {
+      setMode('email_sent')
+      setLoading(false)
+    }
   }
 
   const handleOnboarding = async () => {
@@ -134,7 +155,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {mode === 'onboarding' ? (
-          /* ── Onboarding step ── */
+          /* ── Onboarding ── */
           <>
             <div className="text-center mb-6">
               <h2 className="text-xl font-semibold text-[var(--text-primary)]">Como você vai usar a plataforma?</h2>
@@ -143,8 +164,8 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 
             <div className="flex flex-col gap-3 mb-6">
               {([
-                { value: 'company_user' as UserType, label: 'Sou Empresa', sub: 'Syncero Flow — gestão financeira', icon: <Building2 className="h-6 w-6" />, accent: 'var(--accent)', bg: 'var(--accent-subtle)' },
-                { value: 'accountant'   as UserType, label: 'Sou Contador',  sub: 'Syncero Books — acesso fiscal',   icon: <Calculator  className="h-6 w-6" />, accent: 'var(--success)', bg: '#0d2a1e' },
+                { value: 'company_user' as UserType, label: 'Sou Empresa',  sub: 'Syncero Flow — gestão financeira', icon: <Building2 className="h-6 w-6" />, accent: 'var(--accent)', bg: 'var(--accent-subtle)' },
+                { value: 'accountant'   as UserType, label: 'Sou Contador', sub: 'Syncero Books — acesso fiscal',    icon: <Calculator  className="h-6 w-6" />, accent: 'var(--success)', bg: '#0d2a1e' },
               ]).map((opt) => (
                 <button
                   key={opt.value}
@@ -176,8 +197,79 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               {onboardingLoading ? 'Redirecionando...' : 'Continuar'}
             </button>
           </>
+        ) : mode === 'register' ? (
+          /* ── Register ── */
+          <>
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-semibold text-[var(--text-primary)]">Criar conta no Syncero</h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">Comece gratuitamente, sem cartão de crédito</p>
+            </div>
+
+            <form onSubmit={handleRegister} className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Nome completo"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="h-10 px-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+              />
+              <input
+                type="email"
+                placeholder="E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-10 px-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+              />
+              <input
+                type="password"
+                placeholder="Senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="h-10 px-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] text-sm placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+              />
+              {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="h-10 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? 'Criando conta...' : 'Criar conta'}
+              </button>
+            </form>
+
+            <p className="text-xs text-center text-[var(--text-muted)] mt-4">
+              Já tem conta?{' '}
+              <button onClick={() => setMode('login')} className="text-[var(--accent)] hover:underline cursor-pointer bg-transparent border-none p-0">
+                Entrar
+              </button>
+            </p>
+          </>
+        ) : mode === 'email_sent' ? (
+          /* ── Email confirmation sent ── */
+          <div className="text-center">
+            <div className="mb-4 flex justify-center">
+              <div className="h-12 w-12 rounded-xl bg-[var(--accent-subtle)] flex items-center justify-center">
+                <CheckCircle className="h-6 w-6 text-[var(--accent)]" />
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Verifique seu e-mail</h2>
+            <p className="text-sm text-[var(--text-secondary)]">
+              Enviamos um link de confirmação para{' '}
+              <strong className="text-[var(--text-primary)]">{email}</strong>.
+              Clique no link para ativar sua conta.
+            </p>
+            <button
+              onClick={() => setMode('login')}
+              className="mt-6 text-xs text-[var(--accent)] hover:underline cursor-pointer bg-transparent border-none p-0"
+            >
+              Voltar ao login
+            </button>
+          </div>
         ) : (
-          /* ── Login step ── */
+          /* ── Login ── */
           <>
             <div className="text-center mb-6">
               <h2 className="text-xl font-semibold text-[var(--text-primary)]">Entrar no Syncero</h2>
@@ -232,6 +324,13 @@ function LoginModal({ onClose }: { onClose: () => void }) {
                 {loading ? 'Entrando...' : 'Entrar'}
               </button>
             </form>
+
+            <p className="text-xs text-center text-[var(--text-muted)] mt-4">
+              Não tem conta?{' '}
+              <button onClick={() => setMode('register')} className="text-[var(--accent)] hover:underline cursor-pointer bg-transparent border-none p-0">
+                Criar conta
+              </button>
+            </p>
           </>
         )}
       </div>
@@ -606,6 +705,28 @@ function Footer() {
 
 export default function App() {
   const [modalOpen, setModalOpen] = useState(false)
+  const [callbackSession, setCallbackSession] = useState<Session | null>(null)
+
+  // Detect session on mount — catches OAuth redirect (Supabase parses hash tokens)
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return
+      const type = await getProfileType(session)
+      if (!type) { setCallbackSession(session); setModalOpen(true); return }
+      redirectWithSession(session, type)
+    })
+  }, [])
+
+  // Listen for auth changes — fires after OAuth redirect completes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session) return
+      const type = await getProfileType(session)
+      if (!type) { setCallbackSession(session); setModalOpen(true); return }
+      redirectWithSession(session, type)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
@@ -616,7 +737,12 @@ export default function App() {
       <Comparison />
       <CTA     onLogin={() => setModalOpen(true)} />
       <Footer />
-      {modalOpen && <LoginModal onClose={() => setModalOpen(false)} />}
+      {modalOpen && (
+        <LoginModal
+          onClose={() => { setModalOpen(false); setCallbackSession(null) }}
+          callbackSession={callbackSession}
+        />
+      )}
     </div>
   )
 }

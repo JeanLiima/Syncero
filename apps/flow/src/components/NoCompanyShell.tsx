@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,15 +8,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/Toast'
 import { useT } from '@/i18n'
 import { Button, Card, Input, Select, Avatar } from '@/components/ui'
-
-function formatCNPJ(value: string): string {
-  const d = value.replace(/\D/g, '').slice(0, 14)
-  if (d.length <= 2)  return d
-  if (d.length <= 5)  return `${d.slice(0,2)}.${d.slice(2)}`
-  if (d.length <= 8)  return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5)}`
-  if (d.length <= 12) return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8)}`
-  return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`
-}
 
 const schema = z.object({
   name: z.string().min(2),
@@ -31,9 +21,7 @@ export function NoCompanyShell() {
   const { user, profile, signOut } = useAuth()
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
   const { success, error: toastError } = useToast()
-  const [cnpjDisplay, setCnpjDisplay] = useState('')
-
-  const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -45,12 +33,6 @@ export function NoCompanyShell() {
 
   const avatarUrl: string | null =
     profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? null
-
-  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCNPJ(e.target.value)
-    setCnpjDisplay(formatted)
-    setValue('cnpj', formatted.replace(/\D/g, '') || undefined)
-  }
 
   const onSubmit = async (data: FormData) => {
     const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
@@ -122,9 +104,8 @@ export function NoCompanyShell() {
             />
             <Input
               label={t('noCompany_cnpjLabel')}
-              placeholder="00.000.000/0000-00"
-              value={cnpjDisplay}
-              onChange={handleCnpjChange}
+              placeholder={t('noCompany_cnpjPlaceholder')}
+              {...register('cnpj')}
             />
             <Controller
               control={control}

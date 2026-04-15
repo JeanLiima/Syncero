@@ -3,6 +3,19 @@ import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
 import { LogOut, BookOpen } from 'lucide-react'
 
+// Recovers from stale chunk errors after Vercel redeploys
+const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T> => {
+  try {
+    return await fn()
+  } catch (e) {
+    if (e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('dynamically imported module'))) {
+      window.location.reload()
+      return {} as T
+    }
+    throw e
+  }
+}
+
 // ── Guards ───────────────────────────────────────────────────
 
 const Loader = () => (
@@ -75,7 +88,7 @@ export const router = createBrowserRouter([
   {
     element: <RequireOnboarding />,
     children: [
-      { path: '/onboarding', lazy: () => import('../pages/Onboarding') },
+      { path: '/onboarding', lazy: lazyLoad(() => import('../pages/Onboarding')) },
     ],
   },
 
@@ -84,12 +97,12 @@ export const router = createBrowserRouter([
     element: <RequireAccountant />,
     children: [
       { path: '/',                                              element: <Navigate to="/accountant" replace /> },
-      { path: '/preferences',                                   lazy: () => import('../pages/Preferences') },
-      { path: '/accountant',                                    lazy: () => import('../pages/accountant/Dashboard') },
-      { path: '/accountant/company/:companyId',                 lazy: () => import('../pages/accountant/EmpresaFiscal') },
-      { path: '/accountant/company/:companyId/nfe',             lazy: () => import('../pages/accountant/NFe') },
-      { path: '/accountant/company/:companyId/sped',            lazy: () => import('../pages/accountant/SPED') },
-      { path: '/accountant/company/:companyId/taxes',           lazy: () => import('../pages/accountant/Impostos') },
+      { path: '/preferences',                                   lazy: lazyLoad(() => import('../pages/Preferences')) },
+      { path: '/accountant',                                    lazy: lazyLoad(() => import('../pages/accountant/Dashboard')) },
+      { path: '/accountant/company/:companyId',                 lazy: lazyLoad(() => import('../pages/accountant/EmpresaFiscal')) },
+      { path: '/accountant/company/:companyId/nfe',             lazy: lazyLoad(() => import('../pages/accountant/NFe')) },
+      { path: '/accountant/company/:companyId/sped',            lazy: lazyLoad(() => import('../pages/accountant/SPED')) },
+      { path: '/accountant/company/:companyId/taxes',           lazy: lazyLoad(() => import('../pages/accountant/Impostos')) },
     ],
   },
 

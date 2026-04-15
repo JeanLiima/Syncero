@@ -3,6 +3,19 @@ import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
 import { NoCompanyShell } from '../components/NoCompanyShell'
 
+// Recovers from stale chunk errors after Vercel redeploys
+const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T> => {
+  try {
+    return await fn()
+  } catch (e) {
+    if (e instanceof Error && (e.message.includes('Failed to fetch') || e.message.includes('dynamically imported module'))) {
+      window.location.reload()
+      return {} as T
+    }
+    throw e
+  }
+}
+
 // ── Guards ───────────────────────────────────────────────────
 
 const Loader = () => (
@@ -42,13 +55,13 @@ function RequireAccountant() {
 
 export const router = createBrowserRouter([
   // Public
-  { path: '/invite/:token', lazy: () => import('../pages/AcceptInvite') },
+  { path: '/invite/:token', lazy: lazyLoad(() => import('../pages/AcceptInvite')) },
 
   // Onboarding — Google user without profile
   {
     element: <RequireOnboarding />,
     children: [
-      { path: '/onboarding', lazy: () => import('../pages/Onboarding') },
+      { path: '/onboarding', lazy: lazyLoad(() => import('../pages/Onboarding')) },
     ],
   },
 
@@ -57,22 +70,22 @@ export const router = createBrowserRouter([
     element: <RequireAuth />,
     children: [
       { path: '/',              element: <Navigate to="/dashboard" replace /> },
-      { path: '/dashboard',     lazy: () => import('../pages/Dashboard') },
-      { path: '/transactions',  lazy: () => import('../pages/Lancamentos') },
-      { path: '/cash-flow',     lazy: () => import('../pages/FluxoCaixa') },
-      { path: '/accounts',      lazy: () => import('../pages/Contas') },
-      { path: '/dre',           lazy: () => import('../pages/DRE') },
-      { path: '/settings',      lazy: () => import('../pages/Settings') },
-      { path: '/preferences',   lazy: () => import('../pages/Preferences') },
+      { path: '/dashboard',     lazy: lazyLoad(() => import('../pages/Dashboard')) },
+      { path: '/transactions',  lazy: lazyLoad(() => import('../pages/Lancamentos')) },
+      { path: '/cash-flow',     lazy: lazyLoad(() => import('../pages/FluxoCaixa')) },
+      { path: '/accounts',      lazy: lazyLoad(() => import('../pages/Contas')) },
+      { path: '/dre',           lazy: lazyLoad(() => import('../pages/DRE')) },
+      { path: '/settings',      lazy: lazyLoad(() => import('../pages/Settings')) },
+      { path: '/preferences',   lazy: lazyLoad(() => import('../pages/Preferences')) },
 
       {
         element: <RequireAccountant />,
         children: [
-          { path: '/accountant',                                    lazy: () => import('../pages/contador/Dashboard') },
-          { path: '/accountant/company/:companyId',                 lazy: () => import('../pages/contador/EmpresaFiscal') },
-          { path: '/accountant/company/:companyId/nfe',             lazy: () => import('../pages/contador/NFe') },
-          { path: '/accountant/company/:companyId/sped',            lazy: () => import('../pages/contador/SPED') },
-          { path: '/accountant/company/:companyId/taxes',           lazy: () => import('../pages/contador/Impostos') },
+          { path: '/accountant',                                    lazy: lazyLoad(() => import('../pages/contador/Dashboard')) },
+          { path: '/accountant/company/:companyId',                 lazy: lazyLoad(() => import('../pages/contador/EmpresaFiscal')) },
+          { path: '/accountant/company/:companyId/nfe',             lazy: lazyLoad(() => import('../pages/contador/NFe')) },
+          { path: '/accountant/company/:companyId/sped',            lazy: lazyLoad(() => import('../pages/contador/SPED')) },
+          { path: '/accountant/company/:companyId/taxes',           lazy: lazyLoad(() => import('../pages/contador/Impostos')) },
         ],
       },
     ],

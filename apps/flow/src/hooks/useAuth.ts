@@ -31,20 +31,26 @@ export function useAuth() {
   const lastFetchedUserId = useRef<string | null>(null)
 
   useEffect(() => {
-    // getSession() é o meio mais confiável de capturar a sessão inicial,
-    // incluindo a sessão recém-parseada do hash pelo detectSessionInUrl.
-    // Cobre o caso em que o Supabase terminou de processar o hash antes
-    // de o useEffect registrar o listener do onAuthStateChange.
+    // getSession() captura a sessão já em memória/localStorage.
+    // Problema: quando a página carrega com #access_token=... (redirect da landing),
+    // o Supabase ainda pode estar processando o hash de forma assíncrona. Nesse caso,
+    // getSession() retorna null — mas o evento SIGNED_IN do onAuthStateChange virá
+    // logo em seguida com a sessão real. Por isso, NÃO setamos loading=false quando
+    // há access_token no hash: deixamos o SIGNED_IN resolver.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setLoading(false)
+      if (session?.user) {
+        setUser(session.user)
+        fetchProfile(session.user.id)
+      } else if (!window.location.hash.includes('access_token=')) {
+        // Sem sessão E sem hash para processar → definitivamente não autenticado
+        setLoading(false)
+      }
+      // Se há hash mas getSession retornou null: aguardar SIGNED_IN abaixo
     })
 
-    // onAuthStateChange cobre mudanças subsequentes:
-    // SIGNED_IN (novo login), SIGNED_OUT, TOKEN_REFRESHED.
-    // INITIAL_SESSION é descartado porque o getSession() acima já o cobre,
-    // evitando assim uma segunda chamada a fetchProfile para o mesmo userId.
+    // onAuthStateChange cobre mudanças após a inicialização:
+    // SIGNED_IN dispara depois do Supabase processar o hash da URL.
+    // INITIAL_SESSION é descartado — getSession() acima já o cobre.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return
       setUser(session?.user ?? null)

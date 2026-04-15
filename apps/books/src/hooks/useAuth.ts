@@ -21,14 +21,23 @@ export function useAuth() {
   const lastFetchedUserId = useRef<string | null>(null)
 
   useEffect(() => {
-    // getSession() captura a sessão inicial, incluindo a recém-parseada do hash.
+    // getSession() captura a sessão já em memória/localStorage.
+    // Quando a página carrega com #access_token=... (redirect da landing), o Supabase
+    // pode ainda estar processando o hash — getSession() retorna null nesse caso.
+    // O evento SIGNED_IN do onAuthStateChange virá em seguida com a sessão real.
+    // Por isso, NÃO setamos loading=false quando há access_token no hash.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setLoading(false)
+      if (session?.user) {
+        setUser(session.user)
+        fetchProfile(session.user.id)
+      } else if (!window.location.hash.includes('access_token=')) {
+        // Sem sessão E sem hash → não autenticado
+        setLoading(false)
+      }
+      // Se há hash mas getSession retornou null: aguardar SIGNED_IN abaixo
     })
 
-    // onAuthStateChange cobre mudanças subsequentes.
+    // SIGNED_IN dispara depois do Supabase processar o hash da URL.
     // INITIAL_SESSION descartado — getSession() já o cobre.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return

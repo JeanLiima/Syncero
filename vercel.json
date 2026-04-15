@@ -1,5 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "comment": "Monorepo root — each app (apps/flow, apps/books) has its own Vercel project. Set 'Root Directory' in Vercel dashboard per project."
-}
-

@@ -6,27 +6,47 @@ export function useAuth() {
   const { user, profile, activeCompany, setUser, setProfile, setActiveCompany, clear } = useAuthStore()
   const [loading, setLoading] = useState(true)
 
-  // ── Session initialisation ────────────────────────────────────
-  // We rely solely on onAuthStateChange (no separate getSession() call).
-  // Reasons:
-  //   - onAuthStateChange always fires INITIAL_SESSION on mount, covering the
-  //     "existing session in localStorage" case identically to getSession().
-  //   - Using both getSession() AND onAuthStateChange causes fetchProfile to be
-  //     called twice for the same user (race condition, duplicate DB queries,
-  //     potential setState-after-unmount warnings).
-  //   - lastFetchedUserId ref ensures that even if INITIAL_SESSION + SIGNED_IN
-  //     both fire (e.g. after an OAuth hash redirect from landing), fetchProfile
-  //     only runs once per distinct user.
+  // ── Como funciona o auth cross-domínio neste monorepo ────────
   //
-  // Cross-domain session transfer:
-  //   Landing redirects here as `{flowUrl}#access_token=...&refresh_token=...`.
-  //   Supabase (detectSessionInUrl: true) reads that hash, stores the tokens in
-  //   THIS app's localStorage (key: sb-{projectId}-auth-token), fires SIGNED_IN,
-  //   then cleans the URL. No manual localStorage manipulation needed.
+  // 1. Usuário clica "Entrar com Google" na landing (syncero.vercel.app).
+  // 2. Supabase redireciona para o Google e volta para a landing com:
+  //    landing.app/#access_token=X&refresh_token=Y&token_type=bearer&...
+  // 3. O cliente Supabase da landing lê o hash (detectSessionInUrl: true,
+  //    flowType: 'implicit'), cria a sessão em memória (persistSession: false)
+  //    e dispara SIGNED_IN.
+  // 4. A landing consulta o perfil do usuário, determina o app destino
+  //    (Flow para company_user, Books para accountant) e redireciona:
+  //    window.location.replace('https://flow.app/#access_token=X&refresh_token=Y&...')
+  // 5. O Flow carrega com o hash na URL. O cliente Supabase do Flow lê o hash
+  //    (detectSessionInUrl: true, flowType: 'implicit'), salva a sessão no
+  //    localStorage DESTE domínio (sb-{projectId}-auth-token) e dispara SIGNED_IN.
+  // 6. O hook abaixo detecta a sessão, busca o perfil e exibe o dashboard.
+  //
+  // Não há escrita manual no localStorage — o Supabase faz isso automaticamente
+  // ao processar o hash. O localStorage não é compartilhado entre origens.
+
+  // Guard: getSession() e SIGNED_IN (onAuthStateChange) podem disparar
+  // fetchProfile para o mesmo userId em sequência rápida. O ref evita
+  // duas queries simultâneas ao banco para o mesmo usuário.
   const lastFetchedUserId = useRef<string | null>(null)
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // getSession() é o meio mais confiável de capturar a sessão inicial,
+    // incluindo a sessão recém-parseada do hash pelo detectSessionInUrl.
+    // Cobre o caso em que o Supabase terminou de processar o hash antes
+    // de o useEffect registrar o listener do onAuthStateChange.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user) fetchProfile(session.user.id)
+      else setLoading(false)
+    })
+
+    // onAuthStateChange cobre mudanças subsequentes:
+    // SIGNED_IN (novo login), SIGNED_OUT, TOKEN_REFRESHED.
+    // INITIAL_SESSION é descartado porque o getSession() acima já o cobre,
+    // evitando assim uma segunda chamada a fetchProfile para o mesmo userId.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id)
@@ -41,8 +61,6 @@ export function useAuth() {
   }, [])
 
   const fetchProfile = async (userId: string) => {
-    // Prevent duplicate calls for the same user (INITIAL_SESSION + SIGNED_IN
-    // both fire after an OAuth hash redirect — guard ensures one DB round-trip).
     if (lastFetchedUserId.current === userId) return
     lastFetchedUserId.current = userId
 
@@ -51,28 +69,13 @@ export function useAuth() {
       .select('id, full_name, email, user_type, avatar_url')
       .eq('id', userId)
       .single()
-    // data é null quando o usuário acabou de entrar pelo Google e ainda não tem perfil
+
+    // null quando o usuário entrou pela primeira vez e ainda não tem perfil
     setProfile(data)
 
-    // Accountants belong in Books — redirect with session hash (cross-domain transfer)
-    if (data?.user_type === 'accountant') {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        const BOOKS_URL = import.meta.env.VITE_BOOKS_URL ?? 'https://syncero-books.vercel.app'
-        const hash = new URLSearchParams({
-          access_token:  session.access_token,
-          refresh_token: session.refresh_token ?? '',
-          token_type:    'bearer',
-          expires_in:    String(session.expires_in ?? 3600),
-          type:          'login',
-        })
-        window.location.replace(`${BOOKS_URL}#${hash.toString()}`)
-        setLoading(false)
-        return
-      }
-    }
-
-    // Auto-restore active company when localStorage is empty (new domain/device)
+    // Restaurar activeCompany do banco quando o localStorage do Flow está vazio
+    // (primeiro acesso neste domínio/dispositivo via hash redirect da landing).
+    // O router trata o caso de company_user sem empresa (NoCompanyShell).
     if (data?.user_type === 'company_user' && !useAuthStore.getState().activeCompany) {
       const { data: membership } = await supabase
         .from('company_members')
@@ -88,6 +91,9 @@ export function useAuth() {
     }
 
     setLoading(false)
+    // Nota: se o usuário for accountant, o RequireAuth no router redireciona
+    // para o Books. A lógica de redirecionamento não fica aqui para manter
+    // fetchProfile como função de leitura pura.
   }
 
   // Inicia fluxo OAuth com Google — Supabase redireciona de volta para redirectTo
@@ -115,9 +121,9 @@ export function useAuth() {
       user_type: userType,
       avatar_url: avatarUrl,
     }, { onConflict: 'id' })
+
     if (!error) {
-      // Reset the guard so the post-onboarding fetchProfile actually runs
-      // (the guard already holds this userId from the initial load).
+      // Permite re-fetch após criação do perfil (o guard já tem este userId)
       lastFetchedUserId.current = null
       await fetchProfile(user.id)
     }

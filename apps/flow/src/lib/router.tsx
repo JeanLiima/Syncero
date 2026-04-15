@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
 import { NoCompanyShell } from '../components/NoCompanyShell'
+import { supabase } from '../lib/supabase'
 
 // Recovers from stale chunk errors after Vercel redeploys
 const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T> => {
@@ -25,14 +27,34 @@ const Loader = () => (
 )
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
+const BOOKS_URL   = import.meta.env.VITE_BOOKS_URL   ?? 'https://syncero-books.vercel.app'
 
 function RequireAuth() {
   const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
+
+  // Contador que abriu o Flow por engano → redirecionar para Books com sessão.
+  // O redirect é feito em useEffect para não bloquear a renderização e para
+  // garantir que a sessão já foi persistida no localStorage antes de sair.
+  useEffect(() => {
+    if (loading || !isAccountant) return
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) { window.location.replace(LANDING_URL); return }
+      const hash = new URLSearchParams({
+        access_token:  session.access_token,
+        refresh_token: session.refresh_token ?? '',
+        token_type:    'bearer',
+        expires_in:    String(session.expires_in ?? 3600),
+        type:          'login',
+      })
+      window.location.replace(`${BOOKS_URL}#${hash.toString()}`)
+    })
+  }, [loading, isAccountant])
+
   if (loading) return <Loader />
   if (!user) { window.location.replace(LANDING_URL); return null }
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
-  // company_user without a company → show focused create-company screen
-  if (!isAccountant && !activeCompany) return <NoCompanyShell />
+  if (isAccountant) return <Loader /> // redirect para Books em andamento
+  if (!activeCompany) return <NoCompanyShell />
   return <Layout><Outlet /></Layout>
 }
 

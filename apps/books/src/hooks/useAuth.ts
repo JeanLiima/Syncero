@@ -6,24 +6,32 @@ export function useAuth() {
   const { user, profile, activeCompany, setUser, setProfile, setActiveCompany, clear } = useAuthStore()
   const [loading, setLoading] = useState(true)
 
-  // ── Session initialisation ────────────────────────────────────
-  // We rely solely on onAuthStateChange (no separate getSession() call).
-  // Reasons:
-  //   - onAuthStateChange always fires INITIAL_SESSION on mount, covering the
-  //     "existing session in localStorage" case identically to getSession().
-  //   - Using both causes fetchProfile to be called twice for the same user.
-  //   - lastFetchedUserId ref deduplicates INITIAL_SESSION + SIGNED_IN double-fire
-  //     after an OAuth hash redirect from landing.
+  // ── Como funciona o auth cross-domínio neste monorepo ────────
   //
-  // Cross-domain session transfer:
-  //   Landing redirects here as `{booksUrl}#access_token=...&refresh_token=...`.
-  //   Supabase (detectSessionInUrl: true) reads that hash, stores the tokens in
-  //   THIS app's localStorage (key: sb-{projectId}-auth-token), fires SIGNED_IN,
-  //   then cleans the URL. No manual localStorage manipulation needed.
+  // 1. Usuário loga na landing (syncero.vercel.app) com Google OAuth.
+  // 2. A landing identifica o perfil como 'accountant' e redireciona:
+  //    window.location.replace('https://books.app/#access_token=X&refresh_token=Y&...')
+  // 3. O Books carrega com o hash na URL. O cliente Supabase do Books lê o hash
+  //    (detectSessionInUrl: true, flowType: 'implicit'), salva a sessão no
+  //    localStorage DESTE domínio e dispara SIGNED_IN.
+  // 4. O hook abaixo detecta a sessão, busca o perfil e exibe o dashboard.
+
+  // Guard: getSession() e SIGNED_IN podem disparar fetchProfile para o mesmo
+  // userId em sequência. O ref evita duas queries simultâneas ao banco.
   const lastFetchedUserId = useRef<string | null>(null)
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // getSession() captura a sessão inicial, incluindo a recém-parseada do hash.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user) fetchProfile(session.user.id)
+      else setLoading(false)
+    })
+
+    // onAuthStateChange cobre mudanças subsequentes.
+    // INITIAL_SESSION descartado — getSession() já o cobre.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return
       setUser(session?.user ?? null)
       if (session?.user) {
         fetchProfile(session.user.id)
@@ -38,8 +46,6 @@ export function useAuth() {
   }, [])
 
   const fetchProfile = async (userId: string) => {
-    // Prevent duplicate calls for the same user (INITIAL_SESSION + SIGNED_IN
-    // both fire after an OAuth hash redirect — guard ensures one DB round-trip).
     if (lastFetchedUserId.current === userId) return
     lastFetchedUserId.current = userId
 
@@ -48,7 +54,8 @@ export function useAuth() {
       .select('id, full_name, email, user_type, avatar_url')
       .eq('id', userId)
       .single()
-    // data é null quando o usuário acabou de entrar pelo Google e ainda não tem perfil
+
+    // null quando o usuário entrou pela primeira vez e ainda não tem perfil
     setProfile(data)
     setLoading(false)
   }
@@ -80,9 +87,8 @@ export function useAuth() {
       user_type: userType,
       avatar_url: avatarUrl,
     }, { onConflict: 'id' })
+
     if (!error) {
-      // Reset the guard so the post-onboarding fetchProfile actually runs
-      // (the guard already holds this userId from the initial load).
       lastFetchedUserId.current = null
       await fetchProfile(user.id)
     }

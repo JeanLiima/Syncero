@@ -31,6 +31,24 @@ export function useAuth() {
     // data é null quando o usuário acabou de entrar pelo Google e ainda não tem perfil
     setProfile(data)
 
+    // Accountants belong in Books — redirect with session hash (cross-domain transfer)
+    if (data?.user_type === 'accountant') {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        const BOOKS_URL = import.meta.env.VITE_BOOKS_URL ?? 'https://syncero-books.vercel.app'
+        const hash = new URLSearchParams({
+          access_token:  session.access_token,
+          refresh_token: session.refresh_token ?? '',
+          token_type:    'bearer',
+          expires_in:    String(session.expires_in ?? 3600),
+          type:          'login',
+        })
+        window.location.replace(`${BOOKS_URL}#${hash.toString()}`)
+        setLoading(false)
+        return
+      }
+    }
+
     // Auto-restore active company when localStorage is empty (new domain/device)
     if (data?.user_type === 'company_user' && !useAuthStore.getState().activeCompany) {
       const { data: membership } = await supabase

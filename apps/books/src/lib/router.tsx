@@ -42,7 +42,7 @@ function WrongApp() {
         </p>
         <div className="flex flex-col gap-3">
           <a
-            href="https://syncero-flow.vercel.app"
+            href={FLOW_URL}
             className="inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
           >
             Acessar Syncero Flow
@@ -61,6 +61,7 @@ function WrongApp() {
 }
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
+const FLOW_URL    = import.meta.env.VITE_FLOW_URL    ?? 'https://syncero-flow.vercel.app'
 
 function RequireAccountant() {
   const { user, loading, isAccountant, needsOnboarding } = useAuth()

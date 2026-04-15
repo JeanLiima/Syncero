@@ -13,7 +13,8 @@ export default defineConfig(({ mode }) => {
   const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
   const isPreview  = gitSuffix !== ''
 
-  const landingUrl = env.VITE_LANDING_URL ?? (isPreview ? `https://syncero${gitSuffix}` : 'https://syncero.vercel.app')
+  const landingUrl = env.VITE_LANDING_URL ?? (isPreview ? `https://syncero${gitSuffix}`  : 'https://syncero.vercel.app')
+  const booksUrl   = env.VITE_BOOKS_URL   ?? (isPreview ? `https://syncero-books${gitSuffix}` : 'https://syncero-books.vercel.app')
 
   return {
     plugins: [
@@ -61,6 +62,7 @@ export default defineConfig(({ mode }) => {
     server: { port: 5174 },
     define: {
       'import.meta.env.VITE_LANDING_URL': JSON.stringify(landingUrl),
+      'import.meta.env.VITE_BOOKS_URL':   JSON.stringify(booksUrl),
     },
   }
 })

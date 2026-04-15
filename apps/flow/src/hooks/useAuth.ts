@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 
@@ -6,23 +6,46 @@ export function useAuth() {
   const { user, profile, activeCompany, setUser, setProfile, setActiveCompany, clear } = useAuthStore()
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else setLoading(false)
-    })
+  // ── Session initialisation ────────────────────────────────────
+  // We rely solely on onAuthStateChange (no separate getSession() call).
+  // Reasons:
+  //   - onAuthStateChange always fires INITIAL_SESSION on mount, covering the
+  //     "existing session in localStorage" case identically to getSession().
+  //   - Using both getSession() AND onAuthStateChange causes fetchProfile to be
+  //     called twice for the same user (race condition, duplicate DB queries,
+  //     potential setState-after-unmount warnings).
+  //   - lastFetchedUserId ref ensures that even if INITIAL_SESSION + SIGNED_IN
+  //     both fire (e.g. after an OAuth hash redirect from landing), fetchProfile
+  //     only runs once per distinct user.
+  //
+  // Cross-domain session transfer:
+  //   Landing redirects here as `{flowUrl}#access_token=...&refresh_token=...`.
+  //   Supabase (detectSessionInUrl: true) reads that hash, stores the tokens in
+  //   THIS app's localStorage (key: sb-{projectId}-auth-token), fires SIGNED_IN,
+  //   then cleans the URL. No manual localStorage manipulation needed.
+  const lastFetchedUserId = useRef<string | null>(null)
 
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
-      else { clear(); setLoading(false) }
+      if (session?.user) {
+        fetchProfile(session.user.id)
+      } else {
+        lastFetchedUserId.current = null
+        clear()
+        setLoading(false)
+      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
   const fetchProfile = async (userId: string) => {
+    // Prevent duplicate calls for the same user (INITIAL_SESSION + SIGNED_IN
+    // both fire after an OAuth hash redirect — guard ensures one DB round-trip).
+    if (lastFetchedUserId.current === userId) return
+    lastFetchedUserId.current = userId
+
     const { data } = await supabase
       .from('profiles')
       .select('id, full_name, email, user_type, avatar_url')
@@ -92,7 +115,12 @@ export function useAuth() {
       user_type: userType,
       avatar_url: avatarUrl,
     }, { onConflict: 'id' })
-    if (!error) await fetchProfile(user.id)
+    if (!error) {
+      // Reset the guard so the post-onboarding fetchProfile actually runs
+      // (the guard already holds this userId from the initial load).
+      lastFetchedUserId.current = null
+      await fetchProfile(user.id)
+    }
     return { error }
   }
 

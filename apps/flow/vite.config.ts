@@ -1,21 +1,36 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-
   // VERCEL_ENV é "production" | "preview" | "development" — fonte confiável para distinguir ambientes.
+  // VERCEL_PROJECT_PRODUCTION_URL é a URL de produção do projeto, sempre disponível, mesmo em preview.
   // VERCEL_BRANCH_URL só é usado em preview para derivar as URLs dos apps irmãos.
-  const vercelEnv  = process.env.VERCEL_ENV ?? env.VERCEL_ENV ?? ''
-  const isPreview  = vercelEnv === 'preview'
-  const branchHost = isPreview ? (process.env.VERCEL_BRANCH_URL ?? env.VERCEL_BRANCH_URL ?? '') : ''
-  const gitIdx     = branchHost.indexOf('-git-')
-  const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
+  // VERCEL_URL é a URL do ambiente atual, mas pode ser a de produção mesmo em preview, então não é confiável para distinguir ambientes.
+  const vercelEnv = process.env.VERCEL_ENV ?? '';
+  const isPreview = vercelEnv === 'preview';
 
-  const landingUrl = env.VITE_LANDING_URL ?? (isPreview ? `https://syncero${gitSuffix}`  : 'https://syncero.vercel.app')
-  const booksUrl   = env.VITE_BOOKS_URL   ?? (isPreview ? `https://syncero-books${gitSuffix}` : 'https://syncero-books.vercel.app')
+  let landingUrl: string;
+  let booksUrl: string;
+
+  if (vercelEnv === 'production') {
+    // Use hardcoded production URLs or env variables if set
+    landingUrl = process.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app';
+    booksUrl    = process.env.VITE_BOOKS_URL    ?? 'https://syncero-books.vercel.app';
+  } else if (isPreview) {
+    // Derive from VERCEL_BRANCH_URL for preview environments
+    const branchHost = process.env.VERCEL_BRANCH_URL ?? '';
+    const gitIdx     = branchHost.indexOf('-git-');
+    const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : '';
+
+    landingUrl = process.env.VITE_LANDING_URL ?? `https://syncero${gitSuffix}`;
+    booksUrl = process.env.VITE_BOOKS_URL    ?? `https://syncero-books${gitSuffix}`; // Distinct subdomain for books
+  } else {
+    // Development environment
+    landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173';
+    booksUrl = process.env.VITE_BOOKS_URL    ?? 'http://localhost:5174';
+  }
 
   return {
     plugins: [

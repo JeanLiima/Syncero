@@ -1,21 +1,36 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-
   // VERCEL_ENV é "production" | "preview" | "development" — fonte confiável para distinguir ambientes.
+  // VERCEL_PROJECT_PRODUCTION_URL é a URL de produção do projeto, sempre disponível, mesmo em preview.
   // VERCEL_BRANCH_URL só é usado em preview para derivar as URLs dos apps irmãos.
-  const vercelEnv  = process.env.VERCEL_ENV ?? env.VERCEL_ENV ?? ''
-  const isPreview  = vercelEnv === 'preview'
-  const branchHost = isPreview ? (process.env.VERCEL_BRANCH_URL ?? env.VERCEL_BRANCH_URL ?? '') : ''
-  const gitIdx     = branchHost.indexOf('-git-')
-  const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
+  // VERCEL_URL é a URL do ambiente atual, mas pode ser a de produção mesmo em preview, então não é confiável para distinguir ambientes.
+  const vercelEnv = process.env.VERCEL_ENV ?? '';
+  const isPreview = vercelEnv === 'preview';
 
-  const landingUrl = env.VITE_LANDING_URL ?? (isPreview ? `https://syncero${gitSuffix}`      : 'https://syncero.vercel.app')
-  const flowUrl    = env.VITE_FLOW_URL    ?? (isPreview ? `https://syncero-flow${gitSuffix}` : 'https://syncero-flow.vercel.app')
+  let landingUrl: string;
+  let flowUrl: string;
+
+  if (vercelEnv === 'production') {
+    // Use hardcoded production URLs or env variables if set
+    landingUrl = process.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app';
+    flowUrl    = process.env.VITE_FLOW_URL    ?? 'https://syncero-flow.vercel.app';
+  } else if (isPreview) {
+    // Derive from VERCEL_BRANCH_URL for preview environments
+    const branchHost = process.env.VERCEL_BRANCH_URL ?? '';
+    const gitIdx     = branchHost.indexOf('-git-');
+    const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : '';
+
+    landingUrl = process.env.VITE_LANDING_URL ?? `https://syncero${gitSuffix}`;
+    flowUrl = process.env.VITE_FLOW_URL    ?? `https://syncero-flow${gitSuffix}`; // Distinct subdomain for flow
+  } else {
+    // Development environment
+    landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173';
+    flowUrl = process.env.VITE_FLOW_URL    ?? 'http://localhost:5174';
+  }
 
   return {
     plugins: [

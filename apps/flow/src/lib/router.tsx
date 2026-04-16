@@ -1,10 +1,8 @@
-import { useEffect } from 'react'
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
-import { TrendingUp } from 'lucide-react'
+import { LogOut, TrendingUp } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
 import { NoCompanyShell } from '../components/NoCompanyShell'
-import { supabase } from '../lib/supabase'
 
 // Recovers from stale chunk errors after Vercel redeploys
 const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T> => {
@@ -19,46 +17,61 @@ const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T
   }
 }
 
-// ── Guards ───────────────────────────────────────────────────
-
-const Loader = ({ message = 'Verificando sessão...' }: { message?: string }) => (
+const Loader = () => (
   <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
     <div className="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg shadow-blue-500/20">
       <TrendingUp className="h-5 w-5 text-white" />
     </div>
     <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-    <p className="text-xs text-[var(--text-muted)] tracking-wide">{message}</p>
+    <p className="text-xs text-[var(--text-muted)] tracking-wide">Acessando...</p>
   </div>
 )
 
-const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
-const BOOKS_URL   = import.meta.env.VITE_BOOKS_URL   ?? 'https://syncero-books.vercel.app'
+function WrongApp() {
+  const { signOut } = useAuth()
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)] p-4">
+      <div className="w-full max-w-sm text-center">
+        <div className="flex justify-center mb-6">
+          <div className="h-16 w-16 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--bg-border)] flex items-center justify-center">
+            <TrendingUp className="h-8 w-8 text-[var(--text-muted)]" />
+          </div>
+        </div>
+        <h1 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
+          Syncero Flow é para empresa
+        </h1>
+        <p className="text-sm text-[var(--text-secondary)] mb-8">
+          Sua conta não possui perfil de contador. Se você é empresário, acesse o Syncero Flow.
+        </p>
+        <div className="flex flex-col gap-3">
+          <a
+            href={BOOKS_URL}
+            className="inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            Acessar Syncero Flow
+          </a>
+          <button
+            onClick={signOut}
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-sm hover:bg-[var(--bg-border)] transition-colors cursor-pointer"
+          >
+            <LogOut className="h-4 w-4" />
+            Sair
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const LANDING_URL = import.meta.env.VITE_LANDING_URL;
+const BOOKS_URL   = import.meta.env.VITE_BOOKS_URL;
 
 function RequireAuth() {
   const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
-
-  // Contador que abriu o Flow por engano → redirecionar para Books com sessão.
-  // O redirect é feito em useEffect para não bloquear a renderização e para
-  // garantir que a sessão já foi persistida no localStorage antes de sair.
-  useEffect(() => {
-    if (loading || !isAccountant) return
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { window.location.replace(LANDING_URL); return }
-      const hash = new URLSearchParams({
-        access_token:  session.access_token,
-        refresh_token: session.refresh_token ?? '',
-        token_type:    'bearer',
-        expires_in:    String(session.expires_in ?? 3600),
-        type:          'login',
-      })
-      window.location.replace(`${BOOKS_URL}#${hash.toString()}`)
-    })
-  }, [loading, isAccountant])
-
   if (loading) return <Loader />
   if (!user) { window.location.replace(LANDING_URL); return null }
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
-  if (isAccountant) return <Loader message="Redirecionando para o Syncero Books..." />
+  if (isAccountant) return <WrongApp />
   if (!activeCompany) return <NoCompanyShell />
   return <Layout><Outlet /></Layout>
 }
@@ -78,7 +91,7 @@ function RequireAccountant() {
   return <Outlet />
 }
 
-// ── Roteador ────────────────────────────────────────────────
+// ── Router ────────────────────────────────────────────────
 
 export const router = createBrowserRouter([
   // Public

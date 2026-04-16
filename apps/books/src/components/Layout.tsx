@@ -26,8 +26,6 @@ const accountantNav: NavItem[] = [
   { to: '/accountant', labelKey: 'nav_myCompanies', icon: <Building2 className="h-4 w-4 shrink-0" /> },
 ]
 
-const LANDING_URL = import.meta.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
-
 function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const t = useT()
   return (
@@ -60,7 +58,6 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const handleSignOut = async () => {
     await signOut()
-    window.location.replace(LANDING_URL)
   }
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => {

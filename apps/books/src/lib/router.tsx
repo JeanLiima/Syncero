@@ -26,7 +26,7 @@ const Loader = () => (
       <BookOpen className="h-5 w-5 text-white" />
     </div>
     <div className="h-5 w-5 border-2 border-[var(--success)] border-t-transparent rounded-full animate-spin" />
-    <p className="text-xs text-[var(--text-muted)] tracking-wide">Acessando...'</p>
+    <p className="text-xs text-[var(--text-muted)] tracking-wide">Acessando...</p>
   </div>
 )
 

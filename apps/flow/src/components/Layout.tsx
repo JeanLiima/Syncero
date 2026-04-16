@@ -77,7 +77,6 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const handleSignOut = async () => {
     await signOut()
-    window.location.replace(LANDING_URL)
   }
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => {

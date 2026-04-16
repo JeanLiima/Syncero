@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 
+const LANDING_URL = import.meta.env.VITE_LANDING_URL;
+
 export function useAuth() {
   const { user, profile, activeCompany, setUser, setProfile, setActiveCompany, clear } = useAuthStore()
   const [loading, setLoading] = useState(true)
@@ -103,8 +105,10 @@ export function useAuth() {
   }
 
   const signOut = async () => {
+    console.log(LANDING_URL)
     await supabase.auth.signOut()
     clear()
+    window.location.replace(LANDING_URL)
   }
 
   return {

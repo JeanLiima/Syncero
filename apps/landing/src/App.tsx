@@ -19,7 +19,9 @@ type UserType = 'company_user' | 'accountant'
 // The destination app's Supabase client (detectSessionInUrl: true) reads the hash
 // and stores the session in its own localStorage automatically.
 function redirectWithSession(session: Session, type: UserType) {
-  const base = type === 'accountant' ? BOOKS_URL : FLOW_URL
+  const base = type === 'accountant' ? BOOKS_URL : FLOW_URL;
+  console.log({books: BOOKS_URL, flow: FLOW_URL, base });
+
   const hash = new URLSearchParams({
     access_token:  session.access_token,
     refresh_token: session.refresh_token ?? '',

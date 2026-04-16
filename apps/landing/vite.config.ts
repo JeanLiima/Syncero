@@ -35,6 +35,8 @@ export default defineConfig(({ mode }) => {
     booksUrl = process.env.VITE_BOOKS_URL    ?? 'http://localhost:5174';
   }
 
+  console.log({vercelEnv, landingUrl, flowUrl, booksUrl});
+
   return {
     plugins: [react(), tailwindcss()],
     server: { port: 5173 },

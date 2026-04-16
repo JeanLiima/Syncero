@@ -76,10 +76,15 @@ export function LoginModal({
     setError(null)
     // OAuth returns to landing (VITE_APP_URL); landing checks profile type
     // and redirects to the correct app with session hash.
-    await supabase.auth.signInWithOAuth({
+    const { error: err } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: import.meta.env.VITE_APP_URL ?? window.location.origin },
     })
+    if (err) {
+      setError(err?.message ?? 'Erro ao entrar. Verifique seu e-mail e senha.')
+      setLoading(false)
+    }
+    // await checkProfileAndRedirect(session)
   }
 
   const handleEmail = async (e: React.FormEvent) => {

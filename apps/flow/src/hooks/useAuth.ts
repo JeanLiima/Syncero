@@ -85,7 +85,7 @@ export function useAuth() {
   const signInWithGoogle = (redirectTo?: string) =>
     supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: redirectTo ?? import.meta.env.VITE_APP_URL ?? window.location.origin },
+      options: { redirectTo: redirectTo ?? import.meta.env.VITE_FLOW_URL ?? window.location.origin },
     })
 
   const createProfile = async (userType: 'company_user' | 'accountant') => {
@@ -105,7 +105,7 @@ export function useAuth() {
   }
 
   const signOut = async () => {
-    console.log(LANDING_URL)
+    console.log({ teste: LANDING_URL })
     await supabase.auth.signOut()
     clear()
     window.location.replace(LANDING_URL)

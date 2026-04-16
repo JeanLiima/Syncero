@@ -13,6 +13,13 @@ export const pt = {
   // Layout
   layout_activeCompany: 'Empresa ativa',
 
+  //Router
+  router_books: 'Acessar Syncero Books',
+  router_signOut: 'Sair',
+  router_accessing: 'Acessando...',
+  router_title: 'Syncero Flow é para empresas',
+  router_wrongApp: 'Sua conta não possui perfil de empresa. Se você é contador, acesse o Syncero Books.',
+
   // Dashboard
   dashboard_title: 'Dashboard',
   dashboard_monthIncome: 'Receita do mês',

@@ -69,15 +69,26 @@ export function Layout({ children }: { children: ReactNode }) {
           mobile ? 'w-full h-full' : collapsed ? 'w-14 min-h-screen hidden md:flex' : 'w-56 min-h-screen hidden md:flex'
         )}
       >
-        {/* Logo */}
+        {/* Logo + collapse toggle */}
         <div className={clsx(
           'flex items-center border-b border-[var(--bg-border)]',
-          collapsed ? 'justify-center px-2 py-5' : 'gap-2 px-4 py-5'
+          collapsed ? 'flex-col gap-2 px-2 py-4' : 'px-4 py-5'
         )}>
           <div className="h-8 w-8 shrink-0 rounded-lg bg-[var(--accent)] flex items-center justify-center">
             <span className="text-white font-bold text-sm">SB</span>
           </div>
-          {!collapsed && <span className="font-semibold text-[var(--text-primary)]">Syncero Books</span>}
+          {!collapsed && <span className="font-semibold text-[var(--text-primary)] flex-1 ml-2">Syncero Books</span>}
+          {!mobile && (
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+              className="cursor-pointer p-1.5 rounded-[var(--radius-md)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-secondary)] transition-colors"
+            >
+              {sidebarCollapsed
+                ? <PanelLeftOpen  className="h-4 w-4" />
+                : <PanelLeftClose className="h-4 w-4" />}
+            </button>
+          )}
         </div>
 
         {/* Nav */}
@@ -87,24 +98,6 @@ export function Layout({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        {/* Collapse toggle */}
-        {!mobile && (
-          <div className={clsx('py-3 border-t border-[var(--bg-border)]', collapsed ? 'px-2' : 'px-3')}>
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
-              className={clsx(
-                'cursor-pointer flex items-center rounded-[var(--radius-md)] text-sm text-[var(--text-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-secondary)] transition-colors',
-                collapsed ? 'justify-center w-full p-2' : 'gap-3 w-full px-3 py-2.5'
-              )}
-            >
-              {sidebarCollapsed
-                ? <PanelLeftOpen  className="h-4 w-4 shrink-0" />
-                : <PanelLeftClose className="h-4 w-4 shrink-0" />}
-              {!collapsed && <span>Recolher menu</span>}
-            </button>
-          </div>
-        )}
       </aside>
     )
   }

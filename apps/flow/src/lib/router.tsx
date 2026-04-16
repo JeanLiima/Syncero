@@ -3,6 +3,7 @@ import { LogOut, TrendingUp } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
 import { NoCompanyShell } from '../components/NoCompanyShell'
+import { useT } from '@/i18n'
 
 // Recovers from stale chunk errors after Vercel redeploys
 const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T> => {
@@ -17,18 +18,24 @@ const lazyLoad = <T extends object>(fn: () => Promise<T>) => async (): Promise<T
   }
 }
 
-const Loader = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
-    <div className="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg shadow-blue-500/20">
-      <TrendingUp className="h-5 w-5 text-white" />
+const Loader = () => {
+  const t = useT();
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
+      <div className="h-10 w-10 rounded-xl bg-[var(--success)] flex items-center justify-center shadow-lg shadow-green-500/20">
+        <TrendingUp className="h-5 w-5 text-white" />
+      </div>
+      <div className="h-5 w-5 border-2 border-[var(--success)] border-t-transparent rounded-full animate-spin" />
+      <p className="text-xs text-[var(--text-muted)] tracking-wide">{t('router_accessing')}</p>
     </div>
-    <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-    <p className="text-xs text-[var(--text-muted)] tracking-wide">Acessando...</p>
-  </div>
-)
+  )
+}
 
 function WrongApp() {
-  const { signOut } = useAuth()
+  const { signOut } = useAuth();
+  const t = useT();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)] p-4">
       <div className="w-full max-w-sm text-center">
@@ -38,24 +45,24 @@ function WrongApp() {
           </div>
         </div>
         <h1 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
-          Syncero Flow é para empresa
+          {t('router_title')}
         </h1>
         <p className="text-sm text-[var(--text-secondary)] mb-8">
-          Sua conta não possui perfil de contador. Se você é empresário, acesse o Syncero Flow.
+          {t('router_wrongApp')}
         </p>
         <div className="flex flex-col gap-3">
           <a
             href={BOOKS_URL}
             className="inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
           >
-            Acessar Syncero Flow
+            {t("router_books")}
           </a>
           <button
             onClick={signOut}
             className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] text-sm hover:bg-[var(--bg-border)] transition-colors cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
-            Sair
+            {t('router_signOut')}
           </button>
         </div>
       </div>

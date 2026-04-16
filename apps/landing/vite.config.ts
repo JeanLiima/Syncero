@@ -30,9 +30,12 @@ export default defineConfig(({ mode }) => {
     booksUrl = process.env.VITE_BOOKS_URL    ?? `https://syncero-books${gitSuffix}`; // Distinct subdomain for books
   } else {
     // Development environment
-    landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173';
-    flowUrl = process.env.VITE_FLOW_URL    ?? 'http://localhost:5174';
-    booksUrl = process.env.VITE_BOOKS_URL    ?? 'http://localhost:5174';
+    // landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173';
+    // flowUrl = process.env.VITE_FLOW_URL    ?? 'http://localhost:5174';
+    // booksUrl = process.env.VITE_BOOKS_URL    ?? 'http://localhost:5174';
+    landingUrl = 'http://localhost:5173';
+    flowUrl = 'http://localhost:5174';
+    booksUrl = 'http://localhost:5174';
   }
 
   console.log({ vercelEnv, landingUrl, flowUrl, booksUrl });

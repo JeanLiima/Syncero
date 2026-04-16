@@ -32,6 +32,8 @@ export default defineConfig(({ mode }) => {
     flowUrl = process.env.VITE_FLOW_URL    ?? 'http://localhost:5174';
   }
 
+  console.log({ vercelEnv, landingUrl, flowUrl });
+
   return {
     plugins: [
       react(),

@@ -33,8 +33,8 @@ export default defineConfig(({ mode }) => {
     // landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173';
     // flowUrl = process.env.VITE_FLOW_URL    ?? 'http://localhost:5174';
     // booksUrl = process.env.VITE_BOOKS_URL    ?? 'http://localhost:5174';
-    landingUrl = 'http://localhost:5173';
-    flowUrl = 'http://localhost:5174';
+    landingUrl = 'http://localhost:5175';
+    flowUrl = 'http://localhost:5173';
     booksUrl = 'http://localhost:5174';
   }
 

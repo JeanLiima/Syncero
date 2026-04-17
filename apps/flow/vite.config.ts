@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
     booksUrl = process.env.VITE_BOOKS_URL    ?? `https://syncero-books${gitSuffix}`; // Distinct subdomain for books
   } else {
     // Development environment
-    landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173';
+    landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5175';
     booksUrl = process.env.VITE_BOOKS_URL    ?? 'http://localhost:5174';
   }
 

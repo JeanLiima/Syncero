@@ -28,8 +28,8 @@ export default defineConfig(({ mode }) => {
     flowUrl = process.env.VITE_FLOW_URL    ?? `https://syncero-flow${gitSuffix}`; // Distinct subdomain for flow
   } else {
     // Development environment
-    landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173';
-    flowUrl = process.env.VITE_FLOW_URL    ?? 'http://localhost:5174';
+    landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5175';
+    flowUrl = process.env.VITE_FLOW_URL    ?? 'http://localhost:5173';
   }
 
   console.log({ vercelEnv, landingUrl, flowUrl });

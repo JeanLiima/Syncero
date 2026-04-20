@@ -17,11 +17,13 @@ export default defineConfig(() => {
     landingUrl = process.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
     booksUrl   = process.env.VITE_BOOKS_URL   ?? 'https://syncero-books.vercel.app'
   } else if (isPreview) {
+    // VERCEL_BRANCH_URL: host do branch atual sem https://, ex: "syncero-flow-git-meu-pr-team.vercel.app"
+    // Não usar VITE_*_URL aqui — são vars fixas de produção e sobrescrevem a URL dinâmica do PR.
     const branchHost = process.env.VERCEL_BRANCH_URL ?? ''
     const gitIdx     = branchHost.indexOf('-git-')
     const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
-    landingUrl = process.env.VITE_LANDING_URL ?? `https://syncero${gitSuffix}`
-    booksUrl   = process.env.VITE_BOOKS_URL   ?? `https://syncero-books${gitSuffix}`
+    landingUrl = `https://syncero${gitSuffix}`
+    booksUrl   = `https://syncero-books${gitSuffix}`
   } else {
     // Desenvolvimento local
     landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173'

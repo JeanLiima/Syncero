@@ -1,7 +1,7 @@
 import { clsx } from 'clsx'
 import { usePreferencesStore, type Language } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { Card } from '@/components/ui'
+import { Card } from '@syncero/ui'
 
 const options: { value: Language; flag: string; code: string }[] = [
   { value: 'pt', flag: '🇧🇷', code: 'PT' },

@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
-import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar } from '@/components/ui'
+import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar } from '@syncero/ui'
 import type { Company, CompanyMember, AccountantCompany, MemberRole } from '@/types'
 
 // ── Company tab ───────────────────────────────────────────────

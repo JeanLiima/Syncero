@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
-import { Card, Table, Badge, Select, Input } from '@/components/ui'
+import { Card, Table, Badge, Select, Input } from '@syncero/ui'
 import type { FiscalDocument, FiscalDocType } from '@/types'
 
 export function Component() {

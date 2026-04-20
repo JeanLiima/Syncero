@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import { Card, Select } from '@/components/ui'
+import { Card, Select } from '@syncero/ui'
 import { useCashFlow } from '@/modules/fluxo/queries'
 
 type Period = '30d' | 'month' | '90d'

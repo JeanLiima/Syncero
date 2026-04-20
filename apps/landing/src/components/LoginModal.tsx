@@ -74,11 +74,11 @@ export function LoginModal({
   const handleGoogle = async () => {
     setLoading(true)
     setError(null)
-    // OAuth returns to landing (VITE_APP_URL); landing checks profile type
-    // and redirects to the correct app with session hash.
+    // OAuth retorna para a landing (VITE_LANDING_URL); landing verifica o tipo
+    // de perfil e redireciona para o app correto com a hash de sessão.
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: import.meta.env.VITE_APP_URL ?? window.location.origin },
+      options: { redirectTo: import.meta.env.VITE_LANDING_URL ?? window.location.origin },
     })
     if (err) {
       setError(err?.message ?? 'Erro ao entrar. Verifique seu e-mail e senha.')

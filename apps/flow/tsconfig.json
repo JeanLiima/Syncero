@@ -16,7 +16,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@syncero/ui": ["../../packages/ui/src/index.ts"],
+      "@syncero/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": ["src"],

@@ -15,6 +15,13 @@ export const en: Record<TranslationKey, string> = {
   // Layout
   layout_activeCompany: 'Active company',
 
+  //Router
+  router_flow: 'Access Syncero Flow',
+  router_signOut: 'Sign out',
+  router_accessing: 'Accessing...',
+  router_title: 'Syncero Books is for accountants',
+  router_wrongApp: 'Your account does not have an accountant profile. If you are a business owner, please access Syncero Flow.',
+
   // Dashboard
   dashboard_title: 'Dashboard',
   dashboard_monthIncome: 'Monthly revenue',

@@ -10,8 +10,10 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
+    "dev:landing": "turbo dev --filter=@syncero/landing",
     "dev:flow": "turbo dev --filter=@syncero/flow",
     "dev:books": "turbo dev --filter=@syncero/books",
+    "build:landing": "turbo build --filter=@syncero/landing",
     "build:flow": "turbo build --filter=@syncero/flow",
     "build:books": "turbo build --filter=@syncero/books"
   },

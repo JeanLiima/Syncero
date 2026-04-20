@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 
+const LANDING_URL = import.meta.env.VITE_LANDING_URL;
+
 export function useAuth() {
   const { user, profile, activeCompany, setUser, setProfile, setActiveCompany, clear } = useAuthStore()
   const [loading, setLoading] = useState(true)
@@ -66,7 +68,7 @@ export function useAuth() {
   const signInWithGoogle = (redirectTo?: string) =>
     supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: redirectTo ?? (import.meta.env.VITE_APP_URL ?? window.location.origin) },
+      options: { redirectTo: redirectTo ?? (import.meta.env.VITE_BOOKS_URL ?? window.location.origin) },
     })
 
   const createProfile = async (userType: 'company_user' | 'accountant') => {
@@ -88,6 +90,7 @@ export function useAuth() {
   const signOut = async () => {
     await supabase.auth.signOut()
     clear()
+    window.location.replace(LANDING_URL)
   }
 
   return {

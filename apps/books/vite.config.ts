@@ -17,12 +17,13 @@ export default defineConfig(() => {
     landingUrl = process.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
     flowUrl    = process.env.VITE_FLOW_URL    ?? 'https://syncero-flow.vercel.app'
   } else if (isPreview) {
-    // Em preview, redirecionar para os apps de produção.
-    // O callback OAuth do Google aponta para syncero.vercel.app — não há como
-    // testar o fluxo OAuth em preview sem registrar cada URL de preview no Supabase/Google.
-    // Previews servem para testar a UI de usuários já autenticados.
-    landingUrl = 'https://syncero.vercel.app'
-    flowUrl    = 'https://syncero-flow.vercel.app'
+    // VERCEL_BRANCH_URL: host do branch atual sem https://, ex: "syncero-books-git-meu-pr-team.vercel.app"
+    // Não usar VITE_*_URL aqui — são vars fixas de produção e sobrescrevem a URL dinâmica do PR.
+    const branchHost = process.env.VERCEL_BRANCH_URL ?? ''
+    const gitIdx     = branchHost.indexOf('-git-')
+    const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
+    landingUrl = `https://syncero${gitSuffix}`
+    flowUrl    = `https://syncero-flow${gitSuffix}`
   } else {
     // Desenvolvimento local
     landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173'

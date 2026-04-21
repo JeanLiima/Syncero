@@ -4,9 +4,28 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Busca o branchAlias real de um projeto irmão via API Vercel.
+// Requer VERCEL_TOKEN configurado como env var de Preview no painel Vercel.
+// O branchAlias é estável por branch+projeto — retorna o alias de qualquer
+// deploy anterior do mesmo branch (o hash de truncagem varia por projeto e
+// não é reproduzível sem a API).
+async function getSiblingAlias(projectId: string, branch: string): Promise<string> {
+  const token  = process.env.VERCEL_TOKEN ?? ''
+  const teamId = 'team_ugTQMaYlYJET3z2zDs7B8K8n'
+  if (!token || !branch) return ''
+  try {
+    const url  = `https://api.vercel.com/v6/deployments?teamId=${teamId}&projectId=${projectId}&meta-githubCommitRef=${encodeURIComponent(branch)}&limit=1`
+    const res  = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+    if (!res.ok) return ''
+    const data = await res.json() as { deployments?: Array<{ meta?: { branchAlias?: string } }> }
+    return data.deployments?.[0]?.meta?.branchAlias ?? ''
+  } catch {
+    return ''
+  }
+}
+
 // VERCEL_ENV é "production" | "preview" | "development" — fonte confiável para distinguir ambientes.
-// VERCEL_BRANCH_URL só é usado em preview para derivar as URLs dos apps irmãos.
-export default defineConfig(() => {
+export default defineConfig(async () => {
   const vercelEnv = process.env.VERCEL_ENV ?? ''
   const isPreview = vercelEnv === 'preview'
 
@@ -17,13 +36,18 @@ export default defineConfig(() => {
     landingUrl = process.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
     booksUrl   = process.env.VITE_BOOKS_URL   ?? 'https://syncero-books.vercel.app'
   } else if (isPreview) {
-    // VERCEL_BRANCH_URL: host do branch atual sem https://, ex: "syncero-flow-git-meu-pr-team.vercel.app"
-    // Não usar VITE_*_URL aqui — são vars fixas de produção e sobrescrevem a URL dinâmica do PR.
-    const branchHost = process.env.VERCEL_BRANCH_URL ?? ''
-    const gitIdx     = branchHost.indexOf('-git-')
-    const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
-    landingUrl = `https://syncero${gitSuffix}`
-    booksUrl   = `https://syncero-books${gitSuffix}`
+    // Em preview, cada projeto Vercel gera um branchAlias com hash diferente
+    // (depende do tamanho do nome do projeto). Buscamos o alias real via API
+    // para garantir URLs corretas. VERCEL_TOKEN deve ser uma var de Preview.
+    const branch = process.env.VERCEL_GIT_COMMIT_REF ?? ''
+    const [landingAlias, booksAlias] = await Promise.all([
+      getSiblingAlias('prj_HNBIF52QrbK81Ko4khxpMQ05Dpcr', branch),
+      getSiblingAlias('prj_jQMFND7FLjqNSmhQfEVekNSRAzAT', branch),
+    ])
+    // Fallback para produção se ainda não houver deploy anterior no branch
+    // (ex: primeiro commit de um PR novo — corrige-se automaticamente no 2º deploy)
+    landingUrl = landingAlias ? `https://${landingAlias}` : 'https://syncero.vercel.app'
+    booksUrl   = booksAlias   ? `https://${booksAlias}`   : 'https://syncero-books.vercel.app'
   } else {
     // Desenvolvimento local
     landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173'

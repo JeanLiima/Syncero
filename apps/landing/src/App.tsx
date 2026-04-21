@@ -40,7 +40,8 @@ async function getProfileType(session: Session): Promise<UserType | null> {
 }
 
 export default function App() {
-  const [modalOpen, setModalOpen]           = useState(false)
+  const [authReady, setAuthReady]               = useState(false)
+  const [modalOpen, setModalOpen]               = useState(false)
   const [modalInitialMode, setModalInitialMode] = useState<'login' | 'register'>('login')
   const [callbackSession, setCallbackSession]   = useState<Session | null>(null)
 
@@ -62,20 +63,23 @@ export default function App() {
   //      so it reads the hash, stores the session in its OWN localStorage, and
   //      the user is authenticated — without any cross-domain localStorage write.
   //
-  // Why a single onAuthStateChange (no getSession() effect)?
-  //   - onAuthStateChange always fires INITIAL_SESSION on mount, which covers the
-  //     "existing session" case just as well as getSession().
-  //   - Using both creates a triple-call race: getSession (1×) + INITIAL_SESSION
-  //     (1×) + SIGNED_IN (1×) = 3 concurrent getProfileType + redirectWithSession
-  //     calls for the same session.
-  //   - sessionHandled ref prevents the INITIAL_SESSION + SIGNED_IN double-fire.
+  // authReady prevents the full landing page from rendering while the session
+  // check is in progress. INITIAL_SESSION always fires immediately on mount:
+  //   - No session → authReady = true → landing page shows
+  //   - Session present → redirect to app (landing page never shown)
+  //   - Error → authReady = true → landing page shows (user can retry)
   const sessionHandled = useRef(false)
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       // Only handle events that carry a session
       if (event !== 'SIGNED_IN' && event !== 'INITIAL_SESSION') return
-      if (!session) return
+
+      if (!session) {
+        setAuthReady(true)
+        return
+      }
+
       // Guard: INITIAL_SESSION + SIGNED_IN both fire for an OAuth callback;
       // process only the first one.
       if (sessionHandled.current) return
@@ -83,15 +87,35 @@ export default function App() {
 
       try {
         const type = await getProfileType(session)
-        if (!type) { setCallbackSession(session); setModalOpen(true); return }
+        if (!type) {
+          setCallbackSession(session)
+          setModalOpen(true)
+          setAuthReady(true)
+          return
+        }
         redirectWithSession(session, type)
+        // authReady stays false — we're navigating away
       } catch {
         // Allow a retry on transient DB/network errors
         sessionHandled.current = false
+        setAuthReady(true)
       }
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  if (!authReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg">
+            <span className="text-white font-bold text-base">S</span>
+          </div>
+          <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">

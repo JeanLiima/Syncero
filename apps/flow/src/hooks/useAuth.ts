@@ -11,19 +11,9 @@ export function useAuth() {
 
   useEffect(() => {
     const bootstrapAuth = async () => {
-      // Lê o hash manualmente para cobrir o modo PKCE do Supabase,
-      // onde detectSessionInUrl ignora #access_token= e só processa ?code=.
-      const hash = window.location.hash
-      if (hash.includes('access_token=')) {
-        const params       = new URLSearchParams(hash.substring(1))
-        const accessToken  = params.get('access_token')  ?? ''
-        const refreshToken = params.get('refresh_token') ?? ''
-        if (accessToken) {
-          await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-          window.history.replaceState(null, '', window.location.pathname)
-        }
-      }
-
+      // detectSessionInUrl: true + flowType: 'implicit' processam o hash
+      // automaticamente ao inicializar o client — leitura manual criava race
+      // condition com duplo SIGNED_IN e fetchProfile preso no dedup.
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser(session.user)
@@ -48,11 +38,17 @@ export function useAuth() {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      lastFetchedUserId.current = null
+    }
   }, [])
 
   const fetchProfile = async (userId: string) => {
-    if (lastFetchedUserId.current === userId) return
+    if (lastFetchedUserId.current === userId) {
+      setLoading(false)
+      return
+    }
     lastFetchedUserId.current = userId
 
     const { data } = await supabase
@@ -85,7 +81,7 @@ export function useAuth() {
   const signInWithGoogle = (redirectTo?: string) =>
     supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: redirectTo ?? import.meta.env.VITE_FLOW_URL ?? window.location.origin },
+      options: { redirectTo: redirectTo ?? import.meta.env.VITE_LANDING_URL ?? window.location.origin },
     })
 
   const createProfile = async (userType: 'company_user' | 'accountant') => {
@@ -105,7 +101,6 @@ export function useAuth() {
   }
 
   const signOut = async () => {
-    console.log({ teste: LANDING_URL })
     await supabase.auth.signOut()
     clear()
     window.location.replace(LANDING_URL)

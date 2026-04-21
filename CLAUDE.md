@@ -47,22 +47,27 @@ Each app is fully independent: its own `package.json`, `vite.config.ts`, `tsconf
 | flow    | `https://syncero-flow.vercel.app`|
 | books   | `https://syncero-books.vercel.app`|
 
-### Vercel (preview URLs — aliases fixos)
-| App     | URL                                                              |
-|---------|------------------------------------------------------------------|
-| landing | `https://syncero-preview-jeanliimas-projects.vercel.app`         |
-| flow    | `https://syncero-flow-preview-jeanliimas-projects.vercel.app`    |
-| books   | `https://syncero-books-preview-jeanliimas-projects.vercel.app`   |
+### Vercel (preview URLs — branchAliases do branch atual)
 
-Os aliases são **fixos e permanentes** — a URL nunca muda. O `vite.config.ts` de cada app os hardcoda no bloco `VERCEL_ENV === 'preview'`. Deploys automáticos do GitHub já usam essas URLs.
+O Vercel gera um `branchAlias` canônico por projeto+branch. Esse URL **não redireciona**, auto-atualiza a cada push e é estável enquanto o nome do branch não mudar.
 
-**Para atualizar o preview a um novo commit** (rodar para cada app desejado):
+> **Nota:** `vercel alias set` cria aliases em nível de deployment que o Vercel redireciona para o branchAlias. Para evitar redirects, hardcode o branchAlias diretamente.
+
+| App     | branchAlias (branch `claude/sad-aryabhata-42e05c`)                                    |
+|---------|---------------------------------------------------------------------------------------|
+| landing | `https://syncero-git-claude-sad-aryabhata-42e05c-jeanliimas-projects.vercel.app`      |
+| flow    | `https://syncero-flow-git-claude-sad-aryabhat-fa9536-jeanliimas-projects.vercel.app`  |
+| books   | `https://syncero-books-git-claude-sad-aryabha-2021de-jeanliimas-projects.vercel.app`  |
+
+O `vite.config.ts` de cada app hardcoda esses valores no bloco `VERCEL_ENV === 'preview'`.
+
+**Para um novo PR/branch:** após o primeiro deploy automático, consulte o `branchAlias` via:
 ```bash
-cd apps/flow   # ou apps/landing, apps/books
-DEPLOY=$(vercel deploy --yes 2>&1 | tail -1)
-vercel alias set $DEPLOY syncero-flow-preview-jeanliimas-projects.vercel.app
-# trocar o alias pelo do app correspondente
+# Vercel API — substitua o projectId e teamId
+curl "https://api.vercel.com/v13/deployments?projectId=<id>&teamId=<team>&limit=1&target=preview" \
+  -H "Authorization: Bearer $VERCEL_TOKEN" | jq '.[0].meta.branchAlias'
 ```
+Ou abra o deploy no dashboard Vercel e copie o branchAlias. Depois atualize o bloco `isPreview` nos 3 `vite.config.ts`.
 
 ---
 

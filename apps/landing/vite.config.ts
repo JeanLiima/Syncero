@@ -17,10 +17,11 @@ export default defineConfig(() => {
     flowUrl    = process.env.VITE_FLOW_URL    ?? 'https://syncero-flow.vercel.app'
     booksUrl   = process.env.VITE_BOOKS_URL   ?? 'https://syncero-books.vercel.app'
   } else if (vercelEnv === 'preview') {
-    // Aliases fixos — URL estável que nunca muda, independente do branch ou commit
-    landingUrl = 'https://syncero-preview-jeanliimas-projects.vercel.app'
-    flowUrl    = 'https://syncero-flow-preview-jeanliimas-projects.vercel.app'
-    booksUrl   = 'https://syncero-books-preview-jeanliimas-projects.vercel.app'
+    // branchAlias do Vercel — URL canônica por projeto+branch, estável e sem redirect.
+    // Atualizar quando o nome do branch mudar (novo PR).
+    landingUrl = 'https://syncero-git-claude-sad-aryabhata-42e05c-jeanliimas-projects.vercel.app'
+    flowUrl    = 'https://syncero-flow-git-claude-sad-aryabhat-fa9536-jeanliimas-projects.vercel.app'
+    booksUrl   = 'https://syncero-books-git-claude-sad-aryabha-2021de-jeanliimas-projects.vercel.app'
   } else {
     // Desenvolvimento local
     landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173'

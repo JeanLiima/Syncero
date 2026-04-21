@@ -23,7 +23,7 @@ const Loader = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
-      <div className="h-10 w-10 rounded-xl bg-[var(--success)] flex items-center justify-center shadow-lg shadow-green-500/20">
+      <div className="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg">
         <TrendingUp className="h-5 w-5 text-white" />
       </div>
       <div className="h-5 w-5 border-2 border-[var(--success)] border-t-transparent rounded-full animate-spin" />

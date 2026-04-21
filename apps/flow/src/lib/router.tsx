@@ -26,7 +26,7 @@ const Loader = () => {
       <div className="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg">
         <TrendingUp className="h-5 w-5 text-white" />
       </div>
-      <div className="h-5 w-5 border-2 border-[var(--success)] border-t-transparent rounded-full animate-spin" />
+      <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       <p className="text-xs text-[var(--text-muted)] tracking-wide">{t('router_accessing')}</p>
     </div>
   )

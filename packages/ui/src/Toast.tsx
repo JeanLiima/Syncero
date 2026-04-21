@@ -52,9 +52,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    // Animate in
     const t1 = setTimeout(() => setVisible(true), 10)
-    // Auto-dismiss after 4s
     const t2 = setTimeout(() => {
       setVisible(false)
       setTimeout(() => onRemove(toast.id), 300)

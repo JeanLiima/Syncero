@@ -106,20 +106,20 @@ export function AppLayout({
         <div
           className={clsx(
             'flex items-center border-b border-[var(--bg-border)]',
-            collapsed ? 'flex-col gap-2 px-2 py-4' : 'px-4 py-5',
+            collapsed ? 'flex-col gap-2 px-2 py-3 min-h-[3.5rem]' : 'h-14 px-4',
           )}
         >
           <div className="h-8 w-8 shrink-0 rounded-lg bg-[var(--accent)] flex items-center justify-center">
             <span className="text-white font-bold text-sm">{brand.initials}</span>
           </div>
           {!collapsed && (
-            <span className="font-semibold text-[var(--text-primary)] flex-1 ml-2">{brand.name}</span>
+            <span className="font-semibold text-[var(--text-primary)] flex-1 ml-2 truncate">{brand.name}</span>
           )}
           {!mobile && (
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               title={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
-              className="cursor-pointer p-1.5 rounded-[var(--radius-md)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-secondary)] transition-colors"
+              className="cursor-pointer shrink-0 p-1.5 rounded-[var(--radius-md)] text-[var(--text-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-secondary)] transition-colors"
             >
               {sidebarCollapsed
                 ? <PanelLeftOpen  className="h-4 w-4" />
@@ -184,8 +184,8 @@ export function AppLayout({
 
             {userMenuOpen && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 z-20 w-52 bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-[var(--radius-md)] shadow-lg py-1">
+                <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+                <div className="fixed right-4 top-14 z-50 w-52 bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-[var(--radius-md)] shadow-lg py-1">
                   <div className="px-3 py-2 border-b border-[var(--bg-border)]">
                     <p className="text-xs font-medium text-[var(--text-primary)] truncate">{profile?.full_name}</p>
                     <p className="text-xs text-[var(--text-muted)] truncate">{profile?.email}</p>

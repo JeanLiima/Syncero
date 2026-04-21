@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FileText, BookOpen, Calculator, ArrowRight } from 'lucide-react'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { supabase } from '@/lib/supabase'
-import { Card } from '@/components/ui'
+import { Card } from '@syncero/ui'
 
 export function Component() {
   const { companyId } = useParams<{ companyId: string }>()

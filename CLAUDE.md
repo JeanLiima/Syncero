@@ -47,7 +47,7 @@ Each app is fully independent: its own `package.json`, `vite.config.ts`, `tsconf
 | flow    | `https://syncero-flow.vercel.app`|
 | books   | `https://syncero-books.vercel.app`|
 
-Preview URLs are derived automatically from `VERCEL_BRANCH_URL` in each `vite.config.ts`.
+> Preview deployments usam as URLs de produção para links cross-app. Teste de novas features deve ser feito localmente.
 
 ---
 

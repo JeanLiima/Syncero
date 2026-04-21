@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Building2, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
-import { Card, Badge } from '@/components/ui'
+import { Card, Badge } from '@syncero/ui'
 import type { AccountantCompany } from '@/types'
 
 export function Component() {

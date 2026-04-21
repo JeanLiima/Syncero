@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, Select, Badge } from '@/components/ui'
+import { Card, Select, Badge } from '@syncero/ui'
 import { useDRE } from '@/modules/dre/queries'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })

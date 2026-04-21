@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n'
-import { Button, Card } from '@/components/ui'
+import { Button, Card } from '@syncero/ui'
 
 function GoogleIcon() {
   return (

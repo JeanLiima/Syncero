@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
-import { Button, Card, Spinner } from '@/components/ui'
+import { Button, Card, Spinner } from '@syncero/ui'
 
 type InviteStatus = 'loading' | 'ready' | 'error' | 'success'
 

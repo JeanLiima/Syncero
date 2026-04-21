@@ -5,9 +5,8 @@ import { LogOut } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import { useAuth } from '@/hooks/useAuth'
-import { useToast } from '@/components/ui/Toast'
+import { useToast, Button, Card, Input, Select, Avatar } from '@syncero/ui'
 import { useT } from '@/i18n'
-import { Button, Card, Input, Select, Avatar } from '@/components/ui'
 
 const schema = z.object({
   name: z.string().min(2),

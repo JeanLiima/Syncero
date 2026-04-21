@@ -5,10 +5,8 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // VERCEL_ENV é "production" | "preview" | "development" — fonte confiável para distinguir ambientes.
-// VERCEL_BRANCH_URL só é usado em preview para derivar as URLs dos apps irmãos.
 export default defineConfig(() => {
   const vercelEnv = process.env.VERCEL_ENV ?? ''
-  const isPreview = vercelEnv === 'preview'
 
   let landingUrl: string
   let booksUrl: string
@@ -16,16 +14,8 @@ export default defineConfig(() => {
   if (vercelEnv === 'production') {
     landingUrl = process.env.VITE_LANDING_URL ?? 'https://syncero.vercel.app'
     booksUrl   = process.env.VITE_BOOKS_URL   ?? 'https://syncero-books.vercel.app'
-  } else if (isPreview) {
-    // VERCEL_BRANCH_URL: host do branch atual sem https://, ex: "syncero-flow-git-meu-pr-team.vercel.app"
-    // Não usar VITE_*_URL aqui — são vars fixas de produção e sobrescrevem a URL dinâmica do PR.
-    const branchHost = process.env.VERCEL_BRANCH_URL ?? ''
-    const gitIdx     = branchHost.indexOf('-git-')
-    const gitSuffix  = gitIdx !== -1 ? branchHost.slice(gitIdx) : ''
-    landingUrl = `https://syncero${gitSuffix}`
-    booksUrl   = `https://syncero-books${gitSuffix}`
   } else {
-    // Desenvolvimento local
+    // Dev local (e preview — links cross-app apontam para produção)
     landingUrl = process.env.VITE_LANDING_URL ?? 'http://localhost:5173'
     booksUrl   = process.env.VITE_BOOKS_URL   ?? 'http://localhost:5175'
   }

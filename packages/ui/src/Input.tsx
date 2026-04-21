@@ -1,4 +1,3 @@
-// Input.tsx
 import { type InputHTMLAttributes, forwardRef } from 'react'
 import { clsx } from 'clsx'
 

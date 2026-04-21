@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
-import { Card, Table, Badge } from '@/components/ui'
+import { Card, Table, Badge } from '@syncero/ui'
 import type { FiscalBook } from '@/types'
 
 export function Component() {

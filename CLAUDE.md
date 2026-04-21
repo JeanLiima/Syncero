@@ -47,7 +47,22 @@ Each app is fully independent: its own `package.json`, `vite.config.ts`, `tsconf
 | flow    | `https://syncero-flow.vercel.app`|
 | books   | `https://syncero-books.vercel.app`|
 
-Preview URLs are derived automatically from `VERCEL_BRANCH_URL` in each `vite.config.ts`.
+### Vercel (preview URLs — aliases fixos)
+| App     | URL                                                              |
+|---------|------------------------------------------------------------------|
+| landing | `https://syncero-preview-jeanliimas-projects.vercel.app`         |
+| flow    | `https://syncero-flow-preview-jeanliimas-projects.vercel.app`    |
+| books   | `https://syncero-books-preview-jeanliimas-projects.vercel.app`   |
+
+Os aliases são **fixos e permanentes** — a URL nunca muda. O `vite.config.ts` de cada app os hardcoda no bloco `VERCEL_ENV === 'preview'`. Deploys automáticos do GitHub já usam essas URLs.
+
+**Para atualizar o preview a um novo commit** (rodar para cada app desejado):
+```bash
+cd apps/flow   # ou apps/landing, apps/books
+DEPLOY=$(vercel deploy --yes 2>&1 | tail -1)
+vercel alias set $DEPLOY syncero-flow-preview-jeanliimas-projects.vercel.app
+# trocar o alias pelo do app correspondente
+```
 
 ---
 

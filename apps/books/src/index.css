@@ -1,5 +1,8 @@
 @import "tailwindcss";
-@source "../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+/* Fontes via Google Fonts — carregadas no index.html */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @layer base {
   :root {
@@ -54,6 +57,3 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 4px; }
 }
-
-/* Fontes via Google Fonts — carregadas no index.html */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');

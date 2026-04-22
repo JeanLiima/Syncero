@@ -1,5 +1,9 @@
 @import "tailwindcss";
-@source "../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
+/* Fontes via Google Fonts — carregadas no index.html */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
 
 @layer base {
   :root {
@@ -66,6 +70,3 @@
     transition: background-color 5000s ease-in-out 0s;
   }
 }
-
-/* Fontes via Google Fonts — carregadas no index.html */
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');

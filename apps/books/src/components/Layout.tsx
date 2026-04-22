@@ -18,11 +18,11 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <AppLayout
       brand={{ initials: 'SB', name: 'Syncero Books' }}
+      accentColor="success"
       navItems={navItems}
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}
       profile={profile}
-      userRoleLabel="Contador"
       onSignOut={signOut}
       banner={<PWABanner />}
       preferencesLabel={t('nav_preferences')}

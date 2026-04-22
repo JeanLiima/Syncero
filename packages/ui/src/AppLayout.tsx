@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useState, useRef, useEffect } from 'react'
 import { NavLink, Link } from 'react-router-dom'
 import {
   LogOut,
@@ -15,39 +15,37 @@ import { Avatar } from './Avatar'
 
 export interface NavItem {
   to: string
-  label: string      // já traduzido pelo app consumidor
+  label: string
   icon: ReactNode
-  end?: boolean      // repassa a prop `end` do NavLink
+  end?: boolean
 }
 
 export interface AppLayoutProps {
   children: ReactNode
-  /** Marca / branding da sidebar */
   brand: { initials: string; name: string }
-  /** Itens de navegação com labels já traduzidos */
   navItems: NavItem[]
-  /** Estado controlado pelo app via usePreferencesStore */
   sidebarCollapsed: boolean
   setSidebarCollapsed: (v: boolean) => void
-  /** Dados do usuário autenticado */
   profile: { full_name?: string | null; email?: string | null; avatar_url?: string | null } | null
-  /** Ex: "Empresa" | "Contador" — já traduzido */
-  userRoleLabel: string
+  userRoleLabel?: string
   onSignOut: () => void | Promise<void>
-  /** Slot opcional abaixo do logo na sidebar (ex: empresa ativa no Flow) */
   sidebarHeader?: ReactNode
-  /** Slot opcional à esquerda da topbar no mobile (ex: nome da empresa) */
   topbarMobileLeft?: ReactNode
-  /** Slot para banner (ex: PWABanner) */
   banner?: ReactNode
-  /** Labels já traduzidos para o menu do usuário */
   preferencesLabel: string
   signOutLabel: string
+  /** 'accent' (azul, padrão) | 'success' (verde — Books) */
+  accentColor?: 'accent' | 'success'
 }
+
+const colorMap = {
+  accent:  { brand: 'bg-[var(--accent)]',   active: 'bg-[var(--accent-subtle)] text-[var(--accent)]',   mobileActive: 'text-[var(--accent)]'   },
+  success: { brand: 'bg-[var(--success)]',  active: 'bg-[var(--success-subtle)] text-[var(--success)]', mobileActive: 'text-[var(--success)]'  },
+} as const
 
 // ── SidebarLink ───────────────────────────────────────────────
 
-function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+function SidebarLink({ item, collapsed, activeClass }: { item: NavItem; collapsed: boolean; activeClass: string }) {
   return (
     <NavLink
       to={item.to}
@@ -55,10 +53,10 @@ function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
       title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
         clsx(
-          'flex items-center gap-3 rounded-[var(--radius-md)] text-sm transition-colors',
-          collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5',
+          'flex w-full items-center gap-3 rounded-[var(--radius-md)] text-sm transition-colors',
+          collapsed ? 'justify-center px-2 py-3' : 'px-3 py-3',
           isActive
-            ? 'bg-[var(--accent-subtle)] text-[var(--accent)] font-medium'
+            ? `${activeClass} font-medium`
             : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]',
         )
       }
@@ -85,9 +83,23 @@ export function AppLayout({
   banner,
   preferencesLabel,
   signOutLabel,
+  accentColor = 'accent',
 }: AppLayoutProps) {
+  const colors = colorMap[accentColor]
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!userMenuOpen) return
+    function handleClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [userMenuOpen])
 
   function Sidebar({ mobile = false }: { mobile?: boolean }) {
     const collapsed = mobile ? false : sidebarCollapsed
@@ -106,14 +118,16 @@ export function AppLayout({
         <div
           className={clsx(
             'flex items-center border-b border-[var(--bg-border)]',
-            collapsed ? 'flex-col gap-2 px-2 py-3 min-h-[3.5rem]' : 'h-14 px-4',
+            collapsed
+              ? 'flex-col gap-2 px-2 py-3 min-h-[3.5rem]'
+              : 'h-14 px-4 gap-2',
           )}
         >
-          <div className="h-8 w-8 shrink-0 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+          <div className={clsx('h-8 w-8 shrink-0 rounded-lg flex items-center justify-center', colors.brand)}>
             <span className="text-white font-bold text-sm">{brand.initials}</span>
           </div>
           {!collapsed && (
-            <span className="font-semibold text-[var(--text-primary)] flex-1 ml-2 truncate">{brand.name}</span>
+            <span className="font-semibold text-[var(--text-primary)] flex-1 truncate">{brand.name}</span>
           )}
           {!mobile && (
             <button
@@ -128,13 +142,11 @@ export function AppLayout({
           )}
         </div>
 
-        {/* Slot opcional: ex. empresa ativa (Flow) */}
         {!collapsed && sidebarHeader}
 
-        {/* Nav */}
         <nav className={clsx('flex-1 py-4 flex flex-col gap-1', collapsed ? 'px-2' : 'px-3')}>
           {navItems.map((item) => (
-            <SidebarLink key={item.to} item={item} collapsed={collapsed} />
+            <SidebarLink key={item.to} item={item} collapsed={collapsed} activeClass={colors.active} />
           ))}
         </nav>
       </aside>
@@ -170,7 +182,7 @@ export function AppLayout({
           <div className="flex-1 hidden md:block" />
 
           {/* Menu do usuário */}
-          <div className="relative">
+          <div ref={userMenuRef} className="relative">
             <button
               onClick={() => setUserMenuOpen((v) => !v)}
               className="cursor-pointer flex items-center gap-2 px-2 py-1.5 rounded-[var(--radius-md)] hover:bg-[var(--bg-elevated)] transition-colors"
@@ -183,33 +195,32 @@ export function AppLayout({
             </button>
 
             {userMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                <div className="fixed right-4 top-14 z-50 w-52 bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-[var(--radius-md)] shadow-lg py-1">
-                  <div className="px-3 py-2 border-b border-[var(--bg-border)]">
-                    <p className="text-xs font-medium text-[var(--text-primary)] truncate">{profile?.full_name}</p>
-                    <p className="text-xs text-[var(--text-muted)] truncate">{profile?.email}</p>
+              <div className="absolute right-0 top-full mt-1 z-50 w-52 bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-[var(--radius-md)] shadow-lg py-1">
+                <div className="px-3 py-2 border-b border-[var(--bg-border)]">
+                  <p className="text-xs font-medium text-[var(--text-primary)] truncate">{profile?.full_name}</p>
+                  <p className="text-xs text-[var(--text-muted)] truncate">{profile?.email}</p>
+                  {userRoleLabel && (
                     <span className="mt-1.5 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)]">
                       {userRoleLabel}
                     </span>
-                  </div>
-                  <Link
-                    to="/preferences"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-colors"
-                  >
-                    <SlidersHorizontal className="h-4 w-4" />
-                    {preferencesLabel}
-                  </Link>
-                  <button
-                    onClick={onSignOut}
-                    className="cursor-pointer flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--danger)] transition-colors"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    {signOutLabel}
-                  </button>
+                  )}
                 </div>
-              </>
+                <Link
+                  to="/preferences"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-colors"
+                >
+                  <SlidersHorizontal className="h-4 w-4" />
+                  {preferencesLabel}
+                </Link>
+                <button
+                  onClick={onSignOut}
+                  className="cursor-pointer flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--danger)] transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {signOutLabel}
+                </button>
+              </div>
             )}
           </div>
         </header>
@@ -228,7 +239,7 @@ export function AppLayout({
               className={({ isActive }) =>
                 clsx(
                   'flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] transition-colors',
-                  isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
+                  isActive ? colors.mobileActive : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
                 )
               }
             >

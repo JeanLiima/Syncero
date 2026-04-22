@@ -1,19 +1,22 @@
-import { BookOpen, TrendingUp } from "lucide-react"
+import { BookOpen, TrendingUp } from 'lucide-react'
+import { useT } from '../i18n'
 
 export function Comparison() {
+  const t = useT()
+
   const rows = [
-    { label: 'Público-Alvo',      flow: 'Empresários e Gestores',    books: 'Contadores e Auditores' },
-    { label: 'Foco Principal',    flow: 'Operação e Fluxo de Caixa', books: 'Conformidade e Relatórios' },
-    { label: 'Interface',         flow: 'Minimalista e Mobile',      books: 'Analítica e Robusta' },
-    { label: 'Ação Principal',    flow: 'Lançar e Gerir',            books: 'Validar e Reportar' },
+    { label: t('cmp_label1'), flow: t('cmp_flow1'), books: t('cmp_books1') },
+    { label: t('cmp_label2'), flow: t('cmp_flow2'), books: t('cmp_books2') },
+    { label: t('cmp_label3'), flow: t('cmp_flow3'), books: t('cmp_books3') },
+    { label: t('cmp_label4'), flow: t('cmp_flow4'), books: t('cmp_books4') },
   ]
 
   return (
     <section className="py-24 px-4 sm:px-6 border-t border-[var(--bg-border)]">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-4">Qual é o seu perfil?</h2>
-          <p className="text-[var(--text-secondary)]">Cada produto foi desenhado para uma necessidade específica.</p>
+          <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-4">{t('comparison_h2')}</h2>
+          <p className="text-[var(--text-secondary)]">{t('comparison_sub')}</p>
         </div>
 
         <div className="rounded-[var(--radius-xl)] border border-[var(--bg-border)] overflow-hidden">

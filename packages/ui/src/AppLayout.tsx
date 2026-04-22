@@ -27,7 +27,7 @@ export interface AppLayoutProps {
   sidebarCollapsed: boolean
   setSidebarCollapsed: (v: boolean) => void
   profile: { full_name?: string | null; email?: string | null; avatar_url?: string | null } | null
-  userRoleLabel: string
+  userRoleLabel?: string
   onSignOut: () => void | Promise<void>
   sidebarHeader?: ReactNode
   topbarMobileLeft?: ReactNode
@@ -190,9 +190,11 @@ export function AppLayout({
                 <div className="px-3 py-2 border-b border-[var(--bg-border)]">
                   <p className="text-xs font-medium text-[var(--text-primary)] truncate">{profile?.full_name}</p>
                   <p className="text-xs text-[var(--text-muted)] truncate">{profile?.email}</p>
-                  <span className="mt-1.5 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)]">
-                    {userRoleLabel}
-                  </span>
+                  {userRoleLabel && (
+                    <span className="mt-1.5 inline-block text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)]">
+                      {userRoleLabel}
+                    </span>
+                  )}
                 </div>
                 <Link
                   to="/preferences"

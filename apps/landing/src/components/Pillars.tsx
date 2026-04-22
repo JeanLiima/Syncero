@@ -1,42 +1,25 @@
-import { Link2, RefreshCw, Shield, Zap } from "lucide-react"
-
-const pillars = [
-  {
-    icon: <Link2 className="h-6 w-6 text-[var(--accent)]" />,
-    title: 'Ponte Digital',
-    desc: 'Elimine e-mails, PDFs soltos e planilhas para troca de informações contábeis. Tudo centralizado em uma plataforma.',
-    color: 'var(--accent-subtle)',
-  },
-  {
-    icon: <RefreshCw className="h-6 w-6 text-[var(--success)]" />,
-    title: 'Sincronia em Tempo Real',
-    desc: 'O dado lançado pelo empresário no Flow fica imediatamente disponível para revisão contábil no Books.',
-    color: '#0d2a1e',
-  },
-  {
-    icon: <Zap className="h-6 w-6 text-[var(--warning)]" />,
-    title: 'Fricção Zero',
-    desc: 'Como PWA, o acesso é instantâneo via navegador com experiência de app nativo, sem instalação.',
-    color: '#1f1a0d',
-  },
-  {
-    icon: <Shield className="h-6 w-6 text-[var(--danger)]" />,
-    title: 'Integridade de Dados',
-    desc: 'Cada transação é rastreável e segura. A integridade do seu ledger financeiro é a prioridade máxima.',
-    color: '#2a0d14',
-  },
-]
+import { Link2, RefreshCw, Shield, Zap } from 'lucide-react'
+import { useT } from '../i18n'
 
 export function Pillars() {
+  const t = useT()
+
+  const pillars = [
+    { icon: <Link2    className="h-6 w-6 text-[var(--accent)]"   />, title: t('pillar1_title'), desc: t('pillar1_desc'), color: 'var(--accent-subtle)' },
+    { icon: <RefreshCw className="h-6 w-6 text-[var(--success)]" />, title: t('pillar2_title'), desc: t('pillar2_desc'), color: '#0d2a1e' },
+    { icon: <Zap      className="h-6 w-6 text-[var(--warning)]"  />, title: t('pillar3_title'), desc: t('pillar3_desc'), color: '#1f1a0d' },
+    { icon: <Shield   className="h-6 w-6 text-[var(--danger)]"   />, title: t('pillar4_title'), desc: t('pillar4_desc'), color: '#2a0d14' },
+  ]
+
   return (
     <section className="py-24 px-4 sm:px-6 border-t border-[var(--bg-border)]">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-[var(--text-primary)] mb-4">
-            Construído sobre pilares sólidos
+            {t('pillars_h2')}
           </h2>
           <p className="text-[var(--text-secondary)] max-w-lg mx-auto">
-            Princípios que guiam cada decisão de produto no ecossistema Syncero.
+            {t('pillars_sub')}
           </p>
         </div>
 
@@ -46,10 +29,7 @@ export function Pillars() {
               key={p.title}
               className="flex flex-col gap-4 p-6 rounded-[var(--radius-lg)] border border-[var(--bg-border)] bg-[var(--bg-surface)] hover:border-[var(--bg-border)]/80 transition-colors"
             >
-              <div
-                className="h-12 w-12 rounded-xl flex items-center justify-center"
-                style={{ background: p.color }}
-              >
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center" style={{ background: p.color }}>
                 {p.icon}
               </div>
               <div>

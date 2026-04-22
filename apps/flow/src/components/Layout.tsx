@@ -39,7 +39,6 @@ export function Layout({ children }: { children: ReactNode }) {
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}
       profile={profile}
-      userRoleLabel={isAccountant ? 'Contador' : 'Empresa'}
       onSignOut={signOut}
       sidebarHeader={
         !isAccountant && activeCompany ? (

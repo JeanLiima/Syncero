@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { LogOut, TrendingUp } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
@@ -70,13 +70,25 @@ function WrongApp() {
   )
 }
 
-const LANDING_URL = import.meta.env.VITE_LANDING_URL;
-const BOOKS_URL   = import.meta.env.VITE_BOOKS_URL;
+const BOOKS_URL = import.meta.env.VITE_BOOKS_URL;
 
 function RequireAuth() {
   const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
+  const location = useLocation()
+
   if (loading) return <Loader />
-  if (!user) { window.location.replace(LANDING_URL); return null }
+
+  if (!user) {
+    localStorage.setItem('auth_return_to', location.pathname + location.search)
+    return <Navigate to="/login" replace />
+  }
+
+  const returnTo = localStorage.getItem('auth_return_to')
+  if (returnTo) {
+    localStorage.removeItem('auth_return_to')
+    return <Navigate to={returnTo} replace />
+  }
+
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (isAccountant) return <WrongApp />
   if (!activeCompany) return <NoCompanyShell />
@@ -86,7 +98,7 @@ function RequireAuth() {
 function RequireOnboarding() {
   const { user, loading, needsOnboarding } = useAuth()
   if (loading) return <Loader />
-  if (!user) { window.location.replace(LANDING_URL); return null }
+  if (!user) return <Navigate to="/login" replace />
   if (!needsOnboarding) return <Navigate to="/dashboard" replace />
   return <Outlet />
 }
@@ -102,6 +114,7 @@ function RequireAccountant() {
 
 export const router = createBrowserRouter([
   // Public
+  { path: '/login',         lazy: lazyLoad(() => import('../pages/Login')) },
   { path: '/invite/:token', lazy: lazyLoad(() => import('../pages/AcceptInvite')) },
 
   // Onboarding — Google user without profile

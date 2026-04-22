@@ -1,6 +1,9 @@
 import { ArrowRight, BookOpen, CheckCircle, TrendingUp } from "lucide-react";
 
-export function Products({ onLogin }: { onLogin: () => void }) {
+const FLOW_URL  = import.meta.env.VITE_FLOW_URL  as string
+const BOOKS_URL = import.meta.env.VITE_BOOKS_URL as string
+
+export function Products() {
   return (
     <section id="produtos" className="py-24 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
@@ -52,13 +55,13 @@ export function Products({ onLogin }: { onLogin: () => void }) {
               ))}
             </ul>
 
-            <button
-              onClick={onLogin}
-              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+            <a
+              href={`${FLOW_URL}/login`}
+              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Acessar Syncero Flow
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </a>
           </div>
 
           {/* Syncero Books */}
@@ -98,13 +101,13 @@ export function Products({ onLogin }: { onLogin: () => void }) {
               ))}
             </ul>
 
-            <button
-              onClick={onLogin}
-              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--success)] text-white text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+            <a
+              href={`${BOOKS_URL}/login`}
+              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--success)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               Acessar Syncero Books
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </a>
           </div>
         </div>
       </div>

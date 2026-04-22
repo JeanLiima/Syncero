@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { FileText, BookOpen, Calculator, ArrowRight } from 'lucide-react'
+import { FileText, BookOpen, Calculator, LayoutList, BookMarked, ArrowRight } from 'lucide-react'
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { Card } from '@syncero/ui'
@@ -54,6 +54,8 @@ export function Component() {
       icon: <Calculator className="h-6 w-6 text-[var(--success)]" />,
       to: 'taxes',
     },
+    { label: 'Plano de Contas', value: 'Ver contas', icon: <BookMarked className="h-6 w-6 text-violet-400" />, to: 'plano' },
+    { label: 'Lançamentos', value: 'Ver lançamentos', icon: <LayoutList className="h-6 w-6 text-sky-400" />, to: 'lancamentos' },
   ]
 
   return (

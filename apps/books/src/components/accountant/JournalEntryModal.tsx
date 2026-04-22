@@ -1,0 +1,165 @@
+import { useState } from 'react'
+import { Plus, Trash2 } from 'lucide-react'
+import { Modal, Button, Input, Select } from '@syncero/ui'
+import type { AccountPlan, JournalSide } from '@/types'
+
+interface EntryLine {
+  account_plan_id: string
+  side: JournalSide
+  amount: string
+  memo: string
+}
+
+interface JournalEntryFormData {
+  entry_date: string
+  description: string
+  external_ref: string
+  lines: Array<{ account_plan_id: string; side: JournalSide; amount: number; memo: string }>
+}
+
+interface JournalEntryModalProps {
+  open: boolean
+  onClose: () => void
+  onSubmit: (data: JournalEntryFormData) => Promise<void>
+  accounts: Pick<AccountPlan, 'id' | 'code' | 'name'>[]
+}
+
+const emptyLine = (): EntryLine => ({ account_plan_id: '', side: 'debit', amount: '', memo: '' })
+
+function parseBrAmount(raw: string): number {
+  return parseFloat(raw.replace(',', '.')) || 0
+}
+
+export function JournalEntryModal({ open, onClose, onSubmit, accounts }: JournalEntryModalProps) {
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [description, setDescription] = useState('')
+  const [externalRef, setExternalRef] = useState('')
+  const [lines, setLines] = useState<EntryLine[]>([emptyLine(), emptyLine()])
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const accountOptions = accounts.map(a => ({ value: a.id, label: `${a.code} — ${a.name}` }))
+
+  const debitTotal = lines.filter(l => l.side === 'debit').reduce((s, l) => s + parseBrAmount(l.amount), 0)
+  const creditTotal = lines.filter(l => l.side === 'credit').reduce((s, l) => s + parseBrAmount(l.amount), 0)
+  const isBalanced = Math.abs(debitTotal - creditTotal) < 0.005
+
+  const updateLine = (i: number, patch: Partial<EntryLine>) => {
+    setLines(prev => prev.map((l, idx) => idx === i ? { ...l, ...patch } : l))
+  }
+
+  const handleSubmit = async () => {
+    setError(null)
+    if (!date) { setError('Informe a data.'); return }
+    if (!description.trim()) { setError('Informe o histórico.'); return }
+    if (lines.some(l => !l.account_plan_id || parseBrAmount(l.amount) <= 0)) {
+      setError('Todas as linhas precisam ter conta e valor.')
+      return
+    }
+    if (!isBalanced) { setError('Débitos e créditos devem ser iguais.'); return }
+
+    setSubmitting(true)
+    try {
+      await onSubmit({
+        entry_date: date,
+        description: description.trim(),
+        external_ref: externalRef.trim(),
+        lines: lines.map(l => ({ account_plan_id: l.account_plan_id, side: l.side, amount: parseBrAmount(l.amount), memo: l.memo.trim() })),
+      })
+      setDate(new Date().toISOString().slice(0, 10))
+      setDescription('')
+      setExternalRef('')
+      setLines([emptyLine(), emptyLine()])
+      onClose()
+    } catch {
+      setError('Erro ao salvar lançamento.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+
+  return (
+    <Modal open={open} onClose={onClose} title="Novo lançamento" size="lg">
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-3 gap-4">
+          <Input label="Data" type="date" value={date} onChange={e => setDate(e.target.value)} />
+          <Input label="Histórico" placeholder="Descrição do lançamento" className="col-span-2" value={description} onChange={e => setDescription(e.target.value)} />
+        </div>
+        <Input label="Documento / Referência" placeholder="NF001, boleto, etc." value={externalRef} onChange={e => setExternalRef(e.target.value)} />
+
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-medium text-[var(--text-secondary)]">Partidas</p>
+            <button
+              type="button"
+              onClick={() => setLines(prev => [...prev, emptyLine()])}
+              className="flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
+            >
+              <Plus className="h-3 w-3" /> Adicionar linha
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {lines.map((line, i) => (
+              <div key={i} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-end">
+                <Select
+                  placeholder="Conta contábil"
+                  options={accountOptions}
+                  value={line.account_plan_id}
+                  onChange={(v) => updateLine(i, { account_plan_id: v })}
+                />
+                <Select
+                  options={[{ value: 'debit', label: 'D' }, { value: 'credit', label: 'C' }]}
+                  value={line.side}
+                  onChange={(v) => updateLine(i, { side: v as JournalSide })}
+                  className="w-20"
+                />
+                <Input
+                  placeholder="0,00"
+                  className="w-28"
+                  value={line.amount}
+                  onChange={e => updateLine(i, { amount: e.target.value })}
+                />
+                <Input
+                  placeholder="Complemento"
+                  className="w-36"
+                  value={line.memo}
+                  onChange={e => updateLine(i, { memo: e.target.value })}
+                />
+                <button
+                  type="button"
+                  disabled={lines.length <= 2}
+                  onClick={() => setLines(prev => prev.filter((_, idx) => idx !== i))}
+                  className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-end gap-6 mt-3 pt-3 border-t border-[var(--bg-border)]">
+            <span className="text-xs text-[var(--text-muted)]">
+              Débitos: <span className="font-mono text-[var(--text-primary)]">{fmt(debitTotal)}</span>
+            </span>
+            <span className="text-xs text-[var(--text-muted)]">
+              Créditos: <span className="font-mono text-[var(--text-primary)]">{fmt(creditTotal)}</span>
+            </span>
+            <span className={`text-xs font-medium ${isBalanced ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+              {isBalanced ? '✓ Balanceado' : `Diferença: ${fmt(Math.abs(debitTotal - creditTotal))}`}
+            </span>
+          </div>
+        </div>
+
+        {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
+
+        <div className="flex justify-end gap-2 pt-2 border-t border-[var(--bg-border)]">
+          <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button onClick={handleSubmit} loading={submitting} disabled={!isBalanced}>Registrar</Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}

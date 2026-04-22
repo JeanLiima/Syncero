@@ -35,7 +35,7 @@ export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
       <img
         src={src}
         alt={name ?? 'avatar'}
-        className={clsx('rounded-full object-cover flex-shrink-0', sizeClass, className)}
+        className={clsx('rounded-full object-cover flex-shrink-0 block aspect-square', sizeClass, className)}
       />
     )
   }

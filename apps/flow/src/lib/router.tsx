@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { LogOut, TrendingUp } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { Layout } from '../components/Layout'
@@ -23,10 +23,10 @@ const Loader = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
-      <div className="h-10 w-10 rounded-xl bg-[var(--success)] flex items-center justify-center shadow-lg shadow-green-500/20">
+      <div className="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-lg">
         <TrendingUp className="h-5 w-5 text-white" />
       </div>
-      <div className="h-5 w-5 border-2 border-[var(--success)] border-t-transparent rounded-full animate-spin" />
+      <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       <p className="text-xs text-[var(--text-muted)] tracking-wide">{t('router_accessing')}</p>
     </div>
   )
@@ -70,13 +70,25 @@ function WrongApp() {
   )
 }
 
-const LANDING_URL = import.meta.env.VITE_LANDING_URL;
-const BOOKS_URL   = import.meta.env.VITE_BOOKS_URL;
+const BOOKS_URL = import.meta.env.VITE_BOOKS_URL;
 
 function RequireAuth() {
   const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
+  const location = useLocation()
+
   if (loading) return <Loader />
-  if (!user) { window.location.replace(LANDING_URL); return null }
+
+  if (!user) {
+    localStorage.setItem('auth_return_to', location.pathname + location.search)
+    return <Navigate to="/login" replace />
+  }
+
+  const returnTo = localStorage.getItem('auth_return_to')
+  if (returnTo) {
+    localStorage.removeItem('auth_return_to')
+    return <Navigate to={returnTo} replace />
+  }
+
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (isAccountant) return <WrongApp />
   if (!activeCompany) return <NoCompanyShell />
@@ -86,7 +98,7 @@ function RequireAuth() {
 function RequireOnboarding() {
   const { user, loading, needsOnboarding } = useAuth()
   if (loading) return <Loader />
-  if (!user) { window.location.replace(LANDING_URL); return null }
+  if (!user) return <Navigate to="/login" replace />
   if (!needsOnboarding) return <Navigate to="/dashboard" replace />
   return <Outlet />
 }
@@ -102,6 +114,7 @@ function RequireAccountant() {
 
 export const router = createBrowserRouter([
   // Public
+  { path: '/login',         lazy: lazyLoad(() => import('../pages/Login')) },
   { path: '/invite/:token', lazy: lazyLoad(() => import('../pages/AcceptInvite')) },
 
   // Onboarding — Google user without profile

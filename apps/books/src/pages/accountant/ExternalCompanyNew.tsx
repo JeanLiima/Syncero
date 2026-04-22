@@ -6,7 +6,21 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { Button, Input, Select, Card } from '@syncero/ui'
 import { DEFAULT_ACCOUNT_PLAN } from '@/lib/defaultAccountPlan'
-import type { TaxRegime, CompanyIntegration } from '@/types'
+import type { TaxRegime, CompanyIntegration, CompanySegment } from '@/types'
+
+const segmentOptions = [
+  { value: '', label: '— Não definido —' },
+  { value: 'comercio', label: 'Comércio' },
+  { value: 'servicos', label: 'Serviços' },
+  { value: 'industria', label: 'Indústria' },
+  { value: 'construcao_civil', label: 'Construção Civil' },
+  { value: 'agronegocio', label: 'Agronegócio' },
+  { value: 'saude', label: 'Saúde' },
+  { value: 'educacao', label: 'Educação' },
+  { value: 'tecnologia', label: 'Tecnologia' },
+  { value: 'financeiro', label: 'Financeiro' },
+  { value: 'outros', label: 'Outros' },
+]
 
 const taxRegimeOptions = [
   { value: '', label: '— Não definido —' },
@@ -31,6 +45,7 @@ export function Component() {
   const [tradeName, setTradeName] = useState('')
   const [taxRegime, setTaxRegime] = useState<TaxRegime | ''>('')
   const [integration, setIntegration] = useState<CompanyIntegration>('manual')
+  const [segment, setSegment] = useState<CompanySegment | ''>('')
   const [notes, setNotes] = useState('')
   const [seedPlan, setSeedPlan] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -54,6 +69,7 @@ export function Component() {
           trade_name: tradeName.trim() || null,
           tax_regime: taxRegime || null,
           integration,
+          segment: segment || null,
           notes: notes.trim() || null,
         })
         .select('id')
@@ -98,7 +114,7 @@ export function Component() {
       <div>
         <button
           onClick={() => navigate('/accountant')}
-          className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] mb-3 transition-colors"
+          className="cursor-pointer flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] mb-3 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Voltar
@@ -133,6 +149,12 @@ export function Component() {
             options={taxRegimeOptions}
             value={taxRegime}
             onChange={v => setTaxRegime(v as TaxRegime | '')}
+          />
+          <Select
+            label="Segmento"
+            options={segmentOptions}
+            value={segment}
+            onChange={v => setSegment(v as CompanySegment | '')}
           />
           <Select
             label="Sistema de origem"

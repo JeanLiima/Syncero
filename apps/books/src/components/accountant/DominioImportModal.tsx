@@ -105,7 +105,7 @@ export function DominioImportModal({ open, onClose, onImport, accounts }: Domini
               {entries.length} lançamento(s) encontrado(s). {selected.size} selecionado(s) para importar.
             </p>
             <button
-              className="text-xs text-[var(--accent)] hover:underline"
+              className="cursor-pointer text-xs text-[var(--accent)] hover:underline"
               onClick={() => setSelected(new Set(entries.map((_, i) => i).filter(i => !entries[i].parseError)))}
             >
               Selecionar válidos

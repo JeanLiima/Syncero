@@ -1,46 +1,27 @@
 import { useState } from 'react'
 import { Copy, Check, Eye } from 'lucide-react'
-import { Modal, Button, Input, Select } from '@syncero/ui'
-import type { Company, ExternalCompany } from '@/types'
+import { Modal, Button, Input } from '@syncero/ui'
 
 interface ApiKeyCreateModalProps {
   open: boolean
   onClose: () => void
-  onCreate: (data: { name: string; companyId: string; extCompanyId: string | null; expiresAt: string | null }) => Promise<string>
-  synceroCompanies: Pick<Company, 'id' | 'name'>[]
-  externalCompanies: Pick<ExternalCompany, 'id' | 'name'>[]
+  onCreate: (data: { name: string; expiresAt: string | null }) => Promise<string>
 }
 
-export function ApiKeyCreateModal({ open, onClose, onCreate, synceroCompanies, externalCompanies }: ApiKeyCreateModalProps) {
+export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModalProps) {
   const [name, setName] = useState('')
-  const [companyValue, setCompanyValue] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [rawKey, setRawKey] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const companyOptions: { value: string; label: string }[] = [
-    ...synceroCompanies.map(c => ({ value: `syncero:${c.id}`, label: `${c.name} (Syncero)` })),
-    ...externalCompanies.map(c => ({ value: `external:${c.id}`, label: `${c.name} (Externo)` })),
-  ]
-
   const handleCreate = async () => {
     setError(null)
     if (!name.trim()) { setError('Informe um nome para a chave.'); return }
-    if (!companyValue) { setError('Selecione a empresa.'); return }
-
-    const [type, id] = companyValue.split(':')
-    const isExternal = type === 'external'
-
     setSubmitting(true)
     try {
-      const key = await onCreate({
-        name: name.trim(),
-        companyId: isExternal ? '' : id,
-        extCompanyId: isExternal ? id : null,
-        expiresAt: expiresAt || null,
-      })
+      const key = await onCreate({ name: name.trim(), expiresAt: expiresAt || null })
       setRawKey(key)
     } catch {
       setError('Erro ao criar chave. Tente novamente.')
@@ -58,7 +39,6 @@ export function ApiKeyCreateModal({ open, onClose, onCreate, synceroCompanies, e
 
   const handleClose = () => {
     setName('')
-    setCompanyValue('')
     setExpiresAt('')
     setRawKey(null)
     setCopied(false)
@@ -80,7 +60,7 @@ export function ApiKeyCreateModal({ open, onClose, onCreate, synceroCompanies, e
             <code className="flex-1 text-xs font-mono text-[var(--text-primary)] break-all">{rawKey}</code>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1 px-2 py-1 rounded text-xs text-[var(--accent)] hover:bg-[var(--bg-surface)] transition-colors flex-shrink-0"
+              className="cursor-pointer flex items-center gap-1 px-2 py-1 rounded text-xs text-[var(--accent)] hover:bg-[var(--bg-surface)] transition-colors flex-shrink-0"
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               {copied ? 'Copiado!' : 'Copiar'}
@@ -95,13 +75,6 @@ export function ApiKeyCreateModal({ open, onClose, onCreate, synceroCompanies, e
             placeholder="ex: Domínio Produção"
             value={name}
             onChange={e => setName(e.target.value)}
-          />
-          <Select
-            label="Empresa"
-            options={companyOptions}
-            value={companyValue}
-            onChange={setCompanyValue}
-            placeholder="Selecionar empresa"
           />
           <Input
             label="Expira em (opcional)"

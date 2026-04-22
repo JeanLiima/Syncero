@@ -139,7 +139,7 @@ export function Component() {
                           {hasChildren ? (
                             <button
                               onClick={() => toggleCollapse(plan.id)}
-                              className="h-4 w-4 text-[var(--text-muted)] flex-shrink-0"
+                              className="cursor-pointer h-4 w-4 text-[var(--text-muted)] flex-shrink-0"
                             >
                               {collapsed.has(plan.id)
                                 ? <ChevronRight className="h-3.5 w-3.5" />
@@ -171,7 +171,7 @@ export function Component() {
                         <td className="px-4 py-2.5">
                           <button
                             onClick={() => { setEditing(plan); setModalOpen(true) }}
-                            className="p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                            className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>

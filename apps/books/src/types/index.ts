@@ -158,6 +158,11 @@ export type AccountType = 'ativo' | 'passivo' | 'patrimonio_liquido' | 'receita'
 export type AccountNature = 'devedora' | 'credora'
 export type JournalSide = 'debit' | 'credit'
 
+export type CompanySegment =
+  | 'comercio' | 'servicos' | 'industria' | 'construcao_civil'
+  | 'agronegocio' | 'saude' | 'educacao' | 'tecnologia'
+  | 'financeiro' | 'outros'
+
 export interface ExternalCompany {
   id: string
   accountant_id: string
@@ -166,6 +171,7 @@ export interface ExternalCompany {
   trade_name: string | null
   tax_regime: TaxRegime | null
   integration: CompanyIntegration
+  segment: CompanySegment | null
   is_active: boolean
   notes: string | null
   created_at: string

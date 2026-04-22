@@ -12,6 +12,19 @@ const taxRegimeLabel: Record<string, string> = {
   lucro_real: 'Lucro Real',
 }
 
+const segmentLabel: Record<string, string> = {
+  comercio: 'Comércio',
+  servicos: 'Serviços',
+  industria: 'Indústria',
+  construcao_civil: 'Construção Civil',
+  agronegocio: 'Agronegócio',
+  saude: 'Saúde',
+  educacao: 'Educação',
+  tecnologia: 'Tecnologia',
+  financeiro: 'Financeiro',
+  outros: 'Outros',
+}
+
 export function Component() {
   const { extCompanyId } = useParams<{ extCompanyId: string }>()
 
@@ -73,7 +86,7 @@ export function Component() {
       label: 'API Keys',
       value: 'Gerenciar',
       icon: <Key className="h-6 w-6 text-[var(--success)]" />,
-      to: '/accountant/api-keys',
+      to: 'api-keys',
     },
   ]
 
@@ -88,29 +101,34 @@ export function Component() {
         </div>
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{company?.name ?? '…'}</h1>
         {formattedCnpj && <p className="text-sm text-[var(--text-muted)] font-mono">{formattedCnpj}</p>}
-        {company?.tax_regime && (
-          <p className="text-xs text-[var(--text-muted)]">{taxRegimeLabel[company.tax_regime] ?? company.tax_regime}</p>
-        )}
+        <div className="flex flex-wrap items-center gap-2 mt-1">
+          {company?.tax_regime && (
+            <span className="text-xs text-[var(--text-muted)]">{taxRegimeLabel[company.tax_regime] ?? company.tax_regime}</span>
+          )}
+          {company?.tax_regime && company?.segment && (
+            <span className="text-xs text-[var(--text-muted)]">·</span>
+          )}
+          {company?.segment && (
+            <span className="text-xs text-[var(--text-muted)]">{segmentLabel[company.segment] ?? company.segment}</span>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {items.map((item) => {
-          const isExternal = item.to.startsWith('/')
-          return (
-            <Link key={item.to} to={isExternal ? item.to : item.to}>
-              <Card className="hover:border-[var(--accent)] transition-colors cursor-pointer group">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="h-10 w-10 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center">
-                    {item.icon}
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors" />
+        {items.map((item) => (
+          <Link key={item.to} to={item.to}>
+            <Card className="hover:border-[var(--accent)] transition-colors cursor-pointer group">
+              <div className="flex items-start justify-between mb-3">
+                <div className="h-10 w-10 rounded-lg bg-[var(--bg-elevated)] flex items-center justify-center">
+                  {item.icon}
                 </div>
-                <p className="text-xs text-[var(--text-muted)] mb-1">{item.label}</p>
-                <p className="text-lg font-semibold text-[var(--text-primary)]">{item.value}</p>
-              </Card>
-            </Link>
-          )
-        })}
+                <ArrowRight className="h-4 w-4 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors" />
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mb-1">{item.label}</p>
+              <p className="text-lg font-semibold text-[var(--text-primary)]">{item.value}</p>
+            </Card>
+          </Link>
+        ))}
       </div>
     </div>
   )

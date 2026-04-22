@@ -132,7 +132,8 @@ export const router = createBrowserRouter([
       { path: '/accountant/external/:extCompanyId',             lazy: lazyLoad(() => import('../pages/accountant/EmpresaExterna')) },
       { path: '/accountant/external/:extCompanyId/plano',       lazy: lazyLoad(() => import('../pages/accountant/PlanoDeContas')) },
       { path: '/accountant/external/:extCompanyId/lancamentos', lazy: lazyLoad(() => import('../pages/accountant/Lancamentos')) },
-      { path: '/accountant/api-keys',                           lazy: lazyLoad(() => import('../pages/accountant/ApiKeys')) },
+      { path: '/accountant/company/:companyId/api-keys',        lazy: lazyLoad(() => import('../pages/accountant/ApiKeys')) },
+      { path: '/accountant/external/:extCompanyId/api-keys',    lazy: lazyLoad(() => import('../pages/accountant/ApiKeys')) },
     ],
   },
 

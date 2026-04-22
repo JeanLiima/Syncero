@@ -3,11 +3,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card } from '@syncero/ui'
 import { ApiKeyCreateModal } from '@/components/accountant/ApiKeyCreateModal'
-import type { ApiKey, Company, ExternalCompany } from '@/types'
+import type { ApiKey } from '@/types'
 
-// SHA-256 using Web Crypto API
 async function sha256hex(text: string): Promise<string> {
   const encoded = new TextEncoder().encode(text)
   const hash = await crypto.subtle.digest('SHA-256', encoded)
@@ -22,53 +22,32 @@ function generateRawKey(): string {
 
 export function Component() {
   const { user } = useAuth()
+  const { id, isExternal, companyId, extCompanyId } = useCompanyContext()
   const qc = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
 
+  const queryKey = ['api-keys', id]
+
   const { data: keys = [], isLoading } = useQuery({
-    queryKey: ['api-keys', user?.id],
+    queryKey,
     queryFn: async () => {
-      if (!user?.id) return []
-      const { data, error } = await supabase
+      if (!user?.id || !id) return []
+      const q = supabase
         .from('api_keys')
         .select('*')
         .eq('accountant_id', user.id)
         .order('created_at', { ascending: false })
+      const filtered = isExternal
+        ? q.eq('ext_company_id', id)
+        : q.eq('company_id', id)
+      const { data, error } = await filtered
       if (error) throw error
       return (data ?? []) as ApiKey[]
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!id,
   })
 
-  const { data: synceroCompanies = [] } = useQuery({
-    queryKey: ['accountant-syncero-companies-ids', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return []
-      const { data } = await supabase
-        .from('accountant_companies')
-        .select('companies(id, name)')
-        .eq('accountant_id', user.id)
-        .eq('status', 'accepted')
-      return ((data ?? []).map((r: any) => r.companies).filter(Boolean)) as Pick<Company, 'id' | 'name'>[]
-    },
-    enabled: !!user?.id,
-  })
-
-  const { data: externalCompanies = [] } = useQuery({
-    queryKey: ['external-companies', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return []
-      const { data } = await supabase
-        .from('external_companies')
-        .select('id, name')
-        .eq('accountant_id', user.id)
-        .eq('is_active', true)
-      return (data ?? []) as Pick<ExternalCompany, 'id' | 'name'>[]
-    },
-    enabled: !!user?.id,
-  })
-
-  const handleCreate = async (data: { name: string; companyId: string; extCompanyId: string | null; expiresAt: string | null }): Promise<string> => {
+  const handleCreate = async (data: { name: string; expiresAt: string | null }): Promise<string> => {
     if (!user?.id) throw new Error('Not authenticated')
     const rawKey = generateRawKey()
     const hash = await sha256hex(rawKey)
@@ -77,20 +56,20 @@ export function Component() {
     const { error } = await supabase.from('api_keys').insert({
       accountant_id: user.id,
       name: data.name,
-      company_id: data.extCompanyId ? null : (data.companyId || null),
-      ext_company_id: data.extCompanyId || null,
+      company_id: isExternal ? null : (companyId ?? null),
+      ext_company_id: isExternal ? (extCompanyId ?? null) : null,
       key_hash: hash,
       key_prefix: prefix,
-      expires_at: data.expiresAt || null,
+      expires_at: data.expiresAt ?? null,
     })
     if (error) throw error
-    qc.invalidateQueries({ queryKey: ['api-keys', user.id] })
+    qc.invalidateQueries({ queryKey })
     return rawKey
   }
 
   const handleRevoke = async (keyId: string) => {
     await supabase.from('api_keys').update({ is_active: false }).eq('id', keyId)
-    qc.invalidateQueries({ queryKey: ['api-keys', user?.id] })
+    qc.invalidateQueries({ queryKey })
   }
 
   return (
@@ -154,7 +133,7 @@ export function Component() {
                     {key.is_active && (
                       <button
                         onClick={() => handleRevoke(key.id)}
-                        className="p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                        className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
                         title="Revogar chave"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -172,8 +151,6 @@ export function Component() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreate={handleCreate}
-        synceroCompanies={synceroCompanies}
-        externalCompanies={externalCompanies}
       />
     </div>
   )

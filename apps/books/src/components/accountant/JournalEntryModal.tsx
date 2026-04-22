@@ -95,7 +95,7 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
             <button
               type="button"
               onClick={() => setLines(prev => [...prev, emptyLine()])}
-              className="flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
+              className="cursor-pointer flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
             >
               <Plus className="h-3 w-3" /> Adicionar linha
             </button>
@@ -132,7 +132,7 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
                   type="button"
                   disabled={lines.length <= 2}
                   onClick={() => setLines(prev => prev.filter((_, idx) => idx !== i))}
-                  className="h-10 w-10 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="cursor-pointer h-10 w-10 flex items-center justify-center rounded-[var(--radius-md)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--bg-elevated)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

@@ -34,11 +34,18 @@ export interface AppLayoutProps {
   banner?: ReactNode
   preferencesLabel: string
   signOutLabel: string
+  /** 'accent' (azul, padrão) | 'success' (verde — Books) */
+  accentColor?: 'accent' | 'success'
 }
+
+const colorMap = {
+  accent:  { brand: 'bg-[var(--accent)]',   active: 'bg-[var(--accent-subtle)] text-[var(--accent)]',   mobileActive: 'text-[var(--accent)]'   },
+  success: { brand: 'bg-[var(--success)]',  active: 'bg-[var(--success-subtle)] text-[var(--success)]', mobileActive: 'text-[var(--success)]'  },
+} as const
 
 // ── SidebarLink ───────────────────────────────────────────────
 
-function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+function SidebarLink({ item, collapsed, activeClass }: { item: NavItem; collapsed: boolean; activeClass: string }) {
   return (
     <NavLink
       to={item.to}
@@ -49,7 +56,7 @@ function SidebarLink({ item, collapsed }: { item: NavItem; collapsed: boolean })
           'flex w-full items-center gap-3 rounded-[var(--radius-md)] text-sm transition-colors',
           collapsed ? 'justify-center px-2 py-3' : 'px-3 py-3',
           isActive
-            ? 'bg-[var(--accent-subtle)] text-[var(--accent)] font-medium'
+            ? `${activeClass} font-medium`
             : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]',
         )
       }
@@ -76,7 +83,9 @@ export function AppLayout({
   banner,
   preferencesLabel,
   signOutLabel,
+  accentColor = 'accent',
 }: AppLayoutProps) {
+  const colors = colorMap[accentColor]
   const [mobileOpen, setMobileOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -114,7 +123,7 @@ export function AppLayout({
               : 'h-14 px-4 gap-2',
           )}
         >
-          <div className="h-8 w-8 shrink-0 rounded-lg bg-[var(--accent)] flex items-center justify-center">
+          <div className={clsx('h-8 w-8 shrink-0 rounded-lg flex items-center justify-center', colors.brand)}>
             <span className="text-white font-bold text-sm">{brand.initials}</span>
           </div>
           {!collapsed && (
@@ -137,7 +146,7 @@ export function AppLayout({
 
         <nav className={clsx('flex-1 py-4 flex flex-col gap-1', collapsed ? 'px-2' : 'px-3')}>
           {navItems.map((item) => (
-            <SidebarLink key={item.to} item={item} collapsed={collapsed} />
+            <SidebarLink key={item.to} item={item} collapsed={collapsed} activeClass={colors.active} />
           ))}
         </nav>
       </aside>
@@ -230,7 +239,7 @@ export function AppLayout({
               className={({ isActive }) =>
                 clsx(
                   'flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] transition-colors',
-                  isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
+                  isActive ? colors.mobileActive : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
                 )
               }
             >

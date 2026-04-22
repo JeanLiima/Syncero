@@ -17,21 +17,22 @@ export function Navbar({ onLogin }: { onLogin: () => void }) {
 
         <div className="flex items-center gap-3">
           {/* Language selector */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setLang('pt')}
-              title="Português"
-              className={`text-lg leading-none transition-opacity cursor-pointer ${lang === 'pt' ? 'opacity-100' : 'opacity-30 hover:opacity-60'}`}
-            >
-              🇧🇷
-            </button>
-            <button
-              onClick={() => setLang('en')}
-              title="English"
-              className={`text-lg leading-none transition-opacity cursor-pointer ${lang === 'en' ? 'opacity-100' : 'opacity-30 hover:opacity-60'}`}
-            >
-              🇺🇸
-            </button>
+          <div className="flex items-center rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] overflow-hidden">
+            {(['pt', 'en'] as const).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                title={l === 'pt' ? 'Português' : 'English'}
+                className={`flex items-center gap-1.5 px-3 h-9 text-sm cursor-pointer transition-colors ${
+                  lang === l
+                    ? 'bg-[var(--bg-border)] text-[var(--text-primary)]'
+                    : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-border)]/50'
+                }`}
+              >
+                <span className="text-base leading-none">{l === 'pt' ? '🇧🇷' : '🇺🇸'}</span>
+                <span className="text-xs font-medium uppercase tracking-wide">{l === 'pt' ? 'PT' : 'EN'}</span>
+              </button>
+            ))}
           </div>
 
           <button

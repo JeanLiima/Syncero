@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { handle } from 'hono/vercel'
-import { authMiddleware, createServiceClient, type HonoVariables } from '@syncero/api'
+import { authMiddleware, createServiceClient, type HonoVariables } from './_shared'
 import { DEFAULT_ACCOUNT_PLAN } from './defaultAccountPlan'
 
 export const config = { runtime: 'edge' }

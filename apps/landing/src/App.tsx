@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LoginModal } from './components/LoginModal'
+import { PersonaModal } from './components/PersonaModal'
 import { Navbar } from './components/Navbar'
 import { Hero } from './components/Hero'
 import { Footer } from './components/Footer'
@@ -21,7 +21,7 @@ export default function App() {
       <CTA      onRegister={() => setModalOpen(true)} />
       <Footer />
       {modalOpen && (
-        <LoginModal onClose={() => setModalOpen(false)} />
+        <PersonaModal onClose={() => setModalOpen(false)} />
       )}
     </div>
   )

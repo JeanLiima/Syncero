@@ -3,7 +3,7 @@ import { Building2, Calculator, X } from 'lucide-react'
 const FLOW_URL  = import.meta.env.VITE_FLOW_URL  as string
 const BOOKS_URL = import.meta.env.VITE_BOOKS_URL as string
 
-export function LoginModal({ onClose }: { onClose: () => void }) {
+export function PersonaModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />

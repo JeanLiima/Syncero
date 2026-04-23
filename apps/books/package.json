@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"vite --port 5175\" \"npm run dev:api\"",
-    "dev:api": "tsx --env-file=.env watch api/_dev.ts",
+    "dev:api": "nodemon --watch api --exec \"tsx --env-file=.env\" api/_dev.ts",
     "build": "tsc && vite build",
     "preview": "vite preview --port 4175",
     "typecheck": "tsc --noEmit"
@@ -33,6 +33,7 @@
     "@types/node": "^20.0.0",
     "concurrently": "^9.0.0",
     "tsx": "^4.0.0",
+    "nodemon": "^3.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",

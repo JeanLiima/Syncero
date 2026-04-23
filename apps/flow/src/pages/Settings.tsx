@@ -5,11 +5,11 @@ import { z } from 'zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
 import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar } from '@syncero/ui'
-import type { Company, CompanyMember, AccountantCompany, MemberRole } from '@/types'
+import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant } from '@/lib/backend'
+import type { MemberRole } from '@/types'
 
 // ── Company tab ───────────────────────────────────────────────
 
@@ -31,12 +31,7 @@ function CompanyTab() {
     queryKey: ['company', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany?.id) return null
-      const { data } = await supabase
-        .from('companies')
-        .select('*')
-        .eq('id', activeCompany.id)
-        .single()
-      return data as Company | null
+      return getCompany(activeCompany.id)
     },
     enabled: !!activeCompany?.id,
   })
@@ -55,11 +50,7 @@ function CompanyTab() {
       if (data.cnpj !== undefined) payload.cnpj = data.cnpj || null
       if (data.tax_regime) payload.tax_regime = data.tax_regime
       else payload.tax_regime = null
-      const { error } = await supabase
-        .from('companies')
-        .update(payload)
-        .eq('id', activeCompany!.id)
-      if (error) throw error
+      return updateCompany(activeCompany!.id, payload)
     },
     onSuccess: (_, vars) => {
       setActiveCompany({ ...activeCompany!, name: vars.name })
@@ -109,12 +100,7 @@ function MembersTab() {
     queryKey: ['members', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany?.id) return []
-      const { data } = await supabase
-        .from('company_members')
-        .select('*')
-        .eq('company_id', activeCompany.id)
-        .order('invited_at', { ascending: false })
-      return (data ?? []) as CompanyMember[]
+      return getCompanyMembers(activeCompany.id)
     },
     enabled: !!activeCompany?.id,
   })
@@ -122,16 +108,7 @@ function MembersTab() {
   const invite = useMutation({
     mutationFn: async () => {
       const token = crypto.randomUUID()
-      const { error } = await supabase
-        .from('company_members')
-        .insert({
-          company_id: activeCompany!.id,
-          email: inviteEmail,
-          role: inviteRole,
-          status: 'pending',
-          invite_token: token,
-        })
-      if (error) throw error
+      await inviteCompanyMember(activeCompany!.id, inviteEmail, inviteRole, token)
       return token
     },
     onSuccess: () => {
@@ -142,11 +119,7 @@ function MembersTab() {
 
   const revoke = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('company_members')
-        .update({ status: 'revoked' })
-        .eq('id', id)
-      if (error) throw error
+      await revokeCompanyMember(id)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['members', activeCompany?.id] }),
   })
@@ -242,12 +215,7 @@ function AccountantTab() {
     queryKey: ['accountants', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany?.id) return []
-      const { data } = await supabase
-        .from('accountant_companies')
-        .select('*, profiles(id, full_name, email, avatar_url)')
-        .eq('company_id', activeCompany.id)
-        .order('invited_at', { ascending: false })
-      return (data ?? []) as AccountantCompany[]
+      return getAccountantCompanies(activeCompany.id)
     },
     enabled: !!activeCompany?.id,
   })
@@ -255,15 +223,7 @@ function AccountantTab() {
   const invite = useMutation({
     mutationFn: async () => {
       const token = crypto.randomUUID()
-      const { error } = await supabase
-        .from('accountant_companies')
-        .insert({
-          company_id: activeCompany!.id,
-          email: inviteEmail,
-          status: 'pending',
-          invite_token: token,
-        })
-      if (error) throw error
+      await inviteAccountant(activeCompany!.id, inviteEmail, token)
       return token
     },
     onSuccess: () => {

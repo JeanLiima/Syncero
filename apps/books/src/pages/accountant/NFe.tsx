@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
 import { Card, Table, Badge, Select, DatePicker } from '@syncero/ui'
+import { getFiscalDocuments } from '@/lib/backend'
 import type { FiscalDocument, FiscalDocType } from '@/types'
 
 export function Component() {
@@ -15,21 +15,12 @@ export function Component() {
 
   const { data = [], isLoading } = useQuery({
     queryKey: ['fiscal-docs', companyId, filterType, dateFrom, dateTo],
-    queryFn: async () => {
-      let q = supabase
-        .from('fiscal_documents')
-        .select('*')
-        .eq('company_id', companyId!)
-        .order('issue_date', { ascending: false })
-
-      if (filterType) q = q.eq('doc_type', filterType)
-      if (dateFrom)   q = q.gte('issue_date', dateFrom)
-      if (dateTo)     q = q.lte('issue_date', dateTo)
-
-      const { data, error } = await q
-      if (error) throw error
-      return (data ?? []) as FiscalDocument[]
-    },
+    queryFn: async () =>
+      getFiscalDocuments(companyId!, {
+        doc_type: filterType || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+      }),
     enabled: !!companyId,
   })
 

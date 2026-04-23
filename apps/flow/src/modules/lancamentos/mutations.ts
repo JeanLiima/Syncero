@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
+import { createTransaction, updateTransaction, deleteTransaction } from '@/lib/backend'
 import type { TransactionFormData } from './types'
 
 export function useCreateTransaction() {
@@ -9,13 +9,7 @@ export function useCreateTransaction() {
 
   return useMutation({
     mutationFn: async (data: TransactionFormData) => {
-      const { data: result, error } = await supabase
-        .from('transactions')
-        .insert({ ...data, company_id: activeCompany!.id })
-        .select()
-        .single()
-      if (error) throw error
-      return result
+      return createTransaction({ ...data, company_id: activeCompany!.id })
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['transactions', activeCompany?.id] }),
   })
@@ -27,15 +21,7 @@ export function useUpdateTransaction() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<TransactionFormData> }) => {
-      const { data: result, error } = await supabase
-        .from('transactions')
-        .update(data)
-        .eq('id', id)
-        .eq('company_id', activeCompany!.id)
-        .select()
-        .single()
-      if (error) throw error
-      return result
+      return updateTransaction(id, data)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['transactions', activeCompany?.id] }),
   })
@@ -47,12 +33,7 @@ export function useMarkAsPaid() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('transactions')
-        .update({ is_paid: true })
-        .eq('id', id)
-        .eq('company_id', activeCompany!.id)
-      if (error) throw error
+      await updateTransaction(id, { is_paid: true })
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['transactions', activeCompany?.id] }),
   })
@@ -64,12 +45,7 @@ export function useDeleteTransaction() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id)
-        .eq('company_id', activeCompany!.id)
-      if (error) throw error
+      await deleteTransaction(id)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['transactions', activeCompany?.id] }),
   })

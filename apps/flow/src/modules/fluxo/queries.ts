@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
+import { getTransactions } from '@/lib/backend'
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns'
 
 export interface DailyFlow {
@@ -34,19 +34,17 @@ export function useCashFlow(period: 'month' | '30d' | '90d' = '30d') {
     queryFn: async (): Promise<DailyFlow[]> => {
       if (!activeCompany?.id) return []
 
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('date, amount, type')
-        .eq('company_id', activeCompany.id)
-        .gte('date', dateFrom)
-        .lte('date', dateTo)
-        .order('date')
-
-      if (error) throw error
+      const result = await getTransactions({
+        companyId: activeCompany.id,
+        date_from: dateFrom,
+        date_to: dateTo,
+        page: '1',
+        pageSize: '1000',
+      })
 
       const map = new Map<string, { income: number; expense: number }>()
 
-      for (const t of data ?? []) {
+      for (const t of result.data ?? []) {
         const existing = map.get(t.date) ?? { income: 0, expense: 0 }
         if (t.type === 'income') existing.income += t.amount
         else existing.expense += t.amount

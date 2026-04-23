@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Building2, ArrowRight } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, Badge } from '@syncero/ui'
-import type { AccountantCompany } from '@/types'
+import { getAccountantCompanies } from '@/lib/backend'
 
 export function Component() {
   const { user } = useAuth()
@@ -13,14 +12,7 @@ export function Component() {
     queryKey: ['accountant-companies', user?.id],
     queryFn: async () => {
       if (!user?.id) return []
-      const { data, error } = await supabase
-        .from('accountant_companies')
-        .select('*, companies(id, name, cnpj, tax_regime)')
-        .eq('accountant_id', user.id)
-        .eq('status', 'accepted')
-        .order('accepted_at', { ascending: false })
-      if (error) throw error
-      return (data ?? []) as AccountantCompany[]
+      return getAccountantCompanies()
     },
     enabled: !!user?.id,
   })

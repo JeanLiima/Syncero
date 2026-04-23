@@ -2,8 +2,8 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
 import { Card, Table, Badge } from '@syncero/ui'
+import { getTaxCalculations } from '@/lib/backend'
 import type { TaxCalculation } from '@/types'
 
 export function Component() {
@@ -11,15 +11,7 @@ export function Component() {
 
   const { data = [], isLoading } = useQuery({
     queryKey: ['tax-calculations', companyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tax_calculations')
-        .select('*')
-        .eq('company_id', companyId!)
-        .order('reference_period', { ascending: false })
-      if (error) throw error
-      return (data ?? []) as TaxCalculation[]
-    },
+    queryFn: async () => getTaxCalculations(companyId!),
     enabled: !!companyId,
   })
 

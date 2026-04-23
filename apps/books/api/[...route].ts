@@ -8,6 +8,9 @@ import externalCompaniesRouter from './routes/externalCompanies'
 import accountPlansRouter from './routes/accountPlans'
 import journalEntriesRouter from './routes/journalEntries'
 import apiKeysRouter from './routes/apiKeys'
+import fiscalDocumentsRouter from './routes/fiscalDocuments'
+import fiscalBooksRouter from './routes/fiscalBooks'
+import taxCalculationsRouter from './routes/taxCalculations'
 
 export const config = { runtime: 'edge' }
 
@@ -29,6 +32,12 @@ app.use('/journal-entries', authMiddleware)
 app.use('/journal-entries/*', authMiddleware)
 app.use('/api-keys', authMiddleware)
 app.use('/api-keys/*', authMiddleware)
+app.use('/fiscal-documents', authMiddleware)
+app.use('/fiscal-documents/*', authMiddleware)
+app.use('/fiscal-books', authMiddleware)
+app.use('/fiscal-books/*', authMiddleware)
+app.use('/tax-calculations', authMiddleware)
+app.use('/tax-calculations/*', authMiddleware)
 
 // ── Route registrations ────────────────────────────────────────
 app.route('/me', authRouter)
@@ -38,5 +47,8 @@ app.route('/external-companies', externalCompaniesRouter)
 app.route('/account-plans', accountPlansRouter)
 app.route('/journal-entries', journalEntriesRouter)
 app.route('/api-keys', apiKeysRouter)
+app.route('/fiscal-documents', fiscalDocumentsRouter)
+app.route('/fiscal-books', fiscalBooksRouter)
+app.route('/tax-calculations', taxCalculationsRouter)
 
 export default handle(app)

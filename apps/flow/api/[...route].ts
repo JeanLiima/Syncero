@@ -4,6 +4,14 @@ import { authMiddleware, type HonoVariables } from './_shared'
 import authRouter from './routes/auth'
 import companiesRouter from './routes/companies'
 import invitesRouter from './routes/invites'
+import companyMembersRouter from './routes/companyMembers'
+import accountantCompaniesRouter from './routes/accountantCompanies'
+import transactionsRouter from './routes/transactions'
+import categoriesRouter from './routes/categories'
+import payablesRouter from './routes/payables'
+import fiscalDocumentsRouter from './routes/fiscalDocuments'
+import fiscalBooksRouter from './routes/fiscalBooks'
+import taxCalculationsRouter from './routes/taxCalculations'
 
 export const config = { runtime: 'edge' }
 
@@ -18,6 +26,22 @@ app.onError((err, c) => {
 app.use('/me', authMiddleware)
 app.use('/me/*', authMiddleware)
 app.use('/companies/*', authMiddleware)
+app.use('/company-members/*', authMiddleware)
+app.use('/company-members', authMiddleware)
+app.use('/accountant-companies/*', authMiddleware)
+app.use('/accountant-companies', authMiddleware)
+app.use('/transactions/*', authMiddleware)
+app.use('/transactions', authMiddleware)
+app.use('/categories/*', authMiddleware)
+app.use('/categories', authMiddleware)
+app.use('/payables/*', authMiddleware)
+app.use('/payables', authMiddleware)
+app.use('/fiscal-documents/*', authMiddleware)
+app.use('/fiscal-documents', authMiddleware)
+app.use('/fiscal-books/*', authMiddleware)
+app.use('/fiscal-books', authMiddleware)
+app.use('/tax-calculations/*', authMiddleware)
+app.use('/tax-calculations', authMiddleware)
 app.use('/invites/:token/accept', authMiddleware)
 
 // ── Route registrations ────────────────────────────────────────
@@ -25,5 +49,13 @@ app.use('/invites/:token/accept', authMiddleware)
 app.route('/me', authRouter)
 app.route('/companies', companiesRouter)
 app.route('/invites', invitesRouter)
+app.route('/company-members', companyMembersRouter)
+app.route('/accountant-companies', accountantCompaniesRouter)
+app.route('/transactions', transactionsRouter)
+app.route('/categories', categoriesRouter)
+app.route('/payables', payablesRouter)
+app.route('/fiscal-documents', fiscalDocumentsRouter)
+app.route('/fiscal-books', fiscalBooksRouter)
+app.route('/tax-calculations', taxCalculationsRouter)
 
 export default handle(app)

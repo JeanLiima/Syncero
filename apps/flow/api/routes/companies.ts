@@ -34,6 +34,26 @@ router.get('/:id', async (c) => {
   return c.json(data)
 })
 
+// ── PATCH /api/companies/:id ───────────────────────────────────
+router.patch('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+  const updates = await c.req.json<Record<string, unknown>>()
+
+  const { data: member } = await db.from('company_members')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('company_id', id)
+    .eq('status', 'accepted')
+    .maybeSingle()
+  if (!member) return c.json({ error: 'forbidden' }, 403)
+
+  const { data, error } = await db.from('companies').update(updates).eq('id', id).select('id, name, cnpj, tax_regime').single()
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json(data)
+})
+
 // ── GET /api/companies/:id/fiscal-summary ──────────────────────
 router.get('/:id/fiscal-summary', async (c) => {
   const userId = c.get('userId')

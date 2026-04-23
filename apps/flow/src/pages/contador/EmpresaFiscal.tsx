@@ -1,47 +1,21 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { FileText, BookOpen, Calculator, ArrowRight } from 'lucide-react'
-import { format, startOfMonth, endOfMonth } from 'date-fns'
-import { supabase } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 
 export function Component() {
   const { companyId } = useParams<{ companyId: string }>()
-  const now = new Date()
-  const dateFrom = format(startOfMonth(now), 'yyyy-MM-dd')
-  const dateTo   = format(endOfMonth(now),   'yyyy-MM-dd')
 
   const { data: company } = useQuery({
     queryKey: ['company-readonly', companyId],
-    queryFn: async () => {
-      const { data } = await supabase.from('companies').select('id, name, cnpj, tax_regime').eq('id', companyId!).single()
-      return data
-    },
+    queryFn: () => apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: string | null }>(`/api/companies/${companyId}`),
     enabled: !!companyId,
   })
 
   const { data: summary } = useQuery({
     queryKey: ['fiscal-summary', companyId],
-    queryFn: async () => {
-      const [nfe, books, taxes] = await Promise.all([
-        supabase
-          .from('fiscal_documents')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId!),
-        supabase
-          .from('fiscal_books')
-          .select('id', { count: 'exact', head: true })
-          .eq('company_id', companyId!),
-        supabase
-          .from('tax_calculations')
-          .select('tax_value')
-          .eq('company_id', companyId!)
-          .gte('reference_period', dateFrom.slice(0, 7))
-          .lte('reference_period', dateTo.slice(0, 7)),
-      ])
-      const taxTotal = taxes.data?.reduce((s, t) => s + t.tax_value, 0) ?? 0
-      return { nfeCount: nfe.count ?? 0, booksCount: books.count ?? 0, taxTotal }
-    },
+    queryFn: () => apiFetch<{ nfeCount: number; booksCount: number; taxTotal: number }>(`/api/companies/${companyId}/fiscal-summary`),
     enabled: !!companyId,
   })
 

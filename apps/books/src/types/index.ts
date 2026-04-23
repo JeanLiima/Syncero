@@ -149,3 +149,87 @@ export interface TaxCalculation {
   created_at: string
   updated_at: string
 }
+
+// ── External companies & accounting ──────────────────────────
+
+export type CompanyIntegration = 'manual' | 'dominio' | 'other'
+export type EntrySource = 'manual' | 'dominio_import' | 'api' | 'syncero_import'
+export type AccountType = 'ativo' | 'passivo' | 'patrimonio_liquido' | 'receita' | 'despesa' | 'custo'
+export type AccountNature = 'devedora' | 'credora'
+export type JournalSide = 'debit' | 'credit'
+
+export type CompanySegment =
+  | 'comercio' | 'servicos' | 'industria' | 'construcao_civil'
+  | 'agronegocio' | 'saude' | 'educacao' | 'tecnologia'
+  | 'financeiro' | 'outros'
+
+export interface ExternalCompany {
+  id: string
+  accountant_id: string
+  name: string
+  cnpj: string | null
+  trade_name: string | null
+  tax_regime: TaxRegime | null
+  integration: CompanyIntegration
+  segment: CompanySegment | null
+  is_active: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AccountPlan {
+  id: string
+  company_id: string | null
+  ext_company_id: string | null
+  accountant_id: string
+  parent_id: string | null
+  code: string
+  name: string
+  account_type: AccountType
+  nature: AccountNature
+  is_analytic: boolean
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface JournalEntry {
+  id: string
+  company_id: string | null
+  ext_company_id: string | null
+  accountant_id: string
+  entry_date: string
+  description: string
+  source: EntrySource
+  external_ref: string | null
+  is_reversed: boolean
+  reversal_of: string | null
+  created_at: string
+  updated_at: string
+  lines?: JournalEntryLine[]
+}
+
+export interface JournalEntryLine {
+  id: string
+  entry_id: string
+  account_plan_id: string
+  side: JournalSide
+  amount: number
+  memo: string | null
+  created_at: string
+  account_plan?: Pick<AccountPlan, 'code' | 'name'>
+}
+
+export interface ApiKey {
+  id: string
+  accountant_id: string
+  company_id: string | null
+  ext_company_id: string | null
+  name: string
+  key_prefix: string
+  last_used_at: string | null
+  expires_at: string | null
+  is_active: boolean
+  created_at: string
+}

@@ -66,7 +66,7 @@ export default defineConfig(() => {
         '@syncero/ui': fileURLToPath(new URL('../../packages/ui/src', import.meta.url)),
       },
     },
-    server: { port: 5174 },
+    server: { port: 5174, proxy: { '/api': { target: 'http://localhost:3001', changeOrigin: true } } },
     define: {
       'import.meta.env.VITE_LANDING_URL': JSON.stringify(landingUrl),
       'import.meta.env.VITE_BOOKS_URL':   JSON.stringify(booksUrl),

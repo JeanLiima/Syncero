@@ -4,12 +4,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5173",
+    "dev": "concurrently \"vite --port 5174\" \"npm run dev:api\"",
+    "dev:api": "tsx --env-file=.env watch api/_dev.ts",
     "build": "tsc && vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --port 4174",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "hono": "^4.4.0",
     "@hookform/resolvers": "^3.3.4",
     "@supabase/supabase-js": "^2.39.7",
     "@tanstack/react-query": "^5.28.0",
@@ -26,6 +28,11 @@
     "date-fns": "^3.6.0"
   },
   "devDependencies": {
+    "@hono/node-server": "^1.12.0",
+    "@syncero/api": "*",
+    "@types/node": "^20.0.0",
+    "concurrently": "^9.0.0",
+    "tsx": "^4.0.0",
     "@tailwindcss/vite": "^4.0.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",

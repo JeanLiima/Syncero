@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 
 const LANDING_URL = import.meta.env.VITE_LANDING_URL;
@@ -44,37 +45,25 @@ export function useAuth() {
     }
   }, [])
 
-  const fetchProfile = async (userId: string) => {
-    if (lastFetchedUserId.current === userId) {
+  const fetchProfile = async (_userId: string) => {
+    if (lastFetchedUserId.current === _userId) {
       setLoading(false)
       return
     }
-    lastFetchedUserId.current = userId
+    lastFetchedUserId.current = _userId
 
-    const { data } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, user_type, avatar_url')
-      .eq('id', userId)
-      .single()
-
-    setProfile(data)
-
-    // Restaura activeCompany do banco no primeiro acesso cross-domain
-    // (localStorage do Flow ainda vazio após redirect da landing).
-    if (data?.user_type === 'company_user' && !useAuthStore.getState().activeCompany) {
-      const { data: membership } = await supabase
-        .from('company_members')
-        .select('role, companies(id, name)')
-        .eq('user_id', userId)
-        .eq('status', 'accepted')
-        .limit(1)
-        .single()
-      if (membership?.companies) {
-        const co = membership.companies as unknown as { id: string; name: string }
-        setActiveCompany({ id: co.id, name: co.name, role: membership.role })
+    try {
+      const data = await apiFetch<{
+        profile: { id: string; full_name: string; email: string; user_type: 'company_user' | 'accountant'; avatar_url: string | null } | null
+        activeCompany: { id: string; name: string; role: string } | null
+      }>('/api/me')
+      setProfile(data.profile)
+      if (data.profile?.user_type === 'company_user' && !useAuthStore.getState().activeCompany && data.activeCompany) {
+        setActiveCompany(data.activeCompany)
       }
+    } catch {
+      setProfile(null)
     }
-
     setLoading(false)
   }
 
@@ -86,18 +75,14 @@ export function useAuth() {
 
   const createProfile = async (userType: 'company_user' | 'accountant') => {
     if (!user) return { error: new Error('Usuário não autenticado') }
-    const fullName  = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? 'Usuário'
-    const avatarUrl = (user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null) as string | null
-
-    const { error } = await supabase.from('profiles').upsert({
-      id: user.id, full_name: fullName, email: user.email ?? '', user_type: userType, avatar_url: avatarUrl,
-    }, { onConflict: 'id' })
-
-    if (!error) {
+    try {
+      await apiFetch('/api/me', { method: 'POST', body: JSON.stringify({ user_type: userType }) })
       lastFetchedUserId.current = null
       await fetchProfile(user.id)
+      return { error: null }
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error(String(err)) }
     }
-    return { error }
   }
 
   const signOut = async () => {

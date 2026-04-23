@@ -2,7 +2,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { LogOut } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast, Button, Card, Input, Select, Avatar } from '@syncero/ui'
@@ -34,32 +34,15 @@ export function NoCompanyShell() {
     profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? null
 
   const onSubmit = async (data: FormData) => {
-    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
-    if (authError || !currentUser) {
-      toastError('Usuário não autenticado.')
-      return
-    }
-
-    const payload: Record<string, unknown> = {
-      name: data.name,
-      owner_id: currentUser.id,
-    }
-    if (data.cnpj) payload.cnpj = data.cnpj
-    if (data.tax_regime) payload.tax_regime = data.tax_regime
-
-    const { data: company, error } = await supabase
-      .from('companies')
-      .insert(payload)
-      .select('id, name')
-      .single()
-
-    if (error) {
-      toastError(error.message)
-      return
-    }
-    if (company) {
+    try {
+      const company = await apiFetch<{ id: string; name: string }>('/api/companies', {
+        method: 'POST',
+        body: JSON.stringify({ name: data.name, cnpj: data.cnpj, tax_regime: data.tax_regime }),
+      })
       setActiveCompany({ id: company.id, name: company.name, role: 'admin' })
       success(t('noCompany_success'))
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : 'Erro ao criar empresa.')
     }
   }
 

@@ -1,74 +1,41 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card } from '@syncero/ui'
 import { ApiKeyCreateModal } from '@/components/accountant/ApiKeyCreateModal'
 import type { ApiKey } from '@/types'
 
-async function sha256hex(text: string): Promise<string> {
-  const encoded = new TextEncoder().encode(text)
-  const hash = await crypto.subtle.digest('SHA-256', encoded)
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
-}
-
-function generateRawKey(): string {
-  const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
-  return 'sk_' + Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('')
-}
-
 export function Component() {
-  const { user } = useAuth()
-  const { id, isExternal, companyId, extCompanyId } = useCompanyContext()
+  const { id, isExternal } = useCompanyContext()
   const qc = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
 
   const queryKey = ['api-keys', id]
+  const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
 
   const { data: keys = [], isLoading } = useQuery({
     queryKey,
-    queryFn: async () => {
-      if (!user?.id || !id) return []
-      const q = supabase
-        .from('api_keys')
-        .select('*')
-        .eq('accountant_id', user.id)
-        .order('created_at', { ascending: false })
-      const filtered = isExternal
-        ? q.eq('ext_company_id', id)
-        : q.eq('company_id', id)
-      const { data, error } = await filtered
-      if (error) throw error
-      return (data ?? []) as ApiKey[]
-    },
-    enabled: !!user?.id && !!id,
+    queryFn: () => apiFetch<ApiKey[]>(`/api/api-keys?${companyParam}`),
+    enabled: !!id,
   })
 
   const handleCreate = async (data: { name: string; expiresAt: string | null }): Promise<string> => {
-    if (!user?.id) throw new Error('Not authenticated')
-    const rawKey = generateRawKey()
-    const hash = await sha256hex(rawKey)
-    const prefix = rawKey.slice(0, 11)
-
-    const { error } = await supabase.from('api_keys').insert({
-      accountant_id: user.id,
-      name: data.name,
-      company_id: isExternal ? null : (companyId ?? null),
-      ext_company_id: isExternal ? (extCompanyId ?? null) : null,
-      key_hash: hash,
-      key_prefix: prefix,
-      expires_at: data.expiresAt ?? null,
+    const result = await apiFetch<{ key: string }>('/api/api-keys', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: data.name,
+        expiresAt: data.expiresAt,
+        ...(isExternal ? { extCompanyId: id } : { companyId: id }),
+      }),
     })
-    if (error) throw error
     qc.invalidateQueries({ queryKey })
-    return rawKey
+    return result.key
   }
 
   const handleRevoke = async (keyId: string) => {
-    await supabase.from('api_keys').update({ is_active: false }).eq('id', keyId)
+    await apiFetch(`/api/api-keys/${keyId}/revoke`, { method: 'PATCH', body: '{}' })
     qc.invalidateQueries({ queryKey })
   }
 

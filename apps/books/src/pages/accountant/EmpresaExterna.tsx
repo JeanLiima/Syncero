@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { LayoutList, BookMarked, Key, ArrowRight } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import type { ExternalCompany } from '@/types'
@@ -30,38 +30,19 @@ export function Component() {
 
   const { data: company } = useQuery({
     queryKey: ['external-company', extCompanyId],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('external_companies')
-        .select('*')
-        .eq('id', extCompanyId!)
-        .single()
-      return data as ExternalCompany | null
-    },
+    queryFn: () => apiFetch<ExternalCompany>(`/api/external-companies/${extCompanyId}`),
     enabled: !!extCompanyId,
   })
 
   const { data: planCount = 0 } = useQuery({
     queryKey: ['account-plan-count', extCompanyId],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('account_plans')
-        .select('id', { count: 'exact', head: true })
-        .eq('ext_company_id', extCompanyId!)
-      return count ?? 0
-    },
+    queryFn: () => apiFetch<unknown[]>(`/api/account-plans?extCompanyId=${extCompanyId}`).then(d => d.length),
     enabled: !!extCompanyId,
   })
 
   const { data: entryCount = 0 } = useQuery({
     queryKey: ['journal-entry-count', extCompanyId],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from('journal_entries')
-        .select('id', { count: 'exact', head: true })
-        .eq('ext_company_id', extCompanyId!)
-      return count ?? 0
-    },
+    queryFn: () => apiFetch<unknown[]>(`/api/journal-entries?extCompanyId=${extCompanyId}`).then(d => d.length),
     enabled: !!extCompanyId,
   })
 

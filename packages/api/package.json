@@ -1,0 +1,16 @@
+{
+  "name": "@syncero/api",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  },
+  "peerDependencies": {
+    "@supabase/supabase-js": ">=2",
+    "hono": ">=4"
+  }
+}

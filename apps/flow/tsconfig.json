@@ -18,9 +18,10 @@
     "paths": {
       "@/*": ["./src/*"],
       "@syncero/ui": ["../../packages/ui/src/index.ts"],
-      "@syncero/ui/*": ["../../packages/ui/src/*"]
+      "@syncero/ui/*": ["../../packages/ui/src/*"],
+      "@syncero/api": ["../../packages/api/src/index.ts"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "api"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

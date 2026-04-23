@@ -14,7 +14,8 @@
       "mcp__8907826f-daeb-4102-9cda-30885e2a4bd5__get_runtime_logs",
       "WebFetch(domain:finflow-swart-delta.vercel.app)",
       "mcp__23816a37-c23b-4297-9157-df97b8e34aa1__apply_migration",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm install *)"
     ]
   }
 }

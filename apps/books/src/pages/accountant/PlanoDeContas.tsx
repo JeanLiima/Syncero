@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, ChevronRight, ChevronDown } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card } from '@syncero/ui'
 import { AccountPlanModal } from '@/components/accountant/AccountPlanModal'
@@ -26,7 +25,6 @@ const accountTypeLabel: Record<string, string> = {
 }
 
 export function Component() {
-  const { user } = useAuth()
   const { id, isExternal, canWrite } = useCompanyContext()
   const qc = useQueryClient()
 
@@ -35,16 +33,11 @@ export function Component() {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
 
   const queryKey = ['account-plans', id]
+  const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
 
   const { data: plans = [], isLoading } = useQuery({
     queryKey,
-    queryFn: async () => {
-      const q = supabase.from('account_plans').select('*').eq('is_active', true).order('code')
-      const filtered = isExternal ? q.eq('ext_company_id', id) : q.eq('company_id', id)
-      const { data, error } = await filtered
-      if (error) throw error
-      return (data ?? []) as AccountPlan[]
-    },
+    queryFn: () => apiFetch<AccountPlan[]>(`/api/account-plans?${companyParam}`),
     enabled: !!id,
   })
 
@@ -54,16 +47,14 @@ export function Component() {
   const handleSubmit = async (data: {
     code: string; name: string; account_type: string; nature: string; is_analytic: boolean; parent_id: string | null
   }) => {
-    if (!user?.id) return
     const payload = {
       ...data,
-      accountant_id: user.id,
-      ...(isExternal ? { ext_company_id: id } : { company_id: id }),
+      ...(isExternal ? { extCompanyId: id } : { companyId: id }),
     }
     if (editing) {
-      await supabase.from('account_plans').update(payload).eq('id', editing.id)
+      await apiFetch(`/api/account-plans/${editing.id}`, { method: 'PATCH', body: JSON.stringify(payload) })
     } else {
-      await supabase.from('account_plans').insert(payload)
+      await apiFetch('/api/account-plans', { method: 'POST', body: JSON.stringify(payload) })
     }
     qc.invalidateQueries({ queryKey })
     setEditing(null)

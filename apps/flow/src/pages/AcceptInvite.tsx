@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { Button, Card, Spinner } from '@syncero/ui'
 
@@ -21,48 +22,29 @@ export function Component() {
   }, [token])
 
   const resolveInvite = async () => {
-    // Check accountant_companies first
-    const { data: acct } = await supabase
-      .from('accountant_companies')
-      .select('id, status, companies(name)')
-      .eq('invite_token', token)
-      .maybeSingle()
+    try {
+      const data = await fetch(`/api/invites/${token}`).then(r => r.json()) as
+        | { type: 'accountant' | 'member'; companyName: string; status: string }
+        | { error: string }
 
-    if (acct) {
-      setInviteType('accountant')
-      const company = acct.companies as unknown as { name: string } | null
-      setCompanyName(company?.name ?? '')
-      if (acct.status !== 'pending') {
+      if ('error' in data) {
+        setStatus('error')
+        setMessage('Convite não encontrado.')
+        return
+      }
+
+      setInviteType(data.type)
+      setCompanyName(data.companyName)
+      if (data.status !== 'pending') {
         setStatus('error')
         setMessage('Este convite já foi utilizado ou expirou.')
       } else {
         setStatus('ready')
       }
-      return
+    } catch {
+      setStatus('error')
+      setMessage('Erro ao verificar convite.')
     }
-
-    // Check company_members
-    const { data: member } = await supabase
-      .from('company_members')
-      .select('id, status, companies(name)')
-      .eq('invite_token', token)
-      .maybeSingle()
-
-    if (member) {
-      setInviteType('member')
-      const company = member.companies as unknown as { name: string } | null
-      setCompanyName(company?.name ?? '')
-      if (member.status !== 'pending') {
-        setStatus('error')
-        setMessage('Este convite já foi utilizado ou expirou.')
-      } else {
-        setStatus('ready')
-      }
-      return
-    }
-
-    setStatus('error')
-    setMessage('Convite não encontrado.')
   }
 
   const acceptInvite = async () => {
@@ -76,28 +58,15 @@ export function Component() {
     }
 
     setStatus('loading')
-
-    let error: { message: string } | null = null
-
-    if (inviteType === 'accountant') {
-      const { error: e } = await supabase
-        .from('accountant_companies')
-        .update({ status: 'accepted', accountant_id: user.id })
-        .eq('invite_token', token)
-      error = e
-    } else {
-      const { error: e } = await supabase
-        .from('company_members')
-        .update({ status: 'active', user_id: user.id })
-        .eq('invite_token', token)
-      error = e
-    }
-
-    if (error) {
+    try {
+      await apiFetch(`/api/invites/${token}/accept`, {
+        method: 'POST',
+        body: JSON.stringify({ type: inviteType }),
+      })
+      setStatus('success')
+    } catch {
       setStatus('error')
       setMessage('Erro ao aceitar convite. Tente novamente.')
-    } else {
-      setStatus('success')
     }
   }
 

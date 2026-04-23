@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { Button, Input, Select, Card } from '@syncero/ui'
-import { DEFAULT_ACCOUNT_PLAN } from '@/lib/defaultAccountPlan'
 import type { TaxRegime, CompanyIntegration, CompanySegment } from '@/types'
 
 const segmentOptions = [
@@ -60,10 +59,9 @@ export function Component() {
     setSubmitting(true)
     try {
       const rawCnpj = cnpj.replace(/\D/g, '')
-      const { data: company, error: insertErr } = await supabase
-        .from('external_companies')
-        .insert({
-          accountant_id: user.id,
+      const company = await apiFetch<{ id: string }>('/api/external-companies', {
+        method: 'POST',
+        body: JSON.stringify({
           name: name.trim(),
           cnpj: rawCnpj || null,
           trade_name: tradeName.trim() || null,
@@ -71,34 +69,9 @@ export function Component() {
           integration,
           segment: segment || null,
           notes: notes.trim() || null,
-        })
-        .select('id')
-        .single()
-
-      if (insertErr) throw insertErr
-
-      if (seedPlan && company) {
-        // Build id map for parent references
-        const codeToId = new Map<string, string>()
-        for (const account of DEFAULT_ACCOUNT_PLAN) {
-          const parentId = account.parent_code ? (codeToId.get(account.parent_code) ?? null) : null
-          const { data: row } = await supabase
-            .from('account_plans')
-            .insert({
-              ext_company_id: company.id,
-              accountant_id: user.id,
-              parent_id: parentId,
-              code: account.code,
-              name: account.name,
-              account_type: account.account_type,
-              nature: account.nature,
-              is_analytic: account.is_analytic,
-            })
-            .select('id')
-            .single()
-          if (row) codeToId.set(account.code, row.id)
-        }
-      }
+          seedPlan,
+        }),
+      })
 
       qc.invalidateQueries({ queryKey: ['external-companies', user.id] })
       navigate(`/accountant/external/${company.id}`)

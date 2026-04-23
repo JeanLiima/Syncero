@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@syncero/ui'
 import { CompanyCard } from '@/components/accountant/CompanyCard'
@@ -16,33 +16,13 @@ export function Component() {
 
   const { data: synceroCompanies = [], isLoading: loadingSyncero } = useQuery({
     queryKey: ['accountant-companies', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return []
-      const { data, error } = await supabase
-        .from('accountant_companies')
-        .select('*, companies(id, name, cnpj, tax_regime)')
-        .eq('accountant_id', user.id)
-        .eq('status', 'accepted')
-        .order('accepted_at', { ascending: false })
-      if (error) throw error
-      return (data ?? []) as AccountantCompany[]
-    },
+    queryFn: () => apiFetch<AccountantCompany[]>('/api/companies'),
     enabled: !!user?.id,
   })
 
   const { data: externalCompanies = [], isLoading: loadingExternal } = useQuery({
     queryKey: ['external-companies', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return []
-      const { data, error } = await supabase
-        .from('external_companies')
-        .select('*')
-        .eq('accountant_id', user.id)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-      if (error) throw error
-      return (data ?? []) as ExternalCompany[]
-    },
+    queryFn: () => apiFetch<ExternalCompany[]>('/api/external-companies'),
     enabled: !!user?.id,
   })
 

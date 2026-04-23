@@ -73,7 +73,7 @@ function WrongApp() {
 const BOOKS_URL = import.meta.env.VITE_BOOKS_URL;
 
 function RequireAuth() {
-  const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
+  const { user, loading, needsOnboarding, isAccountant, activeCompany, profile } = useAuth()
   const location = useLocation()
 
   if (loading) return <Loader />
@@ -89,6 +89,8 @@ function RequireAuth() {
     return <Navigate to={returnTo} replace />
   }
 
+  // profile === undefined means GET /api/me failed — show loader so the user can refresh
+  if (profile === undefined) return <Loader />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (isAccountant) return <WrongApp />
   if (!activeCompany) return <NoCompanyShell />

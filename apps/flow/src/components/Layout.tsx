@@ -38,7 +38,7 @@ export function Layout({ children }: { children: ReactNode }) {
       navItems={isAccountant ? accountantNav : companyNav}
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}
-      profile={profile}
+      profile={profile ?? null}
       onSignOut={signOut}
       sidebarHeader={
         !isAccountant && activeCompany ? (

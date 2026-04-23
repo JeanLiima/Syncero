@@ -22,7 +22,7 @@ export function Layout({ children }: { children: ReactNode }) {
       navItems={navItems}
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}
-      profile={profile}
+      profile={profile ?? null}
       onSignOut={signOut}
       banner={<PWABanner />}
       preferencesLabel={t('nav_preferences')}

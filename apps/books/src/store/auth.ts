@@ -18,10 +18,10 @@ export interface ActiveCompany {
 
 interface AuthState {
   user: User | null
-  profile: Profile | null
+  profile: Profile | null | undefined
   activeCompany: ActiveCompany | null
   setUser: (user: User | null) => void
-  setProfile: (profile: Profile | null) => void
+  setProfile: (profile: Profile | null | undefined) => void
   setActiveCompany: (company: ActiveCompany | null) => void
   clear: () => void
 }
@@ -30,12 +30,12 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      profile: null,
+      profile: undefined,
       activeCompany: null,
       setUser: (user) => set({ user }),
       setProfile: (profile) => set({ profile }),
       setActiveCompany: (activeCompany) => set({ activeCompany }),
-      clear: () => set({ user: null, profile: null, activeCompany: null }),
+      clear: () => set({ user: null, profile: undefined, activeCompany: null }),
     }),
     {
       name: 'syncero-auth',

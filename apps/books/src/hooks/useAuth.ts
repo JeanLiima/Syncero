@@ -58,7 +58,7 @@ export function useAuth() {
       }>('/api/me')
       setProfile(data.profile)
     } catch {
-      setProfile(null)
+      lastFetchedUserId.current = null
     }
     setLoading(false)
   }

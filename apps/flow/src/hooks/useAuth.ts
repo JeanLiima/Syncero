@@ -62,7 +62,7 @@ export function useAuth() {
         setActiveCompany(data.activeCompany)
       }
     } catch {
-      setProfile(null)
+      lastFetchedUserId.current = null
     }
     setLoading(false)
   }

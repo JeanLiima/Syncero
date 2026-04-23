@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
-import { Modal, Button, Input, Select } from '@syncero/ui'
+import { Modal, Button, Input, Select, DatePicker } from '@syncero/ui'
 import type { AccountPlan, JournalSide } from '@/types'
 
 interface EntryLine {
@@ -84,7 +84,7 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
     <Modal open={open} onClose={onClose} title="Novo lançamento" size="lg">
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-4">
-          <Input label="Data" type="date" value={date} onChange={e => setDate(e.target.value)} />
+          <DatePicker label="Data" value={date} onChange={e => setDate(e.target.value)} />
           <Input label="Histórico" placeholder="Descrição do lançamento" className="col-span-2" value={description} onChange={e => setDescription(e.target.value)} />
         </div>
         <Input label="Documento / Referência" placeholder="NF001, boleto, etc." value={externalRef} onChange={e => setExternalRef(e.target.value)} />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Copy, Check, Eye } from 'lucide-react'
-import { Modal, Button, Input } from '@syncero/ui'
+import { Modal, Button, Input, DatePicker } from '@syncero/ui'
 
 interface ApiKeyCreateModalProps {
   open: boolean
@@ -76,9 +76,8 @@ export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModal
             value={name}
             onChange={e => setName(e.target.value)}
           />
-          <Input
+          <DatePicker
             label="Expira em (opcional)"
-            type="date"
             value={expiresAt}
             onChange={e => setExpiresAt(e.target.value)}
           />

@@ -4,7 +4,7 @@ import { Plus, Upload } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, Badge } from '@syncero/ui'
+import { Button, Card, Badge, MonthPicker } from '@syncero/ui'
 import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
 import { DominioImportModal } from '@/components/accountant/DominioImportModal'
 import type { JournalEntry, AccountPlan, EntrySource } from '@/types'
@@ -132,11 +132,10 @@ export function Component() {
           <p className="text-sm text-[var(--text-muted)]">{entries.length} lançamento{entries.length !== 1 ? 's' : ''} em {period}</p>
         </div>
         <div className="flex items-center gap-2">
-          <input
-            type="month"
+          <MonthPicker
             value={period}
             onChange={e => setPeriod(e.target.value)}
-            className="h-9 px-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
+            className="h-9"
           />
           {canWrite && (
             <>

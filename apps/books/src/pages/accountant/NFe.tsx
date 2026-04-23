@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
-import { Card, Table, Badge, Select, Input } from '@syncero/ui'
+import { Card, Table, Badge, Select, DatePicker } from '@syncero/ui'
 import type { FiscalDocument, FiscalDocType } from '@/types'
 
 export function Component() {
@@ -54,8 +54,8 @@ export function Component() {
             onChange={(v) => setFilterType(v as FiscalDocType | '')}
             className="w-36"
           />
-          <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
-          <Input type="date" value={dateTo}   onChange={(e) => setDateTo(e.target.value)}   className="w-40" />
+          <DatePicker value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
+          <DatePicker value={dateTo}   onChange={(e) => setDateTo(e.target.value)}   className="w-40" />
         </div>
       </Card>
 

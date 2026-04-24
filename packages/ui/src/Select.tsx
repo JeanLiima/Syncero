@@ -17,6 +17,7 @@ interface SelectProps {
   disabled?: boolean
   className?: string
   name?: string
+  size?: 'sm' | 'md'
   onBlur?: () => void
 }
 
@@ -29,6 +30,7 @@ export function Select({
   placeholder = 'Selecionar',
   disabled,
   className,
+  size = 'md',
   onBlur,
 }: SelectProps) {
   const [open, setOpen] = useState(false)
@@ -69,7 +71,8 @@ export function Select({
           disabled={disabled}
           onClick={() => !disabled && setOpen((v) => !v)}
           className={clsx(
-            'w-full h-10 px-3 pr-9 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border text-sm text-left transition-colors duration-150 cursor-pointer flex items-center',
+            'w-full rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border text-left transition-colors duration-150 cursor-pointer flex items-center',
+            size === 'sm' ? 'h-8 px-2.5 pr-8 text-xs' : 'h-10 px-3 pr-9 text-sm',
             error
               ? 'border-[var(--danger)] focus:border-[var(--danger)]'
               : open
@@ -82,7 +85,8 @@ export function Select({
           <span className="truncate">{selected?.label ?? placeholder}</span>
           <ChevronDown
             className={clsx(
-              'absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)] transition-transform duration-150',
+              'absolute top-1/2 -translate-y-1/2 text-[var(--text-muted)] transition-transform duration-150',
+              size === 'sm' ? 'right-2 h-3.5 w-3.5' : 'right-3 h-4 w-4',
               open && 'rotate-180'
             )}
           />

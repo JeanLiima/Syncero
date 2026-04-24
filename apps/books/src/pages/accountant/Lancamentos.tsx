@@ -92,7 +92,7 @@ export function Component() {
             value={period}
             onChange={setPeriod}
             language={language}
-            className="h-9"
+            size="sm"
           />
           {canWrite && (
             <>

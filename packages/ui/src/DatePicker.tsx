@@ -199,9 +199,10 @@ function Popover({ anchorRef, innerRef, children }: {
 
 // ─── Shared trigger button ───────────────────────────────────────────────────
 
-function Trigger({ id, open, disabled, error, label, display, placeholder, onClick }: {
+function Trigger({ id, open, disabled, error, label, display, placeholder, size, onClick }: {
   id: string; open: boolean; disabled?: boolean; error?: string
-  label?: string; display: string | null; placeholder: string; onClick: () => void
+  label?: string; display: string | null; placeholder: string
+  size: 'sm' | 'md'; onClick: () => void
 }) {
   return (
     <>
@@ -216,7 +217,8 @@ function Trigger({ id, open, disabled, error, label, display, placeholder, onCli
         disabled={disabled}
         onClick={onClick}
         className={clsx(
-          'w-full h-10 px-3 gap-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border text-sm text-left transition-colors duration-150 cursor-pointer flex items-center',
+          'w-full rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border text-left transition-colors duration-150 cursor-pointer flex items-center',
+          size === 'sm' ? 'h-8 px-2.5 gap-1.5 text-xs' : 'h-10 px-3 gap-2 text-sm',
           error
             ? 'border-[var(--danger)]'
             : open
@@ -226,7 +228,7 @@ function Trigger({ id, open, disabled, error, label, display, placeholder, onCli
           display ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'
         )}
       >
-        <Calendar className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />
+        <Calendar className={clsx('shrink-0 text-[var(--text-muted)]', size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4')} />
         <span>{display ?? placeholder}</span>
       </button>
     </>
@@ -244,10 +246,11 @@ interface DatePickerProps {
   disabled?: boolean
   placeholder?: string
   language?: Language
+  size?: 'sm' | 'md'
 }
 
 export function DatePicker({
-  value, onChange, label, error, className, disabled, placeholder, language = 'pt',
+  value, onChange, label, error, className, disabled, placeholder, language = 'pt', size = 'md',
 }: DatePickerProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -289,6 +292,7 @@ export function DatePicker({
           label={label}
           display={selected ? format(selected, displayFormat) : null}
           placeholder={placeholder ?? defaultPlaceholder}
+          size={size}
           onClick={() => !disabled && setOpen(v => !v)}
         />
       </div>
@@ -314,10 +318,11 @@ interface MonthPickerProps {
   disabled?: boolean
   placeholder?: string
   language?: Language
+  size?: 'sm' | 'md'
 }
 
 export function MonthPicker({
-  value, onChange, label, error, className, disabled, placeholder, language = 'pt',
+  value, onChange, label, error, className, disabled, placeholder, language = 'pt', size = 'md',
 }: MonthPickerProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -362,6 +367,7 @@ export function MonthPicker({
           label={label}
           display={display}
           placeholder={placeholder ?? defaultPlaceholder}
+          size={size}
           onClick={() => !disabled && setOpen(v => !v)}
         />
       </div>

@@ -25,7 +25,7 @@ export function Comparison() {
             <div className="px-5 py-4" />
             <div className="px-5 py-4 text-center border-l border-[var(--bg-border)]">
               <div className="flex items-center justify-center gap-2">
-                <TrendingUp className="h-4 w-4 text-[var(--accent)]" />
+                <TrendingUp className="h-4 w-4 text-[var(--flow)]" />
                 <span className="font-semibold text-[var(--text-primary)] text-sm">Flow</span>
               </div>
             </div>

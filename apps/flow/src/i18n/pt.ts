@@ -7,7 +7,6 @@ export const pt = {
   nav_dre: 'DRE',
   nav_settings: 'Configurações',
   nav_preferences: 'Preferências',
-  nav_myCompanies: 'Minhas Empresas',
   nav_signOut: 'Sair',
 
   // Layout
@@ -157,17 +156,8 @@ export const pt = {
   preferences_portuguese: 'Português',
   preferences_english: 'English',
 
-  // Accountant
-  accountant_title: 'Minhas Empresas',
-  accountant_noCompanies: 'Nenhuma empresa vinculada ainda',
-  accountant_viewFiscal: 'Ver fiscal',
+  // Accountant management (company user inviting accountants)
   accountant_status: 'Status',
-  accountant_since: 'Vinculado em',
-  accountant_fiscalTitle: 'Resumo Fiscal',
-  accountant_nfe: 'NF-e',
-  accountant_sped: 'SPED',
-  accountant_taxes: 'Impostos',
-  accountant_back: 'Voltar',
 
   // Login
   login_title: 'Bem-vindo ao Syncero Flow',
@@ -175,12 +165,7 @@ export const pt = {
   login_google: 'Entrar com Google',
 
   // Onboarding
-  onboarding_title: 'Como você vai usar a plataforma?',
   onboarding_welcome: 'Bem-vindo ao Syncero Flow.',
-  onboarding_companyLabel: 'Empresa',
-  onboarding_companyDesc: 'Gerencio as finanças de uma ou mais empresas',
-  onboarding_accountantLabel: 'Contador',
-  onboarding_accountantDesc: 'Acesso fiscal e contábil das empresas dos meus clientes',
   onboarding_continue: 'Continuar',
 
   // Common

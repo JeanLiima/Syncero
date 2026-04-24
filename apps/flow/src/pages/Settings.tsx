@@ -9,7 +9,7 @@ import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
 import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar } from '@syncero/ui'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant } from '@/lib/backend'
-import type { MemberRole } from '@/types'
+import type { MemberRole, AccountantCompany } from '@/types'
 
 // ── Company tab ───────────────────────────────────────────────
 
@@ -211,7 +211,7 @@ function AccountantTab() {
   const [inviteEmail, setInviteEmail] = useState('')
   const qc = useQueryClient()
 
-  const { data: accountants = [], isLoading } = useQuery({
+  const { data: accountants = [], isLoading } = useQuery<AccountantCompany[]>({
     queryKey: ['accountants', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany?.id) return []

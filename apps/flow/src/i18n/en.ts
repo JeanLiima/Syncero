@@ -9,7 +9,6 @@ export const en: Record<TranslationKey, string> = {
   nav_dre: 'Income Statement',
   nav_settings: 'Settings',
   nav_preferences: 'Preferences',
-  nav_myCompanies: 'My Companies',
   nav_signOut: 'Sign Out',
 
   // Layout
@@ -159,17 +158,8 @@ export const en: Record<TranslationKey, string> = {
   preferences_portuguese: 'Português',
   preferences_english: 'English',
 
-  // Accountant
-  accountant_title: 'My Companies',
-  accountant_noCompanies: 'No companies linked yet',
-  accountant_viewFiscal: 'View fiscal',
+  // Accountant management (company user inviting accountants)
   accountant_status: 'Status',
-  accountant_since: 'Linked since',
-  accountant_fiscalTitle: 'Fiscal Summary',
-  accountant_nfe: 'Invoice (NF-e)',
-  accountant_sped: 'SPED',
-  accountant_taxes: 'Taxes',
-  accountant_back: 'Back',
 
   // Login
   login_title: 'Welcome to Syncero Flow',
@@ -177,12 +167,7 @@ export const en: Record<TranslationKey, string> = {
   login_google: 'Sign in with Google',
 
   // Onboarding
-  onboarding_title: 'How will you use the platform?',
   onboarding_welcome: 'Welcome to Syncero Flow.',
-  onboarding_companyLabel: 'Company',
-  onboarding_companyDesc: 'I manage finances for one or more companies',
-  onboarding_accountantLabel: 'Accountant',
-  onboarding_accountantDesc: "Fiscal and accounting access to my clients' companies",
   onboarding_continue: 'Continue',
 
   // Common

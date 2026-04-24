@@ -6,7 +6,6 @@ import {
   CreditCard,
   BarChart2,
   Settings,
-  Building2,
 } from 'lucide-react'
 import { AppLayout, type NavItem } from '@syncero/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -15,11 +14,11 @@ import { usePreferencesStore } from '@/store/preferences'
 import { PWABanner } from '@/components/PWABanner'
 
 export function Layout({ children }: { children: ReactNode }) {
-  const { profile, activeCompany, signOut, isAccountant } = useAuth()
+  const { profile, activeCompany, signOut } = useAuth()
   const t = useT()
   const { sidebarCollapsed, setSidebarCollapsed } = usePreferencesStore()
 
-  const companyNav: NavItem[] = [
+  const navItems: NavItem[] = [
     { to: '/dashboard',    label: t('nav_dashboard'),    icon: <LayoutDashboard className="h-4 w-4 shrink-0" />, end: true },
     { to: '/transactions', label: t('nav_transactions'), icon: <ArrowUpDown     className="h-4 w-4 shrink-0" /> },
     { to: '/cash-flow',    label: t('nav_cashFlow'),     icon: <TrendingUp      className="h-4 w-4 shrink-0" /> },
@@ -28,20 +27,16 @@ export function Layout({ children }: { children: ReactNode }) {
     { to: '/settings',     label: t('nav_settings'),     icon: <Settings        className="h-4 w-4 shrink-0" /> },
   ]
 
-  const accountantNav: NavItem[] = [
-    { to: '/accountant', label: t('nav_myCompanies'), icon: <Building2 className="h-4 w-4 shrink-0" />, end: true },
-  ]
-
   return (
     <AppLayout
       brand={{ initials: 'SF', name: 'Syncero Flow' }}
-      navItems={isAccountant ? accountantNav : companyNav}
+      navItems={navItems}
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}
       profile={profile ?? null}
       onSignOut={signOut}
       sidebarHeader={
-        !isAccountant && activeCompany ? (
+        activeCompany ? (
           <div className="px-4 py-3 border-b border-[var(--bg-border)]">
             <p className="text-xs text-[var(--text-muted)] mb-0.5">{t('layout_activeCompany')}</p>
             <p className="text-sm font-medium text-[var(--text-primary)] truncate">{activeCompany.name}</p>
@@ -49,7 +44,7 @@ export function Layout({ children }: { children: ReactNode }) {
         ) : undefined
       }
       topbarMobileLeft={
-        !isAccountant && activeCompany ? (
+        activeCompany ? (
           <span className="md:hidden text-sm font-medium text-[var(--text-primary)] truncate flex-1">
             {activeCompany.name}
           </span>

@@ -105,13 +105,6 @@ function RequireOnboarding() {
   return <Outlet />
 }
 
-function RequireAccountant() {
-  const { isAccountant, loading } = useAuth()
-  if (loading) return null
-  if (!isAccountant) return <Navigate to="/dashboard" replace />
-  return <Outlet />
-}
-
 // ── Router ────────────────────────────────────────────────
 
 export const router = createBrowserRouter([
@@ -139,17 +132,6 @@ export const router = createBrowserRouter([
       { path: '/dre',           lazy: lazyLoad(() => import('../pages/DRE')) },
       { path: '/settings',      lazy: lazyLoad(() => import('../pages/Settings')) },
       { path: '/preferences',   lazy: lazyLoad(() => import('../pages/Preferences')) },
-
-      {
-        element: <RequireAccountant />,
-        children: [
-          { path: '/accountant',                                    lazy: lazyLoad(() => import('../pages/contador/Dashboard')) },
-          { path: '/accountant/company/:companyId',                 lazy: lazyLoad(() => import('../pages/contador/EmpresaFiscal')) },
-          { path: '/accountant/company/:companyId/nfe',             lazy: lazyLoad(() => import('../pages/contador/NFe')) },
-          { path: '/accountant/company/:companyId/sped',            lazy: lazyLoad(() => import('../pages/contador/SPED')) },
-          { path: '/accountant/company/:companyId/taxes',           lazy: lazyLoad(() => import('../pages/contador/Impostos')) },
-        ],
-      },
     ],
   },
 

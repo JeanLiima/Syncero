@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { Company, CompanyMember, AccountantCompany, Transaction, Category, PayableReceivable, FiscalBook, FiscalDocument, TaxCalculation } from '@/types'
+import type { Company, CompanyMember, AccountantCompany, Transaction, Category, PayableReceivable } from '@/types'
 
 function buildQuery(params: Record<string, string | undefined>) {
   const query = new URLSearchParams()
@@ -107,16 +107,4 @@ export async function updatePayable(id: string, data: Partial<PayableReceivable>
 
 export async function deletePayable(id: string) {
   return apiFetch<{ ok: true }>(`/api/payables/${id}`, { method: 'DELETE' })
-}
-
-export async function getFiscalBooks(companyId: string) {
-  return apiFetch<FiscalBook[]>(`/api/fiscal-books${buildQuery({ companyId })}`)
-}
-
-export async function getFiscalDocuments(companyId: string, opts: { doc_type?: string; date_from?: string; date_to?: string } = {}) {
-  return apiFetch<FiscalDocument[]>(`/api/fiscal-documents${buildQuery({ companyId, ...opts })}`)
-}
-
-export async function getTaxCalculations(companyId: string) {
-  return apiFetch<TaxCalculation[]>(`/api/tax-calculations${buildQuery({ companyId })}`)
 }

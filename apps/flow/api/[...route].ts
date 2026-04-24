@@ -9,9 +9,6 @@ import accountantCompaniesRouter from './routes/accountantCompanies'
 import transactionsRouter from './routes/transactions'
 import categoriesRouter from './routes/categories'
 import payablesRouter from './routes/payables'
-import fiscalDocumentsRouter from './routes/fiscalDocuments'
-import fiscalBooksRouter from './routes/fiscalBooks'
-import taxCalculationsRouter from './routes/taxCalculations'
 
 export const config = { runtime: 'edge' }
 
@@ -36,12 +33,6 @@ app.use('/categories/*', authMiddleware)
 app.use('/categories', authMiddleware)
 app.use('/payables/*', authMiddleware)
 app.use('/payables', authMiddleware)
-app.use('/fiscal-documents/*', authMiddleware)
-app.use('/fiscal-documents', authMiddleware)
-app.use('/fiscal-books/*', authMiddleware)
-app.use('/fiscal-books', authMiddleware)
-app.use('/tax-calculations/*', authMiddleware)
-app.use('/tax-calculations', authMiddleware)
 app.use('/invites/:token/accept', authMiddleware)
 
 // ── Route registrations ────────────────────────────────────────
@@ -54,8 +45,5 @@ app.route('/accountant-companies', accountantCompaniesRouter)
 app.route('/transactions', transactionsRouter)
 app.route('/categories', categoriesRouter)
 app.route('/payables', payablesRouter)
-app.route('/fiscal-documents', fiscalDocumentsRouter)
-app.route('/fiscal-books', fiscalBooksRouter)
-app.route('/tax-calculations', taxCalculationsRouter)
 
 export default handle(app)

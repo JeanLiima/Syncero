@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
-import { Button, Input, Select, Card } from '@syncero/ui'
+import { Button, Input, Select, Card, Checkbox } from '@syncero/ui'
 import type { TaxRegime, CompanyIntegration, CompanySegment } from '@/types'
 
 const segmentOptions = [
@@ -142,15 +142,11 @@ export function Component() {
             onChange={e => setNotes(e.target.value)}
           />
 
-          <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-[var(--text-secondary)]">
-            <input
-              type="checkbox"
-              checked={seedPlan}
-              onChange={e => setSeedPlan(e.target.checked)}
-              className="h-4 w-4 rounded border-[var(--bg-border)] bg-[var(--bg-elevated)] accent-[var(--accent)]"
-            />
-            Criar Plano de Contas padrão CFC
-          </label>
+          <Checkbox
+            label="Criar Plano de Contas padrão CFC"
+            checked={seedPlan}
+            onChange={e => setSeedPlan((e.target as HTMLInputElement).checked)}
+          />
 
           {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
 

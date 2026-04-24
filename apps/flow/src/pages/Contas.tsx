@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format, isPast, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle } from 'lucide-react'
-import { Button, Card, Table, Badge, Modal, Input, Tabs, TabList, Tab, TabPanel } from '@syncero/ui'
+import { Button, Card, Table, Badge, Modal, Input, DatePicker, Tabs, TabList, Tab, TabPanel } from '@syncero/ui'
+import { usePreferencesStore } from '@/store/preferences'
 import { usePayables } from '@/modules/contas/queries'
 import { useCreatePayable, useMarkPayablePaid, useDeletePayable } from '@/modules/contas/mutations'
 import type { PayableReceivable, PayableType } from '@/types'
@@ -29,12 +30,13 @@ function statusBadge(item: PayableReceivable) {
 
 function PayableTable({ type }: { type: PayableType }) {
   const [modalOpen, setModalOpen] = useState(false)
+  const { language } = usePreferencesStore()
   const { data = [], isLoading } = usePayables(type)
   const create = useCreatePayable()
   const markPaid = useMarkPayablePaid()
   const deleteP = useDeletePayable()
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { due_date: format(new Date(), 'yyyy-MM-dd') },
   })
@@ -95,14 +97,14 @@ function PayableTable({ type }: { type: PayableType }) {
                   <div className="flex items-center gap-2 justify-end">
                     <button
                       onClick={() => markPaid.mutate({ id: r.id, type: r.type })}
-                      className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
+                      className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors cursor-pointer"
                       title="Marcar como pago"
                     >
                       <CheckCircle className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => deleteP.mutate({ id: r.id, type: r.type })}
-                      className="p-1 text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                      className="p-1 text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors cursor-pointer"
                       title="Excluir"
                     >
                       ×
@@ -119,7 +121,19 @@ function PayableTable({ type }: { type: PayableType }) {
           <Input label="Descrição" error={errors.description?.message} {...register('description')} />
           <div className="grid grid-cols-2 gap-3">
             <Input label="Valor (R$)" type="number" step="0.01" error={errors.amount?.message} {...register('amount')} />
-            <Input label="Vencimento" type="date" error={errors.due_date?.message} {...register('due_date')} />
+            <Controller
+              control={control}
+              name="due_date"
+              render={({ field }) => (
+                <DatePicker
+                  label="Vencimento"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  language={language}
+                  error={errors.due_date?.message}
+                />
+              )}
+            />
           </div>
           <Input label="Contato" {...register('contact_name')} />
           <Input label="Observações" {...register('notes')} />

@@ -5,7 +5,8 @@ import { z } from 'zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle } from 'lucide-react'
-import { Button, Card, Table, Badge, Modal, Input, Select } from '@syncero/ui'
+import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, Checkbox } from '@syncero/ui'
+import { usePreferencesStore } from '@/store/preferences'
 import { useTransactions, useCategories } from '@/modules/lancamentos/queries'
 import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/lancamentos/mutations'
 import type { Transaction } from '@/types'
@@ -29,6 +30,7 @@ export function Component() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
 
+  const { language } = usePreferencesStore()
   const { data, isLoading } = useTransactions(filters, page)
   const { data: categories = [] } = useCategories()
   const create = useCreateTransaction()
@@ -119,16 +121,16 @@ export function Component() {
             onChange={(v) => setFilters((f) => ({ ...f, is_paid: v === '' ? undefined : v === 'true' }))}
             className="w-44"
           />
-          <Input
-            type="date"
+          <DatePicker
             value={filters.date_from ?? ''}
-            onChange={(e) => setFilters((f) => ({ ...f, date_from: e.target.value || undefined }))}
+            onChange={(v) => setFilters((f) => ({ ...f, date_from: v || undefined }))}
+            language={language}
             className="w-40"
           />
-          <Input
-            type="date"
+          <DatePicker
             value={filters.date_to ?? ''}
-            onChange={(e) => setFilters((f) => ({ ...f, date_to: e.target.value || undefined }))}
+            onChange={(v) => setFilters((f) => ({ ...f, date_to: v || undefined }))}
+            language={language}
             className="w-40"
           />
         </div>
@@ -189,7 +191,7 @@ export function Component() {
                 !r.is_paid ? (
                   <button
                     onClick={(e) => { e.stopPropagation(); markPaid.mutate(r.id) }}
-                    className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
+                    className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors cursor-pointer"
                     title="Marcar como pago"
                   >
                     <CheckCircle className="h-4 w-4" />
@@ -223,7 +225,19 @@ export function Component() {
           <Input label="Descrição" error={errors.description?.message} {...register('description')} />
           <div className="grid grid-cols-2 gap-3">
             <Input label="Valor (R$)" type="number" step="0.01" error={errors.amount?.message} {...register('amount')} />
-            <Input label="Data" type="date" error={errors.date?.message} {...register('date')} />
+            <Controller
+              control={control}
+              name="date"
+              render={({ field }) => (
+                <DatePicker
+                  label="Data"
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  language={language}
+                  error={errors.date?.message}
+                />
+              )}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Controller
@@ -259,10 +273,7 @@ export function Component() {
             />
           </div>
           <Input label="Observações" {...register('notes')} />
-          <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] cursor-pointer">
-            <input type="checkbox" className="accent-[var(--accent)]" {...register('is_paid')} />
-            Marcar como pago
-          </label>
+          <Checkbox label="Marcar como pago" {...register('is_paid')} />
           <div className="flex justify-between gap-3 mt-2">
             {editing && (
               <Button

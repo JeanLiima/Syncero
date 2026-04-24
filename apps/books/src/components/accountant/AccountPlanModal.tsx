@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Modal, Button, Input, Select } from '@syncero/ui'
+import { Modal, Button, Input, Select, Checkbox } from '@syncero/ui'
 import type { AccountPlan, AccountType, AccountNature } from '@/types'
 
 const schema = z.object({
@@ -131,16 +131,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, parents, editing }: 
           />
         </div>
 
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-[var(--text-secondary)]">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-[var(--bg-border)] bg-[var(--bg-elevated)] accent-[var(--accent)]"
-              {...register('is_analytic')}
-            />
-            Conta analítica (aceita lançamentos)
-          </label>
-        </div>
+        <Checkbox label="Conta analítica (aceita lançamentos)" {...register('is_analytic')} />
 
         <div className="flex justify-end gap-2 pt-2 border-t border-[var(--bg-border)]">
           <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>

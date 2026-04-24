@@ -26,7 +26,7 @@ export function PWABanner() {
         // Chrome/Edge/Android — prompt nativo disponível
         <button
           onClick={install}
-          className="flex-shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 active:scale-95 transition-transform"
+          className="flex-shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 active:scale-95 transition-transform cursor-pointer"
         >
           Instalar
         </button>
@@ -40,7 +40,7 @@ export function PWABanner() {
       <button
         onClick={dismiss}
         aria-label="Fechar banner"
-        className="flex-shrink-0 rounded p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+        className="flex-shrink-0 rounded p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 cursor-pointer"
       >
         <X className="h-4 w-4" />
       </button>

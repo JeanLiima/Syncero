@@ -1,6 +1,7 @@
 export { AppLayout } from './AppLayout'
 export type { AppLayoutProps, NavItem } from './AppLayout'
 export { Avatar } from './Avatar'
+export { Checkbox } from './Checkbox'
 export { Badge } from './Badge'
 export { Button } from './Button'
 export { Card } from './Card'

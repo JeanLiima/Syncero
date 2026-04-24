@@ -39,8 +39,8 @@ export interface AppLayoutProps {
 }
 
 const colorMap = {
-  accent:  { brand: 'bg-[var(--accent-subtle)]',   brandIcon: 'text-[var(--accent)]',   active: 'bg-[var(--accent-subtle)] text-[var(--accent)]',   mobileActive: 'text-[var(--accent)]'   },
-  success: { brand: 'bg-[var(--success-subtle)]',  brandIcon: 'text-[var(--success)]',  active: 'bg-[var(--success-subtle)] text-[var(--success)]', mobileActive: 'text-[var(--success)]'  },
+  accent:  { brand: 'bg-[var(--accent-subtle)]',   brandIcon: 'text-[var(--accent)]',   active: 'bg-[var(--accent)] text-white',   mobileActive: 'text-[var(--accent)]'   },
+  success: { brand: 'bg-[var(--success-subtle)]',  brandIcon: 'text-[var(--success)]',  active: 'bg-[var(--success)] text-white',  mobileActive: 'text-[var(--success)]'  },
 } as const
 
 // ── SidebarLink ───────────────────────────────────────────────

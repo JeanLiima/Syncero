@@ -102,7 +102,7 @@ export function Select({
                 className={clsx(
                   'w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors cursor-pointer',
                   opt.value === value
-                    ? 'text-[var(--accent)] bg-[var(--accent-subtle)]'
+                    ? 'bg-[var(--accent)] text-white'
                     : 'text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
                 )}
               >

@@ -9,6 +9,14 @@ export const pt = {
   nav_preferences: 'Preferências',
   nav_companies: 'Empresas',
   nav_signOut: 'Sair',
+  nav_overview: 'Visão Geral',
+  nav_fiscalDocs: 'Doc. Fiscais',
+  nav_sped: 'Livros SPED',
+  nav_taxes: 'Impostos',
+  nav_accountPlan: 'Plano de Contas',
+  nav_journal: 'Lançamentos',
+  nav_apiKeys: 'API Keys',
+  nav_externalBadge: 'Externa',
 
   // Layout
   layout_activeCompany: 'Empresa ativa',

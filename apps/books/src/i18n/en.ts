@@ -11,6 +11,14 @@ export const en: Record<TranslationKey, string> = {
   nav_preferences: 'Preferences',
   nav_companies: 'Companies',
   nav_signOut: 'Sign Out',
+  nav_overview: 'Overview',
+  nav_fiscalDocs: 'Fiscal Docs',
+  nav_sped: 'SPED Books',
+  nav_taxes: 'Taxes',
+  nav_accountPlan: 'Chart of Accounts',
+  nav_journal: 'Journal',
+  nav_apiKeys: 'API Keys',
+  nav_externalBadge: 'External',
 
   // Layout
   layout_activeCompany: 'Active company',

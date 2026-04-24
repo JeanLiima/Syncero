@@ -5,10 +5,12 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Card, Table, Badge, Select, DatePicker } from '@syncero/ui'
 import { getFiscalDocuments } from '@/lib/backend'
+import { usePreferencesStore } from '@/store/preferences'
 import type { FiscalDocument, FiscalDocType } from '@/types'
 
 export function Component() {
   const { companyId } = useParams<{ companyId: string }>()
+  const language = usePreferencesStore(s => s.language)
   const [filterType, setFilterType] = useState<FiscalDocType | ''>('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo,   setDateTo]   = useState('')
@@ -45,8 +47,8 @@ export function Component() {
             onChange={(v) => setFilterType(v as FiscalDocType | '')}
             className="w-36"
           />
-          <DatePicker value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
-          <DatePicker value={dateTo}   onChange={(e) => setDateTo(e.target.value)}   className="w-40" />
+          <DatePicker value={dateFrom} onChange={setDateFrom} language={language} className="w-40" />
+          <DatePicker value={dateTo}   onChange={setDateTo}   language={language} className="w-40" />
         </div>
       </Card>
 

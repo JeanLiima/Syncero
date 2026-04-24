@@ -4,6 +4,7 @@ import { Plus, Upload } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card, Badge, MonthPicker } from '@syncero/ui'
+import { usePreferencesStore } from '@/store/preferences'
 import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
 import { DominioImportModal } from '@/components/accountant/DominioImportModal'
 import type { JournalEntry, AccountPlan, EntrySource } from '@/types'
@@ -25,6 +26,7 @@ const sourceVariant: Record<EntrySource, 'default' | 'info' | 'success' | 'warni
 
 export function Component() {
   const { id, isExternal, canWrite } = useCompanyContext()
+  const language = usePreferencesStore(s => s.language)
   const qc = useQueryClient()
 
   const [entryModalOpen, setEntryModalOpen] = useState(false)
@@ -88,7 +90,8 @@ export function Component() {
         <div className="flex items-center gap-2">
           <MonthPicker
             value={period}
-            onChange={e => setPeriod(e.target.value)}
+            onChange={setPeriod}
+            language={language}
             className="h-9"
           />
           {canWrite && (

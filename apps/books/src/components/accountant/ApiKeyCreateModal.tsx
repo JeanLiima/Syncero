@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Copy, Check, Eye } from 'lucide-react'
 import { Modal, Button, Input, DatePicker } from '@syncero/ui'
+import { usePreferencesStore } from '@/store/preferences'
 
 interface ApiKeyCreateModalProps {
   open: boolean
@@ -9,6 +10,7 @@ interface ApiKeyCreateModalProps {
 }
 
 export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModalProps) {
+  const language = usePreferencesStore(s => s.language)
   const [name, setName] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -79,7 +81,8 @@ export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModal
           <DatePicker
             label="Expira em (opcional)"
             value={expiresAt}
-            onChange={e => setExpiresAt(e.target.value)}
+            onChange={setExpiresAt}
+            language={language}
           />
           {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
           <div className="flex justify-end gap-2 pt-2 border-t border-[var(--bg-border)]">

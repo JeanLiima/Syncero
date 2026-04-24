@@ -53,7 +53,7 @@ function WrongApp() {
         <div className="flex flex-col gap-3">
           <a
             href={BOOKS_URL}
-            className="inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            className="inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-[var(--books)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
           >
             {t("router_books")}
           </a>

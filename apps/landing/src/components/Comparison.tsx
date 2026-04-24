@@ -31,7 +31,7 @@ export function Comparison() {
             </div>
             <div className="px-5 py-4 text-center border-l border-[var(--bg-border)]">
               <div className="flex items-center justify-center gap-2">
-                <BookOpen className="h-4 w-4 text-[var(--success)]" />
+                <BookOpen className="h-4 w-4 text-[var(--books)]" />
                 <span className="font-semibold text-[var(--text-primary)] text-sm">Books</span>
               </div>
             </div>

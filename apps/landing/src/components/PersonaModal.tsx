@@ -46,10 +46,10 @@ export function PersonaModal({ onClose }: { onClose: () => void }) {
 
           <a
             href={`${BOOKS_URL}/login`}
-            className="flex items-center gap-4 p-4 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] hover:border-[var(--success)] hover:bg-[#0d2a1e] transition-all"
+            className="flex items-center gap-4 p-4 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] hover:border-[var(--books)] hover:bg-[var(--books-subtle)] transition-all"
           >
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#0d2a1e]">
-              <Calculator className="h-6 w-6 text-[var(--success)]" />
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--books-subtle)]">
+              <Calculator className="h-6 w-6 text-[var(--books)]" />
             </div>
             <div>
               <p className="font-medium text-sm text-[var(--text-primary)]">Sou Contador</p>

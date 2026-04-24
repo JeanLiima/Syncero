@@ -18,9 +18,9 @@
     --text-secondary: #a8bdd4;   /* era #94a3b8 — mais legível no dark */
     --text-muted:     #64748b;   /* era #475569 — contraste mínimo 4.5:1 */
 
-    --accent:        #3b82f6;
-    --accent-hover:  #2563eb;
-    --accent-subtle: #1e3a5f;
+    --accent:        #7c3aed;
+    --accent-hover:  #6d28d9;
+    --accent-subtle: #2d1b69;
 
     --success:        #10b981;
     --success-subtle: #064e3b;

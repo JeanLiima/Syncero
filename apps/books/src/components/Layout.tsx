@@ -95,7 +95,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <AppLayout
       brand={{ initials: 'SB', name: 'Syncero Books' }}
-      accentColor="success"
+      accentColor="accent"
       navItems={navItems}
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}

@@ -12,7 +12,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const { sidebarCollapsed, setSidebarCollapsed } = usePreferencesStore()
 
   const navItems: NavItem[] = [
-    { to: '/accountant', label: t('nav_myCompanies'), icon: <Building2 className="h-4 w-4 shrink-0" />, end: true },
+    { to: '/accountant', label: t('nav_companies'), icon: <Building2 className="h-4 w-4 shrink-0" />, end: true },
   ]
 
   return (

@@ -7,7 +7,7 @@ export const pt = {
   nav_dre: 'DRE',
   nav_settings: 'Configurações',
   nav_preferences: 'Preferências',
-  nav_myCompanies: 'Minhas Empresas',
+  nav_companies: 'Empresas',
   nav_signOut: 'Sair',
 
   // Layout
@@ -143,7 +143,7 @@ export const pt = {
   preferences_english: 'English',
 
   // Accountant
-  accountant_title: 'Minhas Empresas',
+  accountant_title: 'Empresas',
   accountant_noCompanies: 'Nenhuma empresa vinculada ainda',
   accountant_viewFiscal: 'Ver fiscal',
   accountant_status: 'Status',

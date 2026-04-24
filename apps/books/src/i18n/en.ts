@@ -9,7 +9,7 @@ export const en: Record<TranslationKey, string> = {
   nav_dre: 'Income Statement',
   nav_settings: 'Settings',
   nav_preferences: 'Preferences',
-  nav_myCompanies: 'My Companies',
+  nav_companies: 'Companies',
   nav_signOut: 'Sign Out',
 
   // Layout
@@ -145,7 +145,7 @@ export const en: Record<TranslationKey, string> = {
   preferences_english: 'English',
 
   // Accountant
-  accountant_title: 'My Companies',
+  accountant_title: 'Companies',
   accountant_noCompanies: 'No companies linked yet',
   accountant_viewFiscal: 'View fiscal',
   accountant_status: 'Status',

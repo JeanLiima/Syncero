@@ -94,7 +94,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <AppLayout
-      brand={{ initials: 'SB', name: 'Syncero Books' }}
+      brand={{ icon: <BookOpen className="h-4 w-4" />, name: 'Syncero Books' }}
       accentColor="accent"
       navItems={navItems}
       sidebarCollapsed={sidebarCollapsed}

@@ -29,7 +29,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <AppLayout
-      brand={{ initials: 'SF', name: 'Syncero Flow' }}
+      brand={{ icon: <TrendingUp className="h-4 w-4" />, name: 'Syncero Flow' }}
       navItems={navItems}
       sidebarCollapsed={sidebarCollapsed}
       setSidebarCollapsed={setSidebarCollapsed}

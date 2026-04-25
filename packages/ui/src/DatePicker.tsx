@@ -5,6 +5,7 @@ import {
   startOfMonth, endOfMonth, eachDayOfInterval,
   isSameDay, isSameMonth, addMonths, subMonths,
   startOfWeek, endOfWeek, getYear, getMonth,
+  isAfter, isBefore,
 } from 'date-fns'
 import { ptBR, enUS, type Locale } from 'date-fns/locale'
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -156,9 +157,109 @@ function MonthCalendar({ selected, onSelect, locale }: {
   )
 }
 
+// ─── Range day calendar ──────────────────────────────────────────────────────
+
+function RangeDayCalendar({ from, to, onSelect, locale }: {
+  from: Date | undefined
+  to: Date | undefined
+  onSelect: (d: Date) => void
+  locale: Locale
+}) {
+  const today = new Date()
+  const [view, setView] = useState(from ?? today)
+  const [hovered, setHovered] = useState<Date | undefined>()
+
+  const leftStart  = startOfMonth(view)
+  const rightStart = startOfMonth(addMonths(view, 1))
+
+  // Effective range including hover preview when only `from` is set
+  const effectiveEnd = !to ? hovered : to
+  const rangeFrom = from && effectiveEnd
+    ? (isBefore(from, effectiveEnd) || isSameDay(from, effectiveEnd) ? from : effectiveEnd)
+    : undefined
+  const rangeTo = from && effectiveEnd
+    ? (isBefore(from, effectiveEnd) || isSameDay(from, effectiveEnd) ? effectiveEnd : from)
+    : undefined
+
+  const weekDayHeaders = Array.from({ length: 7 }, (_, i) =>
+    format(addDays(REF_SUNDAY, i), 'EEEEE', { locale })
+  )
+
+  function renderMonth(monthStart: Date) {
+    const calDays = eachDayOfInterval({
+      start: startOfWeek(monthStart, { weekStartsOn: 0 }),
+      end:   endOfWeek(endOfMonth(monthStart), { weekStartsOn: 0 }),
+    })
+
+    return (
+      <div className="w-60">
+        <div className="text-sm font-medium text-center mb-3 text-[var(--text-primary)] capitalize">
+          {format(monthStart, 'MMMM yyyy', { locale })}
+        </div>
+        <div className="grid grid-cols-7 mb-1">
+          {weekDayHeaders.map((d, i) => (
+            <div key={i} className="text-center text-[10px] text-[var(--text-muted)] font-medium py-1 uppercase">
+              {d}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-y-0.5">
+          {calDays.map((day) => {
+            const isFrom     = from && isSameDay(day, from)
+            const isTo       = to   && isSameDay(day, to)
+            const isEndpoint = isFrom || isTo
+            const inRange    = rangeFrom && rangeTo
+              && isAfter(day, rangeFrom) && isBefore(day, rangeTo)
+            const curr = isSameMonth(day, monthStart)
+            const tod  = isSameDay(day, today)
+            return (
+              <button
+                key={day.toISOString()}
+                type="button"
+                onClick={() => onSelect(day)}
+                onMouseEnter={() => setHovered(day)}
+                onMouseLeave={() => setHovered(undefined)}
+                className={clsx(
+                  'h-8 w-full text-xs transition-colors cursor-pointer rounded-[var(--radius-sm)]',
+                  isEndpoint
+                    ? 'bg-[var(--accent)] text-white font-semibold'
+                    : inRange
+                    ? 'bg-[var(--accent)]/15 text-[var(--text-primary)]'
+                    : tod && curr
+                    ? 'text-[var(--accent)] font-semibold hover:bg-[var(--bg-elevated)]'
+                    : curr
+                    ? 'text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                    : 'text-[var(--text-muted)] hover:bg-[var(--bg-elevated)]'
+                )}
+              >
+                {format(day, 'd')}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <NavBtn onClick={() => setView(v => subMonths(v, 1))}>
+          <ChevronLeft className="h-4 w-4" />
+        </NavBtn>
+        <NavBtn onClick={() => setView(v => addMonths(v, 1))}>
+          <ChevronRight className="h-4 w-4" />
+        </NavBtn>
+      </div>
+      <div className="flex gap-6">
+        {renderMonth(leftStart)}
+        {renderMonth(rightStart)}
+      </div>
+    </div>
+  )
+}
+
 // ─── Portal popover ──────────────────────────────────────────────────────────
-// Renders into document.body via portal so it escapes any overflow:hidden ancestor
-// (e.g. modals). Uses fixed positioning calculated from the anchor's bounding rect.
 
 function Popover({ anchorRef, innerRef, children }: {
   anchorRef: React.RefObject<HTMLElement>
@@ -168,22 +269,25 @@ function Popover({ anchorRef, innerRef, children }: {
   const [style, setStyle] = useState<React.CSSProperties>({ visibility: 'hidden' })
 
   useLayoutEffect(() => {
-    const anchor = anchorRef.current
-    if (!anchor) return
+    const anchor  = anchorRef.current
+    const popover = innerRef.current
+    if (!anchor || !popover) return
 
     const rect = anchor.getBoundingClientRect()
-    const popoverHeight = 320 // conservative max height
+    const pw   = popover.offsetWidth  || 300
+    const ph   = popover.offsetHeight || 320
+
+    let left = rect.left
+    if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8
+    left = Math.max(8, left)
+
     const spaceBelow = window.innerHeight - rect.bottom
-
-    const left = Math.min(rect.left, window.innerWidth - 280) // prevent right overflow
-
-    if (spaceBelow >= popoverHeight || spaceBelow >= rect.top) {
+    if (spaceBelow >= ph || spaceBelow >= rect.top) {
       setStyle({ position: 'fixed', top: rect.bottom + 4, left, visibility: 'visible' })
     } else {
-      // flip above the trigger
       setStyle({ position: 'fixed', bottom: window.innerHeight - rect.top + 4, left, visibility: 'visible' })
     }
-  }, [anchorRef])
+  }, [anchorRef, innerRef])
 
   return createPortal(
     <div
@@ -381,3 +485,112 @@ export function MonthPicker({
   )
 }
 MonthPicker.displayName = 'MonthPicker'
+
+// ─── DateRangePicker ─────────────────────────────────────────────────────────
+
+interface DateRangePickerProps {
+  from?: string
+  to?: string
+  onChange: (from: string, to: string) => void
+  label?: string
+  className?: string
+  disabled?: boolean
+  placeholder?: string
+  language?: Language
+  size?: 'sm' | 'md'
+}
+
+export function DateRangePicker({
+  from, to, onChange, label, className, disabled, placeholder, language = 'pt', size = 'md',
+}: DateRangePickerProps) {
+  const [open, setOpen] = useState(false)
+  const [pickFrom, setPickFrom] = useState<Date | undefined>()
+  const [pickTo,   setPickTo]   = useState<Date | undefined>()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const anchorRef    = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
+  const popoverRef   = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>
+  const id = useId()
+  const locale = resolveLocale(language)
+
+  const displayFormat      = language === 'en' ? 'MM/dd/yyyy' : 'dd/MM/yyyy'
+  const defaultPlaceholder = language === 'en' ? 'Select period' : 'Selecionar período'
+
+  const parsedFrom = from ? parse(from, 'yyyy-MM-dd', new Date()) : undefined
+  const parsedTo   = to   ? parse(to,   'yyyy-MM-dd', new Date()) : undefined
+  const selFrom = parsedFrom && isValid(parsedFrom) ? parsedFrom : undefined
+  const selTo   = parsedTo   && isValid(parsedTo)   ? parsedTo   : undefined
+
+  // Keep internal pick state in sync with controlled props
+  useEffect(() => { setPickFrom(selFrom) }, [from]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPickTo(selTo) },     [to])   // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      const t = e.target as Node
+      if (!containerRef.current?.contains(t) && !popoverRef.current?.contains(t)) {
+        setOpen(false)
+        // Reset incomplete selection on close
+        setPickFrom(selFrom)
+        setPickTo(selTo)
+      }
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [selFrom, selTo])
+
+  const handleSelect = (date: Date) => {
+    if (!pickFrom || (pickFrom && pickTo)) {
+      // Start new selection
+      setPickFrom(date)
+      setPickTo(undefined)
+    } else {
+      // Complete selection — ensure from < to
+      const [f, t] = isBefore(date, pickFrom) || isSameDay(date, pickFrom)
+        ? [date, pickFrom]
+        : [pickFrom, date]
+      onChange(format(f, 'yyyy-MM-dd'), format(t, 'yyyy-MM-dd'))
+      setOpen(false)
+    }
+  }
+
+  const display = selFrom && selTo
+    ? `${format(selFrom, displayFormat)} → ${format(selTo, displayFormat)}`
+    : selFrom
+    ? format(selFrom, displayFormat)
+    : null
+
+  const hint = open && pickFrom && !pickTo
+    ? (language === 'en' ? 'Select end date' : 'Selecione a data final')
+    : null
+
+  return (
+    <div className={clsx('flex flex-col gap-1.5', className)} ref={containerRef}>
+      <div ref={anchorRef}>
+        <Trigger
+          id={id}
+          open={open}
+          disabled={disabled}
+          label={label}
+          display={display}
+          placeholder={placeholder ?? defaultPlaceholder}
+          size={size}
+          onClick={() => !disabled && setOpen(v => !v)}
+        />
+      </div>
+      {open && (
+        <Popover anchorRef={anchorRef} innerRef={popoverRef}>
+          <RangeDayCalendar
+            from={pickFrom}
+            to={pickTo}
+            onSelect={handleSelect}
+            locale={locale}
+          />
+          {hint && (
+            <p className="text-xs text-[var(--text-muted)] mt-3 text-center">{hint}</p>
+          )}
+        </Popover>
+      )}
+    </div>
+  )
+}
+DateRangePicker.displayName = 'DateRangePicker'

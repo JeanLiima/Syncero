@@ -1,21 +1,56 @@
 import { useState } from 'react'
-import { format } from 'date-fns'
+import { format, subDays, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import { Card, Select } from '@syncero/ui'
+import { Card, Select, DateRangePicker } from '@syncero/ui'
 import { useCashFlow } from '@/modules/fluxo/queries'
 import { useT } from '@/i18n'
+import { usePreferencesStore } from '@/store/preferences'
 
-type Period = '30d' | 'month' | '90d'
+type Preset = '30d' | 'month' | '90d' | 'custom'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
+function presetDates(preset: Preset): { dateFrom: string; dateTo: string } {
+  const now = new Date()
+  if (preset === 'month') return {
+    dateFrom: format(startOfMonth(now), 'yyyy-MM-dd'),
+    dateTo:   format(endOfMonth(now),   'yyyy-MM-dd'),
+  }
+  if (preset === '90d') return {
+    dateFrom: format(subDays(now, 89), 'yyyy-MM-dd'),
+    dateTo:   format(now,              'yyyy-MM-dd'),
+  }
+  return {
+    dateFrom: format(subDays(now, 29), 'yyyy-MM-dd'),
+    dateTo:   format(now,              'yyyy-MM-dd'),
+  }
+}
+
 export function Component() {
   const t = useT()
-  const [period, setPeriod] = useState<Period>('30d')
-  const { data = [], isLoading } = useCashFlow(period)
+  const { language } = usePreferencesStore()
+  const [preset, setPreset]   = useState<Preset>('30d')
+  const [dateFrom, setDateFrom] = useState(() => presetDates('30d').dateFrom)
+  const [dateTo,   setDateTo]   = useState(() => presetDates('30d').dateTo)
+
+  const { data = [], isLoading } = useCashFlow(dateFrom, dateTo)
+
+  const handlePreset = (v: string) => {
+    const p = v as Preset
+    setPreset(p)
+    const { dateFrom: f, dateTo: to } = presetDates(p)
+    setDateFrom(f)
+    setDateTo(to)
+  }
+
+  const handleRange = (f: string, to: string) => {
+    setDateFrom(f)
+    setDateTo(to)
+    setPreset('custom')
+  }
 
   const totalIncome  = data.reduce((s, d) => s + d.income, 0)
   const totalExpense = data.reduce((s, d) => s + d.expense, 0)
@@ -28,18 +63,29 @@ export function Component() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('cashFlow_title')}</h1>
-        <Select
-          options={[
-            { value: '30d',   label: t('cashFlow_last30') },
-            { value: 'month', label: t('cashFlow_thisMonth') },
-            { value: '90d',   label: t('cashFlow_last90') },
-          ]}
-          value={period}
-          onChange={(v) => setPeriod(v as Period)}
-          className="w-44"
-        />
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select
+            size="sm"
+            options={[
+              { value: '30d',    label: t('cashFlow_last30') },
+              { value: 'month',  label: t('cashFlow_thisMonth') },
+              { value: '90d',    label: t('cashFlow_last90') },
+              { value: 'custom', label: t('cashFlow_custom') },
+            ]}
+            value={preset}
+            onChange={handlePreset}
+            className="w-44"
+          />
+          <DateRangePicker
+            size="sm"
+            from={dateFrom}
+            to={dateTo}
+            onChange={handleRange}
+            language={language}
+          />
+        </div>
       </div>
 
       {/* Summary cards */}

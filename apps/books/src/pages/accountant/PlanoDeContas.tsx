@@ -111,55 +111,57 @@ export function Component() {
 
       {/* Filter bar */}
       {plans.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative flex-1 min-w-40">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
-            <Input
+        <Card padding="sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-40">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+              <Input
+                size="sm"
+                placeholder={t('plano_searchPlaceholder')}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <Select
               size="sm"
-              placeholder={t('plano_searchPlaceholder')}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="pl-8"
+              placeholder="Tipo"
+              value={filterType}
+              onChange={setFilterType}
+              className="w-36"
+              options={[
+                { value: '',                  label: t('plano_filterAllTypes') },
+                { value: 'ativo',             label: t('plano_ativo')          },
+                { value: 'passivo',           label: t('plano_passivo')        },
+                { value: 'patrimonio_liquido',label: t('plano_patrimonioLiquido') },
+                { value: 'receita',           label: t('plano_receita')        },
+                { value: 'despesa',           label: t('plano_despesa')        },
+                { value: 'custo',             label: t('plano_custo')          },
+              ]}
             />
+            <Select
+              size="sm"
+              placeholder="Classe"
+              value={filterClass}
+              onChange={setFilterClass}
+              className="w-32"
+              options={[
+                { value: '',      label: t('plano_filterAllClasses') },
+                { value: 'true',  label: t('plano_filterAnalytic')   },
+                { value: 'false', label: t('plano_filterSynthetic')  },
+              ]}
+            />
+            {hasFilter && (
+              <button
+                onClick={() => { setSearch(''); setFilterType(''); setFilterClass('') }}
+                className="cursor-pointer flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+                {t('plano_clearFilters')}
+              </button>
+            )}
           </div>
-          <Select
-            size="sm"
-            placeholder="Tipo"
-            value={filterType}
-            onChange={setFilterType}
-            className="w-36"
-            options={[
-              { value: '',                  label: t('plano_filterAllTypes') },
-              { value: 'ativo',             label: t('plano_ativo')          },
-              { value: 'passivo',           label: t('plano_passivo')        },
-              { value: 'patrimonio_liquido',label: t('plano_patrimonioLiquido') },
-              { value: 'receita',           label: t('plano_receita')        },
-              { value: 'despesa',           label: t('plano_despesa')        },
-              { value: 'custo',             label: t('plano_custo')          },
-            ]}
-          />
-          <Select
-            size="sm"
-            placeholder="Classe"
-            value={filterClass}
-            onChange={setFilterClass}
-            className="w-32"
-            options={[
-              { value: '',      label: t('plano_filterAllClasses') },
-              { value: 'true',  label: t('plano_filterAnalytic')   },
-              { value: 'false', label: t('plano_filterSynthetic')  },
-            ]}
-          />
-          {hasFilter && (
-            <button
-              onClick={() => { setSearch(''); setFilterType(''); setFilterClass('') }}
-              className="cursor-pointer flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-              {t('plano_clearFilters')}
-            </button>
-          )}
-        </div>
+        </Card>
       )}
 
       {isLoading ? (

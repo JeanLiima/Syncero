@@ -19,6 +19,7 @@ export function useTransactions(filters: TransactionFilters = {}, page = 1, page
         is_paid: filters.is_paid === undefined ? undefined : String(filters.is_paid),
         date_from: filters.date_from,
         date_to: filters.date_to,
+        search: filters.search,
         page: String(page),
         pageSize: String(pageSize),
       })

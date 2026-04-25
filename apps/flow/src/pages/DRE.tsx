@@ -1,33 +1,20 @@
 import { useState } from 'react'
-import { format } from 'date-fns'
-import { ptBR, enUS } from 'date-fns/locale'
-import { Card, Select, Badge } from '@syncero/ui'
+import { Card, MonthPicker, Badge } from '@syncero/ui'
 import { useDRE } from '@/modules/dre/queries'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-const yearOptions = ((): { value: string; label: string }[] => {
-  const y = new Date().getFullYear()
-  return [y - 1, y, y + 1].map((v) => ({ value: String(v), label: String(v) }))
-})()
-
 export function Component() {
   const t = useT()
   const { language } = usePreferencesStore()
-  const locale = language === 'pt' ? ptBR : enUS
-  const now = new Date()
-  const [year,  setYear]  = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1)
+  const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7))
+
+  const year  = Number(period.slice(0, 4))
+  const month = Number(period.slice(5, 7))
 
   const { data = [], isLoading } = useDRE(year, month)
-
-  // Generate month options from date-fns locale
-  const MONTHS = Array.from({ length: 12 }, (_, i) => ({
-    value: String(i + 1),
-    label: format(new Date(2023, i, 1), 'MMMM', { locale }),
-  }))
 
   const incomeRows  = data.filter((r) => r.type === 'income')
   const expenseRows = data.filter((r) => r.type === 'expense')
@@ -39,20 +26,12 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dre_title')}</h1>
-        <div className="flex gap-2">
-          <Select
-            options={MONTHS}
-            value={String(month)}
-            onChange={(v) => setMonth(Number(v))}
-            className="w-36"
-          />
-          <Select
-            options={yearOptions}
-            value={String(year)}
-            onChange={(v) => setYear(Number(v))}
-            className="w-24"
-          />
-        </div>
+        <MonthPicker
+          value={period}
+          onChange={setPeriod}
+          language={language}
+          size="sm"
+        />
       </div>
 
       <Card padding="sm">

@@ -6,6 +6,7 @@ export interface TransactionFilters {
   category_id?: string
   date_from?: string
   date_to?: string
+  search?: string
 }
 
 export interface TransactionFormData {

@@ -32,6 +32,7 @@ router.get('/', async (c) => {
   const isPaid = c.req.query('is_paid')
   const dateFrom = c.req.query('date_from')
   const dateTo = c.req.query('date_to')
+  const search = c.req.query('search')
   const page = Number(c.req.query('page') ?? '1')
   const pageSize = Math.min(Number(c.req.query('pageSize') ?? '20'), 1000)
 
@@ -41,6 +42,7 @@ router.get('/', async (c) => {
   if (isPaid === 'false') query = query.eq('is_paid', false)
   if (dateFrom) query = query.gte('date', dateFrom)
   if (dateTo) query = query.lte('date', dateTo)
+  if (search) query = query.ilike('description', `%${search}%`)
 
   query = query.range((page - 1) * pageSize, page * pageSize - 1)
 

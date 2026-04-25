@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, CheckCircle } from 'lucide-react'
-import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, Checkbox } from '@syncero/ui'
+import { Plus, CheckCircle, Search } from 'lucide-react'
+import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, DateRangePicker, Checkbox } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useTransactions, useCategories } from '@/modules/lancamentos/queries'
 import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/lancamentos/mutations'
@@ -95,7 +95,7 @@ export function Component() {
             {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('transactions_countPlural') : t('transactions_countSingular')}
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button size="sm" onClick={openCreate}>
           <Plus className="h-4 w-4" /> {t('transactions_new')}
         </Button>
       </div>
@@ -103,7 +103,18 @@ export function Component() {
       {/* Filters */}
       <Card padding="sm">
         <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-40">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+            <Input
+              size="sm"
+              placeholder={t('transactions_searchPlaceholder')}
+              value={filters.search ?? ''}
+              onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, search: e.target.value || undefined })) }}
+              className="pl-8"
+            />
+          </div>
           <Select
+            size="sm"
             options={[
               { value: '', label: t('transactions_allTypes') },
               { value: 'income', label: t('transactions_income') },
@@ -114,6 +125,7 @@ export function Component() {
             className="w-40"
           />
           <Select
+            size="sm"
             options={[
               { value: '', label: t('transactions_allStatus') },
               { value: 'true', label: t('transactions_paid') },
@@ -123,17 +135,12 @@ export function Component() {
             onChange={(v) => setFilters((f) => ({ ...f, is_paid: v === '' ? undefined : v === 'true' }))}
             className="w-44"
           />
-          <DatePicker
-            value={filters.date_from ?? ''}
-            onChange={(v) => setFilters((f) => ({ ...f, date_from: v || undefined }))}
+          <DateRangePicker
+            size="sm"
+            from={filters.date_from ?? ''}
+            to={filters.date_to ?? ''}
+            onChange={(from, to) => { setPage(1); setFilters((f) => ({ ...f, date_from: from || undefined, date_to: to || undefined })) }}
             language={language}
-            className="w-40"
-          />
-          <DatePicker
-            value={filters.date_to ?? ''}
-            onChange={(v) => setFilters((f) => ({ ...f, date_to: v || undefined }))}
-            language={language}
-            className="w-40"
           />
         </div>
       </Card>

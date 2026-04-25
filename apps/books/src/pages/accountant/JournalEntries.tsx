@@ -47,13 +47,13 @@ export function Component() {
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey,
-    queryFn: () => apiFetch<JournalEntry[]>(`/api/journal-entries?${companyParam}&period=${period}`),
+    queryFn: ({ signal }) => apiFetch<JournalEntry[]>(`/api/journal-entries?${companyParam}&period=${period}`, {}, signal),
     enabled: !!id,
   })
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['account-plans-analytic', id],
-    queryFn: () => apiFetch<AccountPlan[]>(`/api/account-plans?${companyParam}`).then(data =>
+    queryFn: ({ signal }) => apiFetch<AccountPlan[]>(`/api/account-plans?${companyParam}`, {}, signal).then(data =>
       data.filter(p => p.is_analytic)
     ),
     enabled: !!id,

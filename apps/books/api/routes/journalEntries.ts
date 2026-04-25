@@ -25,7 +25,7 @@ router.get('/', async (c) => {
   const dateTo   = period ? `${period}-31` : undefined
 
   let q = db.from('journal_entries')
-    .select('*, journal_entry_lines(*, account_plans(code, name))')
+    .select('id, entry_date, description, external_ref, source, journal_entry_lines(side, amount, memo, account_plans(code, name))')
     .order('entry_date', { ascending: false })
   if (companyId) q = q.eq('company_id', companyId)
   else q = q.eq('ext_company_id', extCompanyId!)

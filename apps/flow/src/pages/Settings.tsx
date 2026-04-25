@@ -251,19 +251,8 @@ function AccountantTab() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
   })
 
-  const hasAccountant = accountants.length > 0
-
   return (
     <div className="flex flex-col gap-6">
-      {hasAccountant && (
-        <div className="flex justify-end">
-          <Button size="sm" onClick={() => setModalOpen(true)}>
-            <UserPlus className="h-4 w-4" />
-            {t('settings_inviteAccountant')}
-          </Button>
-        </div>
-      )}
-
       <Modal
         open={modalOpen}
         onClose={() => { setModalOpen(false); setInviteEmail('') }}

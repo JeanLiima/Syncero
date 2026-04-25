@@ -98,18 +98,19 @@ router.post('/', async (c) => {
   const admin = await ensureCompanyAdmin(db, userId, companyId)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
+  // Rule: each company may have at most one accountant (accepted or pending).
   const { data: existing } = await db.from('accountant_companies')
     .select('id, status')
     .eq('company_id', companyId)
-    .eq('email', email)
+    .in('status', ['accepted', 'pending'])
     .maybeSingle()
 
   if (existing) {
     if (existing.status === 'accepted') {
-      return c.json({ error: 'This accountant already has access to this company.' }, 409)
+      return c.json({ error: 'This company already has an accountant.' }, 409)
     }
     if (existing.status === 'pending') {
-      return c.json({ error: 'An invite has already been sent to this email.' }, 409)
+      return c.json({ error: 'An invite is already pending for this company.' }, 409)
     }
   }
 

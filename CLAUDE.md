@@ -223,6 +223,7 @@ apps/{flow|books}/
 4. Company switching invalidates all React Query keys prefixed with `companyId`
 5. CNPJ stored as raw digits in DB; formatted as `00.000.000/0000-00` in UI
 6. Tax regime enum values: `'simples'` | `'lucro_presumido'` | `'lucro_real'` (empty string → send null)
+7. **Each company may have at most one accountant** — `POST /api/accountant-companies` rejects with 409 if a row with `status IN ('accepted', 'pending')` already exists for that `company_id`. The invite button is only shown in the table empty state (no external trigger when an accountant already exists).
 
 ---
 

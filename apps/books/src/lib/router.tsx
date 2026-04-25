@@ -107,6 +107,7 @@ function RequireOnboarding() {
 export const router = createBrowserRouter([
   // Public
   { path: '/login', lazy: lazyLoad(() => import('../pages/Login')) },
+  { path: '/invite/:token', lazy: lazyLoad(() => import('../pages/AcceptInvite')) },
 
   // Onboarding
   {

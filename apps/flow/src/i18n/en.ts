@@ -192,7 +192,6 @@ export const en: Record<TranslationKey, string> = {
   // Accept Invite
   invite_verifying: 'Verifying invite…',
   invite_received: 'Invite received',
-  invite_asAccountant: 'access as accountant',
   invite_asMember: 'join',
   invite_company: 'from company',
   invite_loginRequired: 'You need to be logged in to accept the invite.',

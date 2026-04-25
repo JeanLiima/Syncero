@@ -190,7 +190,6 @@ export const pt = {
   // Accept Invite
   invite_verifying: 'Verificando convite…',
   invite_received: 'Convite recebido',
-  invite_asAccountant: 'acessar como contador',
   invite_asMember: 'participar',
   invite_company: 'da empresa',
   invite_loginRequired: 'Você precisa estar logado para aceitar o convite.',

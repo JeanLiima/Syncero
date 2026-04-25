@@ -35,8 +35,8 @@ async function sendInviteEmail(opts: {
   language?: 'pt' | 'en'
 }) {
   const isProduction = process.env.VERCEL_ENV === 'production'
-  const flowUrl = process.env.VITE_FLOW_URL ?? (isProduction ? 'https://syncero-flow.vercel.app' : 'http://localhost:5174')
-  const inviteLink = `${flowUrl}/invite/${opts.inviteToken}`
+  const booksUrl = (isProduction ? process.env.VITE_BOOKS_URL ?? 'https://syncero-books.vercel.app' : 'http://localhost:5175')
+  const inviteLink = `${booksUrl}/invite/${opts.inviteToken}`
   const { subject, html } = accountantInviteEmail({
     companyName: opts.companyName,
     inviterName: opts.inviterName,

@@ -180,6 +180,24 @@ export const en: Record<TranslationKey, string> = {
   plano_despesa: 'Expense',
   plano_custo: 'Cost',
 
+  // Accept Invite
+  invite_verifying: 'Verifying invite…',
+  invite_received: 'Invite received',
+  invite_asAccountant_of: "You've been invited to access as accountant the company",
+  invite_loginRequired: 'You need to be logged in to accept the invite.',
+  invite_accept: 'Accept invite',
+  invite_loginToAccept: 'Log in to accept',
+  invite_invalid: 'Invalid invite',
+  invite_gotoHome: 'Go to home',
+  invite_success: 'Invite accepted!',
+  invite_accessGranted: 'You now have access to',
+  invite_gotoDashboard: 'Go to dashboard',
+  invite_errorInvalid: 'Invalid invite token.',
+  invite_errorNotFound: 'Invite not found.',
+  invite_errorExpired: 'This invite has already been used or has expired.',
+  invite_errorVerify: 'Error verifying invite.',
+  invite_errorAccept: 'Error accepting invite. Please try again.',
+
   // Empresa Externa
   external_back: 'Back',
   external_title: 'New external company',

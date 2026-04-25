@@ -168,6 +168,78 @@ export const pt = {
   onboarding_welcome: 'Bem-vindo ao Syncero Flow.',
   onboarding_continue: 'Continuar',
 
+  // Accept Invite
+  invite_verifying: 'Verificando convite…',
+  invite_received: 'Convite recebido',
+  invite_asAccountant: 'acessar como contador',
+  invite_asMember: 'participar',
+  invite_company: 'da empresa',
+  invite_loginRequired: 'Você precisa estar logado para aceitar o convite.',
+  invite_accept: 'Aceitar convite',
+  invite_loginToAccept: 'Fazer login para aceitar',
+  invite_invalid: 'Convite inválido',
+  invite_gotoHome: 'Ir para o início',
+  invite_success: 'Convite aceito!',
+  invite_accessGranted: 'Você agora tem acesso à empresa',
+  invite_gotoDashboard: 'Acessar painel',
+  invite_errorInvalid: 'Token de convite inválido.',
+  invite_errorNotFound: 'Convite não encontrado.',
+  invite_errorExpired: 'Este convite já foi utilizado ou expirou.',
+  invite_errorVerify: 'Erro ao verificar convite.',
+  invite_errorAccept: 'Erro ao aceitar convite. Tente novamente.',
+
+  // Login extras
+  login_error: 'Não foi possível conectar com o Google. Tente novamente.',
+  login_terms: 'Ao entrar, você concorda com os termos de uso.',
+  login_firstAccess: 'Primeiro acesso? Sua conta será criada automaticamente.',
+
+  // Onboarding
+  onboarding_loading: 'Configurando sua conta...',
+
+  // PWA Banner
+  pwa_title: 'Instale o Syncero Flow',
+  pwa_subtitle: 'Acesso rápido, notificações e uso offline',
+  pwa_install: 'Instalar',
+  pwa_ios: 'Toque em Compartilhar → Tela de Início',
+
+  // DRE extras
+  dre_loading: 'Carregando…',
+  dre_noIncome: 'Sem receitas no período',
+  dre_noExpense: 'Sem despesas no período',
+  dre_profit: 'Lucro',
+  dre_loss: 'Prejuízo',
+
+  // Cash Flow extras
+  cashFlow_chartTitle: 'Evolução do caixa',
+  cashFlow_loading: 'Carregando…',
+  cashFlow_noEntries: 'Nenhum lançamento no período',
+
+  // Transactions extras
+  cashFlow_result: 'Resultado',
+  transactions_markAsPaid: 'Marcar como pago',
+  transactions_noCategory: 'Sem categoria',
+  transactions_previous: 'Anterior',
+  transactions_next: 'Próxima',
+  transactions_errorDescription: 'Descrição obrigatória',
+  transactions_errorAmount: 'Valor deve ser positivo',
+  transactions_errorDate: 'Data obrigatória',
+  transactions_income_badge: 'Receita',
+  transactions_expense_badge: 'Despesa',
+
+  // Accounts extras
+  accounts_add: 'Adicionar',
+  accounts_totalPending: 'Total pendente:',
+  accounts_paid: 'Pago',
+  accounts_cancelled: 'Cancelado',
+  accounts_overdue: 'Vencido',
+  accounts_due: 'A vencer',
+  accounts_newPayable: 'Nova conta a pagar',
+  accounts_newReceivable: 'Nova conta a receber',
+  accounts_emptyPayable: 'Nenhuma conta a pagar',
+  accounts_emptyReceivable: 'Nenhuma conta a receber',
+  accounts_errorRequired: 'Obrigatório',
+  accounts_errorAmount: 'Valor inválido',
+
   // Common
   common_select: 'Selecionar',
   common_save: 'Salvar',

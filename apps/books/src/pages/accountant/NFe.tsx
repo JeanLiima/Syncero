@@ -6,9 +6,11 @@ import { ptBR } from 'date-fns/locale'
 import { Card, Table, Badge, Select, DatePicker } from '@syncero/ui'
 import { getFiscalDocuments } from '@/lib/backend'
 import { usePreferencesStore } from '@/store/preferences'
+import { useT } from '@/i18n'
 import type { FiscalDocument, FiscalDocType } from '@/types'
 
 export function Component() {
+  const t = useT()
   const { companyId } = useParams<{ companyId: string }>()
   const language = usePreferencesStore(s => s.language)
   const [filterType, setFilterType] = useState<FiscalDocType | ''>('')
@@ -31,13 +33,13 @@ export function Component() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-[var(--text-primary)]">Documentos Fiscais</h1>
+      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('nfe_title')}</h1>
 
       <Card padding="sm">
         <div className="flex flex-wrap gap-3 p-2">
           <Select
             options={[
-              { value: '',     label: 'Todos os tipos' },
+              { value: '',     label: t('nfe_allTypes') },
               { value: 'nfe',  label: 'NF-e' },
               { value: 'nfse', label: 'NFS-e' },
               { value: 'cfe',  label: 'CF-e' },
@@ -57,19 +59,19 @@ export function Component() {
           loading={isLoading}
           data={data}
           rowKey={(r) => r.id}
-          emptyMessage="Nenhum documento fiscal encontrado"
+          emptyMessage={t('nfe_empty')}
           columns={[
             {
               key: 'issue_date',
-              header: 'Emissão',
+              header: t('nfe_issueDate'),
               render: (r) => format(new Date(r.issue_date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR }),
             },
-            { key: 'doc_type', header: 'Tipo', render: (r) => <Badge variant="info">{r.doc_type.toUpperCase()}</Badge> },
-            { key: 'number',   header: 'Número' },
-            { key: 'issuer_name', header: 'Emitente', render: (r) => r.issuer_name ?? '—' },
+            { key: 'doc_type', header: t('nfe_type'), render: (r) => <Badge variant="info">{r.doc_type.toUpperCase()}</Badge> },
+            { key: 'number',   header: t('nfe_number') },
+            { key: 'issuer_name', header: t('nfe_issuer'), render: (r) => r.issuer_name ?? '—' },
             {
               key: 'value',
-              header: 'Valor',
+              header: t('nfe_value'),
               align: 'right',
               render: (r) => (
                 <span className="font-mono">
@@ -79,7 +81,7 @@ export function Component() {
             },
             {
               key: 'status',
-              header: 'Status',
+              header: t('nfe_status'),
               render: (r) => <Badge variant={statusVariant(r.status)}>{r.status}</Badge>,
             },
           ]}

@@ -1,9 +1,11 @@
 import { Building2, Calculator, X } from 'lucide-react'
+import { useT } from '../i18n'
 
 const FLOW_URL  = import.meta.env.VITE_FLOW_URL  as string
 const BOOKS_URL = import.meta.env.VITE_BOOKS_URL as string
 
 export function PersonaModal({ onClose }: { onClose: () => void }) {
+  const t = useT()
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
@@ -26,8 +28,8 @@ export function PersonaModal({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="text-center mb-6">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)]">Como você vai usar a plataforma?</h2>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">Escolha o produto certo para o seu perfil</p>
+          <h2 className="text-xl font-semibold text-[var(--text-primary)]">{t('persona_title')}</h2>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">{t('persona_subtitle')}</p>
         </div>
 
         <div className="flex flex-col gap-3">
@@ -39,8 +41,8 @@ export function PersonaModal({ onClose }: { onClose: () => void }) {
               <Building2 className="h-6 w-6 text-[var(--flow)]" />
             </div>
             <div>
-              <p className="font-medium text-sm text-[var(--text-primary)]">Sou Empresa</p>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">Syncero Flow — gestão financeira</p>
+              <p className="font-medium text-sm text-[var(--text-primary)]">{t('persona_company')}</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">{t('persona_companyDesc')}</p>
             </div>
           </a>
 
@@ -52,8 +54,8 @@ export function PersonaModal({ onClose }: { onClose: () => void }) {
               <Calculator className="h-6 w-6 text-[var(--books)]" />
             </div>
             <div>
-              <p className="font-medium text-sm text-[var(--text-primary)]">Sou Contador</p>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">Syncero Books — acesso fiscal</p>
+              <p className="font-medium text-sm text-[var(--text-primary)]">{t('persona_accountant')}</p>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">{t('persona_accountantDesc')}</p>
             </div>
           </a>
         </div>

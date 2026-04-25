@@ -25,7 +25,7 @@ export function Component() {
     setError('')
     const { error: err } = await signInWithGoogle()
     if (err) {
-      setError('Não foi possível conectar com o Google. Tente novamente.')
+      setError(t('login_error'))
       setLoading(false)
     }
     // Se OK, o Supabase redireciona — não há retorno
@@ -43,7 +43,7 @@ export function Component() {
 
         <Card>
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">Syncero Flow</h1>
+            <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">{t('login_title')}</h1>
             <p className="text-sm text-[var(--text-muted)]">{t('login_subtitle')}</p>
           </div>
 
@@ -62,8 +62,8 @@ export function Component() {
           </Button>
 
           <p className="text-xs text-[var(--text-muted)] text-center mt-6 leading-relaxed">
-            Ao entrar, você concorda com os termos de uso.<br />
-            Primeiro acesso? Sua conta será criada automaticamente.
+            {t('login_terms')}<br />
+            {t('login_firstAccess')}
           </p>
         </Card>
       </div>

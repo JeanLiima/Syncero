@@ -6,12 +6,14 @@ import {
 } from 'recharts'
 import { Card, Select } from '@syncero/ui'
 import { useCashFlow } from '@/modules/fluxo/queries'
+import { useT } from '@/i18n'
 
 type Period = '30d' | 'month' | '90d'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export function Component() {
+  const t = useT()
   const [period, setPeriod] = useState<Period>('30d')
   const { data = [], isLoading } = useCashFlow(period)
 
@@ -27,12 +29,12 @@ export function Component() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">Fluxo de Caixa</h1>
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('cashFlow_title')}</h1>
         <Select
           options={[
-            { value: '30d',   label: 'Últimos 30 dias' },
-            { value: 'month', label: 'Este mês' },
-            { value: '90d',   label: 'Últimos 90 dias' },
+            { value: '30d',   label: t('cashFlow_last30') },
+            { value: 'month', label: t('cashFlow_thisMonth') },
+            { value: '90d',   label: t('cashFlow_last90') },
           ]}
           value={period}
           onChange={(v) => setPeriod(v as Period)}
@@ -43,15 +45,15 @@ export function Component() {
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         <Card>
-          <p className="text-xs text-[var(--text-muted)] mb-1">Receitas</p>
+          <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_income')}</p>
           <p className="text-xl font-semibold font-mono text-[var(--success)]">{fmt(totalIncome)}</p>
         </Card>
         <Card>
-          <p className="text-xs text-[var(--text-muted)] mb-1">Despesas</p>
+          <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_expense')}</p>
           <p className="text-xl font-semibold font-mono text-[var(--danger)]">{fmt(totalExpense)}</p>
         </Card>
         <Card>
-          <p className="text-xs text-[var(--text-muted)] mb-1">Resultado</p>
+          <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_result')}</p>
           <p className={`text-xl font-semibold font-mono ${netBalance >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
             {fmt(netBalance)}
           </p>
@@ -60,14 +62,14 @@ export function Component() {
 
       {/* Chart */}
       <Card>
-        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">Evolução do caixa</h2>
+        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">{t('cashFlow_chartTitle')}</h2>
         {isLoading ? (
           <div className="h-64 flex items-center justify-center text-[var(--text-muted)] text-sm">
-            Carregando…
+            {t('cashFlow_loading')}
           </div>
         ) : data.length === 0 ? (
           <div className="h-64 flex items-center justify-center text-[var(--text-muted)] text-sm">
-            Nenhum lançamento no período
+            {t('cashFlow_noEntries')}
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
@@ -82,8 +84,8 @@ export function Component() {
                   <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#0e7490" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#0e7490" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e2d45" />
@@ -98,9 +100,9 @@ export function Component() {
                 formatter={(v: number) => fmt(v)}
               />
               <Legend wrapperStyle={{ fontSize: 12, color: '#94a3b8' }} />
-              <Area type="monotone" dataKey="income"  name="Receitas"  stroke="#10b981" fill="url(#colorIncome)"  strokeWidth={2} />
-              <Area type="monotone" dataKey="expense" name="Despesas"  stroke="#f43f5e" fill="url(#colorExpense)" strokeWidth={2} />
-              <Area type="monotone" dataKey="balance" name="Saldo"     stroke="#3b82f6" fill="url(#colorBalance)" strokeWidth={2} />
+              <Area type="monotone" dataKey="income"  name={t('cashFlow_income')}  stroke="#10b981" fill="url(#colorIncome)"  strokeWidth={2} />
+              <Area type="monotone" dataKey="expense" name={t('cashFlow_expense')} stroke="#f43f5e" fill="url(#colorExpense)" strokeWidth={2} />
+              <Area type="monotone" dataKey="balance" name={t('cashFlow_balance')} stroke="#0e7490" fill="url(#colorBalance)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         )}

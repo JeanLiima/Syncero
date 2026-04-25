@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BookOpen } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n'
 import { Button, Card } from '@syncero/ui'
@@ -25,7 +26,7 @@ export function Component() {
     setError('')
     const { error: err } = await signInWithGoogle()
     if (err) {
-      setError('Não foi possível conectar com o Google. Tente novamente.')
+      setError(t('login_error'))
       setLoading(false)
     }
     // Se OK, o Supabase redireciona — não há retorno
@@ -36,14 +37,14 @@ export function Component() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <div className="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center shadow-lg shadow-violet-500/20">
-            <span className="text-white font-bold text-xl">SB</span>
+          <div className="h-14 w-14 rounded-2xl bg-[var(--accent-subtle)] flex items-center justify-center shadow-lg shadow-violet-500/20">
+            <BookOpen className="h-7 w-7 text-[var(--accent)]" />
           </div>
         </div>
 
         <Card>
           <div className="text-center mb-6">
-            <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Syncero Books</h1>
+            <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-2">{t('login_title')}</h1>
             <p className="text-sm text-[var(--text-muted)]">{t('login_subtitle')}</p>
           </div>
 
@@ -62,8 +63,8 @@ export function Component() {
           </Button>
 
           <p className="text-xs text-[var(--text-muted)] text-center mt-6 leading-relaxed">
-            Ao entrar, você concorda com os termos de uso.<br />
-            Primeiro acesso? Sua conta será criada automaticamente.
+            {t('login_terms')}<br />
+            {t('login_firstAccess')}
           </p>
         </Card>
       </div>

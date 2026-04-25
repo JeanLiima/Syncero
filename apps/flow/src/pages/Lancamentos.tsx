@@ -9,28 +9,31 @@ import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, Checkbox 
 import { usePreferencesStore } from '@/store/preferences'
 import { useTransactions, useCategories } from '@/modules/lancamentos/queries'
 import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/lancamentos/mutations'
+import { useT } from '@/i18n'
 import type { Transaction } from '@/types'
 import type { TransactionFilters } from '@/modules/lancamentos/types'
 
-const schema = z.object({
-  description: z.string().min(1, 'Descrição obrigatória'),
-  amount: z.coerce.number().positive('Valor deve ser positivo'),
-  type: z.enum(['income', 'expense']),
-  date: z.string().min(1, 'Data obrigatória'),
-  category_id: z.string().optional(),
-  is_paid: z.boolean(),
-  notes: z.string().optional(),
-})
-
-type FormData = z.infer<typeof schema>
-
 export function Component() {
+  const t = useT()
+  const { language } = usePreferencesStore()
+
+  const schema = z.object({
+    description: z.string().min(1, t('transactions_errorDescription')),
+    amount: z.coerce.number().positive(t('transactions_errorAmount')),
+    type: z.enum(['income', 'expense']),
+    date: z.string().min(1, t('transactions_errorDate')),
+    category_id: z.string().optional(),
+    is_paid: z.boolean(),
+    notes: z.string().optional(),
+  })
+
+  type FormData = z.infer<typeof schema>
+
   const [filters, setFilters] = useState<TransactionFilters>({})
   const [page, setPage] = useState(1)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
 
-  const { language } = usePreferencesStore()
   const { data, isLoading } = useTransactions(filters, page)
   const { data: categories = [] } = useCategories()
   const create = useCreateTransaction()
@@ -80,7 +83,6 @@ export function Component() {
   }
 
   const totalPages = Math.ceil((data?.count ?? 0) / 20)
-
   const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }))
 
   return (
@@ -88,13 +90,13 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">Lançamentos</h1>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('transactions_title')}</h1>
           <p className="text-sm text-[var(--text-muted)]">
-            {data?.count ?? 0} lançamento{data?.count !== 1 ? 's' : ''}
+            {data?.count ?? 0} {t('transactions_title').toLowerCase()}{data?.count !== 1 ? 's' : ''}
           </p>
         </div>
         <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" /> Novo
+          <Plus className="h-4 w-4" /> {t('transactions_new')}
         </Button>
       </div>
 
@@ -103,9 +105,9 @@ export function Component() {
         <div className="flex flex-wrap gap-3">
           <Select
             options={[
-              { value: '', label: 'Todos os tipos' },
-              { value: 'income', label: 'Receitas' },
-              { value: 'expense', label: 'Despesas' },
+              { value: '', label: t('transactions_allTypes') },
+              { value: 'income', label: t('transactions_income') },
+              { value: 'expense', label: t('transactions_expense') },
             ]}
             value={filters.type ?? ''}
             onChange={(v) => setFilters((f) => ({ ...f, type: v as TransactionFilters['type'] || undefined }))}
@@ -113,9 +115,9 @@ export function Component() {
           />
           <Select
             options={[
-              { value: '', label: 'Todos os status' },
-              { value: 'true', label: 'Pago' },
-              { value: 'false', label: 'Pendente' },
+              { value: '', label: t('transactions_allStatus') },
+              { value: 'true', label: t('transactions_paid') },
+              { value: 'false', label: t('transactions_pending') },
             ]}
             value={filters.is_paid === undefined ? '' : String(filters.is_paid)}
             onChange={(v) => setFilters((f) => ({ ...f, is_paid: v === '' ? undefined : v === 'true' }))}
@@ -146,29 +148,25 @@ export function Component() {
           columns={[
             {
               key: 'date',
-              header: 'Data',
+              header: t('transactions_date'),
               render: (r) => format(new Date(r.date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR }),
             },
-            { key: 'description', header: 'Descrição' },
+            { key: 'description', header: t('transactions_description') },
             {
               key: 'type',
-              header: 'Tipo',
+              header: t('transactions_type'),
               render: (r) => (
                 <Badge variant={r.type === 'income' ? 'success' : 'danger'}>
-                  {r.type === 'income' ? 'Receita' : 'Despesa'}
+                  {r.type === 'income' ? t('transactions_income_badge') : t('transactions_expense_badge')}
                 </Badge>
               ),
             },
             {
               key: 'amount',
-              header: 'Valor',
+              header: t('transactions_amount'),
               align: 'right',
               render: (r) => (
-                <span
-                  className={
-                    r.type === 'income' ? 'text-[var(--success)] font-mono' : 'text-[var(--danger)] font-mono'
-                  }
-                >
+                <span className={r.type === 'income' ? 'text-[var(--success)] font-mono' : 'text-[var(--danger)] font-mono'}>
                   {r.type === 'income' ? '+' : '-'}{' '}
                   {r.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
@@ -176,10 +174,10 @@ export function Component() {
             },
             {
               key: 'is_paid',
-              header: 'Status',
+              header: t('transactions_status'),
               render: (r) => (
                 <Badge variant={r.is_paid ? 'success' : 'warning'}>
-                  {r.is_paid ? 'Pago' : 'Pendente'}
+                  {r.is_paid ? t('transactions_paid') : t('transactions_pending')}
                 </Badge>
               ),
             },
@@ -192,7 +190,7 @@ export function Component() {
                   <button
                     onClick={(e) => { e.stopPropagation(); markPaid.mutate(r.id) }}
                     className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors cursor-pointer"
-                    title="Marcar como pago"
+                    title={t('transactions_markAsPaid')}
                   >
                     <CheckCircle className="h-4 w-4" />
                   </button>
@@ -205,14 +203,14 @@ export function Component() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--bg-border)]">
             <span className="text-xs text-[var(--text-muted)]">
-              Página {page} de {totalPages}
+              {t('dre_period')} {page} / {totalPages}
             </span>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-                Anterior
+                {t('transactions_previous')}
               </Button>
               <Button variant="ghost" size="sm" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
-                Próxima
+                {t('transactions_next')}
               </Button>
             </div>
           </div>
@@ -220,17 +218,17 @@ export function Component() {
       </Card>
 
       {/* Modal form */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar lançamento' : 'Novo lançamento'}>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? t('transactions_editTitle') : t('transactions_newTitle')}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <Input label="Descrição" error={errors.description?.message} {...register('description')} />
+          <Input label={t('transactions_description')} error={errors.description?.message} {...register('description')} />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Valor (R$)" type="number" step="0.01" error={errors.amount?.message} {...register('amount')} />
+            <Input label={`${t('transactions_amount')} (R$)`} type="number" step="0.01" error={errors.amount?.message} {...register('amount')} />
             <Controller
               control={control}
               name="date"
               render={({ field }) => (
                 <DatePicker
-                  label="Data"
+                  label={t('transactions_date')}
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   language={language}
@@ -245,14 +243,14 @@ export function Component() {
               name="type"
               render={({ field }) => (
                 <Select
-                  label="Tipo"
+                  label={t('transactions_type')}
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   error={errors.type?.message}
                   options={[
-                    { value: 'income',  label: 'Receita' },
-                    { value: 'expense', label: 'Despesa' },
+                    { value: 'income',  label: t('transactions_income_badge') },
+                    { value: 'expense', label: t('transactions_expense_badge') },
                   ]}
                 />
               )}
@@ -262,8 +260,8 @@ export function Component() {
               name="category_id"
               render={({ field }) => (
                 <Select
-                  label="Categoria"
-                  placeholder="Sem categoria"
+                  label={t('transactions_category')}
+                  placeholder={t('transactions_noCategory')}
                   value={field.value ?? ''}
                   onChange={(v) => field.onChange(v || undefined)}
                   onBlur={field.onBlur}
@@ -272,8 +270,8 @@ export function Component() {
               )}
             />
           </div>
-          <Input label="Observações" {...register('notes')} />
-          <Checkbox label="Marcar como pago" {...register('is_paid')} />
+          <Input label={t('transactions_notes')} {...register('notes')} />
+          <Checkbox label={t('transactions_markAsPaid')} {...register('is_paid')} />
           <div className="flex justify-between gap-3 mt-2">
             {editing && (
               <Button
@@ -282,12 +280,12 @@ export function Component() {
                 size="sm"
                 onClick={async () => { await deleteT.mutateAsync(editing.id); setModalOpen(false) }}
               >
-                Excluir
+                {t('transactions_delete')}
               </Button>
             )}
             <div className="flex gap-3 ml-auto">
-              <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>Cancelar</Button>
-              <Button type="submit" loading={isSubmitting}>Salvar</Button>
+              <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>{t('transactions_cancel')}</Button>
+              <Button type="submit" loading={isSubmitting}>{t('transactions_save')}</Button>
             </div>
           </div>
         </form>

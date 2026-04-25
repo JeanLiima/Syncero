@@ -7,15 +7,9 @@ import { Button, Card, Badge, MonthPicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
 import { DominioImportModal } from '@/components/accountant/DominioImportModal'
+import { useT } from '@/i18n'
 import type { JournalEntry, AccountPlan, EntrySource } from '@/types'
 import type { ParsedEntry } from '@/lib/dominio'
-
-const sourceLabel: Record<EntrySource, string> = {
-  manual: 'Manual',
-  dominio_import: 'Domínio',
-  api: 'API',
-  syncero_import: 'Syncero',
-}
 
 const sourceVariant: Record<EntrySource, 'default' | 'info' | 'success' | 'warning'> = {
   manual: 'default',
@@ -25,6 +19,13 @@ const sourceVariant: Record<EntrySource, 'default' | 'info' | 'success' | 'warni
 }
 
 export function Component() {
+  const t = useT()
+  const sourceLabel: Record<string, string> = {
+    manual: t('lancamentos_sourceManual'),
+    dominio_import: t('lancamentos_sourceDominio'),
+    api: t('lancamentos_sourceApi'),
+    syncero_import: t('lancamentos_sourceSyncero'),
+  }
   const { id, isExternal, canWrite } = useCompanyContext()
   const language = usePreferencesStore(s => s.language)
   const qc = useQueryClient()
@@ -84,7 +85,7 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">Lançamentos Contábeis</h1>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('lancamentos_title')}</h1>
           <p className="text-sm text-[var(--text-muted)]">{entries.length} lançamento{entries.length !== 1 ? 's' : ''} em {period}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -98,11 +99,11 @@ export function Component() {
             <>
               <Button size="sm" variant="ghost" onClick={() => setImportModalOpen(true)}>
                 <Upload className="h-4 w-4" />
-                Importar Domínio
+                {t('lancamentos_importDominio')}
               </Button>
               <Button size="sm" onClick={() => setEntryModalOpen(true)}>
                 <Plus className="h-4 w-4" />
-                Novo lançamento
+                {t('lancamentos_new')}
               </Button>
             </>
           )}
@@ -110,13 +111,13 @@ export function Component() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">Carregando…</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('lancamentos_loading')}</p>
       ) : entries.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">
             <p className="text-sm text-[var(--text-muted)]">Nenhum lançamento em {period}.</p>
             {canWrite && (
-              <Button size="sm" variant="ghost" onClick={() => setEntryModalOpen(true)}>Criar lançamento</Button>
+              <Button size="sm" variant="ghost" onClick={() => setEntryModalOpen(true)}>{t('lancamentos_create')}</Button>
             )}
           </div>
         </Card>
@@ -125,12 +126,12 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--bg-border)] text-left">
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-28">Data</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Histórico</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Contas debitadas</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Contas creditadas</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-32 text-right">Valor</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-24">Origem</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-28">{t('lancamentos_colDate')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('lancamentos_colHistory')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('lancamentos_colDebited')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('lancamentos_colCredited')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-32 text-right">{t('lancamentos_colValue')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-24">{t('lancamentos_colSource')}</th>
               </tr>
             </thead>
             <tbody>

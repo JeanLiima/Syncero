@@ -170,6 +170,78 @@ export const en: Record<TranslationKey, string> = {
   onboarding_welcome: 'Welcome to Syncero Flow.',
   onboarding_continue: 'Continue',
 
+  // Accept Invite
+  invite_verifying: 'Verifying invite…',
+  invite_received: 'Invite received',
+  invite_asAccountant: 'access as accountant',
+  invite_asMember: 'join',
+  invite_company: 'from company',
+  invite_loginRequired: 'You need to be logged in to accept the invite.',
+  invite_accept: 'Accept invite',
+  invite_loginToAccept: 'Log in to accept',
+  invite_invalid: 'Invalid invite',
+  invite_gotoHome: 'Go to home',
+  invite_success: 'Invite accepted!',
+  invite_accessGranted: 'You now have access to',
+  invite_gotoDashboard: 'Go to dashboard',
+  invite_errorInvalid: 'Invalid invite token.',
+  invite_errorNotFound: 'Invite not found.',
+  invite_errorExpired: 'This invite has already been used or has expired.',
+  invite_errorVerify: 'Error verifying invite.',
+  invite_errorAccept: 'Error accepting invite. Please try again.',
+
+  // Login extras
+  login_error: 'Could not connect with Google. Please try again.',
+  login_terms: 'By signing in, you agree to the terms of use.',
+  login_firstAccess: 'First time? Your account will be created automatically.',
+
+  // Onboarding
+  onboarding_loading: 'Setting up your account...',
+
+  // PWA Banner
+  pwa_title: 'Install Syncero Flow',
+  pwa_subtitle: 'Quick access, notifications and offline use',
+  pwa_install: 'Install',
+  pwa_ios: 'Tap Share → Add to Home Screen',
+
+  // DRE extras
+  dre_loading: 'Loading…',
+  dre_noIncome: 'No income in this period',
+  dre_noExpense: 'No expenses in this period',
+  dre_profit: 'Profit',
+  dre_loss: 'Loss',
+
+  // Cash Flow extras
+  cashFlow_chartTitle: 'Cash flow evolution',
+  cashFlow_loading: 'Loading…',
+  cashFlow_noEntries: 'No entries in this period',
+
+  // Transactions extras
+  cashFlow_result: 'Result',
+  transactions_markAsPaid: 'Mark as paid',
+  transactions_noCategory: 'No category',
+  transactions_previous: 'Previous',
+  transactions_next: 'Next',
+  transactions_errorDescription: 'Description is required',
+  transactions_errorAmount: 'Amount must be positive',
+  transactions_errorDate: 'Date is required',
+  transactions_income_badge: 'Income',
+  transactions_expense_badge: 'Expense',
+
+  // Accounts extras
+  accounts_add: 'Add',
+  accounts_totalPending: 'Total pending:',
+  accounts_paid: 'Paid',
+  accounts_cancelled: 'Cancelled',
+  accounts_overdue: 'Overdue',
+  accounts_due: 'Due',
+  accounts_newPayable: 'New payable',
+  accounts_newReceivable: 'New receivable',
+  accounts_emptyPayable: 'No payable accounts',
+  accounts_emptyReceivable: 'No receivable accounts',
+  accounts_errorRequired: 'Required',
+  accounts_errorAmount: 'Invalid amount',
+
   // Common
   common_select: 'Select',
   common_save: 'Save',

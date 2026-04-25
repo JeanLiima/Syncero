@@ -60,6 +60,14 @@ export const pt = {
 
   // Footer
   footer_rights: 'Todos os direitos reservados.',
+
+  // Persona Modal
+  persona_title: 'Como você vai usar a plataforma?',
+  persona_subtitle: 'Escolha o produto certo para o seu perfil',
+  persona_company: 'Sou Empresa',
+  persona_companyDesc: 'Syncero Flow — gestão financeira',
+  persona_accountant: 'Sou Contador',
+  persona_accountantDesc: 'Syncero Books — acesso fiscal',
 } as const
 
 export type TranslationKey = keyof typeof pt

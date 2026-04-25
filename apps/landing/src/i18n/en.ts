@@ -62,4 +62,12 @@ export const en: Record<TranslationKey, string> = {
 
   // Footer
   footer_rights: 'All rights reserved.',
+
+  // Persona Modal
+  persona_title: 'How will you use the platform?',
+  persona_subtitle: 'Choose the right product for your profile',
+  persona_company: 'I am a Business',
+  persona_companyDesc: 'Syncero Flow — financial management',
+  persona_accountant: 'I am an Accountant',
+  persona_accountantDesc: 'Syncero Books — fiscal access',
 }

@@ -152,7 +152,6 @@ export function Component() {
           data={data?.data ?? []}
           rowKey={(r) => r.id}
           onRowClick={openEdit}
-          loadingMessage={t('common_loading')}
           emptyMessage={t('transactions_empty')}
           columns={[
             {

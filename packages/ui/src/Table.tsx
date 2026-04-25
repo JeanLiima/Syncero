@@ -15,7 +15,6 @@ interface TableProps<T> {
   data: T[]
   rowKey: (row: T) => string
   emptyMessage?: string
-  loadingMessage?: string
   onRowClick?: (row: T) => void
   loading?: boolean
 }
@@ -25,7 +24,6 @@ export function Table<T>({
   data,
   rowKey,
   emptyMessage = 'Nenhum item encontrado',
-  loadingMessage = 'Carregando...',
   onRowClick,
   loading,
 }: TableProps<T>) {

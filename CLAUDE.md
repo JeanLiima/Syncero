@@ -226,6 +226,95 @@ apps/{flow|books}/
 
 ---
 
+## Accountant Invite Flow
+
+### Overview
+
+Company admins (in Flow) invite accountants by email. The accountant receives an email with a unique link, logs in via Google OAuth, and accepts. After acceptance, the accountant can access the company's data read-only in Books.
+
+### Database: `accountant_companies`
+
+| Column | Type | Notes |
+|--------|------|-------|
+| `id` | uuid | PK |
+| `accountant_id` | uuid \| null | null until invite accepted |
+| `company_id` | uuid | FK → companies |
+| `invited_by` | uuid | FK → profiles (who sent the invite) |
+| `email` | text | Accountant's email (invite target) |
+| `invite_token` | text unique | UUID generated client-side |
+| `status` | invite_status | `'pending'` → `'accepted'` |
+| `invited_at` | timestamptz | Auto-set on insert |
+| `accepted_at` | timestamptz | Set on acceptance |
+
+Unique indexes:
+- `(company_id, email) WHERE status = 'pending'` — prevents duplicate pending invites
+- `(company_id, accountant_id) WHERE status = 'accepted'` — one accountant per company
+
+### Step-by-step Flow
+
+```
+1. COMPANY ADMIN — Flow Settings > Accountant tab
+   ├─ Enters: contador@escritorio.com
+   └─ Clicks: "Send invite"
+
+2. FRONTEND — apps/flow/src/pages/Settings.tsx
+   ├─ crypto.randomUUID() → invite_token
+   └─ POST /api/accountant-companies { companyId, email, invite_token }
+
+3. API — apps/flow/api/routes/accountantCompanies.ts (POST /)
+   ├─ Validates: user is company admin (company_members.role = 'admin')
+   ├─ Checks: no duplicate pending invite for this email
+   ├─ Inserts: accountant_companies { company_id, email, status:'pending', invite_token, invited_by }
+   ├─ Fetches: company name + inviter full_name
+   └─ Sends email via Resend → invite link: {FLOW_URL}/invite/{token}
+
+4. EMAIL — apps/flow/api/emails/accountantInvite.ts
+   └─ Dark HTML template with CTA button + fallback link
+
+5. ACCOUNTANT — receives email, clicks link
+   └─ Visits: {FLOW_URL}/invite/{token}
+
+6. FRONTEND — apps/flow/src/pages/AcceptInvite.tsx
+   ├─ GET /api/invites/{token} (no auth) → resolves { type, companyName, status }
+   ├─ Shows: "You've been invited to access {companyName}"
+   └─ Clicks: "Accept" → Google OAuth login if not logged in
+
+7. API — apps/flow/api/routes/invites.ts (POST /:token/accept)
+   ├─ UPDATE accountant_companies SET status='accepted', accountant_id=userId
+   └─ RLS for Books is now unlocked for this accountant+company pair
+
+8. ACCOUNTANT — redirected to Books dashboard
+   └─ Can now see company data read-only
+```
+
+### Environment Variables Required (Flow — server-side)
+
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `RESEND_API_KEY` | `re_...` | Email delivery |
+| `FLOW_URL` | `https://syncero-flow.vercel.app` | Invite link base URL |
+| `SUPABASE_URL` | Supabase project URL | Service client |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key | Service client (bypasses RLS) |
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `apps/flow/src/pages/Settings.tsx` | Invite form UI (AccountantTab) |
+| `apps/flow/api/routes/accountantCompanies.ts` | POST invite + send email |
+| `apps/flow/api/routes/invites.ts` | GET resolve token + POST accept |
+| `apps/flow/src/pages/AcceptInvite.tsx` | Acceptance page |
+| `apps/flow/api/emails/accountantInvite.ts` | Email HTML template |
+| `supabase/migrations/008_accountant_invite.sql` | Schema changes |
+
+### Error Handling
+
+- Duplicate pending invite → API returns 409 "An invite has already been sent to this email."
+- Already accepted → API returns 409 "This accountant already has access to this company."
+- Email delivery failure → logged server-side, invite record still created (best-effort)
+
+---
+
 ## What Still Needs Implementing
 
 ### High priority

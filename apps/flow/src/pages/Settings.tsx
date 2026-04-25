@@ -209,6 +209,7 @@ function AccountantTab() {
   const t = useT()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const [inviteEmail, setInviteEmail] = useState('')
+  const [lastInvitedEmail, setLastInvitedEmail] = useState('')
   const qc = useQueryClient()
 
   const { data: accountants = [], isLoading } = useQuery<AccountantCompany[]>({
@@ -224,9 +225,9 @@ function AccountantTab() {
     mutationFn: async () => {
       const token = crypto.randomUUID()
       await inviteAccountant(activeCompany!.id, inviteEmail, token)
-      return token
     },
     onSuccess: () => {
+      setLastInvitedEmail(inviteEmail)
       setInviteEmail('')
       qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
     },
@@ -254,7 +255,12 @@ function AccountantTab() {
         </div>
         {invite.isSuccess && (
           <p className="mt-3 text-xs text-[var(--success)]">
-            Convite enviado! Link: {window.location.origin}/convite/{/* token not accessible here, just show success */}
+            {t('settings_inviteSent').replace('{email}', lastInvitedEmail)}
+          </p>
+        )}
+        {invite.isError && (
+          <p className="mt-3 text-xs text-[var(--danger)]">
+            {(invite.error as Error)?.message ?? t('settings_inviteError')}
           </p>
         )}
       </Card>

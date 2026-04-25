@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar, Modal } from '@syncero/ui'
+import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar, Modal, ConfirmDialog } from '@syncero/ui'
 import { RefreshCw, X, UserMinus, UserPlus } from 'lucide-react'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
 import type { MemberRole, AccountantCompany } from '@/types'
@@ -213,6 +213,7 @@ function AccountantTab() {
   const language = usePreferencesStore((s) => s.language)
   const [modalOpen, setModalOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
+  const [unlinkId, setUnlinkId] = useState<string | null>(null)
   const qc = useQueryClient()
 
   const { data: accountants = [], isLoading } = useQuery<AccountantCompany[]>({
@@ -368,7 +369,7 @@ function AccountantTab() {
                 if (r.status === 'accepted') return (
                   <div className="relative group">
                     <button
-                      onClick={() => unlink.mutate(r.id)}
+                      onClick={() => setUnlinkId(r.id)}
                       disabled={unlink.isPending && unlink.variables === r.id}
                       className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
                     >
@@ -386,6 +387,16 @@ function AccountantTab() {
           ]}
         />
       </Card>
+
+      <ConfirmDialog
+        open={!!unlinkId}
+        onClose={() => setUnlinkId(null)}
+        onConfirm={() => { unlink.mutate(unlinkId!); setUnlinkId(null) }}
+        title={t('settings_unlinkTitle')}
+        message={t('settings_unlinkMessage')}
+        confirmLabel={t('settings_unlink')}
+        loading={unlink.isPending}
+      />
     </div>
   )
 }

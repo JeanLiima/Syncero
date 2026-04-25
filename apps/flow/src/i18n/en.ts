@@ -158,6 +158,8 @@ export const en: Record<TranslationKey, string> = {
   settings_resend: 'Resend',
   settings_cancel: 'Cancel',
   settings_unlink: 'Unlink',
+  settings_unlinkTitle: 'Unlink accountant',
+  settings_unlinkMessage: 'By unlinking, the accountant will immediately lose access to this company and data will no longer be synced. Do you want to continue?',
 
   // No Company Shell
   noCompany_title: 'Create company',

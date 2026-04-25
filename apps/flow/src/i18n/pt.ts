@@ -156,6 +156,8 @@ export const pt = {
   settings_resend: 'Reenviar',
   settings_cancel: 'Cancelar',
   settings_unlink: 'Desvincular',
+  settings_unlinkTitle: 'Desvincular contador',
+  settings_unlinkMessage: 'Ao desvincular, o contador perderá acesso imediato à empresa e os dados deixarão de ser sincronizados. Deseja continuar?',
 
   // No Company Shell
   noCompany_title: 'Criar empresa',

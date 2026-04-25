@@ -156,6 +156,8 @@ export const en: Record<TranslationKey, string> = {
   settings_invitedAt: 'Invited at',
   settings_inviteSent: 'Invite sent to {email}! The accountant will receive an email with the access link.',
   settings_inviteError: 'Failed to send the invite. Please try again.',
+  settings_resend: 'Resend',
+  settings_cancel: 'Cancel',
 
   // No Company Shell
   noCompany_title: 'Create company',

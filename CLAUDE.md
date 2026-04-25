@@ -292,7 +292,7 @@ Unique indexes:
 | Variable | Value | Purpose |
 |----------|-------|---------|
 | `RESEND_API_KEY` | `re_...` | Email delivery |
-| `FLOW_URL` | `https://syncero-flow.vercel.app` | Invite link base URL |
+| `VITE_FLOW_URL` | `https://syncero-flow.vercel.app` | Invite link base URL (reused from frontend config) |
 | `SUPABASE_URL` | Supabase project URL | Service client |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key | Service client (bypasses RLS) |
 

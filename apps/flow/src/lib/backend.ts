@@ -50,6 +50,14 @@ export async function inviteAccountant(companyId: string, email: string, invite_
   })
 }
 
+export async function resendAccountantInvite(id: string) {
+  return apiFetch(`/api/accountant-companies/${id}/resend`, { method: 'POST', body: '{}' })
+}
+
+export async function cancelAccountantInvite(id: string) {
+  return apiFetch(`/api/accountant-companies/${id}`, { method: 'DELETE' })
+}
+
 export type TransactionQueryParams = {
   companyId: string
   type?: string

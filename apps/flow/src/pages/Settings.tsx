@@ -8,7 +8,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
 import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar } from '@syncero/ui'
-import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant } from '@/lib/backend'
+import { RefreshCw, X } from 'lucide-react'
+import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
 import type { MemberRole, AccountantCompany } from '@/types'
 
 // ── Company tab ───────────────────────────────────────────────
@@ -233,6 +234,16 @@ function AccountantTab() {
     },
   })
 
+  const resend = useMutation({
+    mutationFn: (id: string) => resendAccountantInvite(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
+  })
+
+  const cancel = useMutation({
+    mutationFn: (id: string) => cancelAccountantInvite(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
+  })
+
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
       <Card>
@@ -286,7 +297,7 @@ function AccountantTab() {
                     </div>
                   </div>
                 ) : (
-                  <span className="text-[var(--text-muted)]">{r.email}</span>
+                  <span className="text-sm text-[var(--text-muted)]">{r.email}</span>
                 )
               },
             },
@@ -303,6 +314,39 @@ function AccountantTab() {
               key: 'invited_at',
               header: t('settings_invitedAt'),
               render: (r) => format(new Date(r.invited_at), 'dd/MM/yyyy', { locale: ptBR }),
+            },
+            {
+              key: 'actions',
+              header: '',
+              align: 'right',
+              render: (r) => r.status === 'pending' ? (
+                <div className="flex items-center justify-end gap-1">
+                  <div className="relative group">
+                    <button
+                      onClick={() => resend.mutate(r.id)}
+                      disabled={resend.isPending && resend.variables === r.id}
+                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('settings_resend')}
+                    </span>
+                  </div>
+                  <div className="relative group">
+                    <button
+                      onClick={() => cancel.mutate(r.id)}
+                      disabled={cancel.isPending && cancel.variables === r.id}
+                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('settings_cancel')}
+                    </span>
+                  </div>
+                </div>
+              ) : null,
             },
           ]}
         />

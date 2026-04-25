@@ -152,10 +152,10 @@ export const pt = {
   settings_waiting: 'Aguardando',
   settings_rejected: 'Rejeitado',
   settings_invitedAt: 'Convidado em',
-  settings_inviteSent: 'Convite enviado para {email}! O contador receberá um e-mail com o link de acesso.',
   settings_inviteError: 'Erro ao enviar o convite. Tente novamente.',
   settings_resend: 'Reenviar',
   settings_cancel: 'Cancelar',
+  settings_unlink: 'Desvincular',
 
   // No Company Shell
   noCompany_title: 'Criar empresa',

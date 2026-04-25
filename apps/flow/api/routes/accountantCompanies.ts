@@ -198,7 +198,7 @@ router.delete('/:id', async (c) => {
     .maybeSingle()
 
   if (!invite) return c.json({ error: 'Invite not found.' }, 404)
-  if (invite.status !== 'pending') return c.json({ error: 'Only pending invites can be cancelled.' }, 400)
+  if (invite.status === 'revoked') return c.json({ error: 'Already revoked.' }, 400)
 
   const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
   if (!admin) return c.json({ error: 'forbidden' }, 403)

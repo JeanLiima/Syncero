@@ -8,8 +8,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar } from '@syncero/ui'
-import { RefreshCw, X } from 'lucide-react'
+import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar, Modal } from '@syncero/ui'
+import { RefreshCw, X, UserMinus, UserPlus } from 'lucide-react'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
 import type { MemberRole, AccountantCompany } from '@/types'
 
@@ -211,8 +211,8 @@ function AccountantTab() {
   const t = useT()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const language = usePreferencesStore((s) => s.language)
+  const [modalOpen, setModalOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
-  const [lastInvitedEmail, setLastInvitedEmail] = useState('')
   const qc = useQueryClient()
 
   const { data: accountants = [], isLoading } = useQuery<AccountantCompany[]>({
@@ -230,8 +230,8 @@ function AccountantTab() {
       await inviteAccountant(activeCompany!.id, inviteEmail, token, language)
     },
     onSuccess: () => {
-      setLastInvitedEmail(inviteEmail)
       setInviteEmail('')
+      setModalOpen(false)
       qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
     },
   })
@@ -246,37 +246,49 @@ function AccountantTab() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
   })
 
+  const unlink = useMutation({
+    mutationFn: (id: string) => cancelAccountantInvite(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
+  })
+
   return (
-    <div className="flex flex-col gap-6 max-w-2xl">
-      <Card>
-        <h3 className="text-sm font-medium text-[var(--text-primary)] mb-4">{t('settings_inviteAccountant')}</h3>
-        <div className="flex gap-2 flex-wrap">
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-end">
+        <Button size="sm" onClick={() => setModalOpen(true)}>
+          <UserPlus className="h-4 w-4" />
+          {t('settings_inviteAccountant')}
+        </Button>
+      </div>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => { setModalOpen(false); setInviteEmail('') }}
+        title={t('settings_inviteAccountant')}
+        size="sm"
+      >
+        <div className="flex flex-col gap-4">
           <Input
+            label="Email"
             placeholder="contador@escritorio.com"
             type="email"
             value={inviteEmail}
             onChange={(e) => setInviteEmail(e.target.value)}
-            className="flex-1 min-w-48"
           />
-          <Button
-            onClick={() => invite.mutate()}
-            loading={invite.isPending}
-            disabled={!inviteEmail}
-          >
-            {t('settings_sendInvite')}
-          </Button>
+          {invite.isError && (
+            <p className="text-xs text-[var(--danger)]">
+              {(invite.error as Error)?.message ?? t('settings_inviteError')}
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => { setModalOpen(false); setInviteEmail('') }}>
+              {t('settings_cancel')}
+            </Button>
+            <Button onClick={() => invite.mutate()} loading={invite.isPending} disabled={!inviteEmail}>
+              {t('settings_sendInvite')}
+            </Button>
+          </div>
         </div>
-        {invite.isSuccess && (
-          <p className="mt-3 text-xs text-[var(--success)]">
-            {t('settings_inviteSent').replace('{email}', lastInvitedEmail)}
-          </p>
-        )}
-        {invite.isError && (
-          <p className="mt-3 text-xs text-[var(--danger)]">
-            {(invite.error as Error)?.message ?? t('settings_inviteError')}
-          </p>
-        )}
-      </Card>
+      </Modal>
 
       <Card padding="sm">
         <Table
@@ -321,34 +333,54 @@ function AccountantTab() {
               key: 'actions',
               header: '',
               align: 'right',
-              render: (r) => r.status === 'pending' ? (
-                <div className="flex items-center justify-end gap-1">
-                  <div className="relative group">
-                    <button
-                      onClick={() => resend.mutate(r.id)}
-                      disabled={resend.isPending && resend.variables === r.id}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
-                    >
-                      <RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('settings_resend')}
-                    </span>
+              className: 'w-px !px-2',
+              render: (r) => {
+                if (r.status === 'pending') return (
+                  <div className="flex items-center justify-end gap-1">
+                    <div className="relative group">
+                      <button
+                        onClick={() => resend.mutate(r.id)}
+                        disabled={resend.isPending && resend.variables === r.id}
+                        className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />
+                      </button>
+                      <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        {t('settings_resend')}
+                      </span>
+                    </div>
+                    <div className="relative group">
+                      <button
+                        onClick={() => cancel.mutate(r.id)}
+                        disabled={cancel.isPending && cancel.variables === r.id}
+                        className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        {t('settings_cancel')}
+                      </span>
+                    </div>
                   </div>
+                )
+
+                if (r.status === 'accepted') return (
                   <div className="relative group">
                     <button
-                      onClick={() => cancel.mutate(r.id)}
-                      disabled={cancel.isPending && cancel.variables === r.id}
+                      onClick={() => unlink.mutate(r.id)}
+                      disabled={unlink.isPending && unlink.variables === r.id}
                       className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <UserMinus className="h-3.5 w-3.5" />
                     </button>
-                    <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('settings_cancel')}
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('settings_unlink')}
                     </span>
                   </div>
-                </div>
-              ) : null,
+                )
+
+                return null
+              },
             },
           ]}
         />

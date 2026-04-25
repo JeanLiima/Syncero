@@ -152,6 +152,12 @@ export const pt = {
   settings_waiting: 'Aguardando',
   settings_rejected: 'Rejeitado',
   settings_invitedAt: 'Convidado em',
+  settings_inviteError: 'Erro ao enviar o convite. Tente novamente.',
+  settings_resend: 'Reenviar',
+  settings_cancel: 'Cancelar',
+  settings_unlink: 'Desvincular',
+  settings_unlinkTitle: 'Desvincular contador',
+  settings_unlinkMessage: 'Ao desvincular, o contador perderá acesso imediato à empresa e os dados deixarão de ser sincronizados. Deseja continuar?',
 
   // No Company Shell
   noCompany_title: 'Criar empresa',
@@ -186,7 +192,6 @@ export const pt = {
   // Accept Invite
   invite_verifying: 'Verificando convite…',
   invite_received: 'Convite recebido',
-  invite_asAccountant: 'acessar como contador',
   invite_asMember: 'participar',
   invite_company: 'da empresa',
   invite_loginRequired: 'Você precisa estar logado para aceitar o convite.',

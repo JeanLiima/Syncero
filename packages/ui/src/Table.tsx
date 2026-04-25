@@ -14,7 +14,7 @@ interface TableProps<T> {
   columns: Column<T>[]
   data: T[]
   rowKey: (row: T) => string
-  emptyMessage?: string
+  emptyMessage?: string | ReactNode
   onRowClick?: (row: T) => void
   loading?: boolean
 }
@@ -30,7 +30,7 @@ export function Table<T>({
   return (
     <div className="w-full overflow-x-auto">
       <table className="w-full text-sm">
-        <thead>
+        {(loading || data.length > 0) && <thead>
           <tr className="border-b border-[var(--bg-border)]">
             {columns.map((col) => (
               <th
@@ -49,7 +49,7 @@ export function Table<T>({
               </th>
             ))}
           </tr>
-        </thead>
+        </thead>}
         <tbody>
           {loading ? (
             Array.from({ length: 5 }).map((_, i) => (

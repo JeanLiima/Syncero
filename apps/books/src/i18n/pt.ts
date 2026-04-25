@@ -178,6 +178,24 @@ export const pt = {
   plano_despesa: 'Despesa',
   plano_custo: 'Custo',
 
+  // Accept Invite
+  invite_verifying: 'Verificando convite…',
+  invite_received: 'Convite recebido',
+  invite_asAccountant_of: 'Você foi convidado para acessar como contador a empresa',
+  invite_loginRequired: 'Você precisa estar logado para aceitar o convite.',
+  invite_accept: 'Aceitar convite',
+  invite_loginToAccept: 'Fazer login para aceitar',
+  invite_invalid: 'Convite inválido',
+  invite_gotoHome: 'Ir para o início',
+  invite_success: 'Convite aceito!',
+  invite_accessGranted: 'Você agora tem acesso à empresa',
+  invite_gotoDashboard: 'Acessar painel',
+  invite_errorInvalid: 'Token de convite inválido.',
+  invite_errorNotFound: 'Convite não encontrado.',
+  invite_errorExpired: 'Este convite já foi utilizado ou expirou.',
+  invite_errorVerify: 'Erro ao verificar convite.',
+  invite_errorAccept: 'Erro ao aceitar convite. Tente novamente.',
+
   // Empresa Externa
   external_back: 'Voltar',
   external_title: 'Nova empresa externa',

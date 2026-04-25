@@ -154,6 +154,12 @@ export const en: Record<TranslationKey, string> = {
   settings_waiting: 'Waiting',
   settings_rejected: 'Rejected',
   settings_invitedAt: 'Invited at',
+  settings_inviteError: 'Failed to send the invite. Please try again.',
+  settings_resend: 'Resend',
+  settings_cancel: 'Cancel',
+  settings_unlink: 'Unlink',
+  settings_unlinkTitle: 'Unlink accountant',
+  settings_unlinkMessage: 'By unlinking, the accountant will immediately lose access to this company and data will no longer be synced. Do you want to continue?',
 
   // No Company Shell
   noCompany_title: 'Create company',
@@ -188,7 +194,6 @@ export const en: Record<TranslationKey, string> = {
   // Accept Invite
   invite_verifying: 'Verifying invite…',
   invite_received: 'Invite received',
-  invite_asAccountant: 'access as accountant',
   invite_asMember: 'join',
   invite_company: 'from company',
   invite_loginRequired: 'You need to be logged in to accept the invite.',

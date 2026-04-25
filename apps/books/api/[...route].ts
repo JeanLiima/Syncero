@@ -11,6 +11,7 @@ import apiKeysRouter from './routes/apiKeys'
 import fiscalDocumentsRouter from './routes/fiscalDocuments'
 import fiscalBooksRouter from './routes/fiscalBooks'
 import taxCalculationsRouter from './routes/taxCalculations'
+import invitesRouter from './routes/invites'
 
 export const config = { runtime: 'edge' }
 
@@ -24,6 +25,7 @@ app.onError((err, c) => {
 // ── Auth middleware ───────────────────────────────────────────
 app.use('/me', authMiddleware)
 app.use('/me/*', authMiddleware)
+app.use('/invites/:token/accept', authMiddleware)
 app.use('/companies/*', authMiddleware)
 app.use('/external-companies/*', authMiddleware)
 app.use('/account-plans', authMiddleware)
@@ -50,5 +52,6 @@ app.route('/api-keys', apiKeysRouter)
 app.route('/fiscal-documents', fiscalDocumentsRouter)
 app.route('/fiscal-books', fiscalBooksRouter)
 app.route('/tax-calculations', taxCalculationsRouter)
+app.route('/invites', invitesRouter)
 
 export default handle(app)

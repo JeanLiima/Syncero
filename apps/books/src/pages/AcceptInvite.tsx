@@ -25,7 +25,7 @@ export function Component() {
   const resolveInvite = async () => {
     try {
       const data = await fetch(`/api/invites/${token}`).then(r => r.json()) as
-        | { type: 'member'; companyName: string; status: string }
+        | { type: 'accountant'; companyName: string; status: string }
         | { error: string }
 
       if ('error' in data) {
@@ -60,9 +60,9 @@ export function Component() {
     try {
       await apiFetch(`/api/invites/${token}/accept`, { method: 'POST', body: '{}' })
       setStatus('success')
-    } catch {
+    } catch (err) {
       setStatus('error')
-      setMessage(t('invite_errorAccept'))
+      setMessage((err as Error)?.message || t('invite_errorAccept'))
     }
   }
 
@@ -71,9 +71,9 @@ export function Component() {
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-8">
           <div className="h-12 w-12 rounded-xl bg-[var(--accent-subtle)] flex items-center justify-center">
-            <svg viewBox="0 0 64 64" className="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6,42 22,26 30,34 46,18" />
-              <polyline points="38,18 46,18 46,26" />
+            <svg viewBox="0 0 24 24" className="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
             </svg>
           </div>
         </div>
@@ -90,8 +90,7 @@ export function Component() {
             <>
               <h1 className="text-xl font-semibold text-[var(--text-primary)] mb-2">{t('invite_received')}</h1>
               <p className="text-sm text-[var(--text-secondary)] mb-6">
-                {t('invite_company')}{' '}
-                {t('invite_asMember')}{' '}
+                {t('invite_asAccountant_of')}{' '}
                 <strong className="text-[var(--text-primary)]">{companyName}</strong>.
               </p>
               {!user && (

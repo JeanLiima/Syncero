@@ -6,6 +6,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
+import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar } from '@syncero/ui'
 import { RefreshCw, X } from 'lucide-react'
@@ -209,6 +210,7 @@ function MembersTab() {
 function AccountantTab() {
   const t = useT()
   const activeCompany = useAuthStore((s) => s.activeCompany)
+  const language = usePreferencesStore((s) => s.language)
   const [inviteEmail, setInviteEmail] = useState('')
   const [lastInvitedEmail, setLastInvitedEmail] = useState('')
   const qc = useQueryClient()
@@ -225,7 +227,7 @@ function AccountantTab() {
   const invite = useMutation({
     mutationFn: async () => {
       const token = crypto.randomUUID()
-      await inviteAccountant(activeCompany!.id, inviteEmail, token)
+      await inviteAccountant(activeCompany!.id, inviteEmail, token, language)
     },
     onSuccess: () => {
       setLastInvitedEmail(inviteEmail)

@@ -43,10 +43,10 @@ export async function getAccountantCompanies(companyId?: string) {
   return apiFetch<AccountantCompany[]>(`/api/accountant-companies${buildQuery({ companyId })}`)
 }
 
-export async function inviteAccountant(companyId: string, email: string, invite_token: string) {
+export async function inviteAccountant(companyId: string, email: string, invite_token: string, language: 'pt' | 'en' = 'pt') {
   return apiFetch(`/api/accountant-companies`, {
     method: 'POST',
-    body: JSON.stringify({ companyId, email, invite_token }),
+    body: JSON.stringify({ companyId, email, invite_token, language }),
   })
 }
 

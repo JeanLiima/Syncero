@@ -32,6 +32,7 @@ async function sendInviteEmail(opts: {
   inviteToken: string
   companyName: string
   inviterName: string
+  language?: 'pt' | 'en'
 }) {
   const isProduction = process.env.VERCEL_ENV === 'production'
   const flowUrl = process.env.VITE_FLOW_URL ?? (isProduction ? 'https://syncero-flow.vercel.app' : 'http://localhost:5174')
@@ -40,6 +41,7 @@ async function sendInviteEmail(opts: {
     companyName: opts.companyName,
     inviterName: opts.inviterName,
     inviteLink,
+    language: opts.language,
   })
 
   const resend = new Resend(opts.resendKey)
@@ -86,8 +88,8 @@ router.get('/', async (c) => {
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const body = await c.req.json<{ companyId: string; email: string; invite_token: string }>()
-  const { companyId, email, invite_token } = body
+  const body = await c.req.json<{ companyId: string; email: string; invite_token: string; language?: 'pt' | 'en' }>()
+  const { companyId, email, invite_token, language } = body
 
   if (!companyId || !email || !invite_token) {
     return c.json({ error: 'companyId, email and invite_token are required' }, 400)
@@ -131,6 +133,7 @@ router.post('/', async (c) => {
       inviteToken: invite_token,
       companyName: company?.name ?? 'the company',
       inviterName: inviter?.full_name ?? 'A company admin',
+      language,
     })
   } else {
     console.warn('RESEND_API_KEY not set — invite created but email not sent')

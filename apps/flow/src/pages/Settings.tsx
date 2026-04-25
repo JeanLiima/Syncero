@@ -251,14 +251,18 @@ function AccountantTab() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
   })
 
+  const hasAccountant = accountants.length > 0
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-end">
-        <Button size="sm" onClick={() => setModalOpen(true)}>
-          <UserPlus className="h-4 w-4" />
-          {t('settings_inviteAccountant')}
-        </Button>
-      </div>
+      {hasAccountant && (
+        <div className="flex justify-end">
+          <Button size="sm" onClick={() => setModalOpen(true)}>
+            <UserPlus className="h-4 w-4" />
+            {t('settings_inviteAccountant')}
+          </Button>
+        </div>
+      )}
 
       <Modal
         open={modalOpen}
@@ -295,7 +299,15 @@ function AccountantTab() {
           loading={isLoading}
           data={accountants}
           rowKey={(r) => r.id}
-          emptyMessage={t('settings_noAccountants')}
+          emptyMessage={
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-sm text-[var(--text-muted)]">{t('settings_noAccountants')}</p>
+              <Button size="sm" variant="ghost" onClick={() => setModalOpen(true)}>
+                <UserPlus className="h-4 w-4" />
+                {t('settings_inviteAccountant')}
+              </Button>
+            </div>
+          }
           columns={[
             {
               key: 'accountant',

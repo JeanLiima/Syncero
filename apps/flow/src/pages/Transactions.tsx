@@ -7,11 +7,11 @@ import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle, Search } from 'lucide-react'
 import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, DateRangePicker, Checkbox } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
-import { useTransactions, useCategories } from '@/modules/lancamentos/queries'
-import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/lancamentos/mutations'
+import { useTransactions, useCategories } from '@/modules/transactions/queries'
+import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/transactions/mutations'
 import { useT } from '@/i18n'
 import type { Transaction } from '@/types'
-import type { TransactionFilters } from '@/modules/lancamentos/types'
+import type { TransactionFilters } from '@/modules/transactions/types'
 
 export function Component() {
   const t = useT()
@@ -152,7 +152,6 @@ export function Component() {
           data={data?.data ?? []}
           rowKey={(r) => r.id}
           onRowClick={openEdit}
-          loadingMessage={t('common_loading')}
           emptyMessage={t('transactions_empty')}
           columns={[
             {
@@ -212,7 +211,7 @@ export function Component() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--bg-border)]">
             <span className="text-xs text-[var(--text-muted)]">
-              {t('dre_period')} {page} / {totalPages}
+              {t('incomeStatement_period')} {page} / {totalPages}
             </span>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>

@@ -54,8 +54,8 @@ export function Layout({ children }: { children: ReactNode }) {
       { to: `${basePath}/sped`,  label: t('nav_sped'),       icon: icon(BookOpen)   },
       { to: `${basePath}/taxes`, label: t('nav_taxes'),      icon: icon(Calculator) },
     ] : []),
-    { to: `${basePath}/plano`,       label: t('nav_accountPlan'), icon: icon(LayoutList) },
-    { to: `${basePath}/lancamentos`, label: t('nav_journal'),     icon: icon(BookMarked) },
+    { to: `${basePath}/chart-of-accounts`, label: t('nav_accountPlan'), icon: icon(LayoutList) },
+    { to: `${basePath}/journal-entries`,   label: t('nav_journal'),     icon: icon(BookMarked) },
     { to: `${basePath}/api-keys`,    label: t('nav_apiKeys'),     icon: icon(Key)        },
   ]
 

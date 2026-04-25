@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, ChevronRight, ChevronDown, Search, X } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, Input, Select } from '@syncero/ui'
+import { Button, Card, Input, Select, Skeleton, SkeletonRows } from '@syncero/ui'
 import { AccountPlanModal } from '@/components/accountant/AccountPlanModal'
 import { useT } from '@/i18n'
 import type { AccountPlan } from '@/types'
@@ -165,7 +165,20 @@ export function Component() {
       )}
 
       {isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">{t('plano_loading')}</p>
+        <>
+          <Card padding="sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <Skeleton className="h-8 flex-1 min-w-40" />
+              <Skeleton className="h-8 w-36" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+          </Card>
+          <Card className="p-0 overflow-hidden">
+            <table className="w-full text-sm">
+              <tbody><SkeletonRows rows={8} cols={5} /></tbody>
+            </table>
+          </Card>
+        </>
       ) : plans.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">

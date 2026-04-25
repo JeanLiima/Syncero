@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 import { clsx } from 'clsx'
+import { Skeleton } from './Skeleton'
 
 interface Column<T> {
   key: string
@@ -14,7 +15,6 @@ interface TableProps<T> {
   data: T[]
   rowKey: (row: T) => string
   emptyMessage?: string
-  loadingMessage?: string
   onRowClick?: (row: T) => void
   loading?: boolean
 }
@@ -24,7 +24,6 @@ export function Table<T>({
   data,
   rowKey,
   emptyMessage = 'Nenhum item encontrado',
-  loadingMessage = 'Carregando...',
   onRowClick,
   loading,
 }: TableProps<T>) {
@@ -53,11 +52,18 @@ export function Table<T>({
         </thead>
         <tbody>
           {loading ? (
-            <tr>
-              <td colSpan={columns.length} className="px-4 py-8 text-center text-[var(--text-muted)]">
-                {loadingMessage}
-              </td>
-            </tr>
+            Array.from({ length: 5 }).map((_, i) => (
+              <tr key={i} className="border-b border-[var(--bg-border)]">
+                {columns.map((col, j) => (
+                  <td key={col.key} className="px-4 py-3">
+                    <Skeleton className={clsx(
+                      'h-4',
+                      j === 0 ? 'w-24' : j === columns.length - 1 ? 'w-12' : 'w-full'
+                    )} />
+                  </td>
+                ))}
+              </tr>
+            ))
           ) : data.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="px-4 py-8 text-center text-[var(--text-muted)]">

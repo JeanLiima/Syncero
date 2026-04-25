@@ -6,8 +6,8 @@ import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle } from 'lucide-react'
 import { Button, Card, Table, Badge, Modal, Input, DatePicker, Tabs, TabList, Tab, TabPanel } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
-import { usePayables } from '@/modules/contas/queries'
-import { useCreatePayable, useMarkPayablePaid, useDeletePayable } from '@/modules/contas/mutations'
+import { usePayables } from '@/modules/accounts/queries'
+import { useCreatePayable, useMarkPayablePaid, useDeletePayable } from '@/modules/accounts/mutations'
 import { useT } from '@/i18n'
 import type { PayableReceivable, PayableType } from '@/types'
 import { useState } from 'react'
@@ -78,7 +78,6 @@ function PayableTable({ type }: { type: PayableType }) {
           loading={isLoading}
           data={data}
           rowKey={(r) => r.id}
-          loadingMessage={t('common_loading')}
           emptyMessage={emptyMsg}
           columns={[
             {

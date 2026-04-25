@@ -5,13 +5,13 @@ import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, Badge, MonthPicker } from '@syncero/ui'
+import { Button, Card, Badge, MonthPicker, SkeletonRows } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
-import { DominioImportModal } from '@/components/accountant/DominioImportModal'
+import { DomainImportModal } from '@/components/accountant/DomainImportModal'
 import { useT } from '@/i18n'
 import type { JournalEntry, AccountPlan, EntrySource } from '@/types'
-import type { ParsedEntry } from '@/lib/dominio'
+import type { ParsedEntry } from '@/lib/domain'
 
 const sourceVariant: Record<EntrySource, 'default' | 'info' | 'success' | 'warning'> = {
   manual: 'default',
@@ -47,13 +47,13 @@ export function Component() {
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey,
-    queryFn: () => apiFetch<JournalEntry[]>(`/api/journal-entries?${companyParam}&period=${period}`),
+    queryFn: ({ signal }) => apiFetch<JournalEntry[]>(`/api/journal-entries?${companyParam}&period=${period}`, {}, signal),
     enabled: !!id,
   })
 
   const { data: accounts = [] } = useQuery({
     queryKey: ['account-plans-analytic', id],
-    queryFn: () => apiFetch<AccountPlan[]>(`/api/account-plans?${companyParam}`).then(data =>
+    queryFn: ({ signal }) => apiFetch<AccountPlan[]>(`/api/account-plans?${companyParam}`, {}, signal).then(data =>
       data.filter(p => p.is_analytic)
     ),
     enabled: !!id,
@@ -119,7 +119,11 @@ export function Component() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">{t('lancamentos_loading')}</p>
+        <Card className="p-0 overflow-hidden">
+          <table className="w-full text-sm">
+            <tbody><SkeletonRows rows={6} cols={6} /></tbody>
+          </table>
+        </Card>
       ) : entries.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">
@@ -185,7 +189,7 @@ export function Component() {
             onSubmit={handleCreateEntry}
             accounts={accounts}
           />
-          <DominioImportModal
+          <DomainImportModal
             open={importModalOpen}
             onClose={() => setImportModalOpen(false)}
             onImport={handleDominioImport}

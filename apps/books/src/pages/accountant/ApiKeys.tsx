@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2 } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card } from '@syncero/ui'
+import { Button, Card, SkeletonRows } from '@syncero/ui'
 import { ApiKeyCreateModal } from '@/components/accountant/ApiKeyCreateModal'
 import { useT } from '@/i18n'
 import type { ApiKey } from '@/types'
@@ -60,7 +60,11 @@ export function Component() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">{t('apiKeys_loading')}</p>
+        <Card className="p-0 overflow-hidden">
+          <table className="w-full text-sm">
+            <tbody><SkeletonRows rows={3} cols={6} /></tbody>
+          </table>
+        </Card>
       ) : keys.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">

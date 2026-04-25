@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Card, MonthPicker, Badge } from '@syncero/ui'
-import { useDRE } from '@/modules/dre/queries'
+import { Card, MonthPicker, Badge, Skeleton } from '@syncero/ui'
+import { useIncomeStatement } from '@/modules/incomeStatement/queries'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
 
@@ -14,7 +14,7 @@ export function Component() {
   const year  = Number(period.slice(0, 4))
   const month = Number(period.slice(5, 7))
 
-  const { data = [], isLoading } = useDRE(year, month)
+  const { data = [], isLoading } = useIncomeStatement(year, month)
 
   const incomeRows  = data.filter((r) => r.type === 'income')
   const expenseRows = data.filter((r) => r.type === 'expense')
@@ -25,7 +25,7 @@ export function Component() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dre_title')}</h1>
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('incomeStatement_title')}</h1>
         <MonthPicker
           value={period}
           onChange={setPeriod}
@@ -36,16 +36,52 @@ export function Component() {
 
       <Card padding="sm">
         {isLoading ? (
-          <p className="text-sm text-[var(--text-muted)] p-4 text-center">{t('dre_loading')}</p>
+          <table className="w-full text-sm">
+            <tbody>
+              {/* Income section header */}
+              <tr className="bg-[var(--bg-elevated)]">
+                <td colSpan={2} className="px-4 py-2"><Skeleton className="h-3 w-20" /></td>
+              </tr>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <tr key={`inc-${i}`} className="border-b border-[var(--bg-border)]">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                  <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                </tr>
+              ))}
+              <tr className="border-b-2 border-[var(--bg-border)]">
+                <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+              </tr>
+              {/* Expense section header */}
+              <tr className="bg-[var(--bg-elevated)]">
+                <td colSpan={2} className="px-4 py-2"><Skeleton className="h-3 w-20" /></td>
+              </tr>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <tr key={`exp-${i}`} className="border-b border-[var(--bg-border)]">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-36" /></td>
+                  <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                </tr>
+              ))}
+              <tr className="border-b-2 border-[var(--bg-border)]">
+                <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+              </tr>
+              {/* Net result */}
+              <tr className="bg-[var(--bg-elevated)]">
+                <td className="px-4 py-4"><Skeleton className="h-5 w-28" /></td>
+                <td className="px-4 py-4 text-right"><Skeleton className="h-5 w-28 ml-auto" /></td>
+              </tr>
+            </tbody>
+          </table>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--bg-border)]">
                 <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] capitalize tracking-wide">
-                  {t('dre_category')}
+                  {t('incomeStatement_category')}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] capitalize tracking-wide">
-                  {t('dre_result')}
+                  {t('incomeStatement_result')}
                 </th>
               </tr>
             </thead>
@@ -53,13 +89,13 @@ export function Component() {
               {/* Receitas */}
               <tr className="bg-[var(--bg-elevated)]">
                 <td colSpan={2} className="px-4 py-2 text-xs font-semibold text-[var(--success)] uppercase tracking-wide">
-                  {t('dre_income')}
+                  {t('incomeStatement_income')}
                 </td>
               </tr>
               {incomeRows.length === 0 ? (
                 <tr>
                   <td colSpan={2} className="px-4 py-3 text-[var(--text-muted)] italic text-xs">
-                    {t('dre_noIncome')}
+                    {t('incomeStatement_noIncome')}
                   </td>
                 </tr>
               ) : incomeRows.map((r) => (
@@ -69,20 +105,20 @@ export function Component() {
                 </tr>
               ))}
               <tr className="border-b-2 border-[var(--bg-border)]">
-                <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{t('dre_totalIncome')}</td>
+                <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{t('incomeStatement_totalIncome')}</td>
                 <td className="px-4 py-3 text-right font-mono font-semibold text-[var(--success)]">{fmt(totalIncome)}</td>
               </tr>
 
               {/* Despesas */}
               <tr className="bg-[var(--bg-elevated)]">
                 <td colSpan={2} className="px-4 py-2 text-xs font-semibold text-[var(--danger)] uppercase tracking-wide">
-                  {t('dre_expense')}
+                  {t('incomeStatement_expense')}
                 </td>
               </tr>
               {expenseRows.length === 0 ? (
                 <tr>
                   <td colSpan={2} className="px-4 py-3 text-[var(--text-muted)] italic text-xs">
-                    {t('dre_noExpense')}
+                    {t('incomeStatement_noExpense')}
                   </td>
                 </tr>
               ) : expenseRows.map((r) => (
@@ -92,13 +128,13 @@ export function Component() {
                 </tr>
               ))}
               <tr className="border-b-2 border-[var(--bg-border)]">
-                <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{t('dre_totalExpense')}</td>
+                <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{t('incomeStatement_totalExpense')}</td>
                 <td className="px-4 py-3 text-right font-mono font-semibold text-[var(--danger)]">{fmt(totalExpense)}</td>
               </tr>
 
               {/* Resultado */}
               <tr className="bg-[var(--bg-elevated)]">
-                <td className="px-4 py-4 font-bold text-[var(--text-primary)] text-base">{t('dre_netResult')}</td>
+                <td className="px-4 py-4 font-bold text-[var(--text-primary)] text-base">{t('incomeStatement_netResult')}</td>
                 <td className={`px-4 py-4 text-right font-mono font-bold text-base ${net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                   {fmt(net)}
                 </td>
@@ -111,7 +147,7 @@ export function Component() {
       {!isLoading && (
         <div className="flex justify-end">
           <Badge variant={net >= 0 ? 'success' : 'danger'} className="text-sm px-3 py-1">
-            {net >= 0 ? t('dre_profit') : t('dre_loss')}: {fmt(Math.abs(net))}
+            {net >= 0 ? t('incomeStatement_profit') : t('incomeStatement_loss')}: {fmt(Math.abs(net))}
           </Badge>
         </div>
       )}

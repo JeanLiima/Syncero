@@ -92,7 +92,7 @@ export function Component() {
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('transactions_title')}</h1>
           <p className="text-sm text-[var(--text-muted)]">
-            {data?.count ?? 0} {t('transactions_title').toLowerCase()}{data?.count !== 1 ? 's' : ''}
+            {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('transactions_countPlural') : t('transactions_countSingular')}
           </p>
         </div>
         <Button onClick={openCreate}>
@@ -145,6 +145,8 @@ export function Component() {
           data={data?.data ?? []}
           rowKey={(r) => r.id}
           onRowClick={openEdit}
+          loadingMessage={t('common_loading')}
+          emptyMessage={t('transactions_empty')}
           columns={[
             {
               key: 'date',

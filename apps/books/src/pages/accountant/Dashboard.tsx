@@ -41,9 +41,9 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dashboard_myCompanies')}</h1>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dashboard_companies')}</h1>
           <p className="text-sm text-[var(--text-muted)]">
-            {total} empresa{total !== 1 ? 's' : ''} gerenciada{total !== 1 ? 's' : ''}
+            {total} {total !== 1 ? t('dashboard_managedPlural') : t('dashboard_managed')}
           </p>
         </div>
         <Link to="/accountant/external/new">

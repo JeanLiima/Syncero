@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Upload } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
+import { ptBR, enUS } from 'date-fns/locale'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card, Badge, MonthPicker } from '@syncero/ui'
@@ -28,11 +30,17 @@ export function Component() {
   }
   const { id, isExternal, canWrite } = useCompanyContext()
   const language = usePreferencesStore(s => s.language)
+  const locale = language === 'en' ? enUS : ptBR
   const qc = useQueryClient()
 
   const [entryModalOpen, setEntryModalOpen] = useState(false)
   const [importModalOpen, setImportModalOpen] = useState(false)
   const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7))
+
+  const periodLabel = (() => {
+    const raw = format(parseISO(`${period}-01`), 'MMMM yyyy', { locale })
+    return raw.charAt(0).toUpperCase() + raw.slice(1)
+  })()
 
   const queryKey = ['journal-entries', id, period]
   const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
@@ -86,7 +94,7 @@ export function Component() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('lancamentos_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">{entries.length} lançamento{entries.length !== 1 ? 's' : ''} em {period}</p>
+          <p className="text-sm text-[var(--text-muted)]">{entries.length} {entries.length !== 1 ? t('lancamentos_countPlural') : t('lancamentos_countSingular')} — {periodLabel}</p>
         </div>
         <div className="flex items-center gap-2">
           <MonthPicker
@@ -115,7 +123,7 @@ export function Component() {
       ) : entries.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-sm text-[var(--text-muted)]">Nenhum lançamento em {period}.</p>
+            <p className="text-sm text-[var(--text-muted)]">{t('lancamentos_emptyPeriod')} {periodLabel}.</p>
             {canWrite && (
               <Button size="sm" variant="ghost" onClick={() => setEntryModalOpen(true)}>{t('lancamentos_create')}</Button>
             )}

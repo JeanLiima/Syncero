@@ -78,6 +78,7 @@ function PayableTable({ type }: { type: PayableType }) {
           loading={isLoading}
           data={data}
           rowKey={(r) => r.id}
+          loadingMessage={t('common_loading')}
           emptyMessage={emptyMsg}
           columns={[
             {

@@ -14,7 +14,7 @@ export const en: Record<TranslationKey, string> = {
   // Layout
   layout_activeCompany: 'Active company',
 
-  //Router
+  // Router
   router_books: 'Access Syncero Books',
   router_signOut: 'Sign out',
   router_accessing: 'Accessing...',
@@ -36,6 +36,9 @@ export const en: Record<TranslationKey, string> = {
 
   // Transactions
   transactions_title: 'Transactions',
+  transactions_countSingular: 'transaction',
+  transactions_countPlural: 'transactions',
+  transactions_empty: 'No transactions found',
   transactions_new: 'New',
   transactions_allTypes: 'All types',
   transactions_income: 'Income',
@@ -43,60 +46,67 @@ export const en: Record<TranslationKey, string> = {
   transactions_allStatus: 'All statuses',
   transactions_paid: 'Paid',
   transactions_pending: 'Pending',
-  transactions_dateFrom: 'From',
-  transactions_dateTo: 'To',
   transactions_description: 'Description',
   transactions_category: 'Category',
-  transactions_allCategories: 'All categories',
   transactions_amount: 'Amount',
   transactions_date: 'Date',
   transactions_type: 'Type',
   transactions_status: 'Status',
-  transactions_actions: '',
-  transactions_empty: 'No transactions found',
-  transactions_edit: 'Edit',
   transactions_delete: 'Delete',
-  transactions_markPaid: 'Mark as paid',
   transactions_newTitle: 'New transaction',
   transactions_editTitle: 'Edit transaction',
   transactions_save: 'Save',
   transactions_cancel: 'Cancel',
   transactions_notes: 'Notes',
+  transactions_markAsPaid: 'Mark as paid',
+  transactions_noCategory: 'No category',
+  transactions_previous: 'Previous',
+  transactions_next: 'Next',
+  transactions_errorDescription: 'Description is required',
+  transactions_errorAmount: 'Amount must be positive',
+  transactions_errorDate: 'Date is required',
+  transactions_income_badge: 'Income',
+  transactions_expense_badge: 'Expense',
 
   // Cash Flow
   cashFlow_title: 'Cash Flow',
-  cashFlow_period: 'Period',
   cashFlow_last30: 'Last 30 days',
   cashFlow_thisMonth: 'This month',
   cashFlow_last90: 'Last 90 days',
   cashFlow_income: 'Income',
   cashFlow_expense: 'Expenses',
   cashFlow_balance: 'Balance',
-  cashFlow_cumulative: 'Cumulative balance',
-  cashFlow_empty: 'No data for the period',
+  cashFlow_result: 'Result',
+  cashFlow_chartTitle: 'Cash flow evolution',
+  cashFlow_loading: 'Loading…',
+  cashFlow_noEntries: 'No entries in this period',
 
   // Accounts
   accounts_title: 'Accounts',
   accounts_payable: 'Payable',
   accounts_receivable: 'Receivable',
-  accounts_new: 'New account',
   accounts_description: 'Description',
   accounts_amount: 'Amount',
   accounts_dueDate: 'Due date',
   accounts_status: 'Status',
   accounts_contact: 'Contact',
-  accounts_actions: '',
-  accounts_empty: 'No accounts found',
   accounts_markPaid: 'Mark as paid',
   accounts_delete: 'Delete',
-  accounts_newTitle: 'New account',
-  accounts_editTitle: 'Edit account',
   accounts_save: 'Save',
   accounts_cancel: 'Cancel',
   accounts_notes: 'Notes',
-  accounts_type: 'Type',
-  accounts_payableType: 'Payable',
-  accounts_receivableType: 'Receivable',
+  accounts_add: 'Add',
+  accounts_totalPending: 'Total pending:',
+  accounts_paid: 'Paid',
+  accounts_cancelled: 'Cancelled',
+  accounts_overdue: 'Overdue',
+  accounts_due: 'Due',
+  accounts_newPayable: 'New payable',
+  accounts_newReceivable: 'New receivable',
+  accounts_emptyPayable: 'No payable accounts',
+  accounts_emptyReceivable: 'No receivable accounts',
+  accounts_errorRequired: 'Required',
+  accounts_errorAmount: 'Invalid amount',
 
   // DRE
   dre_title: 'Income Statement',
@@ -108,7 +118,11 @@ export const en: Record<TranslationKey, string> = {
   dre_totalIncome: 'Total revenue',
   dre_totalExpense: 'Total expenses',
   dre_netResult: 'Net result',
-  dre_empty: 'No data for the period',
+  dre_loading: 'Loading…',
+  dre_noIncome: 'No income in this period',
+  dre_noExpense: 'No expenses in this period',
+  dre_profit: 'Profit',
+  dre_loss: 'Loss',
 
   // Settings
   settings_title: 'Settings',
@@ -149,26 +163,25 @@ export const en: Record<TranslationKey, string> = {
   noCompany_taxRegimePlaceholder: 'Select',
   noCompany_submit: 'Create company',
   noCompany_success: 'Company created successfully!',
-  noCompany_error: 'Error creating company. Please try again.',
 
   // Preferences
   preferences_title: 'Preferences',
   preferences_language: 'Language',
   preferences_languageHint: 'Choose the interface language',
-  preferences_portuguese: 'Português',
-  preferences_english: 'English',
 
-  // Accountant management (company user inviting accountants)
+  // Accountant management
   accountant_status: 'Status',
 
   // Login
   login_title: 'Welcome to Syncero Flow',
   login_subtitle: 'Business financial control',
   login_google: 'Sign in with Google',
+  login_error: 'Could not connect with Google. Please try again.',
+  login_terms: 'By signing in, you agree to the terms of use.',
+  login_firstAccess: 'First time? Your account will be created automatically.',
 
   // Onboarding
-  onboarding_welcome: 'Welcome to Syncero Flow.',
-  onboarding_continue: 'Continue',
+  onboarding_loading: 'Setting up your account...',
 
   // Accept Invite
   invite_verifying: 'Verifying invite…',
@@ -190,65 +203,13 @@ export const en: Record<TranslationKey, string> = {
   invite_errorVerify: 'Error verifying invite.',
   invite_errorAccept: 'Error accepting invite. Please try again.',
 
-  // Login extras
-  login_error: 'Could not connect with Google. Please try again.',
-  login_terms: 'By signing in, you agree to the terms of use.',
-  login_firstAccess: 'First time? Your account will be created automatically.',
-
-  // Onboarding
-  onboarding_loading: 'Setting up your account...',
-
   // PWA Banner
   pwa_title: 'Install Syncero Flow',
   pwa_subtitle: 'Quick access, notifications and offline use',
   pwa_install: 'Install',
   pwa_ios: 'Tap Share → Add to Home Screen',
 
-  // DRE extras
-  dre_loading: 'Loading…',
-  dre_noIncome: 'No income in this period',
-  dre_noExpense: 'No expenses in this period',
-  dre_profit: 'Profit',
-  dre_loss: 'Loss',
-
-  // Cash Flow extras
-  cashFlow_chartTitle: 'Cash flow evolution',
-  cashFlow_loading: 'Loading…',
-  cashFlow_noEntries: 'No entries in this period',
-
-  // Transactions extras
-  cashFlow_result: 'Result',
-  transactions_markAsPaid: 'Mark as paid',
-  transactions_noCategory: 'No category',
-  transactions_previous: 'Previous',
-  transactions_next: 'Next',
-  transactions_errorDescription: 'Description is required',
-  transactions_errorAmount: 'Amount must be positive',
-  transactions_errorDate: 'Date is required',
-  transactions_income_badge: 'Income',
-  transactions_expense_badge: 'Expense',
-
-  // Accounts extras
-  accounts_add: 'Add',
-  accounts_totalPending: 'Total pending:',
-  accounts_paid: 'Paid',
-  accounts_cancelled: 'Cancelled',
-  accounts_overdue: 'Overdue',
-  accounts_due: 'Due',
-  accounts_newPayable: 'New payable',
-  accounts_newReceivable: 'New receivable',
-  accounts_emptyPayable: 'No payable accounts',
-  accounts_emptyReceivable: 'No receivable accounts',
-  accounts_errorRequired: 'Required',
-  accounts_errorAmount: 'Invalid amount',
-
   // Common
   common_select: 'Select',
-  common_save: 'Save',
-  common_cancel: 'Cancel',
-  common_delete: 'Delete',
-  common_edit: 'Edit',
   common_loading: 'Loading...',
-  common_error: 'An error occurred',
-  common_empty: 'No results',
 }

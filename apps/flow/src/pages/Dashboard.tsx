@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { format, startOfMonth, endOfMonth, subDays } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR, enUS } from 'date-fns/locale'
 import { TrendingUp, TrendingDown, DollarSign, Clock } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Link } from 'react-router-dom'
 import { Card, Badge, Button } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
+import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import { getTransactions, getPayables } from '@/lib/backend'
 
@@ -102,6 +103,12 @@ export function Component() {
   const { data: chartData = [] } = useLast30Days()
   const { data: recent = [] } = useRecentTransactions()
   const activeCompany = useAuthStore((s) => s.activeCompany)
+  const language = usePreferencesStore((s) => s.language)
+  const locale = language === 'en' ? enUS : ptBR
+  const monthLabel = (() => {
+    const raw = format(new Date(), 'MMMM yyyy', { locale })
+    return raw.charAt(0).toUpperCase() + raw.slice(1)
+  })()
 
   // This case is now handled by NoCompanyShell in the router,
   // but kept as a fallback
@@ -135,9 +142,7 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dashboard_title')}</h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
-        </p>
+        <p className="text-sm text-[var(--text-muted)]">{monthLabel}</p>
       </div>
 
       {/* Metric cards */}

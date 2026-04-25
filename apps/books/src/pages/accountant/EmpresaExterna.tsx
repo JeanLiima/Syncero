@@ -4,6 +4,7 @@ import { LayoutList, BookMarked, Key, ArrowRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
+import { useT } from '@/i18n'
 import type { ExternalCompany } from '@/types'
 
 const taxRegimeLabel: Record<string, string> = {
@@ -26,6 +27,7 @@ const segmentLabel: Record<string, string> = {
 }
 
 export function Component() {
+  const t = useT()
   const { extCompanyId } = useParams<{ extCompanyId: string }>()
 
   const { data: company } = useQuery({
@@ -52,20 +54,20 @@ export function Component() {
 
   const items = [
     {
-      label: 'Plano de Contas',
-      value: `${planCount} conta${planCount !== 1 ? 's' : ''}`,
+      label: t('overview_chartOfAccounts'),
+      value: `${planCount} ${planCount !== 1 ? t('overview_accountCountPlural') : t('overview_accountCount')}`,
       icon: <BookMarked className="h-6 w-6 text-[var(--accent)]" />,
       to: 'plano',
     },
     {
-      label: 'Lançamentos',
-      value: `${entryCount} lançamento${entryCount !== 1 ? 's' : ''}`,
+      label: t('overview_journal'),
+      value: `${entryCount} ${entryCount !== 1 ? t('overview_entryCountPlural') : t('overview_entryCount')}`,
       icon: <LayoutList className="h-6 w-6 text-[var(--warning)]" />,
       to: 'lancamentos',
     },
     {
-      label: 'API Keys',
-      value: 'Gerenciar',
+      label: t('overview_apiKeys'),
+      value: t('overview_manage'),
       icon: <Key className="h-6 w-6 text-[var(--success)]" />,
       to: 'api-keys',
     },
@@ -75,7 +77,7 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <p className="text-xs text-[var(--text-muted)]">Empresa externa</p>
+          <p className="text-xs text-[var(--text-muted)]">{t('overview_externalCompany')}</p>
           {company && (
             <CompanyTypeBadge isExternal integration={company.integration} />
           )}

@@ -1,14 +1,6 @@
 export const pt = {
   // Nav
-  nav_dashboard: 'Dashboard',
-  nav_transactions: 'Lançamentos',
-  nav_cashFlow: 'Fluxo de Caixa',
-  nav_accounts: 'Contas',
-  nav_dre: 'DRE',
-  nav_settings: 'Configurações',
-  nav_preferences: 'Preferências',
   nav_companies: 'Empresas',
-  nav_signOut: 'Sair',
   nav_overview: 'Visão Geral',
   nav_fiscalDocs: 'Doc. Fiscais',
   nav_sped: 'Livros SPED',
@@ -17,166 +9,20 @@ export const pt = {
   nav_journal: 'Lançamentos',
   nav_apiKeys: 'API Keys',
   nav_externalBadge: 'Externa',
+  nav_preferences: 'Preferências',
+  nav_signOut: 'Sair',
 
-  // Layout
-  layout_activeCompany: 'Empresa ativa',
-
-  //Router
+  // Router
   router_flow: 'Acessar Syncero Flow',
   router_signOut: 'Sair',
   router_accessing: 'Acessando...',
   router_title: 'Syncero Books é para contadores',
   router_wrongApp: 'Sua conta não possui perfil de contador. Se você é empresário, acesse o Syncero Flow.',
 
-  // Dashboard
-  dashboard_title: 'Dashboard',
-  dashboard_monthIncome: 'Receita do mês',
-  dashboard_monthExpense: 'Despesas do mês',
-  dashboard_netResult: 'Resultado',
-  dashboard_toReceive: 'A receber',
-  dashboard_recentTransactions: 'Últimos lançamentos',
-  dashboard_noTransactions: 'Nenhum lançamento ainda',
-  dashboard_cashFlowChart: 'Fluxo dos últimos 30 dias',
-
-  // Transactions (Lançamentos)
-  transactions_title: 'Lançamentos',
-  transactions_new: 'Novo',
-  transactions_allTypes: 'Todos os tipos',
-  transactions_income: 'Receitas',
-  transactions_expense: 'Despesas',
-  transactions_allStatus: 'Todos os status',
-  transactions_paid: 'Pago',
-  transactions_pending: 'Pendente',
-  transactions_dateFrom: 'De',
-  transactions_dateTo: 'Até',
-  transactions_description: 'Descrição',
-  transactions_category: 'Categoria',
-  transactions_allCategories: 'Todas as categorias',
-  transactions_amount: 'Valor',
-  transactions_date: 'Data',
-  transactions_type: 'Tipo',
-  transactions_status: 'Status',
-  transactions_actions: '',
-  transactions_empty: 'Nenhum lançamento encontrado',
-  transactions_edit: 'Editar',
-  transactions_delete: 'Excluir',
-  transactions_markPaid: 'Marcar pago',
-  transactions_newTitle: 'Novo lançamento',
-  transactions_editTitle: 'Editar lançamento',
-  transactions_save: 'Salvar',
-  transactions_cancel: 'Cancelar',
-  transactions_notes: 'Observações',
-
-  // Cash Flow
-  cashFlow_title: 'Fluxo de Caixa',
-  cashFlow_period: 'Período',
-  cashFlow_last30: 'Últimos 30 dias',
-  cashFlow_thisMonth: 'Este mês',
-  cashFlow_last90: 'Últimos 90 dias',
-  cashFlow_income: 'Receitas',
-  cashFlow_expense: 'Despesas',
-  cashFlow_balance: 'Saldo',
-  cashFlow_cumulative: 'Saldo acumulado',
-  cashFlow_empty: 'Nenhum dado para o período',
-
-  // Accounts (Contas a Pagar/Receber)
-  accounts_title: 'Contas',
-  accounts_payable: 'A Pagar',
-  accounts_receivable: 'A Receber',
-  accounts_new: 'Nova conta',
-  accounts_description: 'Descrição',
-  accounts_amount: 'Valor',
-  accounts_dueDate: 'Vencimento',
-  accounts_status: 'Status',
-  accounts_contact: 'Contato',
-  accounts_actions: '',
-  accounts_empty: 'Nenhuma conta encontrada',
-  accounts_markPaid: 'Marcar pago',
-  accounts_delete: 'Excluir',
-  accounts_newTitle: 'Nova conta',
-  accounts_editTitle: 'Editar conta',
-  accounts_save: 'Salvar',
-  accounts_cancel: 'Cancelar',
-  accounts_notes: 'Observações',
-  accounts_type: 'Tipo',
-  accounts_payableType: 'A pagar',
-  accounts_receivableType: 'A receber',
-
-  // DRE
-  dre_title: 'DRE',
-  dre_period: 'Período',
-  dre_category: 'Categoria',
-  dre_income: 'Receitas',
-  dre_expense: 'Despesas',
-  dre_result: 'Resultado',
-  dre_totalIncome: 'Total receitas',
-  dre_totalExpense: 'Total despesas',
-  dre_netResult: 'Resultado líquido',
-  dre_empty: 'Nenhum dado para o período',
-
-  // Settings
-  settings_title: 'Configurações',
-  settings_company: 'Empresa',
-  settings_members: 'Membros',
-  settings_accountant: 'Contador',
-  settings_companyName: 'Nome da empresa',
-  settings_cnpj: 'CNPJ',
-  settings_taxRegime: 'Regime tributário',
-  settings_simplesNacional: 'Simples Nacional',
-  settings_lucroPresumido: 'Lucro Presumido',
-  settings_lucroReal: 'Lucro Real',
-  settings_save: 'Salvar alterações',
-  settings_inviteMember: 'Convidar membro',
-  settings_inviteAccountant: 'Convidar contador',
-  settings_sendInvite: 'Enviar convite',
-  settings_invite: 'Convidar',
-  settings_email: 'E-mail',
-  settings_role: 'Papel',
-  settings_admin: 'Administrador',
-  settings_member: 'Membro',
-  settings_viewer: 'Visualizador',
-  settings_revoke: 'Revogar',
-  settings_noMembers: 'Nenhum membro ainda',
-  settings_noAccountants: 'Nenhum contador vinculado',
-  settings_active: 'Ativo',
-  settings_waiting: 'Aguardando',
-  settings_rejected: 'Rejeitado',
-  settings_invitedAt: 'Convidado em',
-
-  // Preferences
-  preferences_title: 'Preferências',
-  preferences_language: 'Idioma',
-  preferences_languageHint: 'Escolha o idioma da interface',
-  preferences_portuguese: 'Português',
-  preferences_english: 'English',
-
-  // Accountant
-  accountant_title: 'Empresas',
-  accountant_noCompanies: 'Nenhuma empresa vinculada ainda',
-  accountant_viewFiscal: 'Ver fiscal',
-  accountant_status: 'Status',
-  accountant_since: 'Vinculado em',
-  accountant_fiscalTitle: 'Resumo Fiscal',
-  accountant_nfe: 'NF-e',
-  accountant_sped: 'SPED',
-  accountant_taxes: 'Impostos',
-  accountant_back: 'Voltar',
-
   // Login
   login_title: 'Bem-vindo ao Syncero Books',
   login_subtitle: 'Plataforma para contadores',
   login_google: 'Entrar com Google',
-
-  // Onboarding
-  onboarding_title: 'Como você vai usar a plataforma?',
-  onboarding_welcome: 'Bem-vindo ao Syncero Books.',
-  onboarding_companyLabel: 'Empresa',
-  onboarding_companyDesc: 'Gerencio as finanças de uma ou mais empresas',
-  onboarding_accountantLabel: 'Contador',
-  onboarding_accountantDesc: 'Acesso fiscal e contábil das empresas dos meus clientes',
-  onboarding_continue: 'Continuar',
-
-  // Login extras
   login_error: 'Não foi possível conectar com o Google. Tente novamente.',
   login_terms: 'Ao entrar, você concorda com os termos de uso.',
   login_firstAccess: 'Primeiro acesso? Sua conta será criada automaticamente.',
@@ -190,8 +36,13 @@ export const pt = {
   pwa_install: 'Instalar',
   pwa_ios: 'Toque em Compartilhar → Tela de Início',
 
+  // Preferences
+  preferences_title: 'Preferências',
+  preferences_language: 'Idioma',
+  preferences_languageHint: 'Escolha o idioma da interface',
+
   // Dashboard (accountant)
-  dashboard_myCompanies: 'Minhas Empresas',
+  dashboard_companies: 'Empresas',
   dashboard_addCompany: 'Adicionar empresa',
   dashboard_noCompanies: 'Nenhuma empresa ainda.',
   dashboard_noCompaniesHint: 'Adicione uma empresa externa ou aguarde um convite de uma empresa Syncero Flow.',
@@ -199,6 +50,25 @@ export const pt = {
   dashboard_filterSyncero: 'Syncero Flow',
   dashboard_filterExternal: 'Externas',
   dashboard_loading: 'Carregando…',
+  dashboard_managed: 'empresa gerenciada',
+  dashboard_managedPlural: 'empresas gerenciadas',
+
+  // Overview (EmpresaFiscal / EmpresaExterna)
+  overview_company: 'Empresa',
+  overview_externalCompany: 'Empresa externa',
+  overview_nfe: 'NF-e / NFS-e',
+  overview_sped: 'Livros SPED',
+  overview_taxes: 'Impostos do mês',
+  overview_chartOfAccounts: 'Plano de Contas',
+  overview_journal: 'Lançamentos',
+  overview_apiKeys: 'API Keys',
+  overview_viewAccounts: 'Ver contas',
+  overview_viewEntries: 'Ver lançamentos',
+  overview_manage: 'Gerenciar',
+  overview_accountCount: 'conta',
+  overview_accountCountPlural: 'contas',
+  overview_entryCount: 'lançamento',
+  overview_entryCountPlural: 'lançamentos',
 
   // API Keys
   apiKeys_title: 'API Keys',
@@ -235,6 +105,9 @@ export const pt = {
 
   // Lançamentos contábeis
   lancamentos_title: 'Lançamentos Contábeis',
+  lancamentos_countSingular: 'lançamento',
+  lancamentos_countPlural: 'lançamentos',
+  lancamentos_emptyPeriod: 'Nenhum lançamento em',
   lancamentos_importDominio: 'Importar Domínio',
   lancamentos_new: 'Novo lançamento',
   lancamentos_loading: 'Carregando…',
@@ -276,6 +149,8 @@ export const pt = {
 
   // Plano de Contas
   plano_title: 'Plano de Contas',
+  plano_countSingular: 'conta',
+  plano_countPlural: 'contas',
   plano_new: 'Nova conta',
   plano_searchPlaceholder: 'Buscar por nome ou código…',
   plano_filterAllTypes: 'Todos os tipos',
@@ -323,16 +198,6 @@ export const pt = {
   external_create: 'Criar empresa',
   external_errorName: 'Informe o nome da empresa.',
   external_errorCreate: 'Erro ao criar empresa.',
-
-  // Common
-  common_select: 'Selecionar',
-  common_save: 'Salvar',
-  common_cancel: 'Cancelar',
-  common_delete: 'Excluir',
-  common_edit: 'Editar',
-  common_loading: 'Carregando...',
-  common_error: 'Ocorreu um erro',
-  common_empty: 'Nenhum resultado',
 } as const
 
 export type TranslationKey = keyof typeof pt

@@ -99,7 +99,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('plano_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">{plans.length} conta{plans.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-[var(--text-muted)]">{plans.length} {plans.length !== 1 ? t('plano_countPlural') : t('plano_countSingular')}</p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true) }}>

@@ -2,15 +2,7 @@ import type { TranslationKey } from './pt'
 
 export const en: Record<TranslationKey, string> = {
   // Nav
-  nav_dashboard: 'Dashboard',
-  nav_transactions: 'Transactions',
-  nav_cashFlow: 'Cash Flow',
-  nav_accounts: 'Accounts',
-  nav_dre: 'Income Statement',
-  nav_settings: 'Settings',
-  nav_preferences: 'Preferences',
   nav_companies: 'Companies',
-  nav_signOut: 'Sign Out',
   nav_overview: 'Overview',
   nav_fiscalDocs: 'Fiscal Docs',
   nav_sped: 'SPED Books',
@@ -19,166 +11,20 @@ export const en: Record<TranslationKey, string> = {
   nav_journal: 'Journal',
   nav_apiKeys: 'API Keys',
   nav_externalBadge: 'External',
+  nav_preferences: 'Preferences',
+  nav_signOut: 'Sign Out',
 
-  // Layout
-  layout_activeCompany: 'Active company',
-
-  //Router
+  // Router
   router_flow: 'Access Syncero Flow',
   router_signOut: 'Sign out',
   router_accessing: 'Accessing...',
   router_title: 'Syncero Books is for accountants',
   router_wrongApp: 'Your account does not have an accountant profile. If you are a business owner, please access Syncero Flow.',
 
-  // Dashboard
-  dashboard_title: 'Dashboard',
-  dashboard_monthIncome: 'Monthly revenue',
-  dashboard_monthExpense: 'Monthly expenses',
-  dashboard_netResult: 'Net result',
-  dashboard_toReceive: 'To receive',
-  dashboard_recentTransactions: 'Recent transactions',
-  dashboard_noTransactions: 'No transactions yet',
-  dashboard_cashFlowChart: 'Last 30 days cash flow',
-
-  // Transactions
-  transactions_title: 'Transactions',
-  transactions_new: 'New',
-  transactions_allTypes: 'All types',
-  transactions_income: 'Income',
-  transactions_expense: 'Expenses',
-  transactions_allStatus: 'All statuses',
-  transactions_paid: 'Paid',
-  transactions_pending: 'Pending',
-  transactions_dateFrom: 'From',
-  transactions_dateTo: 'To',
-  transactions_description: 'Description',
-  transactions_category: 'Category',
-  transactions_allCategories: 'All categories',
-  transactions_amount: 'Amount',
-  transactions_date: 'Date',
-  transactions_type: 'Type',
-  transactions_status: 'Status',
-  transactions_actions: '',
-  transactions_empty: 'No transactions found',
-  transactions_edit: 'Edit',
-  transactions_delete: 'Delete',
-  transactions_markPaid: 'Mark as paid',
-  transactions_newTitle: 'New transaction',
-  transactions_editTitle: 'Edit transaction',
-  transactions_save: 'Save',
-  transactions_cancel: 'Cancel',
-  transactions_notes: 'Notes',
-
-  // Cash Flow
-  cashFlow_title: 'Cash Flow',
-  cashFlow_period: 'Period',
-  cashFlow_last30: 'Last 30 days',
-  cashFlow_thisMonth: 'This month',
-  cashFlow_last90: 'Last 90 days',
-  cashFlow_income: 'Income',
-  cashFlow_expense: 'Expenses',
-  cashFlow_balance: 'Balance',
-  cashFlow_cumulative: 'Cumulative balance',
-  cashFlow_empty: 'No data for the period',
-
-  // Accounts
-  accounts_title: 'Accounts',
-  accounts_payable: 'Payable',
-  accounts_receivable: 'Receivable',
-  accounts_new: 'New account',
-  accounts_description: 'Description',
-  accounts_amount: 'Amount',
-  accounts_dueDate: 'Due date',
-  accounts_status: 'Status',
-  accounts_contact: 'Contact',
-  accounts_actions: '',
-  accounts_empty: 'No accounts found',
-  accounts_markPaid: 'Mark as paid',
-  accounts_delete: 'Delete',
-  accounts_newTitle: 'New account',
-  accounts_editTitle: 'Edit account',
-  accounts_save: 'Save',
-  accounts_cancel: 'Cancel',
-  accounts_notes: 'Notes',
-  accounts_type: 'Type',
-  accounts_payableType: 'Payable',
-  accounts_receivableType: 'Receivable',
-
-  // DRE
-  dre_title: 'Income Statement',
-  dre_period: 'Period',
-  dre_category: 'Category',
-  dre_income: 'Revenue',
-  dre_expense: 'Expenses',
-  dre_result: 'Result',
-  dre_totalIncome: 'Total revenue',
-  dre_totalExpense: 'Total expenses',
-  dre_netResult: 'Net result',
-  dre_empty: 'No data for the period',
-
-  // Settings
-  settings_title: 'Settings',
-  settings_company: 'Company',
-  settings_members: 'Members',
-  settings_accountant: 'Accountant',
-  settings_companyName: 'Company name',
-  settings_cnpj: 'Tax ID',
-  settings_taxRegime: 'Tax regime',
-  settings_simplesNacional: 'Simples Nacional',
-  settings_lucroPresumido: 'Lucro Presumido',
-  settings_lucroReal: 'Lucro Real',
-  settings_save: 'Save changes',
-  settings_inviteMember: 'Invite member',
-  settings_inviteAccountant: 'Invite accountant',
-  settings_sendInvite: 'Send invite',
-  settings_invite: 'Invite',
-  settings_email: 'Email',
-  settings_role: 'Role',
-  settings_admin: 'Administrator',
-  settings_member: 'Member',
-  settings_viewer: 'Viewer',
-  settings_revoke: 'Revoke',
-  settings_noMembers: 'No members yet',
-  settings_noAccountants: 'No accountant linked',
-  settings_active: 'Active',
-  settings_waiting: 'Waiting',
-  settings_rejected: 'Rejected',
-  settings_invitedAt: 'Invited at',
-
-  // Preferences
-  preferences_title: 'Preferences',
-  preferences_language: 'Language',
-  preferences_languageHint: 'Choose the interface language',
-  preferences_portuguese: 'Português',
-  preferences_english: 'English',
-
-  // Accountant
-  accountant_title: 'Companies',
-  accountant_noCompanies: 'No companies linked yet',
-  accountant_viewFiscal: 'View fiscal',
-  accountant_status: 'Status',
-  accountant_since: 'Linked since',
-  accountant_fiscalTitle: 'Fiscal Summary',
-  accountant_nfe: 'Invoice (NF-e)',
-  accountant_sped: 'SPED',
-  accountant_taxes: 'Taxes',
-  accountant_back: 'Back',
-
   // Login
   login_title: 'Welcome to Syncero Books',
   login_subtitle: 'Accounting platform',
   login_google: 'Sign in with Google',
-
-  // Onboarding
-  onboarding_title: 'How will you use the platform?',
-  onboarding_welcome: 'Welcome to Syncero Books.',
-  onboarding_companyLabel: 'Company',
-  onboarding_companyDesc: 'I manage finances for one or more companies',
-  onboarding_accountantLabel: 'Accountant',
-  onboarding_accountantDesc: "Fiscal and accounting access to my clients' companies",
-  onboarding_continue: 'Continue',
-
-  // Login extras
   login_error: 'Could not connect with Google. Please try again.',
   login_terms: 'By signing in, you agree to the terms of use.',
   login_firstAccess: 'First time? Your account will be created automatically.',
@@ -192,8 +38,13 @@ export const en: Record<TranslationKey, string> = {
   pwa_install: 'Install',
   pwa_ios: 'Tap Share → Add to Home Screen',
 
+  // Preferences
+  preferences_title: 'Preferences',
+  preferences_language: 'Language',
+  preferences_languageHint: 'Choose the interface language',
+
   // Dashboard (accountant)
-  dashboard_myCompanies: 'My Companies',
+  dashboard_companies: 'Companies',
   dashboard_addCompany: 'Add company',
   dashboard_noCompanies: 'No companies yet.',
   dashboard_noCompaniesHint: 'Add an external company or wait for an invite from a Syncero Flow company.',
@@ -201,6 +52,25 @@ export const en: Record<TranslationKey, string> = {
   dashboard_filterSyncero: 'Syncero Flow',
   dashboard_filterExternal: 'External',
   dashboard_loading: 'Loading…',
+  dashboard_managed: 'managed company',
+  dashboard_managedPlural: 'managed companies',
+
+  // Overview (EmpresaFiscal / EmpresaExterna)
+  overview_company: 'Company',
+  overview_externalCompany: 'External company',
+  overview_nfe: 'NF-e / NFS-e',
+  overview_sped: 'SPED Books',
+  overview_taxes: 'Monthly taxes',
+  overview_chartOfAccounts: 'Chart of Accounts',
+  overview_journal: 'Journal',
+  overview_apiKeys: 'API Keys',
+  overview_viewAccounts: 'View accounts',
+  overview_viewEntries: 'View entries',
+  overview_manage: 'Manage',
+  overview_accountCount: 'account',
+  overview_accountCountPlural: 'accounts',
+  overview_entryCount: 'entry',
+  overview_entryCountPlural: 'entries',
 
   // API Keys
   apiKeys_title: 'API Keys',
@@ -237,6 +107,9 @@ export const en: Record<TranslationKey, string> = {
 
   // Lançamentos contábeis
   lancamentos_title: 'Journal Entries',
+  lancamentos_countSingular: 'entry',
+  lancamentos_countPlural: 'entries',
+  lancamentos_emptyPeriod: 'No entries in',
   lancamentos_importDominio: 'Import Domínio',
   lancamentos_new: 'New entry',
   lancamentos_loading: 'Loading…',
@@ -278,6 +151,8 @@ export const en: Record<TranslationKey, string> = {
 
   // Plano de Contas
   plano_title: 'Chart of Accounts',
+  plano_countSingular: 'account',
+  plano_countPlural: 'accounts',
   plano_new: 'New account',
   plano_searchPlaceholder: 'Search by name or code…',
   plano_filterAllTypes: 'All types',
@@ -325,14 +200,4 @@ export const en: Record<TranslationKey, string> = {
   external_create: 'Create company',
   external_errorName: 'Please enter the company name.',
   external_errorCreate: 'Error creating company.',
-
-  // Common
-  common_select: 'Select',
-  common_save: 'Save',
-  common_cancel: 'Cancel',
-  common_delete: 'Delete',
-  common_edit: 'Edit',
-  common_loading: 'Loading...',
-  common_error: 'An error occurred',
-  common_empty: 'No results',
 }

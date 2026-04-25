@@ -95,6 +95,31 @@ export async function getCategories(companyId: string) {
   return apiFetch<Category[]>(`/api/categories${buildQuery({ companyId })}`)
 }
 
+export async function getCategoryUsage(categoryId: string) {
+  return apiFetch<{ count: number }>(`/api/categories/${categoryId}/usage`)
+}
+
+export async function createCategory(data: { company_id: string; name: string; type: string; color: string | null }) {
+  return apiFetch<Category>('/api/categories', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateCategory(id: string, data: Partial<Pick<Category, 'name' | 'type' | 'color'>>) {
+  return apiFetch<Category>(`/api/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteCategory(id: string, transferTo?: string | null) {
+  return apiFetch<{ ok: true } | { error: string; count: number }>(
+    `/api/categories/${id}`,
+    { method: 'DELETE', body: JSON.stringify(transferTo !== undefined ? { transferTo } : {}) },
+  )
+}
+
 export async function getPayables(companyId: string, type: string) {
   return apiFetch<PayableReceivable[]>(`/api/payables${buildQuery({ companyId, type })}`)
 }

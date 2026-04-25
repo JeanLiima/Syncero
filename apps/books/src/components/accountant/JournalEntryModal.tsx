@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Modal, Button, Input, Select, DatePicker } from '@syncero/ui'
+import { usePreferencesStore } from '@/store/preferences'
 import type { AccountPlan, JournalSide } from '@/types'
 
 interface EntryLine {
@@ -31,6 +32,7 @@ function parseBrAmount(raw: string): number {
 }
 
 export function JournalEntryModal({ open, onClose, onSubmit, accounts }: JournalEntryModalProps) {
+  const language = usePreferencesStore(s => s.language)
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [description, setDescription] = useState('')
   const [externalRef, setExternalRef] = useState('')
@@ -84,7 +86,7 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
     <Modal open={open} onClose={onClose} title="Novo lançamento" size="lg">
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-4">
-          <DatePicker label="Data" value={date} onChange={e => setDate(e.target.value)} />
+          <DatePicker label="Data" value={date} onChange={setDate} language={language} />
           <Input label="Histórico" placeholder="Descrição do lançamento" className="col-span-2" value={description} onChange={e => setDescription(e.target.value)} />
         </div>
         <Input label="Documento / Referência" placeholder="NF001, boleto, etc." value={externalRef} onChange={e => setExternalRef(e.target.value)} />

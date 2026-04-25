@@ -2,24 +2,18 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
 import { Card, Table, Badge } from '@syncero/ui'
+import { getTaxCalculations } from '@/lib/backend'
+import { useT } from '@/i18n'
 import type { TaxCalculation } from '@/types'
 
 export function Component() {
+  const t = useT()
   const { companyId } = useParams<{ companyId: string }>()
 
   const { data = [], isLoading } = useQuery({
     queryKey: ['tax-calculations', companyId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('tax_calculations')
-        .select('*')
-        .eq('company_id', companyId!)
-        .order('reference_period', { ascending: false })
-      if (error) throw error
-      return (data ?? []) as TaxCalculation[]
-    },
+    queryFn: async () => getTaxCalculations(companyId!),
     enabled: !!companyId,
   })
 
@@ -33,17 +27,17 @@ export function Component() {
     s === 'paid' ? 'success' : s === 'calculated' ? 'info' : 'warning'
 
   const statusLabel = (s: TaxCalculation['status']) =>
-    s === 'paid' ? 'Pago' : s === 'calculated' ? 'Calculado' : 'Rascunho'
+    s === 'paid' ? t('impostos_paid') : s === 'calculated' ? t('impostos_calculated') : t('impostos_draft')
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-[var(--text-primary)]">Impostos</h1>
+      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('impostos_title')}</h1>
 
       {isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">Carregando…</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('impostos_loading')}</p>
       ) : Object.keys(grouped).length === 0 ? (
         <Card>
-          <p className="text-sm text-[var(--text-muted)] text-center py-6">Nenhum cálculo de imposto encontrado</p>
+          <p className="text-sm text-[var(--text-muted)] text-center py-6">{t('impostos_empty')}</p>
         </Card>
       ) : (
         Object.entries(grouped).map(([period, rows]) => {
@@ -52,20 +46,20 @@ export function Component() {
             <Card key={period} padding="sm">
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--bg-border)]">
                 <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-                  Período: {period}
+                  {t('impostos_period')} {period}
                 </h2>
                 <span className="font-mono text-sm text-[var(--danger)] font-semibold">
-                  Total: {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  {t('impostos_total')} {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
               </div>
               <Table
                 data={rows}
                 rowKey={(r) => r.id}
                 columns={[
-                  { key: 'tax_type', header: 'Imposto' },
+                  { key: 'tax_type', header: t('impostos_tax') },
                   {
                     key: 'base_value',
-                    header: 'Base de cálculo',
+                    header: t('impostos_base'),
                     align: 'right',
                     render: (r) => (
                       <span className="font-mono">
@@ -75,13 +69,13 @@ export function Component() {
                   },
                   {
                     key: 'rate',
-                    header: 'Alíquota',
+                    header: t('impostos_rate'),
                     align: 'right',
                     render: (r) => `${(r.rate * 100).toFixed(2)}%`,
                   },
                   {
                     key: 'tax_value',
-                    header: 'Valor',
+                    header: t('impostos_value'),
                     align: 'right',
                     render: (r) => (
                       <span className="font-mono font-medium text-[var(--danger)]">
@@ -91,7 +85,7 @@ export function Component() {
                   },
                   {
                     key: 'due_date',
-                    header: 'Vencimento',
+                    header: t('impostos_dueDate'),
                     render: (r) =>
                       r.due_date
                         ? format(new Date(r.due_date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR })
@@ -99,7 +93,7 @@ export function Component() {
                   },
                   {
                     key: 'status',
-                    header: 'Status',
+                    header: t('impostos_status'),
                     render: (r) => <Badge variant={statusVariant(r.status)}>{statusLabel(r.status)}</Badge>,
                   },
                 ]}

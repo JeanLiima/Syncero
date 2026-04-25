@@ -3,33 +3,28 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { supabase } from '@/lib/supabase'
 import { Card, Table, Badge, Select, DatePicker } from '@syncero/ui'
+import { getFiscalDocuments } from '@/lib/backend'
+import { usePreferencesStore } from '@/store/preferences'
+import { useT } from '@/i18n'
 import type { FiscalDocument, FiscalDocType } from '@/types'
 
 export function Component() {
+  const t = useT()
   const { companyId } = useParams<{ companyId: string }>()
+  const language = usePreferencesStore(s => s.language)
   const [filterType, setFilterType] = useState<FiscalDocType | ''>('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo,   setDateTo]   = useState('')
 
   const { data = [], isLoading } = useQuery({
     queryKey: ['fiscal-docs', companyId, filterType, dateFrom, dateTo],
-    queryFn: async () => {
-      let q = supabase
-        .from('fiscal_documents')
-        .select('*')
-        .eq('company_id', companyId!)
-        .order('issue_date', { ascending: false })
-
-      if (filterType) q = q.eq('doc_type', filterType)
-      if (dateFrom)   q = q.gte('issue_date', dateFrom)
-      if (dateTo)     q = q.lte('issue_date', dateTo)
-
-      const { data, error } = await q
-      if (error) throw error
-      return (data ?? []) as FiscalDocument[]
-    },
+    queryFn: async () =>
+      getFiscalDocuments(companyId!, {
+        doc_type: filterType || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+      }),
     enabled: !!companyId,
   })
 
@@ -38,13 +33,13 @@ export function Component() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-[var(--text-primary)]">Documentos Fiscais</h1>
+      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('nfe_title')}</h1>
 
       <Card padding="sm">
         <div className="flex flex-wrap gap-3 p-2">
           <Select
             options={[
-              { value: '',     label: 'Todos os tipos' },
+              { value: '',     label: t('nfe_allTypes') },
               { value: 'nfe',  label: 'NF-e' },
               { value: 'nfse', label: 'NFS-e' },
               { value: 'cfe',  label: 'CF-e' },
@@ -54,8 +49,8 @@ export function Component() {
             onChange={(v) => setFilterType(v as FiscalDocType | '')}
             className="w-36"
           />
-          <DatePicker value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
-          <DatePicker value={dateTo}   onChange={(e) => setDateTo(e.target.value)}   className="w-40" />
+          <DatePicker value={dateFrom} onChange={setDateFrom} language={language} className="w-40" />
+          <DatePicker value={dateTo}   onChange={setDateTo}   language={language} className="w-40" />
         </div>
       </Card>
 
@@ -64,19 +59,19 @@ export function Component() {
           loading={isLoading}
           data={data}
           rowKey={(r) => r.id}
-          emptyMessage="Nenhum documento fiscal encontrado"
+          emptyMessage={t('nfe_empty')}
           columns={[
             {
               key: 'issue_date',
-              header: 'Emissão',
+              header: t('nfe_issueDate'),
               render: (r) => format(new Date(r.issue_date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR }),
             },
-            { key: 'doc_type', header: 'Tipo', render: (r) => <Badge variant="info">{r.doc_type.toUpperCase()}</Badge> },
-            { key: 'number',   header: 'Número' },
-            { key: 'issuer_name', header: 'Emitente', render: (r) => r.issuer_name ?? '—' },
+            { key: 'doc_type', header: t('nfe_type'), render: (r) => <Badge variant="info">{r.doc_type.toUpperCase()}</Badge> },
+            { key: 'number',   header: t('nfe_number') },
+            { key: 'issuer_name', header: t('nfe_issuer'), render: (r) => r.issuer_name ?? '—' },
             {
               key: 'value',
-              header: 'Valor',
+              header: t('nfe_value'),
               align: 'right',
               render: (r) => (
                 <span className="font-mono">
@@ -86,7 +81,7 @@ export function Component() {
             },
             {
               key: 'status',
-              header: 'Status',
+              header: t('nfe_status'),
               render: (r) => <Badge variant={statusVariant(r.status)}>{r.status}</Badge>,
             },
           ]}

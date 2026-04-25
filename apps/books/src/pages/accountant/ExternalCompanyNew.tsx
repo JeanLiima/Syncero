@@ -4,7 +4,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
-import { Button, Input, Select, Card } from '@syncero/ui'
+import { Button, Input, Select, Card, Checkbox } from '@syncero/ui'
+import { useT } from '@/i18n'
 import type { TaxRegime, CompanyIntegration, CompanySegment } from '@/types'
 
 const segmentOptions = [
@@ -35,6 +36,7 @@ const integrationOptions = [
 ]
 
 export function Component() {
+  const t = useT()
   const { user } = useAuth()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -53,7 +55,7 @@ export function Component() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!name.trim()) { setError('Informe o nome da empresa.'); return }
+    if (!name.trim()) { setError(t('external_errorName')); return }
     if (!user?.id) return
 
     setSubmitting(true)
@@ -76,7 +78,7 @@ export function Component() {
       qc.invalidateQueries({ queryKey: ['external-companies', user.id] })
       navigate(`/accountant/external/${company.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar empresa.')
+      setError(err instanceof Error ? err.message : t('external_errorCreate'))
     } finally {
       setSubmitting(false)
     }
@@ -90,73 +92,69 @@ export function Component() {
           className="cursor-pointer flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] mb-3 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Voltar
+          {t('external_back')}
         </button>
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">Nova empresa externa</h1>
-        <p className="text-sm text-[var(--text-muted)]">Empresa que não usa o Syncero Flow.</p>
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('external_title')}</h1>
+        <p className="text-sm text-[var(--text-muted)]">{t('external_subtitle')}</p>
       </div>
 
       <Card>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <Input
-            label="Razão social *"
-            placeholder="Nome da empresa"
+            label={t('external_name')}
+            placeholder={t('external_namePlaceholder')}
             value={name}
             onChange={e => setName(e.target.value)}
           />
           <Input
-            label="Nome fantasia"
-            placeholder="Nome comercial"
+            label={t('external_tradeName')}
+            placeholder={t('external_tradeNamePlaceholder')}
             value={tradeName}
             onChange={e => setTradeName(e.target.value)}
           />
           <Input
-            label="CNPJ"
-            placeholder="00.000.000/0000-00"
+            label={t('external_cnpj')}
+            placeholder={t('external_cnpjPlaceholder')}
             value={cnpj}
             onChange={e => setCnpj(e.target.value)}
             maxLength={18}
           />
           <Select
-            label="Regime tributário"
+            label={t('external_taxRegime')}
             options={taxRegimeOptions}
             value={taxRegime}
             onChange={v => setTaxRegime(v as TaxRegime | '')}
           />
           <Select
-            label="Segmento"
+            label={t('external_segment')}
             options={segmentOptions}
             value={segment}
             onChange={v => setSegment(v as CompanySegment | '')}
           />
           <Select
-            label="Sistema de origem"
+            label={t('external_integration')}
             options={integrationOptions}
             value={integration}
             onChange={v => setIntegration(v as CompanyIntegration)}
           />
           <Input
-            label="Observações"
-            placeholder="Notas internas sobre a empresa"
+            label={t('external_notes')}
+            placeholder={t('external_notesPlaceholder')}
             value={notes}
             onChange={e => setNotes(e.target.value)}
           />
 
-          <label className="flex items-center gap-2 cursor-pointer select-none text-sm text-[var(--text-secondary)]">
-            <input
-              type="checkbox"
-              checked={seedPlan}
-              onChange={e => setSeedPlan(e.target.checked)}
-              className="h-4 w-4 rounded border-[var(--bg-border)] bg-[var(--bg-elevated)] accent-[var(--accent)]"
-            />
-            Criar Plano de Contas padrão CFC
-          </label>
+          <Checkbox
+            label={t('external_seedPlan')}
+            checked={seedPlan}
+            onChange={e => setSeedPlan((e.target as HTMLInputElement).checked)}
+          />
 
           {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-1">
-            <Button type="button" variant="ghost" onClick={() => navigate('/accountant')}>Cancelar</Button>
-            <Button type="submit" loading={submitting}>Criar empresa</Button>
+            <Button type="button" variant="ghost" onClick={() => navigate('/accountant')}>{t('external_cancel')}</Button>
+            <Button type="submit" loading={submitting}>{t('external_create')}</Button>
           </div>
         </form>
       </Card>

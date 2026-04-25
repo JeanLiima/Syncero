@@ -5,9 +5,11 @@ import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card } from '@syncero/ui'
 import { ApiKeyCreateModal } from '@/components/accountant/ApiKeyCreateModal'
+import { useT } from '@/i18n'
 import type { ApiKey } from '@/types'
 
 export function Component() {
+  const t = useT()
   const { id, isExternal } = useCompanyContext()
   const qc = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
@@ -43,26 +45,26 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">API Keys</h1>
-          <p className="text-sm text-[var(--text-muted)]">Chaves para integração com sistemas externos</p>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('apiKeys_title')}</h1>
+          <p className="text-sm text-[var(--text-muted)]">{t('apiKeys_subtitle')}</p>
         </div>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" />
-          Nova chave
+          {t('apiKeys_new')}
         </Button>
       </div>
 
       <div className="p-4 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-sm text-[var(--text-secondary)]">
-        <p className="font-medium text-[var(--text-primary)] mb-1">Como usar</p>
-        <p>Inclua a chave no header <code className="font-mono text-xs bg-[var(--bg-surface)] px-1 py-0.5 rounded">Authorization: Bearer &lt;chave&gt;</code> ao fazer POST para a API de lançamentos.</p>
+        <p className="font-medium text-[var(--text-primary)] mb-1">{t('apiKeys_howTo')}</p>
+        <p><code className="font-mono text-xs bg-[var(--bg-surface)] px-1 py-0.5 rounded">Authorization: Bearer &lt;key&gt;</code> — {t('apiKeys_howToDesc')}</p>
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">Carregando…</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('apiKeys_loading')}</p>
       ) : keys.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-sm text-[var(--text-muted)]">Nenhuma chave criada ainda.</p>
+            <p className="text-sm text-[var(--text-muted)]">{t('apiKeys_empty')}</p>
           </div>
         </Card>
       ) : (
@@ -70,11 +72,11 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--bg-border)] text-left">
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Nome</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Prefixo</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Último uso</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Expira em</th>
-                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Status</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('apiKeys_name')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('apiKeys_prefix')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('apiKeys_lastUsed')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('apiKeys_expiresAt')}</th>
+                <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('apiKeys_status')}</th>
                 <th className="px-4 py-3 w-10" />
               </tr>
             </thead>
@@ -93,7 +95,7 @@ export function Component() {
                     <span className={`text-xs px-1.5 py-0.5 rounded ${
                       key.is_active ? 'bg-[var(--success)]/15 text-[var(--success)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
                     }`}>
-                      {key.is_active ? 'Ativa' : 'Revogada'}
+                      {key.is_active ? t('apiKeys_active') : t('apiKeys_revoked')}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -101,7 +103,7 @@ export function Component() {
                       <button
                         onClick={() => handleRevoke(key.id)}
                         className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-                        title="Revogar chave"
+                        title={t('apiKeys_revoke')}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

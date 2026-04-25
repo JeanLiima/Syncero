@@ -14,6 +14,7 @@ interface TableProps<T> {
   data: T[]
   rowKey: (row: T) => string
   emptyMessage?: string
+  loadingMessage?: string
   onRowClick?: (row: T) => void
   loading?: boolean
 }
@@ -23,6 +24,7 @@ export function Table<T>({
   data,
   rowKey,
   emptyMessage = 'Nenhum item encontrado',
+  loadingMessage = 'Carregando...',
   onRowClick,
   loading,
 }: TableProps<T>) {
@@ -35,7 +37,7 @@ export function Table<T>({
               <th
                 key={col.key}
                 className={clsx(
-                  'px-4 py-3 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide',
+                  'px-4 py-3 text-xs font-medium text-[var(--text-muted)] capitalize',
                   col.align === 'right'
                     ? 'text-right'
                     : col.align === 'center'
@@ -53,7 +55,7 @@ export function Table<T>({
           {loading ? (
             <tr>
               <td colSpan={columns.length} className="px-4 py-8 text-center text-[var(--text-muted)]">
-                Carregando...
+                {loadingMessage}
               </td>
             </tr>
           ) : data.length === 0 ? (

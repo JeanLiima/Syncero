@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
+import { createPayable, updatePayable, deletePayable } from '@/lib/backend'
 import type { PayableType } from '@/types'
 
 export interface PayableFormData {
@@ -18,13 +18,7 @@ export function useCreatePayable() {
 
   return useMutation({
     mutationFn: async (data: PayableFormData) => {
-      const { data: result, error } = await supabase
-        .from('payables_receivables')
-        .insert({ ...data, company_id: activeCompany!.id, status: 'pending' })
-        .select()
-        .single()
-      if (error) throw error
-      return result
+      return createPayable({ ...data, company_id: activeCompany!.id, status: 'pending' })
     },
     onSuccess: (_, vars) =>
       qc.invalidateQueries({ queryKey: ['payables', activeCompany?.id, vars.type] }),
@@ -37,12 +31,7 @@ export function useMarkPayablePaid() {
 
   return useMutation({
     mutationFn: async ({ id, type }: { id: string; type: PayableType }) => {
-      const { error } = await supabase
-        .from('payables_receivables')
-        .update({ status: 'paid', paid_date: new Date().toISOString().split('T')[0] })
-        .eq('id', id)
-        .eq('company_id', activeCompany!.id)
-      if (error) throw error
+      await updatePayable(id, { status: 'paid', paid_date: new Date().toISOString().split('T')[0] })
       return type
     },
     onSuccess: (type) =>
@@ -56,12 +45,7 @@ export function useDeletePayable() {
 
   return useMutation({
     mutationFn: async ({ id, type }: { id: string; type: PayableType }) => {
-      const { error } = await supabase
-        .from('payables_receivables')
-        .delete()
-        .eq('id', id)
-        .eq('company_id', activeCompany!.id)
-      if (error) throw error
+      await deletePayable(id)
       return type
     },
     onSuccess: (type) =>

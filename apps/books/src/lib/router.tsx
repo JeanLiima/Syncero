@@ -22,10 +22,10 @@ const Loader = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--bg-base)]">
-      <div className="h-10 w-10 rounded-xl bg-[var(--success)] flex items-center justify-center shadow-l">
+      <div className="h-10 w-10 rounded-xl bg-[var(--accent)] flex items-center justify-center shadow-l">
         <BookOpen className="h-5 w-5 text-white" />
       </div>
-      <div className="h-5 w-5 border-2 border-[var(--success)] border-t-transparent rounded-full animate-spin" />
+      <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
       <p className="text-xs text-[var(--text-muted)] tracking-wide">{t('router_accessing')}</p>
     </div>
   )
@@ -52,7 +52,7 @@ function WrongApp() {
         <div className="flex flex-col gap-3">
           <a
             href={FLOW_URL}
-            className="inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+            className="inline-flex items-center justify-center h-10 px-4 rounded-[var(--radius-md)] bg-[var(--flow)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
           >
             {t("router_flow")}
           </a>

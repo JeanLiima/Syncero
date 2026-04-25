@@ -22,7 +22,7 @@ export interface NavItem {
 
 export interface AppLayoutProps {
   children: ReactNode
-  brand: { initials: string; name: string }
+  brand: { icon: ReactNode; name: string }
   navItems: NavItem[]
   sidebarCollapsed: boolean
   setSidebarCollapsed: (v: boolean) => void
@@ -39,8 +39,8 @@ export interface AppLayoutProps {
 }
 
 const colorMap = {
-  accent:  { brand: 'bg-[var(--accent)]',   active: 'bg-[var(--accent-subtle)] text-[var(--accent)]',   mobileActive: 'text-[var(--accent)]'   },
-  success: { brand: 'bg-[var(--success)]',  active: 'bg-[var(--success-subtle)] text-[var(--success)]', mobileActive: 'text-[var(--success)]'  },
+  accent:  { brand: 'bg-[var(--accent-subtle)]',   brandIcon: 'text-[var(--accent)]',   active: 'bg-[var(--accent)] text-white',   mobileActive: 'text-[var(--accent)]'   },
+  success: { brand: 'bg-[var(--success-subtle)]',  brandIcon: 'text-[var(--success)]',  active: 'bg-[var(--success)] text-white',  mobileActive: 'text-[var(--success)]'  },
 } as const
 
 // ── SidebarLink ───────────────────────────────────────────────
@@ -123,8 +123,8 @@ export function AppLayout({
               : 'h-14 px-4 gap-2',
           )}
         >
-          <div className={clsx('h-8 w-8 shrink-0 rounded-lg flex items-center justify-center', colors.brand)}>
-            <span className="text-white font-bold text-sm">{brand.initials}</span>
+          <div className={clsx('h-8 w-8 shrink-0 rounded-lg flex items-center justify-center', colors.brand, colors.brandIcon)}>
+            {brand.icon}
           </div>
           {!collapsed && (
             <span className="font-semibold text-[var(--text-primary)] flex-1 truncate">{brand.name}</span>

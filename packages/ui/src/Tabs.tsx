@@ -37,7 +37,7 @@ export function Tab({ id, children }: { id: string; children: ReactNode }) {
     <button
       onClick={() => setActive(id)}
       className={clsx(
-        'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
+        'px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px cursor-pointer',
         active === id
           ? 'border-[var(--accent)] text-[var(--accent)]'
           : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-secondary)]'

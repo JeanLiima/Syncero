@@ -22,17 +22,17 @@ export function Products() {
         <div className="grid md:grid-cols-2 gap-6">
 
           {/* Syncero Flow */}
-          <div className="relative group flex flex-col rounded-[var(--radius-xl)] border border-[var(--bg-border)] bg-[var(--bg-surface)] p-8 overflow-hidden hover:border-[var(--accent)]/50 transition-colors">
+          <div className="relative group flex flex-col rounded-[var(--radius-xl)] border border-[var(--bg-border)] bg-[var(--bg-surface)] p-8 overflow-hidden hover:border-[var(--flow)]/50 transition-colors">
             <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-10 pointer-events-none"
-              style={{ background: 'radial-gradient(ellipse, #3b82f6 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
+              style={{ background: 'radial-gradient(ellipse, #0e7490 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-12 w-12 rounded-xl bg-[var(--accent-subtle)] flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-[var(--accent)]" />
+              <div className="h-12 w-12 rounded-xl bg-[var(--flow-subtle)] flex items-center justify-center">
+                <TrendingUp className="h-6 w-6 text-[var(--flow)]" />
               </div>
               <div>
                 <h3 className="font-bold text-[var(--text-primary)] text-lg">Syncero Flow</h3>
-                <p className="text-xs text-[var(--accent)]">{t('flow_tagline')}</p>
+                <p className="text-xs text-[var(--flow)]">{t('flow_tagline')}</p>
               </div>
             </div>
 
@@ -42,7 +42,7 @@ export function Products() {
             <ul className="space-y-3 mb-8 flex-1">
               {(['flow_f1','flow_f2','flow_f3','flow_f4','flow_f5'] as const).map((key) => (
                 <li key={key} className="flex items-center gap-2.5 text-sm text-[var(--text-secondary)]">
-                  <CheckCircle className="h-4 w-4 text-[var(--accent)] flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 text-[var(--flow)] flex-shrink-0" />
                   {t(key)}
                 </li>
               ))}
@@ -50,7 +50,7 @@ export function Products() {
 
             <a
               href={`${FLOW_URL}/login`}
-              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--flow)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               {t('flow_btn')}
               <ArrowRight className="h-4 w-4" />
@@ -58,17 +58,17 @@ export function Products() {
           </div>
 
           {/* Syncero Books */}
-          <div className="relative group flex flex-col rounded-[var(--radius-xl)] border border-[var(--bg-border)] bg-[var(--bg-surface)] p-8 overflow-hidden hover:border-[var(--success)]/50 transition-colors">
+          <div className="relative group flex flex-col rounded-[var(--radius-xl)] border border-[var(--bg-border)] bg-[var(--bg-surface)] p-8 overflow-hidden hover:border-[var(--books)]/50 transition-colors">
             <div className="absolute top-0 right-0 w-48 h-48 rounded-full opacity-10 pointer-events-none"
-              style={{ background: 'radial-gradient(ellipse, #10b981 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
+              style={{ background: 'radial-gradient(ellipse, #7c3aed 0%, transparent 70%)', transform: 'translate(30%, -30%)' }} />
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="h-12 w-12 rounded-xl bg-[#0d2a1e] flex items-center justify-center">
-                <BookOpen className="h-6 w-6 text-[var(--success)]" />
+              <div className="h-12 w-12 rounded-xl bg-[var(--books-subtle)] flex items-center justify-center">
+                <BookOpen className="h-6 w-6 text-[var(--books)]" />
               </div>
               <div>
                 <h3 className="font-bold text-[var(--text-primary)] text-lg">Syncero Books</h3>
-                <p className="text-xs text-[var(--success)]">{t('books_tagline')}</p>
+                <p className="text-xs text-[var(--books)]">{t('books_tagline')}</p>
               </div>
             </div>
 
@@ -78,7 +78,7 @@ export function Products() {
             <ul className="space-y-3 mb-8 flex-1">
               {(['books_f1','books_f2','books_f3','books_f4','books_f5'] as const).map((key) => (
                 <li key={key} className="flex items-center gap-2.5 text-sm text-[var(--text-secondary)]">
-                  <CheckCircle className="h-4 w-4 text-[var(--success)] flex-shrink-0" />
+                  <CheckCircle className="h-4 w-4 text-[var(--books)] flex-shrink-0" />
                   {t(key)}
                 </li>
               ))}
@@ -86,7 +86,7 @@ export function Products() {
 
             <a
               href={`${BOOKS_URL}/login`}
-              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--success)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-[var(--radius-md)] bg-[var(--books)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               {t('books_btn')}
               <ArrowRight className="h-4 w-4" />

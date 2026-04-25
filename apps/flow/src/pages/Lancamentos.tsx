@@ -4,26 +4,31 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, CheckCircle } from 'lucide-react'
-import { Button, Card, Table, Badge, Modal, Input, Select } from '@syncero/ui'
+import { Plus, CheckCircle, Search } from 'lucide-react'
+import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, DateRangePicker, Checkbox } from '@syncero/ui'
+import { usePreferencesStore } from '@/store/preferences'
 import { useTransactions, useCategories } from '@/modules/lancamentos/queries'
 import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/lancamentos/mutations'
+import { useT } from '@/i18n'
 import type { Transaction } from '@/types'
 import type { TransactionFilters } from '@/modules/lancamentos/types'
 
-const schema = z.object({
-  description: z.string().min(1, 'Descrição obrigatória'),
-  amount: z.coerce.number().positive('Valor deve ser positivo'),
-  type: z.enum(['income', 'expense']),
-  date: z.string().min(1, 'Data obrigatória'),
-  category_id: z.string().optional(),
-  is_paid: z.boolean(),
-  notes: z.string().optional(),
-})
-
-type FormData = z.infer<typeof schema>
-
 export function Component() {
+  const t = useT()
+  const { language } = usePreferencesStore()
+
+  const schema = z.object({
+    description: z.string().min(1, t('transactions_errorDescription')),
+    amount: z.coerce.number().positive(t('transactions_errorAmount')),
+    type: z.enum(['income', 'expense']),
+    date: z.string().min(1, t('transactions_errorDate')),
+    category_id: z.string().optional(),
+    is_paid: z.boolean(),
+    notes: z.string().optional(),
+  })
+
+  type FormData = z.infer<typeof schema>
+
   const [filters, setFilters] = useState<TransactionFilters>({})
   const [page, setPage] = useState(1)
   const [modalOpen, setModalOpen] = useState(false)
@@ -78,7 +83,6 @@ export function Component() {
   }
 
   const totalPages = Math.ceil((data?.count ?? 0) / 20)
-
   const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }))
 
   return (
@@ -86,50 +90,57 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">Lançamentos</h1>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('transactions_title')}</h1>
           <p className="text-sm text-[var(--text-muted)]">
-            {data?.count ?? 0} lançamento{data?.count !== 1 ? 's' : ''}
+            {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('transactions_countPlural') : t('transactions_countSingular')}
           </p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" /> Novo
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="h-4 w-4" /> {t('transactions_new')}
         </Button>
       </div>
 
       {/* Filters */}
       <Card padding="sm">
         <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-40">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+            <Input
+              size="sm"
+              placeholder={t('transactions_searchPlaceholder')}
+              value={filters.search ?? ''}
+              onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, search: e.target.value || undefined })) }}
+              className="pl-8"
+            />
+          </div>
           <Select
+            size="sm"
             options={[
-              { value: '', label: 'Todos os tipos' },
-              { value: 'income', label: 'Receitas' },
-              { value: 'expense', label: 'Despesas' },
+              { value: '', label: t('transactions_allTypes') },
+              { value: 'income', label: t('transactions_income') },
+              { value: 'expense', label: t('transactions_expense') },
             ]}
             value={filters.type ?? ''}
             onChange={(v) => setFilters((f) => ({ ...f, type: v as TransactionFilters['type'] || undefined }))}
             className="w-40"
           />
           <Select
+            size="sm"
             options={[
-              { value: '', label: 'Todos os status' },
-              { value: 'true', label: 'Pago' },
-              { value: 'false', label: 'Pendente' },
+              { value: '', label: t('transactions_allStatus') },
+              { value: 'true', label: t('transactions_paid') },
+              { value: 'false', label: t('transactions_pending') },
             ]}
             value={filters.is_paid === undefined ? '' : String(filters.is_paid)}
             onChange={(v) => setFilters((f) => ({ ...f, is_paid: v === '' ? undefined : v === 'true' }))}
             className="w-44"
           />
-          <Input
-            type="date"
-            value={filters.date_from ?? ''}
-            onChange={(e) => setFilters((f) => ({ ...f, date_from: e.target.value || undefined }))}
-            className="w-40"
-          />
-          <Input
-            type="date"
-            value={filters.date_to ?? ''}
-            onChange={(e) => setFilters((f) => ({ ...f, date_to: e.target.value || undefined }))}
-            className="w-40"
+          <DateRangePicker
+            size="sm"
+            from={filters.date_from ?? ''}
+            to={filters.date_to ?? ''}
+            onChange={(from, to) => { setPage(1); setFilters((f) => ({ ...f, date_from: from || undefined, date_to: to || undefined })) }}
+            language={language}
           />
         </div>
       </Card>
@@ -141,32 +152,30 @@ export function Component() {
           data={data?.data ?? []}
           rowKey={(r) => r.id}
           onRowClick={openEdit}
+          loadingMessage={t('common_loading')}
+          emptyMessage={t('transactions_empty')}
           columns={[
             {
               key: 'date',
-              header: 'Data',
+              header: t('transactions_date'),
               render: (r) => format(new Date(r.date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR }),
             },
-            { key: 'description', header: 'Descrição' },
+            { key: 'description', header: t('transactions_description') },
             {
               key: 'type',
-              header: 'Tipo',
+              header: t('transactions_type'),
               render: (r) => (
                 <Badge variant={r.type === 'income' ? 'success' : 'danger'}>
-                  {r.type === 'income' ? 'Receita' : 'Despesa'}
+                  {r.type === 'income' ? t('transactions_income_badge') : t('transactions_expense_badge')}
                 </Badge>
               ),
             },
             {
               key: 'amount',
-              header: 'Valor',
+              header: t('transactions_amount'),
               align: 'right',
               render: (r) => (
-                <span
-                  className={
-                    r.type === 'income' ? 'text-[var(--success)] font-mono' : 'text-[var(--danger)] font-mono'
-                  }
-                >
+                <span className={r.type === 'income' ? 'text-[var(--success)] font-mono' : 'text-[var(--danger)] font-mono'}>
                   {r.type === 'income' ? '+' : '-'}{' '}
                   {r.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
@@ -174,10 +183,10 @@ export function Component() {
             },
             {
               key: 'is_paid',
-              header: 'Status',
+              header: t('transactions_status'),
               render: (r) => (
                 <Badge variant={r.is_paid ? 'success' : 'warning'}>
-                  {r.is_paid ? 'Pago' : 'Pendente'}
+                  {r.is_paid ? t('transactions_paid') : t('transactions_pending')}
                 </Badge>
               ),
             },
@@ -189,8 +198,8 @@ export function Component() {
                 !r.is_paid ? (
                   <button
                     onClick={(e) => { e.stopPropagation(); markPaid.mutate(r.id) }}
-                    className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
-                    title="Marcar como pago"
+                    className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors cursor-pointer"
+                    title={t('transactions_markAsPaid')}
                   >
                     <CheckCircle className="h-4 w-4" />
                   </button>
@@ -203,14 +212,14 @@ export function Component() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--bg-border)]">
             <span className="text-xs text-[var(--text-muted)]">
-              Página {page} de {totalPages}
+              {t('dre_period')} {page} / {totalPages}
             </span>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-                Anterior
+                {t('transactions_previous')}
               </Button>
               <Button variant="ghost" size="sm" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
-                Próxima
+                {t('transactions_next')}
               </Button>
             </div>
           </div>
@@ -218,12 +227,24 @@ export function Component() {
       </Card>
 
       {/* Modal form */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar lançamento' : 'Novo lançamento'}>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? t('transactions_editTitle') : t('transactions_newTitle')}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <Input label="Descrição" error={errors.description?.message} {...register('description')} />
+          <Input label={t('transactions_description')} error={errors.description?.message} {...register('description')} />
           <div className="grid grid-cols-2 gap-3">
-            <Input label="Valor (R$)" type="number" step="0.01" error={errors.amount?.message} {...register('amount')} />
-            <Input label="Data" type="date" error={errors.date?.message} {...register('date')} />
+            <Input label={`${t('transactions_amount')} (R$)`} type="number" step="0.01" error={errors.amount?.message} {...register('amount')} />
+            <Controller
+              control={control}
+              name="date"
+              render={({ field }) => (
+                <DatePicker
+                  label={t('transactions_date')}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  language={language}
+                  error={errors.date?.message}
+                />
+              )}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <Controller
@@ -231,14 +252,14 @@ export function Component() {
               name="type"
               render={({ field }) => (
                 <Select
-                  label="Tipo"
+                  label={t('transactions_type')}
                   value={field.value ?? ''}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   error={errors.type?.message}
                   options={[
-                    { value: 'income',  label: 'Receita' },
-                    { value: 'expense', label: 'Despesa' },
+                    { value: 'income',  label: t('transactions_income_badge') },
+                    { value: 'expense', label: t('transactions_expense_badge') },
                   ]}
                 />
               )}
@@ -248,8 +269,8 @@ export function Component() {
               name="category_id"
               render={({ field }) => (
                 <Select
-                  label="Categoria"
-                  placeholder="Sem categoria"
+                  label={t('transactions_category')}
+                  placeholder={t('transactions_noCategory')}
                   value={field.value ?? ''}
                   onChange={(v) => field.onChange(v || undefined)}
                   onBlur={field.onBlur}
@@ -258,11 +279,8 @@ export function Component() {
               )}
             />
           </div>
-          <Input label="Observações" {...register('notes')} />
-          <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)] cursor-pointer">
-            <input type="checkbox" className="accent-[var(--accent)]" {...register('is_paid')} />
-            Marcar como pago
-          </label>
+          <Input label={t('transactions_notes')} {...register('notes')} />
+          <Checkbox label={t('transactions_markAsPaid')} {...register('is_paid')} />
           <div className="flex justify-between gap-3 mt-2">
             {editing && (
               <Button
@@ -271,12 +289,12 @@ export function Component() {
                 size="sm"
                 onClick={async () => { await deleteT.mutateAsync(editing.id); setModalOpen(false) }}
               >
-                Excluir
+                {t('transactions_delete')}
               </Button>
             )}
             <div className="flex gap-3 ml-auto">
-              <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>Cancelar</Button>
-              <Button type="submit" loading={isSubmitting}>Salvar</Button>
+              <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>{t('transactions_cancel')}</Button>
+              <Button type="submit" loading={isSubmitting}>{t('transactions_save')}</Button>
             </div>
           </div>
         </form>

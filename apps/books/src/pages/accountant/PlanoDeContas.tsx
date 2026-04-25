@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, ChevronRight, ChevronDown } from 'lucide-react'
+import { Plus, Pencil, ChevronRight, ChevronDown, Search, X } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card } from '@syncero/ui'
+import { Button, Card, Input, Select } from '@syncero/ui'
 import { AccountPlanModal } from '@/components/accountant/AccountPlanModal'
+import { useT } from '@/i18n'
 import type { AccountPlan } from '@/types'
 
 function buildTree(plans: AccountPlan[]): AccountPlan[] {
@@ -15,22 +16,27 @@ function getDepth(code: string): number {
   return code.split('.').length - 1
 }
 
-const accountTypeLabel: Record<string, string> = {
-  ativo: 'Ativo',
-  passivo: 'Passivo',
-  patrimonio_liquido: 'PL',
-  receita: 'Receita',
-  despesa: 'Despesa',
-  custo: 'Custo',
-}
-
 export function Component() {
+  const t = useT()
+  const accountTypeLabel: Record<string, string> = {
+    ativo: t('plano_ativo'),
+    passivo: t('plano_passivo'),
+    patrimonio_liquido: t('plano_patrimonioLiquido'),
+    receita: t('plano_receita'),
+    despesa: t('plano_despesa'),
+    custo: t('plano_custo'),
+  }
   const { id, isExternal, canWrite } = useCompanyContext()
   const qc = useQueryClient()
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<AccountPlan | null>(null)
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
+
+  const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState('')
+  const [filterClass, setFilterClass] = useState('')
+  const hasFilter = !!(search || filterType || filterClass)
 
   const queryKey = ['account-plans', id]
   const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
@@ -76,29 +82,96 @@ export function Component() {
     return isVisible(parent)
   }
 
+  const visiblePlans = hasFilter
+    ? tree.filter(plan => {
+        const q = search.toLowerCase()
+        const matchesSearch = !search ||
+          plan.name.toLowerCase().includes(q) ||
+          plan.code.toLowerCase().includes(q)
+        const matchesType  = !filterType  || plan.account_type === filterType
+        const matchesClass = !filterClass || String(plan.is_analytic) === filterClass
+        return matchesSearch && matchesType && matchesClass
+      })
+    : tree.filter(isVisible)
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">Plano de Contas</h1>
-          <p className="text-sm text-[var(--text-muted)]">{plans.length} conta{plans.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('plano_title')}</h1>
+          <p className="text-sm text-[var(--text-muted)]">{plans.length} {plans.length !== 1 ? t('plano_countPlural') : t('plano_countSingular')}</p>
         </div>
         {canWrite && (
           <Button size="sm" onClick={() => { setEditing(null); setModalOpen(true) }}>
             <Plus className="h-4 w-4" />
-            Nova conta
+            {t('plano_new')}
           </Button>
         )}
       </div>
 
+      {/* Filter bar */}
+      {plans.length > 0 && (
+        <Card padding="sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-40">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+              <Input
+                size="sm"
+                placeholder={t('plano_searchPlaceholder')}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <Select
+              size="sm"
+              placeholder="Tipo"
+              value={filterType}
+              onChange={setFilterType}
+              className="w-36"
+              options={[
+                { value: '',                  label: t('plano_filterAllTypes') },
+                { value: 'ativo',             label: t('plano_ativo')          },
+                { value: 'passivo',           label: t('plano_passivo')        },
+                { value: 'patrimonio_liquido',label: t('plano_patrimonioLiquido') },
+                { value: 'receita',           label: t('plano_receita')        },
+                { value: 'despesa',           label: t('plano_despesa')        },
+                { value: 'custo',             label: t('plano_custo')          },
+              ]}
+            />
+            <Select
+              size="sm"
+              placeholder="Classe"
+              value={filterClass}
+              onChange={setFilterClass}
+              className="w-32"
+              options={[
+                { value: '',      label: t('plano_filterAllClasses') },
+                { value: 'true',  label: t('plano_filterAnalytic')   },
+                { value: 'false', label: t('plano_filterSynthetic')  },
+              ]}
+            />
+            {hasFilter && (
+              <button
+                onClick={() => { setSearch(''); setFilterType(''); setFilterClass('') }}
+                className="cursor-pointer flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+                {t('plano_clearFilters')}
+              </button>
+            )}
+          </div>
+        </Card>
+      )}
+
       {isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">Carregando…</p>
+        <p className="text-sm text-[var(--text-muted)]">{t('plano_loading')}</p>
       ) : plans.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-sm text-[var(--text-muted)]">Nenhuma conta cadastrada.</p>
+            <p className="text-sm text-[var(--text-muted)]">{t('plano_empty')}</p>
             {canWrite && (
-              <Button size="sm" variant="ghost" onClick={() => setModalOpen(true)}>Criar primeira conta</Button>
+              <Button size="sm" variant="ghost" onClick={() => setModalOpen(true)}>{t('plano_createFirst')}</Button>
             )}
           </div>
         </Card>
@@ -108,16 +181,23 @@ export function Component() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[var(--bg-border)] text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-32">Código</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">Nome</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-28">Tipo</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-24">Natureza</th>
-                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-20">Classe</th>
+                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-32">{t('plano_colCode')}</th>
+                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('plano_colName')}</th>
+                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-28">{t('plano_colType')}</th>
+                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-24">{t('plano_colNature')}</th>
+                  <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)] w-20">{t('plano_colClass')}</th>
                   {canWrite && <th className="px-4 py-3 w-10" />}
                 </tr>
               </thead>
               <tbody>
-                {tree.filter(isVisible).map((plan) => {
+                {visiblePlans.length === 0 ? (
+                  <tr>
+                    <td colSpan={canWrite ? 6 : 5} className="px-4 py-8 text-center text-sm text-[var(--text-muted)]">
+                      {t('plano_noResults')}
+                    </td>
+                  </tr>
+                ) : null}
+              {visiblePlans.map((plan) => {
                   const depth = getDepth(plan.code)
                   const hasChildren = plans.some(p => p.parent_id === plan.id)
                   return (
@@ -127,7 +207,7 @@ export function Component() {
                     >
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-1" style={{ paddingLeft: `${depth * 12}px` }}>
-                          {hasChildren ? (
+                          {hasChildren && !hasFilter ? (
                             <button
                               onClick={() => toggleCollapse(plan.id)}
                               className="cursor-pointer h-4 w-4 text-[var(--text-muted)] flex-shrink-0"
@@ -146,7 +226,7 @@ export function Component() {
                       <td className="px-4 py-2.5 text-xs text-[var(--text-secondary)]">{accountTypeLabel[plan.account_type] ?? plan.account_type}</td>
                       <td className="px-4 py-2.5">
                         <span className={`text-xs ${plan.nature === 'devedora' ? 'text-blue-400' : 'text-green-400'}`}>
-                          {plan.nature === 'devedora' ? 'Devedora' : 'Credora'}
+                          {plan.nature === 'devedora' ? t('plano_debtor') : t('plano_creditor')}
                         </span>
                       </td>
                       <td className="px-4 py-2.5">
@@ -155,7 +235,7 @@ export function Component() {
                             ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
                             : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
                         }`}>
-                          {plan.is_analytic ? 'Analítica' : 'Sintética'}
+                          {plan.is_analytic ? t('plano_analytic') : t('plano_synthetic')}
                         </span>
                       </td>
                       {canWrite && (

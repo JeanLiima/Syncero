@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { format, startOfMonth, endOfMonth, subDays } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR, enUS } from 'date-fns/locale'
 import { TrendingUp, TrendingDown, DollarSign, Clock } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Link } from 'react-router-dom'
 import { Card, Badge, Button } from '@syncero/ui'
-import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/auth'
+import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
+import { getTransactions, getPayables } from '@/lib/backend'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -15,7 +16,7 @@ function useMonthSummary() {
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const now = new Date()
   const dateFrom = format(startOfMonth(now), 'yyyy-MM-dd')
-  const dateTo   = format(endOfMonth(now),   'yyyy-MM-dd')
+  const dateTo   = format(endOfMonth(now), 'yyyy-MM-dd')
 
   return useQuery({
     queryKey: ['dashboard-summary', activeCompany?.id],
@@ -23,23 +24,19 @@ function useMonthSummary() {
       if (!activeCompany?.id) return { income: 0, expense: 0, toReceive: 0 }
 
       const [txRes, prRes] = await Promise.all([
-        supabase
-          .from('transactions')
-          .select('type, amount')
-          .eq('company_id', activeCompany.id)
-          .gte('date', dateFrom)
-          .lte('date', dateTo),
-        supabase
-          .from('payables_receivables')
-          .select('amount')
-          .eq('company_id', activeCompany.id)
-          .eq('type', 'receivable')
-          .eq('status', 'pending'),
+        getTransactions({
+          companyId: activeCompany.id,
+          date_from: dateFrom,
+          date_to: dateTo,
+          page: '1',
+          pageSize: '1000',
+        }),
+        getPayables(activeCompany.id, 'receivable'),
       ])
 
       const income  = txRes.data?.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0) ?? 0
       const expense = txRes.data?.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0) ?? 0
-      const toReceive = prRes.data?.reduce((s, t) => s + t.amount, 0) ?? 0
+      const toReceive = prRes.reduce((s, t) => s + t.amount, 0)
 
       return { income, expense, toReceive }
     },
@@ -56,17 +53,16 @@ function useLast30Days() {
     queryKey: ['dashboard-chart', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany?.id) return []
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('date, amount, type')
-        .eq('company_id', activeCompany.id)
-        .gte('date', dateFrom)
-        .lte('date', dateTo)
-        .order('date')
-      if (error) throw error
+      const result = await getTransactions({
+        companyId: activeCompany.id,
+        date_from: dateFrom,
+        date_to: dateTo,
+        page: '1',
+        pageSize: '1000',
+      })
 
       const map = new Map<string, { income: number; expense: number }>()
-      for (const t of data ?? []) {
+      for (const t of result.data ?? []) {
         const existing = map.get(t.date) ?? { income: 0, expense: 0 }
         if (t.type === 'income') existing.income += t.amount
         else existing.expense += t.amount
@@ -90,14 +86,12 @@ function useRecentTransactions() {
     queryKey: ['dashboard-recent', activeCompany?.id],
     queryFn: async () => {
       if (!activeCompany?.id) return []
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('id, description, amount, type, date, is_paid')
-        .eq('company_id', activeCompany.id)
-        .order('date', { ascending: false })
-        .limit(5)
-      if (error) throw error
-      return data ?? []
+      const result = await getTransactions({
+        companyId: activeCompany.id,
+        page: '1',
+        pageSize: '5',
+      })
+      return result.data ?? []
     },
     enabled: !!activeCompany?.id,
   })
@@ -109,6 +103,12 @@ export function Component() {
   const { data: chartData = [] } = useLast30Days()
   const { data: recent = [] } = useRecentTransactions()
   const activeCompany = useAuthStore((s) => s.activeCompany)
+  const language = usePreferencesStore((s) => s.language)
+  const locale = language === 'en' ? enUS : ptBR
+  const monthLabel = (() => {
+    const raw = format(new Date(), 'MMMM yyyy', { locale })
+    return raw.charAt(0).toUpperCase() + raw.slice(1)
+  })()
 
   // This case is now handled by NoCompanyShell in the router,
   // but kept as a fallback
@@ -142,9 +142,7 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dashboard_title')}</h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          {format(new Date(), "MMMM 'de' yyyy", { locale: ptBR })}
-        </p>
+        <p className="text-sm text-[var(--text-muted)]">{monthLabel}</p>
       </div>
 
       {/* Metric cards */}

@@ -3,8 +3,10 @@ import { useQuery } from '@tanstack/react-query'
 import { FileText, BookOpen, Calculator, LayoutList, BookMarked, Key, ArrowRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
+import { useT } from '@/i18n'
 
 export function Component() {
+  const t = useT()
   const { companyId } = useParams<{ companyId: string }>()
 
   const { data: company } = useQuery({
@@ -20,23 +22,18 @@ export function Component() {
   })
 
   const items = [
-    { label: 'NF-e / NFS-e', value: summary?.nfeCount ?? 0, icon: <FileText className="h-6 w-6 text-[var(--accent)]" />, to: 'nfe' },
-    { label: 'Livros SPED', value: summary?.booksCount ?? 0, icon: <BookOpen className="h-6 w-6 text-[var(--warning)]" />, to: 'sped' },
-    {
-      label: 'Impostos do mês',
-      value: (summary?.taxTotal ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-      icon: <Calculator className="h-6 w-6 text-[var(--success)]" />,
-      to: 'taxes',
-    },
-    { label: 'Plano de Contas', value: 'Ver contas', icon: <BookMarked className="h-6 w-6 text-violet-400" />, to: 'plano' },
-    { label: 'Lançamentos', value: 'Ver lançamentos', icon: <LayoutList className="h-6 w-6 text-sky-400" />, to: 'lancamentos' },
-    { label: 'API Keys', value: 'Gerenciar', icon: <Key className="h-6 w-6 text-[var(--success)]" />, to: 'api-keys' },
+    { label: t('overview_nfe'),             value: summary?.nfeCount ?? 0,                                                                    icon: <FileText   className="h-6 w-6 text-[var(--accent)]"   />, to: 'nfe'         },
+    { label: t('overview_sped'),            value: summary?.booksCount ?? 0,                                                                  icon: <BookOpen   className="h-6 w-6 text-[var(--warning)]" />, to: 'sped'        },
+    { label: t('overview_taxes'),           value: (summary?.taxTotal ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: <Calculator className="h-6 w-6 text-[var(--success)]" />, to: 'taxes'       },
+    { label: t('overview_chartOfAccounts'), value: t('overview_viewAccounts'),                                                                icon: <BookMarked className="h-6 w-6 text-violet-400"        />, to: 'plano'       },
+    { label: t('overview_journal'),         value: t('overview_viewEntries'),                                                                 icon: <LayoutList className="h-6 w-6 text-sky-400"           />, to: 'lancamentos' },
+    { label: t('overview_apiKeys'),         value: t('overview_manage'),                                                                      icon: <Key        className="h-6 w-6 text-[var(--success)]" />, to: 'api-keys'    },
   ]
 
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="text-xs text-[var(--text-muted)] mb-1">Empresa</p>
+        <p className="text-xs text-[var(--text-muted)] mb-1">{t('overview_company')}</p>
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{company?.name ?? '…'}</h1>
         {company?.cnpj && <p className="text-sm text-[var(--text-muted)]">{company.cnpj}</p>}
       </div>

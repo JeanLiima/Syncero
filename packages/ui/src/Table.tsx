@@ -37,7 +37,7 @@ export function Table<T>({
               <th
                 key={col.key}
                 className={clsx(
-                  'px-4 py-3 text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide',
+                  'px-4 py-3 text-xs font-medium text-[var(--text-muted)] capitalize',
                   col.align === 'right'
                     ? 'text-right'
                     : col.align === 'center'

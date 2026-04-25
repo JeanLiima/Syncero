@@ -3,7 +3,7 @@ import { createServiceClient, type HonoVariables } from '../_shared'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
-// GET /api/dre?companyId=&date_from=&date_to=
+// GET /api/income-statement?companyId=&date_from=&date_to=
 // Aggregates transactions by category server-side — avoids sending raw rows to the browser.
 router.get('/', async (c) => {
   const userId = c.get('userId')
@@ -44,7 +44,7 @@ router.get('/', async (c) => {
     if (!map.has(key)) {
       map.set(key, {
         category_id: cat?.id ?? null,
-        category_name: cat?.name ?? 'Sem categoria',
+        category_name: cat?.name ?? 'Uncategorized',
         type: tx.type,
         total: 0,
       })

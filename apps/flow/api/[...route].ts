@@ -9,7 +9,7 @@ import accountantCompaniesRouter from './routes/accountantCompanies'
 import transactionsRouter from './routes/transactions'
 import categoriesRouter from './routes/categories'
 import payablesRouter from './routes/payables'
-import dreRouter from './routes/dre'
+import incomeStatementRouter from './routes/incomeStatement'
 import cashFlowRouter from './routes/cashFlow'
 
 export const config = { runtime: 'edge' }
@@ -35,7 +35,7 @@ app.use('/categories/*', authMiddleware)
 app.use('/categories', authMiddleware)
 app.use('/payables/*', authMiddleware)
 app.use('/payables', authMiddleware)
-app.use('/dre', authMiddleware)
+app.use('/income-statement', authMiddleware)
 app.use('/cash-flow', authMiddleware)
 app.use('/invites/:token/accept', authMiddleware)
 
@@ -49,7 +49,7 @@ app.route('/accountant-companies', accountantCompaniesRouter)
 app.route('/transactions', transactionsRouter)
 app.route('/categories', categoriesRouter)
 app.route('/payables', payablesRouter)
-app.route('/dre', dreRouter)
+app.route('/income-statement', incomeStatementRouter)
 app.route('/cash-flow', cashFlowRouter)
 
 export default handle(app)

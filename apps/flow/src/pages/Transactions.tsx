@@ -212,7 +212,7 @@ export function Component() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--bg-border)]">
             <span className="text-xs text-[var(--text-muted)]">
-              {t('dre_period')} {page} / {totalPages}
+              {t('incomeStatement_period')} {page} / {totalPages}
             </span>
             <div className="flex gap-2">
               <Button variant="ghost" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>

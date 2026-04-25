@@ -23,7 +23,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { to: '/transactions', label: t('nav_transactions'), icon: <ArrowUpDown     className="h-4 w-4 shrink-0" /> },
     { to: '/cash-flow',    label: t('nav_cashFlow'),     icon: <TrendingUp      className="h-4 w-4 shrink-0" /> },
     { to: '/accounts',     label: t('nav_accounts'),     icon: <CreditCard      className="h-4 w-4 shrink-0" /> },
-    { to: '/dre',          label: t('nav_dre'),          icon: <BarChart2       className="h-4 w-4 shrink-0" /> },
+    { to: '/income-statement', label: t('nav_incomeStatement'),       icon: <BarChart2       className="h-4 w-4 shrink-0" /> },
     { to: '/settings',     label: t('nav_settings'),     icon: <Settings        className="h-4 w-4 shrink-0" /> },
   ]
 

@@ -129,7 +129,7 @@ export const router = createBrowserRouter([
       { path: '/transactions',  lazy: lazyLoad(() => import('../pages/Transactions')) },
       { path: '/cash-flow',     lazy: lazyLoad(() => import('../pages/CashFlow')) },
       { path: '/accounts',      lazy: lazyLoad(() => import('../pages/Accounts')) },
-      { path: '/dre',           lazy: lazyLoad(() => import('../pages/IncomeStatement')) },
+      { path: '/income-statement', lazy: lazyLoad(() => import('../pages/IncomeStatement')) },
       { path: '/settings',      lazy: lazyLoad(() => import('../pages/Settings')) },
       { path: '/preferences',   lazy: lazyLoad(() => import('../pages/Preferences')) },
     ],

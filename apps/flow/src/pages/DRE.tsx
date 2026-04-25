@@ -41,10 +41,10 @@ export function Component() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--bg-border)]">
-                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] capitalize tracking-wide">
                   {t('dre_category')}
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] uppercase tracking-wide">
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] capitalize tracking-wide">
                   {t('dre_result')}
                 </th>
               </tr>

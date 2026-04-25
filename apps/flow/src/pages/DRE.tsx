@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Card, MonthPicker, Badge } from '@syncero/ui'
+import { Card, MonthPicker, Badge, Skeleton } from '@syncero/ui'
 import { useDRE } from '@/modules/dre/queries'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
@@ -36,7 +36,43 @@ export function Component() {
 
       <Card padding="sm">
         {isLoading ? (
-          <p className="text-sm text-[var(--text-muted)] p-4 text-center">{t('dre_loading')}</p>
+          <table className="w-full text-sm">
+            <tbody>
+              {/* Income section header */}
+              <tr className="bg-[var(--bg-elevated)]">
+                <td colSpan={2} className="px-4 py-2"><Skeleton className="h-3 w-20" /></td>
+              </tr>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <tr key={`inc-${i}`} className="border-b border-[var(--bg-border)]">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                  <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                </tr>
+              ))}
+              <tr className="border-b-2 border-[var(--bg-border)]">
+                <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+              </tr>
+              {/* Expense section header */}
+              <tr className="bg-[var(--bg-elevated)]">
+                <td colSpan={2} className="px-4 py-2"><Skeleton className="h-3 w-20" /></td>
+              </tr>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <tr key={`exp-${i}`} className="border-b border-[var(--bg-border)]">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-36" /></td>
+                  <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                </tr>
+              ))}
+              <tr className="border-b-2 border-[var(--bg-border)]">
+                <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+              </tr>
+              {/* Net result */}
+              <tr className="bg-[var(--bg-elevated)]">
+                <td className="px-4 py-4"><Skeleton className="h-5 w-28" /></td>
+                <td className="px-4 py-4 text-right"><Skeleton className="h-5 w-28 ml-auto" /></td>
+              </tr>
+            </tbody>
+          </table>
         ) : (
           <table className="w-full text-sm">
             <thead>

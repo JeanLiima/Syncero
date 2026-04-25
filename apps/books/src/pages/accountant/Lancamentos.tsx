@@ -5,7 +5,7 @@ import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, Badge, MonthPicker } from '@syncero/ui'
+import { Button, Card, Badge, MonthPicker, SkeletonRows } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
 import { DominioImportModal } from '@/components/accountant/DominioImportModal'
@@ -119,7 +119,11 @@ export function Component() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-[var(--text-muted)]">{t('lancamentos_loading')}</p>
+        <Card className="p-0 overflow-hidden">
+          <table className="w-full text-sm">
+            <tbody><SkeletonRows rows={6} cols={6} /></tbody>
+          </table>
+        </Card>
       ) : entries.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">

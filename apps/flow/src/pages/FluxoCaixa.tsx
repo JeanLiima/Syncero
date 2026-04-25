@@ -4,7 +4,7 @@ import { ptBR } from 'date-fns/locale'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
-import { Card, Select, DateRangePicker } from '@syncero/ui'
+import { Card, Select, DateRangePicker, Skeleton } from '@syncero/ui'
 import { useCashFlow } from '@/modules/fluxo/queries'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
@@ -90,29 +90,34 @@ export function Component() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_income')}</p>
-          <p className="text-xl font-semibold font-mono text-[var(--success)]">{fmt(totalIncome)}</p>
-        </Card>
-        <Card>
-          <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_expense')}</p>
-          <p className="text-xl font-semibold font-mono text-[var(--danger)]">{fmt(totalExpense)}</p>
-        </Card>
-        <Card>
-          <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_result')}</p>
-          <p className={`text-xl font-semibold font-mono ${netBalance >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
-            {fmt(netBalance)}
-          </p>
-        </Card>
+        {isLoading ? Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <Skeleton className="h-3 w-16 mb-3" />
+            <Skeleton className="h-7 w-32" />
+          </Card>
+        )) : (<>
+          <Card>
+            <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_income')}</p>
+            <p className="text-xl font-semibold font-mono text-[var(--success)]">{fmt(totalIncome)}</p>
+          </Card>
+          <Card>
+            <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_expense')}</p>
+            <p className="text-xl font-semibold font-mono text-[var(--danger)]">{fmt(totalExpense)}</p>
+          </Card>
+          <Card>
+            <p className="text-xs text-[var(--text-muted)] mb-1">{t('cashFlow_result')}</p>
+            <p className={`text-xl font-semibold font-mono ${netBalance >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+              {fmt(netBalance)}
+            </p>
+          </Card>
+        </>)}
       </div>
 
       {/* Chart */}
       <Card>
         <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">{t('cashFlow_chartTitle')}</h2>
         {isLoading ? (
-          <div className="h-64 flex items-center justify-center text-[var(--text-muted)] text-sm">
-            {t('cashFlow_loading')}
-          </div>
+          <Skeleton className="h-[300px] w-full" />
         ) : data.length === 0 ? (
           <div className="h-64 flex items-center justify-center text-[var(--text-muted)] text-sm">
             {t('cashFlow_noEntries')}

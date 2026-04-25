@@ -8,7 +8,7 @@ import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card, Badge, MonthPicker, SkeletonRows } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
-import { DominioImportModal } from '@/components/accountant/DominioImportModal'
+import { DomainImportModal } from '@/components/accountant/DomainImportModal'
 import { useT } from '@/i18n'
 import type { JournalEntry, AccountPlan, EntrySource } from '@/types'
 import type { ParsedEntry } from '@/lib/dominio'
@@ -189,7 +189,7 @@ export function Component() {
             onSubmit={handleCreateEntry}
             accounts={accounts}
           />
-          <DominioImportModal
+          <DomainImportModal
             open={importModalOpen}
             onClose={() => setImportModalOpen(false)}
             onImport={handleDominioImport}

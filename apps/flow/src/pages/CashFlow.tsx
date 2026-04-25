@@ -5,7 +5,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import { Card, Select, DateRangePicker, Skeleton } from '@syncero/ui'
-import { useCashFlow } from '@/modules/fluxo/queries'
+import { useCashFlow } from '@/modules/cashFlow/queries'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
 

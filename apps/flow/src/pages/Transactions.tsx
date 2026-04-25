@@ -7,11 +7,11 @@ import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle, Search } from 'lucide-react'
 import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, DateRangePicker, Checkbox } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
-import { useTransactions, useCategories } from '@/modules/lancamentos/queries'
-import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/lancamentos/mutations'
+import { useTransactions, useCategories } from '@/modules/transactions/queries'
+import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/transactions/mutations'
 import { useT } from '@/i18n'
 import type { Transaction } from '@/types'
-import type { TransactionFilters } from '@/modules/lancamentos/types'
+import type { TransactionFilters } from '@/modules/transactions/types'
 
 export function Component() {
   const t = useT()

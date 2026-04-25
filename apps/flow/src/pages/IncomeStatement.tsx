@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Card, MonthPicker, Badge, Skeleton } from '@syncero/ui'
-import { useDRE } from '@/modules/dre/queries'
+import { useDRE } from '@/modules/incomeStatement/queries'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
 

@@ -11,7 +11,7 @@ import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
 import { DomainImportModal } from '@/components/accountant/DomainImportModal'
 import { useT } from '@/i18n'
 import type { JournalEntry, AccountPlan, EntrySource } from '@/types'
-import type { ParsedEntry } from '@/lib/dominio'
+import type { ParsedEntry } from '@/lib/domain'
 
 const sourceVariant: Record<EntrySource, 'default' | 'info' | 'success' | 'warning'> = {
   manual: 'default',

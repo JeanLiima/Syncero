@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Upload, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { Modal, Button } from '@syncero/ui'
-import { parseDominioExport, type ParsedEntry } from '@/lib/dominio'
+import { parseDominioExport, type ParsedEntry } from '@/lib/domain'
 import type { AccountPlan } from '@/types'
 
 interface DominioImportModalProps {
@@ -13,7 +13,7 @@ interface DominioImportModalProps {
 
 type Step = 'upload' | 'preview' | 'done'
 
-export function DominioImportModal({ open, onClose, onImport, accounts }: DominioImportModalProps) {
+export function DomainImportModal({ open, onClose, onImport, accounts }: DominioImportModalProps) {
   const [step, setStep] = useState<Step>('upload')
   const [entries, setEntries] = useState<ParsedEntry[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())

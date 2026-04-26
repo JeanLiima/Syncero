@@ -15,6 +15,16 @@ export interface TransactionFormData {
   type: TransactionType
   date: string
   category_id?: string
-  is_paid: boolean
+  contact_id?: string
+  counterpart?: string
   notes?: string
+  is_paid: boolean
+  paid_at?: string
+  payment_method?: 'cash' | 'bank'
+  bank_id?: string
+  payment_registered_at?: string
+  is_installment?: boolean
+  installment_count?: number
+  installment_number?: number
+  installment_group_id?: string
 }

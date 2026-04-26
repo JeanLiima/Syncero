@@ -35,7 +35,7 @@ function NavBtn({ onClick, children }: { onClick: () => void; children: React.Re
 
 const REF_SUNDAY = new Date(2023, 0, 1)
 
-function DayCalendar({ selected, onSelect, locale }: {
+export function DayCalendar({ selected, onSelect, locale }: {
   selected: Date | undefined
   onSelect: (d: Date) => void
   locale: Locale

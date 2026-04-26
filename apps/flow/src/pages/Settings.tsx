@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -10,8 +10,8 @@ import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar, Modal, ConfirmDialog } from '@syncero/ui'
 import { RefreshCw, X, UserMinus, UserPlus, Pencil, Trash2, Plus } from 'lucide-react'
-import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite, getCategories, getCategoryUsage, createCategory, updateCategory, deleteCategory } from '@/lib/backend'
-import type { MemberRole, AccountantCompany, Category, TransactionType } from '@/types'
+import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite, getCategories, getCategoryUsage, createCategory, updateCategory, deleteCategory, getBanks, createBank, updateBank, deleteBank } from '@/lib/backend'
+import type { MemberRole, AccountantCompany, Category, TransactionType, Bank } from '@/types'
 
 // ── Company tab ───────────────────────────────────────────────
 
@@ -690,6 +690,184 @@ function CategoriesTab() {
   )
 }
 
+// ── Banks tab ─────────────────────────────────────────────────
+
+type BankForm = { name: string; agency: string; account_number: string; account_type: 'checking' | 'savings' }
+const EMPTY_BANK: BankForm = { name: '', agency: '', account_number: '', account_type: 'checking' }
+
+function BanksTab() {
+  const t = useT()
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+  const qc = useQueryClient()
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editing, setEditing] = useState<Bank | null>(null)
+  const [form, setForm] = useState<BankForm>(EMPTY_BANK)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+
+  const { data: banks = [], isLoading } = useQuery<Bank[]>({
+    queryKey: ['banks', activeCompany?.id],
+    queryFn: () => getBanks(activeCompany!.id),
+    enabled: !!activeCompany?.id,
+  })
+
+  const openCreate = () => { setEditing(null); setForm(EMPTY_BANK); setModalOpen(true) }
+  const openEdit = (b: Bank) => {
+    setEditing(b)
+    setForm({ name: b.name, agency: b.agency ?? '', account_number: b.account_number ?? '', account_type: b.account_type })
+    setModalOpen(true)
+  }
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        name: form.name,
+        agency: form.agency || undefined,
+        account_number: form.account_number || undefined,
+        account_type: form.account_type,
+      }
+      if (editing) return updateBank(editing.id, payload)
+      return createBank({ company_id: activeCompany!.id, ...payload })
+    },
+    onSuccess: () => { setModalOpen(false); qc.invalidateQueries({ queryKey: ['banks', activeCompany?.id] }) },
+  })
+
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteBank(id),
+    onSuccess: () => { setDeleteId(null); qc.invalidateQueries({ queryKey: ['banks', activeCompany?.id] }) },
+  })
+
+  const f = (key: keyof BankForm) => (e: ChangeEvent<HTMLInputElement>) =>
+    setForm((prev) => ({ ...prev, [key]: e.target.value }))
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-end">
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="h-4 w-4" />
+          {t('banks_new')}
+        </Button>
+      </div>
+
+      <Card padding="sm">
+        <Table
+          loading={isLoading}
+          data={banks}
+          rowKey={(r) => r.id}
+          emptyMessage={t('banks_empty')}
+          columns={[
+            {
+              key: 'name',
+              header: t('banks_name'),
+              render: (r) => <span className="text-sm font-medium text-[var(--text-primary)]">{r.name}</span>,
+            },
+            {
+              key: 'agency',
+              header: t('banks_agency'),
+              render: (r) => <span className="text-sm text-[var(--text-secondary)]">{r.agency ?? '—'}</span>,
+            },
+            {
+              key: 'account_number',
+              header: t('banks_accountNumber'),
+              render: (r) => <span className="text-sm text-[var(--text-secondary)]">{r.account_number ?? '—'}</span>,
+            },
+            {
+              key: 'account_type',
+              header: t('banks_accountType'),
+              render: (r) => (
+                <span className="text-sm text-[var(--text-secondary)]">
+                  {r.account_type === 'checking' ? t('banks_checking') : t('banks_savings')}
+                </span>
+              ),
+            },
+            {
+              key: 'actions',
+              header: '',
+              align: 'right',
+              className: 'w-px !px-2',
+              render: (r) => (
+                <div className="flex items-center justify-end gap-1">
+                  <div className="relative group">
+                    <button
+                      onClick={() => openEdit(r)}
+                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('categories_edit')}
+                    </span>
+                  </div>
+                  <div className="relative group">
+                    <button
+                      onClick={() => setDeleteId(r.id)}
+                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('categories_delete')}
+                    </span>
+                  </div>
+                </div>
+              ),
+            },
+          ]}
+        />
+      </Card>
+
+      {/* Create / Edit modal */}
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? t('banks_editTitle') : t('banks_createTitle')} size="sm">
+        <div className="flex flex-col gap-4">
+          <Input label={t('banks_name')} value={form.name} onChange={f('name')} />
+          <div className="grid grid-cols-2 gap-3">
+            <Input label={t('banks_agency')} value={form.agency} onChange={f('agency')} />
+            <Input label={t('banks_accountNumber')} value={form.account_number} onChange={f('account_number')} />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-muted)] mb-2">{t('banks_accountType')}</label>
+            <div className="flex gap-2">
+              {(['checking', 'savings'] as const).map((at) => (
+                <button
+                  key={at}
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, account_type: at }))}
+                  className={`flex-1 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${
+                    form.account_type === at
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                  }`}
+                >
+                  {at === 'checking' ? t('banks_checking') : t('banks_savings')}
+                </button>
+              ))}
+            </div>
+          </div>
+          {save.isError && (
+            <p className="text-xs text-[var(--danger)]">{(save.error as Error)?.message}</p>
+          )}
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="ghost" onClick={() => setModalOpen(false)}>{t('settings_cancel')}</Button>
+            <Button onClick={() => save.mutate()} loading={save.isPending} disabled={!form.name.trim()}>
+              {t('banks_save')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => remove.mutate(deleteId!)}
+        title={t('banks_deleteTitle')}
+        message={t('banks_deleteConfirm')}
+        confirmLabel={t('categories_delete')}
+        loading={remove.isPending}
+      />
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────
 
 export function Component() {
@@ -704,11 +882,13 @@ export function Component() {
           <Tab id="members">{t('settings_members')}</Tab>
           <Tab id="accountant">{t('settings_accountant')}</Tab>
           <Tab id="categories">{t('settings_categories')}</Tab>
+          <Tab id="banks">{t('settings_banks')}</Tab>
         </TabList>
         <TabPanel id="company"><CompanyTab /></TabPanel>
         <TabPanel id="members"><MembersTab /></TabPanel>
         <TabPanel id="accountant"><AccountantTab /></TabPanel>
         <TabPanel id="categories"><CategoriesTab /></TabPanel>
+        <TabPanel id="banks"><BanksTab /></TabPanel>
       </Tabs>
     </div>
   )

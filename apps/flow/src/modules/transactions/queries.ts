@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
-import { getTransactions, getCategories } from '@/lib/backend'
+import { getTransactions, getCategories, getBanks, getContacts } from '@/lib/backend'
 import type { Transaction } from '@/types'
 import type { TransactionFilters } from './types'
 
@@ -38,6 +38,32 @@ export function useCategories() {
     queryFn: async () => {
       if (!activeCompany?.id) return []
       return getCategories(activeCompany.id)
+    },
+    enabled: !!activeCompany?.id,
+  })
+}
+
+export function useContacts(search: string) {
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+
+  return useQuery({
+    queryKey: ['contacts', activeCompany?.id, search],
+    queryFn: async () => {
+      if (!activeCompany?.id) return []
+      return getContacts(activeCompany.id, search || undefined)
+    },
+    enabled: !!activeCompany?.id,
+  })
+}
+
+export function useBanks() {
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+
+  return useQuery({
+    queryKey: ['banks', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany?.id) return []
+      return getBanks(activeCompany.id)
     },
     enabled: !!activeCompany?.id,
   })

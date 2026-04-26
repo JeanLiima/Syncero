@@ -2,6 +2,8 @@
 
 export type UserType = 'company_user' | 'accountant'
 export type TransactionType = 'income' | 'expense'
+export type PaymentMethod = 'cash' | 'bank'
+export type BankAccountType = 'checking' | 'savings'
 export type TaxRegime = 'simples' | 'lucro_presumido' | 'lucro_real'
 export type MemberRole = 'admin' | 'member' | 'viewer'
 export type MemberStatus = 'pending' | 'accepted' | 'revoked'
@@ -62,6 +64,26 @@ export interface AccountantCompany {
 
 // ── Financial ─────────────────────────────────────────────────
 
+export interface Contact {
+  id: string
+  company_id: string
+  name: string
+  cpf: string | null
+  cnpj: string | null
+  created_at: string
+}
+
+export interface Bank {
+  id: string
+  company_id: string
+  name: string
+  agency: string | null
+  account_number: string | null
+  account_type: BankAccountType
+  pix_key: string | null
+  created_at: string
+}
+
 export interface Category {
   id: string
   company_id: string
@@ -75,16 +97,28 @@ export interface Transaction {
   id: string
   company_id: string
   category_id: string | null
+  contact_id: string | null
   description: string
   amount: number
   type: TransactionType
   date: string
   is_paid: boolean
   notes: string | null
+  counterpart: string | null
+  paid_at: string | null
+  payment_method: PaymentMethod | null
+  bank_id: string | null
+  payment_registered_at: string | null
+  is_installment: boolean
+  installment_count: number | null
+  installment_number: number | null
+  installment_group_id: string | null
   created_by: string
   created_at: string
   updated_at: string
   categories?: Pick<Category, 'id' | 'name' | 'color'>
+  banks?: Pick<Bank, 'id' | 'name'>
+  contacts?: Pick<Contact, 'id' | 'name' | 'cpf' | 'cnpj'>
 }
 
 export interface PayableReceivable {

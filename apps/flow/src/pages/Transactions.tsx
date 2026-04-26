@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle, Search } from 'lucide-react'
-import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, DateRangePicker, Checkbox } from '@syncero/ui'
+import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
-import { useTransactions, useCategories } from '@/modules/transactions/queries'
-import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/transactions/mutations'
+import { useTransactions } from '@/modules/transactions/queries'
+import { useMarkAsPaid } from '@/modules/transactions/mutations'
+import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 import { useT } from '@/i18n'
 import type { Transaction } from '@/types'
 import type { TransactionFilters } from '@/modules/transactions/types'
@@ -17,73 +15,25 @@ export function Component() {
   const t = useT()
   const { language } = usePreferencesStore()
 
-  const schema = z.object({
-    description: z.string().min(1, t('transactions_errorDescription')),
-    amount: z.coerce.number().positive(t('transactions_errorAmount')),
-    type: z.enum(['income', 'expense']),
-    date: z.string().min(1, t('transactions_errorDate')),
-    category_id: z.string().optional(),
-    is_paid: z.boolean(),
-    notes: z.string().optional(),
-  })
-
-  type FormData = z.infer<typeof schema>
-
   const [filters, setFilters] = useState<TransactionFilters>({})
   const [page, setPage] = useState(1)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
 
   const { data, isLoading } = useTransactions(filters, page)
-  const { data: categories = [] } = useCategories()
-  const create = useCreateTransaction()
-  const update = useUpdateTransaction()
   const markPaid = useMarkAsPaid()
-  const deleteT = useDeleteTransaction()
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    control,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { type: 'expense', is_paid: false, date: format(new Date(), 'yyyy-MM-dd') },
-  })
 
   const openCreate = () => {
     setEditing(null)
-    reset({ type: 'expense', is_paid: false, date: format(new Date(), 'yyyy-MM-dd') })
     setModalOpen(true)
   }
 
-  const openEdit = (t: Transaction) => {
-    setEditing(t)
-    reset({
-      description: t.description,
-      amount: t.amount,
-      type: t.type,
-      date: t.date,
-      category_id: t.category_id ?? undefined,
-      is_paid: t.is_paid,
-      notes: t.notes ?? undefined,
-    })
+  const openEdit = (row: Transaction) => {
+    setEditing(row)
     setModalOpen(true)
-  }
-
-  const onSubmit = async (data: FormData) => {
-    if (editing) {
-      await update.mutateAsync({ id: editing.id, data })
-    } else {
-      await create.mutateAsync(data)
-    }
-    setModalOpen(false)
-    reset()
   }
 
   const totalPages = Math.ceil((data?.count ?? 0) / 20)
-  const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }))
 
   return (
     <div className="flex flex-col gap-6">
@@ -225,79 +175,12 @@ export function Component() {
         )}
       </Card>
 
-      {/* Modal form */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? t('transactions_editTitle') : t('transactions_newTitle')}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <Input label={t('transactions_description')} error={errors.description?.message} {...register('description')} />
-          <div className="grid grid-cols-2 gap-3">
-            <Input label={`${t('transactions_amount')} (R$)`} type="number" step="0.01" error={errors.amount?.message} {...register('amount')} />
-            <Controller
-              control={control}
-              name="date"
-              render={({ field }) => (
-                <DatePicker
-                  label={t('transactions_date')}
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  language={language}
-                  error={errors.date?.message}
-                />
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Controller
-              control={control}
-              name="type"
-              render={({ field }) => (
-                <Select
-                  label={t('transactions_type')}
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  error={errors.type?.message}
-                  options={[
-                    { value: 'income',  label: t('transactions_income_badge') },
-                    { value: 'expense', label: t('transactions_expense_badge') },
-                  ]}
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="category_id"
-              render={({ field }) => (
-                <Select
-                  label={t('transactions_category')}
-                  placeholder={t('transactions_noCategory')}
-                  value={field.value ?? ''}
-                  onChange={(v) => field.onChange(v || undefined)}
-                  onBlur={field.onBlur}
-                  options={categoryOptions}
-                />
-              )}
-            />
-          </div>
-          <Input label={t('transactions_notes')} {...register('notes')} />
-          <Checkbox label={t('transactions_markAsPaid')} {...register('is_paid')} />
-          <div className="flex justify-between gap-3 mt-2">
-            {editing && (
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={async () => { await deleteT.mutateAsync(editing.id); setModalOpen(false) }}
-              >
-                {t('transactions_delete')}
-              </Button>
-            )}
-            <div className="flex gap-3 ml-auto">
-              <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>{t('transactions_cancel')}</Button>
-              <Button type="submit" loading={isSubmitting}>{t('transactions_save')}</Button>
-            </div>
-          </div>
-        </form>
-      </Modal>
+      <TransactionWizard
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        editing={editing}
+        language={language}
+      />
     </div>
   )
 }

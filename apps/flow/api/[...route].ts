@@ -12,6 +12,7 @@ import banksRouter from './routes/banks'
 import payablesRouter from './routes/payables'
 import incomeStatementRouter from './routes/incomeStatement'
 import cashFlowRouter from './routes/cashFlow'
+import contactsRouter from './routes/contacts'
 
 export const config = { runtime: 'edge' }
 
@@ -40,6 +41,8 @@ app.use('/payables/*', authMiddleware)
 app.use('/payables', authMiddleware)
 app.use('/income-statement', authMiddleware)
 app.use('/cash-flow', authMiddleware)
+app.use('/contacts', authMiddleware)
+app.use('/contacts/*', authMiddleware)
 app.use('/invites/:token/accept', authMiddleware)
 
 // ── Route registrations ────────────────────────────────────────
@@ -55,5 +58,6 @@ app.route('/banks', banksRouter)
 app.route('/payables', payablesRouter)
 app.route('/income-statement', incomeStatementRouter)
 app.route('/cash-flow', cashFlowRouter)
+app.route('/contacts', contactsRouter)
 
 export default handle(app)

@@ -23,7 +23,7 @@ router.get('/', async (c) => {
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
   let query = db.from('transactions')
-    .select('*, categories(id, name, color)', { count: 'exact' })
+    .select('*, categories(id, name, color), contacts(id, name, cpf, cnpj)', { count: 'exact' })
     .eq('company_id', companyId)
     .order('date', { ascending: false })
 
@@ -63,7 +63,7 @@ router.post('/', async (c) => {
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db.from('transactions').insert(body).select().single()
+  const { data, error } = await db.from('transactions').insert({ ...body, created_by: userId }).select().single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data, 201)
 })

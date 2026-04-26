@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/i18n'
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from './mutations'
 import { useCategories, useBanks, useContacts } from './queries'
+import { BankSelectField } from './PaymentModal'
 import { createContact } from '@/lib/backend'
 import { useAuthStore } from '@/store/auth'
 import type { Transaction, TransactionType, Contact } from '@/types'
@@ -297,7 +298,6 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank' | null>(null)
   const [bankId, setBankId] = useState<string | undefined>()
   const [methodError, setMethodError] = useState('')
-  const [bankError, setBankError] = useState('')
 
   const amountRef = useRef<HTMLInputElement>(null)
   const isCreating = !editing
@@ -318,7 +318,6 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     setPaymentMethod(null)
     setBankId(undefined)
     setMethodError('')
-    setBankError('')
     setContactSearch('')
     if (editing) {
       setStep(1)
@@ -478,8 +477,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     let ok = true
     if (!paymentMethod) { setMethodError(t('transactions_payment_methodRequired')); ok = false }
     else setMethodError('')
-    if (paymentMethod === 'bank' && !bankId) { setBankError(t('transactions_payment_bankRequired')); ok = false }
-    else setBankError('')
+    if (paymentMethod === 'bank' && !bankId) { ok = false }
     return ok
   }
 
@@ -885,7 +883,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           onChange={(v) => {
             setPaymentMethod((v as 'cash' | 'bank') || null)
             setMethodError('')
-            if (v !== 'bank') { setBankId(undefined); setBankError('') }
+            if (v !== 'bank') setBankId(undefined)
           }}
           options={[
             { value: 'cash', label: t('transactions_paymentCash') },
@@ -895,16 +893,12 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         {methodError && <p className="text-xs text-[var(--danger)]">{methodError}</p>}
       </div>
       {paymentMethod === 'bank' && (
-        <div className="flex flex-col gap-1">
-          <Select
-            label={t('transactions_bankAccount')}
-            placeholder={t('common_select')}
-            value={bankId ?? ''}
-            onChange={(v) => { setBankId(v || undefined); setBankError('') }}
-            options={banks.map((b) => ({ value: b.id, label: b.name }))}
-          />
-          {bankError && <p className="text-xs text-[var(--danger)]">{bankError}</p>}
-        </div>
+        <BankSelectField
+          label={t('transactions_bankAccount')}
+          value={bankId ?? ''}
+          onChange={(v) => setBankId(v || undefined)}
+          banks={banks}
+        />
       )}
     </div>
   )

@@ -28,13 +28,11 @@ function ContactModal({
   onClose,
   onCreated,
   initialName,
-  language,
 }: {
   open: boolean
   onClose: () => void
   onCreated: (contact: Contact) => void
   initialName: string
-  language: 'pt' | 'en'
 }) {
   const t = useT()
   const qc = useQueryClient()
@@ -266,6 +264,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const create = useCreateTransaction()
   const update = useUpdateTransaction()
   const deleteT = useDeleteTransaction()
+  const user = useAuthStore((s) => s.user)
   const { data: categories = [] } = useCategories()
   const { data: banks = [] } = useBanks()
 
@@ -297,6 +296,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const [paidAt, setPaidAt] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank' | null>(null)
   const [bankId, setBankId] = useState<string | undefined>()
+  const [methodError, setMethodError] = useState('')
+  const [bankError, setBankError] = useState('')
 
   const amountRef = useRef<HTMLInputElement>(null)
   const isCreating = !editing
@@ -316,6 +317,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     setPaidAt('')
     setPaymentMethod(null)
     setBankId(undefined)
+    setMethodError('')
+    setBankError('')
     setContactSearch('')
     if (editing) {
       setStep(1)
@@ -471,8 +474,17 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     setPhase('payment-prompt')
   }
 
+  const validatePayment = () => {
+    let ok = true
+    if (!paymentMethod) { setMethodError(t('transactions_payment_methodRequired')); ok = false }
+    else setMethodError('')
+    if (paymentMethod === 'bank' && !bankId) { setBankError(t('transactions_payment_bankRequired')); ok = false }
+    else setBankError('')
+    return ok
+  }
+
   const handleRegisterPayment = async () => {
-    if (!createdId || !paidAt) return
+    if (!createdId || !paidAt || !validatePayment()) return
     await update.mutateAsync({
       id: createdId,
       data: {
@@ -481,6 +493,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         payment_method: paymentMethod ?? undefined,
         bank_id: paymentMethod === 'bank' ? bankId ?? undefined : undefined,
         payment_registered_at: new Date().toISOString(),
+        payment_registered_by: user?.id ?? undefined,
       },
     })
     onClose()
@@ -505,7 +518,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
     // Payment form: Enter saves
     if (phase === 'payment-form') {
-      if (e.key === 'Enter' && paidAt && !update.isPending) { e.preventDefault(); handleRegisterPayment() }
+      if (e.key === 'Enter' && !update.isPending) { e.preventDefault(); handleRegisterPayment() }
       return
     }
 
@@ -864,24 +877,34 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         onChange={setPaidAt}
         language={language}
       />
-      <Select
-        label={t('transactions_paymentMethod')}
-        placeholder={t('common_select')}
-        value={paymentMethod ?? ''}
-        onChange={(v) => setPaymentMethod((v as 'cash' | 'bank') || null)}
-        options={[
-          { value: 'cash', label: t('transactions_paymentCash') },
-          { value: 'bank', label: t('transactions_paymentBank') },
-        ]}
-      />
-      {paymentMethod === 'bank' && (
+      <div className="flex flex-col gap-1">
         <Select
-          label={t('transactions_bankAccount')}
+          label={t('transactions_paymentMethod')}
           placeholder={t('common_select')}
-          value={bankId ?? ''}
-          onChange={(v) => setBankId(v || undefined)}
-          options={banks.map((b) => ({ value: b.id, label: b.name }))}
+          value={paymentMethod ?? ''}
+          onChange={(v) => {
+            setPaymentMethod((v as 'cash' | 'bank') || null)
+            setMethodError('')
+            if (v !== 'bank') { setBankId(undefined); setBankError('') }
+          }}
+          options={[
+            { value: 'cash', label: t('transactions_paymentCash') },
+            { value: 'bank', label: t('transactions_paymentBank') },
+          ]}
         />
+        {methodError && <p className="text-xs text-[var(--danger)]">{methodError}</p>}
+      </div>
+      {paymentMethod === 'bank' && (
+        <div className="flex flex-col gap-1">
+          <Select
+            label={t('transactions_bankAccount')}
+            placeholder={t('common_select')}
+            value={bankId ?? ''}
+            onChange={(v) => { setBankId(v || undefined); setBankError('') }}
+            options={banks.map((b) => ({ value: b.id, label: b.name }))}
+          />
+          {bankError && <p className="text-xs text-[var(--danger)]">{bankError}</p>}
+        </div>
       )}
     </div>
   )
@@ -1005,7 +1028,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
               <Button
                 onClick={handleRegisterPayment}
                 loading={update.isPending}
-                disabled={!paidAt}
+                disabled={!paidAt || !paymentMethod || (paymentMethod === 'bank' && !bankId)}
               >
                 {t('transactions_payment_confirm')}
               </Button>
@@ -1020,7 +1043,6 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         open={contactModalOpen}
         onClose={() => setContactModalOpen(false)}
         initialName={contactModalInitialName}
-        language={language}
         onCreated={(contact) => {
           setCounterpart(contact.name)
           setContactSearch(contact.name)

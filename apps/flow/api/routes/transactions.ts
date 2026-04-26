@@ -13,6 +13,35 @@ async function ensureCompanyMember(db: ReturnType<typeof createServiceClient>, u
   return data
 }
 
+router.get('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const transactionId = c.req.param('id')
+
+  const { data: tx, error } = await db.from('transactions')
+    .select('*, categories(id, name, color), contacts(id, name, cpf, cnpj), banks(id, name)')
+    .eq('id', transactionId)
+    .single()
+
+  if (error || !tx) return c.json({ error: 'not found' }, 404)
+
+  const member = await ensureCompanyMember(db, userId, tx.company_id)
+  if (!member) return c.json({ error: 'forbidden' }, 403)
+
+  const profileIds = [...new Set([tx.created_by, tx.payment_registered_by].filter(Boolean))]
+  const profileMap: Record<string, string> = {}
+  if (profileIds.length > 0) {
+    const { data: rows } = await db.from('profiles').select('id, full_name').in('id', profileIds)
+    for (const p of rows ?? []) profileMap[p.id] = p.full_name
+  }
+
+  return c.json({
+    ...tx,
+    creator_name: profileMap[tx.created_by] ?? null,
+    payment_registrar_name: tx.payment_registered_by ? (profileMap[tx.payment_registered_by] ?? null) : null,
+  })
+})
+
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
-import { getTransactions, getCategories, getBanks, getContacts } from '@/lib/backend'
+import { getTransactions, getTransactionDetail, getCategories, getBanks, getContacts } from '@/lib/backend'
 import type { Transaction } from '@/types'
 import type { TransactionFilters } from './types'
 
@@ -27,6 +27,14 @@ export function useTransactions(filters: TransactionFilters = {}, page = 1, page
       return { data: result.data ?? [], count: result.count ?? 0 }
     },
     enabled: !!activeCompany?.id,
+  })
+}
+
+export function useTransactionDetail(id: string | null) {
+  return useQuery({
+    queryKey: ['transaction', id],
+    queryFn: () => getTransactionDetail(id!),
+    enabled: !!id,
   })
 }
 

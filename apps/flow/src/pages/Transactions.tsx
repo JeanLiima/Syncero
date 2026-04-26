@@ -5,8 +5,9 @@ import { Plus, CheckCircle, Search } from 'lucide-react'
 import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useTransactions } from '@/modules/transactions/queries'
-import { useMarkAsPaid } from '@/modules/transactions/mutations'
 import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
+import { TransactionDetailModal } from '@/modules/transactions/TransactionDetailModal'
+import { PaymentModal } from '@/modules/transactions/PaymentModal'
 import { useT } from '@/i18n'
 import type { Transaction } from '@/types'
 import type { TransactionFilters } from '@/modules/transactions/types'
@@ -17,20 +18,23 @@ export function Component() {
 
   const [filters, setFilters] = useState<TransactionFilters>({})
   const [page, setPage] = useState(1)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const [paymentId, setPaymentId] = useState<string | null>(null)
+  const [wizardOpen, setWizardOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
 
   const { data, isLoading } = useTransactions(filters, page)
-  const markPaid = useMarkAsPaid()
 
   const openCreate = () => {
     setEditing(null)
-    setModalOpen(true)
+    setWizardOpen(true)
   }
 
-  const openEdit = (row: Transaction) => {
-    setEditing(row)
-    setModalOpen(true)
+  const openDetail = (row: Transaction) => setDetailId(row.id)
+
+  const openEdit = (tx: Transaction) => {
+    setEditing(tx)
+    setWizardOpen(true)
   }
 
   const totalPages = Math.ceil((data?.count ?? 0) / 20)
@@ -101,7 +105,7 @@ export function Component() {
           loading={isLoading}
           data={data?.data ?? []}
           rowKey={(r) => r.id}
-          onRowClick={openEdit}
+          onRowClick={openDetail}
           emptyMessage={t('transactions_empty')}
           columns={[
             {
@@ -146,7 +150,7 @@ export function Component() {
               render: (r) =>
                 !r.is_paid ? (
                   <button
-                    onClick={(e) => { e.stopPropagation(); markPaid.mutate(r.id) }}
+                    onClick={(e) => { e.stopPropagation(); setPaymentId(r.id) }}
                     className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors cursor-pointer"
                     title={t('transactions_markAsPaid')}
                   >
@@ -175,9 +179,24 @@ export function Component() {
         )}
       </Card>
 
+      <PaymentModal
+        transactionId={paymentId}
+        open={!!paymentId}
+        onClose={() => setPaymentId(null)}
+        language={language}
+      />
+
+      <TransactionDetailModal
+        transactionId={detailId}
+        open={!!detailId}
+        onClose={() => setDetailId(null)}
+        onEdit={openEdit}
+        language={language}
+      />
+
       <TransactionWizard
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
         editing={editing}
         language={language}
       />

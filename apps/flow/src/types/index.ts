@@ -109,6 +109,7 @@ export interface Transaction {
   payment_method: PaymentMethod | null
   bank_id: string | null
   payment_registered_at: string | null
+  payment_registered_by: string | null
   is_installment: boolean
   installment_count: number | null
   installment_number: number | null
@@ -119,6 +120,11 @@ export interface Transaction {
   categories?: Pick<Category, 'id' | 'name' | 'color'>
   banks?: Pick<Bank, 'id' | 'name'>
   contacts?: Pick<Contact, 'id' | 'name' | 'cpf' | 'cnpj'>
+}
+
+export interface TransactionDetail extends Transaction {
+  creator_name: string | null
+  payment_registrar_name: string | null
 }
 
 export interface PayableReceivable {

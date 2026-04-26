@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { Company, CompanyMember, AccountantCompany, Transaction, Category, PayableReceivable, Bank, Contact } from '@/types'
+import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, PayableReceivable, Bank, Contact } from '@/types'
 
 function buildQuery(params: Record<string, string | undefined>) {
   const query = new URLSearchParams()
@@ -71,6 +71,10 @@ export type TransactionQueryParams = {
 
 export async function getTransactions(params: TransactionQueryParams) {
   return apiFetch<{ data: Transaction[]; count: number }>(`/api/transactions${buildQuery(params)}`)
+}
+
+export async function getTransactionDetail(id: string) {
+  return apiFetch<TransactionDetail>(`/api/transactions/${id}`)
 }
 
 export async function createTransaction(data: Partial<Transaction>) {

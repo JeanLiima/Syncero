@@ -23,6 +23,7 @@ export interface TransactionFormData {
   payment_method?: 'cash' | 'bank'
   bank_id?: string
   payment_registered_at?: string
+  payment_registered_by?: string
   is_installment?: boolean
   installment_count?: number
   installment_number?: number

@@ -293,7 +293,7 @@ function Popover({ anchorRef, innerRef, children }: {
     <div
       ref={innerRef}
       style={style}
-      className="z-[9999] p-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-xl select-none"
+      className="z-[9999] w-fit p-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-xl select-none"
     >
       {children}
     </div>,

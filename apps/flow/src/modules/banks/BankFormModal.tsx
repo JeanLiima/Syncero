@@ -159,8 +159,8 @@ export function BankFormModal({ open, onClose, onSaved, editing }: Props) {
     mutationFn: async () => {
       const payload = {
         name: bankLabel.trim(),
-        agency: agency.trim() || undefined,
-        account_number: accountNumber.trim() || undefined,
+        agency: agency.trim(),
+        account_number: accountNumber.trim(),
         account_type: accountType,
       }
       if (editing) return updateBank(editing.id, payload)
@@ -176,6 +176,8 @@ export function BankFormModal({ open, onClose, onSaved, editing }: Props) {
 
   const title = editing ? t('banks_editTitle') : t('banks_createTitle')
   const canSave = bankLabel.trim().length > 0
+    && agency.trim().length > 0
+    && accountNumber.trim().length > 0
 
   return (
     <Modal open={open} onClose={onClose} title={title} size="sm">
@@ -188,12 +190,14 @@ export function BankFormModal({ open, onClose, onSaved, editing }: Props) {
             value={agency}
             onChange={(e) => setAgency(e.target.value)}
             placeholder="0000"
+            maxLength={10}
           />
           <Input
             label={t('banks_accountNumber')}
             value={accountNumber}
             onChange={(e) => setAccountNumber(e.target.value)}
             placeholder="00000-0"
+            maxLength={20}
           />
         </div>
 

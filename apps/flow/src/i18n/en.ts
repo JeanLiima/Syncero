@@ -158,7 +158,9 @@ export const en: Record<TranslationKey, string> = {
   // Banks
   settings_banks: 'Banks',
   banks_new: 'New account',
-  banks_name: 'Bank name',
+  banks_name: 'Bank',
+  banks_bank: 'Bank',
+  banks_searchPlaceholder: 'Search by name or number...',
   banks_agency: 'Agency',
   banks_accountNumber: 'Account number',
   banks_accountType: 'Account type',

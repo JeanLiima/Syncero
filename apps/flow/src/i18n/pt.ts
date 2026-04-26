@@ -156,7 +156,9 @@ export const pt = {
   // Banks
   settings_banks: 'Bancos',
   banks_new: 'Nova conta',
-  banks_name: 'Nome do banco',
+  banks_name: 'Banco',
+  banks_bank: 'Banco',
+  banks_searchPlaceholder: 'Busque por nome ou número...',
   banks_agency: 'Agência',
   banks_accountNumber: 'Número da conta',
   banks_accountType: 'Tipo de conta',

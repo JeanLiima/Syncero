@@ -1,59 +1,13 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { Plus, Landmark } from 'lucide-react'
-import { Button, DatePicker, Input, Modal, Select } from '@syncero/ui'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Button, DatePicker, Modal, Select } from '@syncero/ui'
 import { useT } from '@/i18n'
-import { useAuthStore } from '@/store/auth'
-import { createBank } from '@/lib/backend'
+import { BankFormModal } from '@/modules/banks/BankFormModal'
 import type { Bank } from '@/types'
 import { useBanks } from './queries'
 import { useUpdateTransaction } from './mutations'
-
-// ── Quick-create bank modal ──────────────────────────────────
-
-export function BankQuickModal({
-  open,
-  onClose,
-  onCreated,
-}: {
-  open: boolean
-  onClose: () => void
-  onCreated: (bank: Bank) => void
-}) {
-  const t = useT()
-  const qc = useQueryClient()
-  const activeCompany = useAuthStore((s) => s.activeCompany)
-  const [name, setName] = useState('')
-
-  useEffect(() => { if (open) setName('') }, [open])
-
-  const save = useMutation({
-    mutationFn: () => createBank({ company_id: activeCompany!.id, name: name.trim() }),
-    onSuccess: (bank) => {
-      qc.invalidateQueries({ queryKey: ['banks', activeCompany?.id] })
-      onCreated(bank)
-    },
-  })
-
-  return (
-    <Modal open={open} onClose={onClose} title={t('bank_newTitle')} size="sm">
-      <Input
-        label={t('bank_name')}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => { if (e.key === 'Enter' && name.trim() && !save.isPending) save.mutate() }}
-        autoFocus
-      />
-      <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
-        <Button variant="ghost" size="sm" onClick={onClose}>{t('transactions_cancel')}</Button>
-        <Button onClick={() => save.mutate()} loading={save.isPending} disabled={!name.trim()}>
-          {t('transactions_save')}
-        </Button>
-      </div>
-    </Modal>
-  )
-}
+import { useAuthStore } from '@/store/auth'
 
 // ── Reusable bank select with empty-state + quick-create ─────
 
@@ -104,10 +58,10 @@ export function BankSelectField({
         </div>
       )}
 
-      <BankQuickModal
+      <BankFormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreated={(bank) => { onChange(bank.id); setModalOpen(false) }}
+        onSaved={(bank) => { onChange(bank.id); setModalOpen(false) }}
       />
     </>
   )

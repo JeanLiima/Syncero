@@ -8,6 +8,7 @@ import companyMembersRouter from './routes/companyMembers'
 import accountantCompaniesRouter from './routes/accountantCompanies'
 import transactionsRouter from './routes/transactions'
 import categoriesRouter from './routes/categories'
+import banksRouter from './routes/banks'
 import payablesRouter from './routes/payables'
 import incomeStatementRouter from './routes/incomeStatement'
 import cashFlowRouter from './routes/cashFlow'
@@ -33,6 +34,8 @@ app.use('/transactions/*', authMiddleware)
 app.use('/transactions', authMiddleware)
 app.use('/categories/*', authMiddleware)
 app.use('/categories', authMiddleware)
+app.use('/banks/*', authMiddleware)
+app.use('/banks', authMiddleware)
 app.use('/payables/*', authMiddleware)
 app.use('/payables', authMiddleware)
 app.use('/income-statement', authMiddleware)
@@ -48,6 +51,7 @@ app.route('/company-members', companyMembersRouter)
 app.route('/accountant-companies', accountantCompaniesRouter)
 app.route('/transactions', transactionsRouter)
 app.route('/categories', categoriesRouter)
+app.route('/banks', banksRouter)
 app.route('/payables', payablesRouter)
 app.route('/income-statement', incomeStatementRouter)
 app.route('/cash-flow', cashFlowRouter)

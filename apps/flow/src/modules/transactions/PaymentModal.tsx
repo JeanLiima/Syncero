@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import { Plus, Landmark } from 'lucide-react'
-import { Button, DatePicker, Modal, Select } from '@syncero/ui'
+import { Button, DatePicker, Modal, Select, useToast } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { BankFormModal } from '@/modules/banks/BankFormModal'
 import type { Bank } from '@/types'
@@ -76,6 +76,7 @@ interface Props {
 
 export function PaymentModal({ transactionId, open, onClose, language }: Props) {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const user = useAuthStore((s) => s.user)
   const update = useUpdateTransaction()
   const { data: banks = [] } = useBanks()
@@ -96,18 +97,23 @@ export function PaymentModal({ transactionId, open, onClose, language }: Props) 
 
   const handleConfirm = async () => {
     if (!transactionId || !canConfirm) return
-    await update.mutateAsync({
-      id: transactionId,
-      data: {
-        is_paid: true,
-        paid_at: paidAt,
-        payment_method: paymentMethod as 'cash' | 'bank',
-        bank_id: paymentMethod === 'bank' ? bankId : undefined,
-        payment_registered_at: new Date().toISOString(),
-        payment_registered_by: user?.id ?? undefined,
-      },
-    })
-    onClose()
+    try {
+      await update.mutateAsync({
+        id: transactionId,
+        data: {
+          is_paid: true,
+          paid_at: paidAt,
+          payment_method: paymentMethod as 'cash' | 'bank',
+          bank_id: paymentMethod === 'bank' ? bankId : undefined,
+          payment_registered_at: new Date().toISOString(),
+          payment_registered_by: user?.id ?? undefined,
+        },
+      })
+      success(t('transactions_paymentRegistered'))
+      onClose()
+    } catch {
+      toastError(t('common_errorGeneric'))
+    }
   }
 
   return (

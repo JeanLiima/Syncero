@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Input, Modal } from '@syncero/ui'
+import { Button, Input, Modal, useToast } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { useAuthStore } from '@/store/auth'
 import { createBank, updateBank } from '@/lib/backend'
@@ -131,6 +131,7 @@ interface Props {
 
 export function BankFormModal({ open, onClose, onSaved, editing }: Props) {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const qc = useQueryClient()
   const activeCompany = useAuthStore((s) => s.activeCompany)
 
@@ -167,8 +168,10 @@ export function BankFormModal({ open, onClose, onSaved, editing }: Props) {
     },
     onSuccess: (bank) => {
       qc.invalidateQueries({ queryKey: ['banks', activeCompany?.id] })
+      success(t('common_savedSuccess'))
       onSaved(bank)
     },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const title = editing ? t('banks_editTitle') : t('banks_createTitle')

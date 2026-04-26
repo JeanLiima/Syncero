@@ -345,6 +345,12 @@ export const pt = {
   // Common
   common_select: 'Selecionar',
   common_loading: 'Carregando...',
+  common_savedSuccess: 'Salvo com sucesso',
+  common_deletedSuccess: 'Excluído com sucesso',
+  common_errorGeneric: 'Algo deu errado. Tente novamente.',
+  common_inviteSent: 'Convite enviado!',
+  accounts_markedPaid: 'Marcado como pago',
+  transactions_paymentRegistered: 'Pagamento registrado',
 } as const
 
 export type TranslationKey = keyof typeof pt

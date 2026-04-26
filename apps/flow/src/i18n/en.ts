@@ -347,4 +347,10 @@ export const en: Record<TranslationKey, string> = {
   // Common
   common_select: 'Select',
   common_loading: 'Loading...',
+  common_savedSuccess: 'Saved successfully',
+  common_deletedSuccess: 'Deleted successfully',
+  common_errorGeneric: 'Something went wrong. Please try again.',
+  common_inviteSent: 'Invite sent!',
+  accounts_markedPaid: 'Marked as paid',
+  transactions_paymentRegistered: 'Payment registered',
 }

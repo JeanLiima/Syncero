@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { TrendingUp, TrendingDown, UserPlus, Repeat } from 'lucide-react'
-import { Button, DatePicker, Input, Modal, Select } from '@syncero/ui'
+import { Button, DatePicker, Input, Modal, Select, useToast } from '@syncero/ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/i18n'
 import { useCategories, useContacts } from './queries'
@@ -244,6 +244,7 @@ interface Props {
 
 export function TransactionEditModal({ transaction, open, onClose, language }: Props) {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const update = useUpdateTransaction()
   const deleteT = useDeleteTransaction()
   const { data: categories = [] } = useCategories()
@@ -309,6 +310,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     if (!description.trim()) { setDescError(t('transactions_errorDescription')); return }
     if (amountCents <= 0) { setAmountError(t('transactions_errorAmount')); amountRef.current?.focus(); return }
 
+    try {
     await update.mutateAsync({
       id: transaction.id,
       data: {
@@ -327,13 +329,22 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
         installment_group_id: transaction.installment_group_id ?? null,
       },
     })
+    success(t('common_savedSuccess'))
     onClose()
+    } catch {
+      toastError(t('common_errorGeneric'))
+    }
   }
 
   const handleDelete = async () => {
     if (!transaction) return
-    await deleteT.mutateAsync(transaction.id)
-    onClose()
+    try {
+      await deleteT.mutateAsync(transaction.id)
+      success(t('common_deletedSuccess'))
+      onClose()
+    } catch {
+      toastError(t('common_errorGeneric'))
+    }
   }
 
   const filteredCategories = categories.filter((c) => c.type === type)

@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar, Modal, ConfirmDialog } from '@syncero/ui'
+import { Button, Card, Input, Select, Table, Badge, Tabs, TabList, Tab, TabPanel, Avatar, Modal, ConfirmDialog, useToast } from '@syncero/ui'
 import { RefreshCw, X, UserMinus, UserPlus, Pencil, Trash2, Plus } from 'lucide-react'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite, getCategories, getCategoryUsage, createCategory, updateCategory, deleteCategory, getBanks, deleteBank } from '@/lib/backend'
 import { BankFormModal } from '@/modules/banks/BankFormModal'
@@ -26,6 +26,7 @@ type CompanyForm = z.infer<typeof companySchema>
 
 function CompanyTab() {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
   const qc = useQueryClient()
@@ -58,7 +59,9 @@ function CompanyTab() {
     onSuccess: (_, vars) => {
       setActiveCompany({ ...activeCompany!, name: vars.name })
       qc.invalidateQueries({ queryKey: ['company', activeCompany?.id] })
+      success(t('common_savedSuccess'))
     },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   return (
@@ -94,6 +97,7 @@ function CompanyTab() {
 
 function MembersTab() {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<MemberRole>('member')
@@ -117,14 +121,20 @@ function MembersTab() {
     onSuccess: () => {
       setInviteEmail('')
       qc.invalidateQueries({ queryKey: ['members', activeCompany?.id] })
+      success(t('common_inviteSent'))
     },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const revoke = useMutation({
     mutationFn: async (id: string) => {
       await revokeCompanyMember(id)
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['members', activeCompany?.id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['members', activeCompany?.id] })
+      success(t('common_deletedSuccess'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   return (
@@ -210,6 +220,7 @@ function MembersTab() {
 
 function AccountantTab() {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const language = usePreferencesStore((s) => s.language)
   const [modalOpen, setModalOpen] = useState(false)
@@ -235,22 +246,36 @@ function AccountantTab() {
       setInviteEmail('')
       setModalOpen(false)
       qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
+      success(t('common_inviteSent'))
     },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const resend = useMutation({
     mutationFn: (id: string) => resendAccountantInvite(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
+      success(t('common_inviteSent'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const cancel = useMutation({
     mutationFn: (id: string) => cancelAccountantInvite(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
+      success(t('common_deletedSuccess'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const unlink = useMutation({
     mutationFn: (id: string) => cancelAccountantInvite(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
+      success(t('common_deletedSuccess'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   return (
@@ -434,6 +459,7 @@ type CategoryForm = { name: string; type: TransactionType; color: string }
 
 function CategoriesTab() {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const qc = useQueryClient()
 
@@ -485,7 +511,9 @@ function CategoriesTab() {
     onSuccess: () => {
       setModalOpen(false)
       qc.invalidateQueries({ queryKey: ['categories', activeCompany?.id] })
+      success(t('common_savedSuccess'))
     },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const remove = useMutation({
@@ -496,7 +524,9 @@ function CategoriesTab() {
     onSuccess: () => {
       setDeleting(null)
       qc.invalidateQueries({ queryKey: ['categories', activeCompany?.id] })
+      success(t('common_deletedSuccess'))
     },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const otherCategories = categories.filter(
@@ -695,6 +725,7 @@ function CategoriesTab() {
 
 function BanksTab() {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const qc = useQueryClient()
 
@@ -713,7 +744,12 @@ function BanksTab() {
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteBank(id),
-    onSuccess: () => { setDeleteId(null); qc.invalidateQueries({ queryKey: ['banks', activeCompany?.id] }) },
+    onSuccess: () => {
+      setDeleteId(null)
+      qc.invalidateQueries({ queryKey: ['banks', activeCompany?.id] })
+      success(t('common_deletedSuccess'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   return (

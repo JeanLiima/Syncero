@@ -66,7 +66,8 @@ router.get('/', async (c) => {
   const pageSize = Math.min(Number(c.req.query('pageSize') ?? '20'), 1000)
 
   if (type) query = query.eq('type', type)
-  if (categoryId) query = query.eq('category_id', categoryId)
+  if (categoryId === 'none') query = query.is('category_id', null)
+  else if (categoryId) query = query.eq('category_id', categoryId)
   if (isPaid === 'true') query = query.eq('is_paid', true)
   if (isPaid === 'false') query = query.eq('is_paid', false)
   if (dateFrom) query = query.gte('date', dateFrom)

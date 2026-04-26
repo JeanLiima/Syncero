@@ -4,8 +4,9 @@ import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle, Search } from 'lucide-react'
 import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
-import { useTransactions } from '@/modules/transactions/queries'
+import { useTransactions, useCategories } from '@/modules/transactions/queries'
 import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
+import { TransactionEditModal } from '@/modules/transactions/TransactionEditModal'
 import { TransactionDetailModal } from '@/modules/transactions/TransactionDetailModal'
 import { PaymentModal } from '@/modules/transactions/PaymentModal'
 import { useT } from '@/i18n'
@@ -24,6 +25,10 @@ export function Component() {
   const [editing, setEditing] = useState<Transaction | null>(null)
 
   const { data, isLoading } = useTransactions(filters, page)
+  const { data: categories = [] } = useCategories()
+  const filteredCategories = filters.type
+    ? categories.filter((c) => c.type === filters.type)
+    : categories
 
   const openCreate = () => {
     setEditing(null)
@@ -34,7 +39,6 @@ export function Component() {
 
   const openEdit = (tx: Transaction) => {
     setEditing(tx)
-    setWizardOpen(true)
   }
 
   const totalPages = Math.ceil((data?.count ?? 0) / 20)
@@ -75,7 +79,7 @@ export function Component() {
               { value: 'expense', label: t('transactions_expense') },
             ]}
             value={filters.type ?? ''}
-            onChange={(v) => setFilters((f) => ({ ...f, type: v as TransactionFilters['type'] || undefined }))}
+            onChange={(v) => { setPage(1); setFilters((f) => ({ ...f, type: v as TransactionFilters['type'] || undefined, category_id: undefined })) }}
             className="w-40"
           />
           <Select
@@ -87,6 +91,17 @@ export function Component() {
             ]}
             value={filters.is_paid === undefined ? '' : String(filters.is_paid)}
             onChange={(v) => setFilters((f) => ({ ...f, is_paid: v === '' ? undefined : v === 'true' }))}
+            className="w-44"
+          />
+          <Select
+            size="sm"
+            options={[
+              { value: '', label: t('transactions_allCategories') },
+              { value: 'none', label: t('transactions_filterNoCategory') },
+              ...filteredCategories.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+            value={filters.category_id ?? ''}
+            onChange={(v) => { setPage(1); setFilters((f) => ({ ...f, category_id: v || undefined })) }}
             className="w-44"
           />
           <DateRangePicker
@@ -201,7 +216,14 @@ export function Component() {
       <TransactionWizard
         open={wizardOpen}
         onClose={() => setWizardOpen(false)}
-        editing={editing}
+        editing={null}
+        language={language}
+      />
+
+      <TransactionEditModal
+        transaction={editing}
+        open={!!editing}
+        onClose={() => setEditing(null)}
         language={language}
       />
     </div>

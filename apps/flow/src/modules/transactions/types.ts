@@ -14,18 +14,18 @@ export interface TransactionFormData {
   amount: number
   type: TransactionType
   date: string
-  category_id?: string
-  contact_id?: string
-  counterpart?: string
-  notes?: string
+  category_id?: string | null
+  contact_id?: string | null
+  counterpart?: string | null
+  notes?: string | null
   is_paid: boolean
-  paid_at?: string
-  payment_method?: 'cash' | 'bank'
-  bank_id?: string
-  payment_registered_at?: string
-  payment_registered_by?: string
+  paid_at?: string | null
+  payment_method?: 'cash' | 'bank' | null
+  bank_id?: string | null
+  payment_registered_at?: string | null
+  payment_registered_by?: string | null
   is_installment?: boolean
-  installment_count?: number
-  installment_number?: number
-  installment_group_id?: string
+  installment_count?: number | null
+  installment_number?: number | null
+  installment_group_id?: string | null
 }

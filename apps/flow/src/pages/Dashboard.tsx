@@ -36,7 +36,9 @@ function useMonthSummary() {
 
       const income  = txRes.data?.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0) ?? 0
       const expense = txRes.data?.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0) ?? 0
-      const toReceive = prRes.reduce((s, t) => s + t.amount, 0)
+      const toReceive = prRes
+        .filter((t) => t.status !== 'paid' && t.status !== 'cancelled')
+        .reduce((s, t) => s + t.amount, 0)
 
       return { income, expense, toReceive }
     },

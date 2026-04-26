@@ -406,7 +406,6 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       setAmountCents((prev) => Math.floor(prev / 10))
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      if (validateAmount()) goTo(4)
     } else if (!['Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault()
     }
@@ -523,8 +522,13 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (phase !== 'wizard') return
     if (target.tagName === 'TEXTAREA') return
 
-    // Steps 3 and 6 handle their own Enter/Arrow keys
-    if (step === 3 || step === 6) return
+    // Step 6 handles its own Enter/Arrow keys via the combobox
+    if (step === 6) return
+
+    if (step === 3) {
+      if (e.key === 'Enter') { e.preventDefault(); if (validateAmount()) goTo(4) }
+      return
+    }
 
     // Card steps: arrow keys cycle options
     if (step === 1) {

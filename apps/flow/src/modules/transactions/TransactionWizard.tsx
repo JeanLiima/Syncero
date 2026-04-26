@@ -909,7 +909,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     step === 2 ||
     step === 3 ||
     step === 4 ||
-    (step === 5 && categoryId === undefined) ||
+    step === 5 ||
     (step === 6 && counterpart.trim().length > 0) ||
     !!editing
   )

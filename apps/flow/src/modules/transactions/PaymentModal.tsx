@@ -97,7 +97,7 @@ export function BankSelectField({
           <button
             type="button"
             onClick={() => setModalOpen(true)}
-            className="self-start text-xs text-[var(--accent)] hover:underline"
+            className="self-start text-xs text-[var(--accent)] hover:underline cursor-pointer"
           >
             + {t('transactions_payment_newBank')}
           </button>

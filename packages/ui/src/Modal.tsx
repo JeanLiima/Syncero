@@ -7,10 +7,11 @@ interface ModalProps {
   onClose: () => void
   title?: string
   children: ReactNode
+  footer?: ReactNode
   size?: 'sm' | 'md' | 'lg'
 }
 
-export function Modal({ open, onClose, title, children, size = 'md' }: ModalProps) {
+export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     if (open) document.addEventListener('keydown', handler)
@@ -44,6 +45,11 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
           </div>
         )}
         <div className="overflow-y-auto flex-1 p-5">{children}</div>
+        {footer && (
+          <div className="flex-shrink-0 px-5 py-4 border-t border-[var(--bg-border)]">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   )

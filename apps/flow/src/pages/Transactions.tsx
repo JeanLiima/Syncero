@@ -149,13 +149,17 @@ export function Component() {
               align: 'right',
               render: (r) =>
                 !r.is_paid ? (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setPaymentId(r.id) }}
-                    className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors cursor-pointer"
-                    title={t('transactions_markAsPaid')}
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                  </button>
+                  <div className="relative group flex justify-end">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPaymentId(r.id) }}
+                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('transactions_markAsPaid')}
+                    </span>
+                  </div>
                 ) : null,
             },
           ]}

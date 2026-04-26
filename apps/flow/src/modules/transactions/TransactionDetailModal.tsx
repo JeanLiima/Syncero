@@ -141,8 +141,30 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
     }
   }
 
+  const footer = (
+    <div className="flex items-center justify-between">
+      <Button variant="ghost" size="sm" onClick={onClose}>
+        {t('transactions_cancel')}
+      </Button>
+      <div className="flex gap-2">
+        {tx && !tx.is_paid && (
+          <Button variant="ghost" size="sm" onClick={() => setPaymentOpen(true)}>
+            <CheckCircle className="h-3.5 w-3.5" />
+            {t('transactions_payment_register')}
+          </Button>
+        )}
+        {tx && (
+          <Button size="sm" onClick={() => { onClose(); onEdit(tx) }}>
+            <Edit2 className="h-3.5 w-3.5" />
+            {t('transactions_detail_edit')}
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+
   return (
-    <Modal open={open} onClose={onClose} title={t('transactions_detailTitle')} size="md">
+    <Modal open={open} onClose={onClose} title={t('transactions_detailTitle')} size="md" footer={footer}>
       {isLoading && (
         <div className="flex items-center justify-center py-16">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
@@ -226,26 +248,6 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
 
         </div>
       )}
-
-      <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--bg-border)]">
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          {t('transactions_cancel')}
-        </Button>
-        <div className="flex gap-2">
-          {tx && !tx.is_paid && (
-            <Button variant="ghost" size="sm" onClick={() => setPaymentOpen(true)}>
-              <CheckCircle className="h-3.5 w-3.5" />
-              {t('transactions_payment_register')}
-            </Button>
-          )}
-          {tx && (
-            <Button size="sm" onClick={() => { onClose(); onEdit(tx) }}>
-              <Edit2 className="h-3.5 w-3.5" />
-              {t('transactions_detail_edit')}
-            </Button>
-          )}
-        </div>
-      </div>
 
       <PaymentModal
         transactionId={transactionId}

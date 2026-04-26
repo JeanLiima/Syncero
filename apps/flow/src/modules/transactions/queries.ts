@@ -64,6 +64,19 @@ export function useContacts(search: string) {
   })
 }
 
+export function useInstallmentGroup(transaction: Transaction | null) {
+  const groupId = transaction?.installment_group_id ?? null
+  const companyId = transaction?.company_id ?? ''
+
+  return useQuery({
+    queryKey: ['installment-group', groupId],
+    queryFn: () => getTransactions({ companyId, installment_group_id: groupId!, pageSize: '100' }),
+    enabled: !!groupId && !!companyId,
+    select: (data) =>
+      [...data.data].sort((a, b) => (a.installment_number ?? 0) - (b.installment_number ?? 0)),
+  })
+}
+
 export function useBanks() {
   const activeCompany = useAuthStore((s) => s.activeCompany)
 

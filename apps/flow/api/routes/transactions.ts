@@ -65,9 +65,12 @@ router.get('/', async (c) => {
   const page = Number(c.req.query('page') ?? '1')
   const pageSize = Math.min(Number(c.req.query('pageSize') ?? '20'), 1000)
 
+  const installmentGroupId = c.req.query('installment_group_id')
+
   if (type) query = query.eq('type', type)
   if (categoryId === 'none') query = query.is('category_id', null)
   else if (categoryId) query = query.eq('category_id', categoryId)
+  if (installmentGroupId) query = query.eq('installment_group_id', installmentGroupId)
   if (isPaid === 'true') query = query.eq('is_paid', true)
   if (isPaid === 'false') query = query.eq('is_paid', false)
   if (dateFrom) query = query.gte('date', dateFrom)

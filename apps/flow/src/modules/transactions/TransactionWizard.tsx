@@ -287,6 +287,9 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const [amountError, setAmountError] = useState('')
   const [descError, setDescError] = useState('')
 
+  // Installment overrides: { [installmentNumber]: { date, amountStr } }
+  const [installmentOverrides, setInstallmentOverrides] = useState<Record<number, { date: string; amountStr: string }>>({})
+
   // Contact search & modal
   const [contactSearch, setContactSearch] = useState('')
   const [contactModalOpen, setContactModalOpen] = useState(false)
@@ -344,9 +347,13 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       setContactId(undefined)
       setIsInstallment(false)
       setInstallmentCount(2)
-      setCreateFutureInstallments(false)
+      setCreateFutureInstallments(true)
     }
+    setInstallmentOverrides({})
   }, [open])
+
+  // Reset overrides whenever the base installment values change
+  useEffect(() => { setInstallmentOverrides({}) }, [installmentCount, amountCents, date])
 
   useEffect(() => {
     if (step === 3) setTimeout(() => amountRef.current?.focus(), 50)
@@ -449,12 +456,22 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (isInstallment && createFutureInstallments && installmentCount >= 2) {
       const groupId = crypto.randomUUID()
       let firstId: string | null = null
+      const perInstallment = Math.floor(amountCents / installmentCount)
+      const remainder = amountCents - perInstallment * (installmentCount - 1)
       for (let i = 0; i < installmentCount; i++) {
+        const num = i + 1
+        const override = installmentOverrides[num]
+        const defaultCents = i === installmentCount - 1 ? remainder : perInstallment
+        const installDate = override?.date ?? format(addMonths(parseISO(date), i), 'yyyy-MM-dd')
+        const installAmount = override?.amountStr !== undefined
+          ? (parseFloat(override.amountStr.replace(',', '.')) || defaultCents / 100)
+          : defaultCents / 100
         const result = await create.mutateAsync({
           ...basePayload,
-          date: format(addMonths(parseISO(date), i), 'yyyy-MM-dd'),
-          description: `${description.trim()} (${i + 1}/${installmentCount})`,
-          installment_number: i + 1,
+          amount: installAmount,
+          date: installDate,
+          description: `${description.trim()} (${num}/${installmentCount})`,
+          installment_number: num,
           installment_group_id: groupId,
         })
         if (i === 0) firstId = result?.id ?? null
@@ -463,6 +480,9 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     } else {
       const result = await create.mutateAsync({
         ...basePayload,
+        description: isInstallment
+          ? `${description.trim()} (1/${installmentCount})`
+          : description.trim(),
         installment_number: isInstallment ? 1 : undefined,
         installment_group_id: isInstallment ? crypto.randomUUID() : undefined,
       })
@@ -590,10 +610,34 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     const remainder = amountCents - perInstallment * (installmentCount - 1)
     return Array.from({ length: installmentCount }, (_, i) => ({
       number: i + 1,
-      date: format(addMonths(parseISO(date), i), 'dd/MM/yyyy'),
+      rawDate: format(addMonths(parseISO(date), i), 'yyyy-MM-dd'),
       cents: i === installmentCount - 1 ? remainder : perInstallment,
     }))
   })()
+
+  const getOverrideDate = (num: number, rawDate: string) => installmentOverrides[num]?.date ?? rawDate
+  const getOverrideAmountStr = (num: number, cents: number) =>
+    installmentOverrides[num]?.amountStr ?? (cents / 100).toFixed(2).replace('.', ',')
+
+  const updateInstallmentOverride = (num: number, field: 'date' | 'amountStr', value: string) => {
+    setInstallmentOverrides((prev) => {
+      const base = installmentPreview?.find((p) => p.number === num)
+      const current = prev[num] ?? {
+        date: base?.rawDate ?? '',
+        amountStr: base ? (base.cents / 100).toFixed(2).replace('.', ',') : '0',
+      }
+      return { ...prev, [num]: { ...current, [field]: value } }
+    })
+  }
+
+  const installmentEditedTotal = installmentPreview
+    ? installmentPreview.reduce((sum, p) => {
+        const str = installmentOverrides[p.number]?.amountStr
+        return sum + (str !== undefined ? parseFloat(str.replace(',', '.')) || 0 : p.cents / 100)
+      }, 0)
+    : 0
+  const installmentTotalChanged =
+    !!installmentPreview && Math.abs(installmentEditedTotal - amountCents / 100) > 0.005
 
   // ── Step content ────────────────────────────────────────────
 
@@ -735,20 +779,80 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
               />
             )}
             {installmentPreview && (
-              <div className="flex flex-col gap-1 max-h-36 overflow-y-auto rounded-lg border border-[var(--bg-border)] divide-y divide-[var(--bg-border)]">
-                {installmentPreview.map((p) => (
-                  <div key={p.number} className="flex items-center justify-between px-3 py-2 text-xs">
-                    <span className="text-[var(--text-muted)] tabular-nums">
-                      {p.number}/{installmentCount}
-                    </span>
-                    <span className="text-[var(--text-secondary)]">{p.date}</span>
-                    <span className={`font-medium tabular-nums ${
-                      type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
-                    }`}>
-                      R$ {formatCents(p.cents)}
-                    </span>
+              <div className="flex flex-col gap-1 rounded-lg border border-[var(--bg-border)] overflow-hidden">
+                {/* Header */}
+                <div className="grid grid-cols-[2rem_1fr_6.5rem] gap-2 px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--bg-border)]">
+                  <span className="text-xs text-[var(--text-muted)]">#</span>
+                  <span className="text-xs text-[var(--text-muted)]">{t('transactions_date')}</span>
+                  <span className="text-xs text-[var(--text-muted)] text-right">{t('transactions_amount')}</span>
+                </div>
+
+                {/* Rows */}
+                <div className="max-h-44 overflow-y-auto divide-y divide-[var(--bg-border)]">
+                  {installmentPreview.map((p) =>
+                    createFutureInstallments ? (
+                      // Editable row
+                      <div key={p.number} className="grid grid-cols-[2rem_1fr_6.5rem] items-center gap-2 px-3 py-1.5 hover:bg-[var(--bg-elevated)]">
+                        <span className="text-xs font-mono text-[var(--text-muted)] text-center">
+                          {p.number}/{installmentCount}
+                        </span>
+                        <input
+                          type="date"
+                          value={getOverrideDate(p.number, p.rawDate)}
+                          onChange={(e) => updateInstallmentOverride(p.number, 'date', e.target.value)}
+                          className="h-7 px-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors w-full"
+                        />
+                        <div className="flex items-center gap-1 h-7 px-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] focus-within:border-[var(--accent)] transition-colors">
+                          <span className="text-xs text-[var(--text-muted)] shrink-0">R$</span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={getOverrideAmountStr(p.number, p.cents)}
+                            onChange={(e) => updateInstallmentOverride(p.number, 'amountStr', e.target.value)}
+                            className="flex-1 bg-transparent text-xs text-right text-[var(--text-primary)] font-mono outline-none min-w-0"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      // Read-only row
+                      <div key={p.number} className="grid grid-cols-[2rem_1fr_6.5rem] items-center gap-2 px-3 py-2">
+                        <span className="text-xs font-mono text-[var(--text-muted)] text-center">
+                          {p.number}/{installmentCount}
+                        </span>
+                        <span className="text-xs text-[var(--text-secondary)]">
+                          {format(parseISO(p.rawDate), 'dd/MM/yyyy')}
+                        </span>
+                        <span className={`text-xs font-medium tabular-nums text-right ${
+                          type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
+                        }`}>
+                          R$ {formatCents(p.cents)}
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {/* Total footer */}
+                <div className="grid grid-cols-[2rem_1fr_auto] items-center gap-2 px-3 py-1.5 bg-[var(--bg-elevated)] border-t border-[var(--bg-border)]">
+                  <span />
+                  <span className="text-xs text-[var(--text-muted)]">{t('transactions_installment_total')}</span>
+                  <div className="flex items-center gap-2 text-xs font-mono">
+                    {installmentTotalChanged ? (
+                      <>
+                        <span className="text-[var(--text-muted)] line-through">
+                          {(amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </span>
+                        <span className="text-[var(--warning)] font-medium">
+                          {installmentEditedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[var(--text-secondary)]">
+                        {(amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    )}
                   </div>
-                ))}
+                </div>
               </div>
             )}
           </div>

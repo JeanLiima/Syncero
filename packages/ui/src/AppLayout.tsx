@@ -1,5 +1,5 @@
 import { type ReactNode, useState, useRef, useEffect } from 'react'
-import { NavLink, Link } from 'react-router-dom'
+import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   LogOut,
   Menu,
@@ -18,6 +18,7 @@ export interface NavItem {
   label: string
   icon: ReactNode
   end?: boolean
+  children?: { to: string; label: string }[]
 }
 
 export interface AppLayoutProps {
@@ -63,6 +64,98 @@ function SidebarLink({ item, collapsed, activeClass }: { item: NavItem; collapse
     >
       {item.icon}
       {!collapsed && item.label}
+    </NavLink>
+  )
+}
+
+// ── SidebarGroup (item with children) ────────────────────────
+
+function SidebarGroup({ item, collapsed, activeClass }: {
+  item: NavItem & { children: NonNullable<NavItem['children']> }
+  collapsed: boolean
+  activeClass: string
+}) {
+  const { pathname } = useLocation()
+  const isAnyActive = item.children.some((c) => pathname.startsWith(c.to))
+
+  if (collapsed) {
+    return (
+      <NavLink
+        to={item.children[0].to}
+        title={item.label}
+        className={clsx(
+          'flex w-full items-center justify-center px-2 py-3 rounded-[var(--radius-md)] text-sm transition-colors',
+          isAnyActive
+            ? `${activeClass} font-medium`
+            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]',
+        )}
+      >
+        {item.icon}
+      </NavLink>
+    )
+  }
+
+  return (
+    <div>
+      <div className={clsx(
+        'flex items-center gap-3 px-3 py-2.5 text-sm select-none',
+        isAnyActive ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-muted)]',
+      )}>
+        {item.icon}
+        <span>{item.label}</span>
+      </div>
+      <div className="ml-3 border-l border-[var(--bg-border)] pl-2.5 flex flex-col gap-0.5 mb-1">
+        {item.children.map((child) => (
+          <NavLink
+            key={child.to}
+            to={child.to}
+            className={({ isActive }) => clsx(
+              'block px-3 py-1.5 rounded-[var(--radius-md)] text-sm transition-colors',
+              isActive
+                ? `${activeClass} font-medium`
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]',
+            )}
+          >
+            {child.label}
+          </NavLink>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── MobileNavItem ─────────────────────────────────────────────
+
+function MobileNavItem({ item, mobileActiveClass }: { item: NavItem; mobileActiveClass: string }) {
+  const { pathname } = useLocation()
+
+  if (item.children) {
+    const isActive = item.children.some((c) => pathname.startsWith(c.to))
+    return (
+      <NavLink
+        to={item.children[0].to}
+        className={clsx(
+          'flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] transition-colors',
+          isActive ? mobileActiveClass : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
+        )}
+      >
+        {item.icon}
+        <span className="leading-none">{item.label.split(' ')[0]}</span>
+      </NavLink>
+    )
+  }
+
+  return (
+    <NavLink
+      to={item.to}
+      end={item.end}
+      className={({ isActive }) => clsx(
+        'flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] transition-colors',
+        isActive ? mobileActiveClass : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
+      )}
+    >
+      {item.icon}
+      <span className="leading-none">{item.label.split(' ')[0]}</span>
     </NavLink>
   )
 }
@@ -145,9 +238,11 @@ export function AppLayout({
         {!collapsed && sidebarHeader}
 
         <nav className={clsx('flex-1 py-4 flex flex-col gap-1', collapsed ? 'px-2' : 'px-3')}>
-          {navItems.map((item) => (
-            <SidebarLink key={item.to} item={item} collapsed={collapsed} activeClass={colors.active} />
-          ))}
+          {navItems.map((item) =>
+            item.children
+              ? <SidebarGroup key={item.to} item={item as NavItem & { children: NonNullable<NavItem['children']> }} collapsed={collapsed} activeClass={colors.active} />
+              : <SidebarLink  key={item.to} item={item} collapsed={collapsed} activeClass={colors.active} />
+          )}
         </nav>
       </aside>
     )
@@ -232,20 +327,7 @@ export function AppLayout({
         {/* Nav mobile bottom */}
         <nav className="md:hidden flex border-t border-[var(--bg-border)] bg-[var(--bg-surface)] safe-area-bottom">
           {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                clsx(
-                  'flex-1 flex flex-col items-center gap-1 py-2.5 text-[10px] transition-colors',
-                  isActive ? colors.mobileActive : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
-                )
-              }
-            >
-              {item.icon}
-              <span className="leading-none">{item.label.split(' ')[0]}</span>
-            </NavLink>
+            <MobileNavItem key={item.to} item={item} mobileActiveClass={colors.mobileActive} />
           ))}
         </nav>
       </div>

@@ -60,4 +60,42 @@ router.post('/', async (c) => {
   return c.json(data, 201)
 })
 
+router.patch('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const id = c.req.param('id')
+  const body = await c.req.json<{ name?: string; cpf?: string | null; cnpj?: string | null }>()
+
+  const { data: contact } = await db.from('contacts').select('company_id').eq('id', id).maybeSingle()
+  if (!contact) return c.json({ error: 'not found' }, 404)
+
+  const member = await ensureCompanyMember(db, userId, contact.company_id)
+  if (!member) return c.json({ error: 'forbidden' }, 403)
+
+  const patch: Record<string, unknown> = {}
+  if (body.name !== undefined) patch.name = body.name.trim()
+  if ('cpf' in body) patch.cpf = body.cpf?.trim() || null
+  if ('cnpj' in body) patch.cnpj = body.cnpj?.trim() || null
+
+  const { data, error } = await db.from('contacts').update(patch).eq('id', id).select().single()
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json(data)
+})
+
+router.delete('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const id = c.req.param('id')
+
+  const { data: contact } = await db.from('contacts').select('company_id').eq('id', id).maybeSingle()
+  if (!contact) return c.json({ error: 'not found' }, 404)
+
+  const member = await ensureCompanyMember(db, userId, contact.company_id)
+  if (!member) return c.json({ error: 'forbidden' }, 403)
+
+  const { error } = await db.from('contacts').delete().eq('id', id)
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
+})
+
 export default router

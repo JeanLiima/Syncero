@@ -144,8 +144,6 @@ export const en: Record<TranslationKey, string> = {
   transactions_payment_noBanks: 'No bank accounts registered',
   transactions_payment_createBank: 'Create account',
   transactions_payment_newBank: 'New account',
-  bank_newTitle: 'New bank account',
-  bank_name: 'Account name',
   transactions_wizard_detailsLabel: 'Any details to add?',
   transactions_wizard_descPrefixIncomeWith: 'Payment received from',
   transactions_wizard_descPrefixExpenseWith: 'Payment to',
@@ -175,7 +173,6 @@ export const en: Record<TranslationKey, string> = {
   banks_accountType: 'Account type',
   banks_checking: 'Checking',
   banks_savings: 'Savings',
-  banks_pixKey: 'Pix key',
   banks_save: 'Save',
   banks_empty: 'No bank accounts registered',
   banks_createTitle: 'New bank account',
@@ -194,7 +191,6 @@ export const en: Record<TranslationKey, string> = {
   cashFlow_balance: 'Balance',
   cashFlow_result: 'Result',
   cashFlow_chartTitle: 'Cash flow evolution',
-  cashFlow_loading: 'Loading…',
   cashFlow_noEntries: 'No entries in this period',
 
   // Accounts
@@ -367,7 +363,6 @@ export const en: Record<TranslationKey, string> = {
 
   // Common
   common_select: 'Select',
-  common_loading: 'Loading...',
   common_savedSuccess: 'Saved successfully',
   common_deletedSuccess: 'Deleted successfully',
   common_errorGeneric: 'Something went wrong. Please try again.',

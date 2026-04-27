@@ -142,8 +142,6 @@ export const pt = {
   transactions_payment_noBanks: 'Nenhuma conta bancária cadastrada',
   transactions_payment_createBank: 'Cadastrar conta',
   transactions_payment_newBank: 'Nova conta',
-  bank_newTitle: 'Nova conta bancária',
-  bank_name: 'Nome da conta',
   transactions_wizard_detailsLabel: 'Algum detalhe a adicionar?',
   transactions_wizard_descPrefixIncomeWith: 'Recebimento de',
   transactions_wizard_descPrefixExpenseWith: 'Pagamento para',
@@ -173,7 +171,6 @@ export const pt = {
   banks_accountType: 'Tipo de conta',
   banks_checking: 'Conta Corrente',
   banks_savings: 'Poupança',
-  banks_pixKey: 'Chave Pix',
   banks_save: 'Salvar',
   banks_empty: 'Nenhuma conta bancária cadastrada',
   banks_createTitle: 'Nova conta bancária',
@@ -192,7 +189,6 @@ export const pt = {
   cashFlow_balance: 'Saldo',
   cashFlow_result: 'Resultado',
   cashFlow_chartTitle: 'Evolução do caixa',
-  cashFlow_loading: 'Carregando…',
   cashFlow_noEntries: 'Nenhum lançamento no período',
 
   // Accounts (Contas a Pagar/Receber)
@@ -365,7 +361,6 @@ export const pt = {
 
   // Common
   common_select: 'Selecionar',
-  common_loading: 'Carregando...',
   common_savedSuccess: 'Salvo com sucesso',
   common_deletedSuccess: 'Excluído com sucesso',
   common_errorGeneric: 'Algo deu errado. Tente novamente.',

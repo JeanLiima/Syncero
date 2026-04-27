@@ -5,24 +5,18 @@ import { accountantInviteEmail } from '../emails/accountantInvite'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
-async function ensureCompanyMember(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string) {
-  const { data } = await db.from('company_members')
+async function checkCompanyAccess(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string, requireAdmin = false) {
+  const query = db.from('company_members')
     .select('id')
     .eq('user_id', userId)
     .eq('company_id', companyId)
     .eq('status', 'accepted')
-    .maybeSingle()
-  return data
-}
-
-async function ensureCompanyAdmin(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string) {
-  const { data } = await db.from('company_members')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('company_id', companyId)
-    .eq('status', 'accepted')
-    .eq('role', 'admin')
-    .maybeSingle()
+  
+  if (requireAdmin) {
+    query.eq('role', 'admin')
+  }
+  
+  const { data } = await query.maybeSingle()
   return data
 }
 
@@ -52,8 +46,22 @@ async function sendInviteEmail(opts: {
     html,
   })
 
-  if (error) console.error('Failed to send invite email:', error)
-  return !error
+  if (error) {
+    console.error('Failed to send invite email:', error.message) // Sanitized error
+    return false
+  }
+  return true
+}
+
+async function getCompanyAndInviter(db: ReturnType<typeof createServiceClient>, companyId: string, userId: string) {
+  const [companyRes, inviterRes] = await Promise.all([
+    db.from('companies').select('name').eq('id', companyId).single(),
+    db.from('profiles').select('full_name').eq('id', userId).single(),
+  ])
+  return {
+    companyName: companyRes.data?.name ?? 'the company',
+    inviterName: inviterRes.data?.full_name ?? 'A company admin'
+  }
 }
 
 // ── GET /api/accountant-companies ─────────────────────────────
@@ -63,14 +71,14 @@ router.get('/', async (c) => {
   const companyId = c.req.query('companyId')
 
   if (companyId) {
-    const member = await ensureCompanyMember(db, userId, companyId)
-    if (!member) return c.json({ error: 'forbidden' }, 403)
+    const member = await checkCompanyAccess(db, userId, companyId, false)
+    if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
 
     const { data, error } = await db.from('accountant_companies')
       .select('*, profiles!accountant_id(id, full_name, email, avatar_url)')
       .eq('company_id', companyId)
       .order('invited_at', { ascending: false })
-    if (error) return c.json({ error: error.message }, 400)
+    if (error) return c.json({ error: 'Database error' }, 500)
     return c.json(data)
   }
 
@@ -80,7 +88,7 @@ router.get('/', async (c) => {
     .eq('status', 'accepted')
     .order('accepted_at', { ascending: false })
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'Database error' }, 500)
   return c.json(data)
 })
 
@@ -95,8 +103,8 @@ router.post('/', async (c) => {
     return c.json({ error: 'companyId, email and invite_token are required' }, 400)
   }
 
-  const admin = await ensureCompanyAdmin(db, userId, companyId)
-  if (!admin) return c.json({ error: 'forbidden' }, 403)
+  const admin = await checkCompanyAccess(db, userId, companyId, true)
+  if (!admin) return c.json({ error: 'Forbidden: not a company admin' }, 403)
 
   // Rule: each company may have at most one accountant (accepted or pending).
   const { data: existing } = await db.from('accountant_companies')
@@ -114,28 +122,28 @@ router.post('/', async (c) => {
     }
   }
 
-  const [{ data: company }, { data: inviter }] = await Promise.all([
-    db.from('companies').select('name').eq('id', companyId).single(),
-    db.from('profiles').select('full_name').eq('id', userId).single(),
-  ])
+  const { companyName, inviterName } = await getCompanyAndInviter(db, companyId, userId)
 
   const { data, error } = await db.from('accountant_companies')
     .insert({ company_id: companyId, email, status: 'pending', invite_token, invited_by: userId })
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'Failed to create invite' }, 500)
 
   const resendKey = process.env.RESEND_API_KEY
   if (resendKey) {
-    await sendInviteEmail({
+    const emailSent = await sendInviteEmail({
       resendKey,
       to: email,
       inviteToken: invite_token,
-      companyName: company?.name ?? 'the company',
-      inviterName: inviter?.full_name ?? 'A company admin',
+      companyName,
+      inviterName,
       language,
     })
+    if (!emailSent) {
+      console.warn('Invite created but email failed to send')
+    }
   } else {
     console.warn('RESEND_API_KEY not set — invite created but email not sent')
   }
@@ -157,8 +165,8 @@ router.post('/:id/resend', async (c) => {
   if (!invite) return c.json({ error: 'Invite not found.' }, 404)
   if (invite.status !== 'pending') return c.json({ error: 'Only pending invites can be resent.' }, 400)
 
-  const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
-  if (!admin) return c.json({ error: 'forbidden' }, 403)
+  const admin = await checkCompanyAccess(db, userId, invite.company_id, true)
+  if (!admin) return c.json({ error: 'Forbidden: not a company admin' }, 403)
 
   // Rotate the token so the old link is invalidated
   const new_token = crypto.randomUUID()
@@ -166,22 +174,22 @@ router.post('/:id/resend', async (c) => {
     .update({ invite_token: new_token, invited_at: new Date().toISOString() })
     .eq('id', id)
 
-  if (updateError) return c.json({ error: updateError.message }, 400)
+  if (updateError) return c.json({ error: 'Failed to update invite' }, 500)
 
-  const [{ data: company }, { data: inviter }] = await Promise.all([
-    db.from('companies').select('name').eq('id', invite.company_id).single(),
-    db.from('profiles').select('full_name').eq('id', userId).single(),
-  ])
+  const { companyName, inviterName } = await getCompanyAndInviter(db, invite.company_id, userId)
 
   const resendKey = process.env.RESEND_API_KEY
   if (resendKey) {
-    await sendInviteEmail({
+    const emailSent = await sendInviteEmail({
       resendKey,
       to: invite.email,
       inviteToken: new_token,
-      companyName: company?.name ?? 'the company',
-      inviterName: inviter?.full_name ?? 'A company admin',
+      companyName,
+      inviterName,
     })
+    if (!emailSent) {
+      console.warn('Resend failed')
+    }
   }
 
   return c.json({ ok: true })
@@ -201,11 +209,11 @@ router.delete('/:id', async (c) => {
   if (!invite) return c.json({ error: 'Invite not found.' }, 404)
   if (invite.status === 'revoked') return c.json({ error: 'Already revoked.' }, 400)
 
-  const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
-  if (!admin) return c.json({ error: 'forbidden' }, 403)
+  const admin = await checkCompanyAccess(db, userId, invite.company_id, true)
+  if (!admin) return c.json({ error: 'Forbidden: not a company admin' }, 403)
 
   const { error } = await db.from('accountant_companies').delete().eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'Failed to delete invite' }, 500)
 
   return c.json({ ok: true })
 })

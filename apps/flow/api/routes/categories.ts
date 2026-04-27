@@ -18,17 +18,17 @@ router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const companyId = c.req.query('companyId')
-  if (!companyId) return c.json({ error: 'companyId é obrigatório' }, 400)
+  if (!companyId) return c.json({ error: 'companyId is required' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
-  if (!member) return c.json({ error: 'forbidden' }, 403)
+  if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
 
   const { data, error } = await db.from('categories')
     .select('*')
     .eq('company_id', companyId)
     .order('type')
     .order('name')
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'Failed to fetch categories' }, 500)
 
   return c.json(data)
 })
@@ -40,10 +40,10 @@ router.get('/:id/usage', async (c) => {
   const categoryId = c.req.param('id')
 
   const row = await db.from('categories').select('company_id').eq('id', categoryId).single()
-  if (!row.data) return c.json({ error: 'not found' }, 404)
+  if (!row.data) return c.json({ error: 'Category not found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, row.data.company_id)
-  if (!member) return c.json({ error: 'forbidden' }, 403)
+  if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
 
   const { count } = await db.from('transactions')
     .select('*', { count: 'exact', head: true })
@@ -56,15 +56,19 @@ router.get('/:id/usage', async (c) => {
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const body = await c.req.json<Record<string, unknown>>()
-  const companyId = body.company_id as string | undefined
-  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
+  const body = await c.req.json<{ name: string; type: string; color?: string; company_id: string }>()
+  const { name, type, color, company_id } = body
 
-  const member = await ensureCompanyMember(db, userId, companyId)
-  if (!member) return c.json({ error: 'forbidden' }, 403)
+  if (!name?.trim() || !type || !company_id) return c.json({ error: 'name, type, and company_id are required' }, 400)
 
-  const { data, error } = await db.from('categories').insert(body).select().single()
-  if (error) return c.json({ error: error.message }, 400)
+  const member = await ensureCompanyMember(db, userId, company_id)
+  if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
+
+  const payload = { name: name.trim(), type, company_id }
+  if (color) payload.color = color
+
+  const { data, error } = await db.from('categories').insert(payload).select().single()
+  if (error) return c.json({ error: 'Failed to create category' }, 500)
   return c.json(data, 201)
 })
 
@@ -73,16 +77,27 @@ router.patch('/:id', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const categoryId = c.req.param('id')
-  const payload = await c.req.json<Record<string, unknown>>()
+  const body = await c.req.json<{ name?: string; type?: string; color?: string }>()
 
   const row = await db.from('categories').select('company_id').eq('id', categoryId).single()
-  if (!row.data) return c.json({ error: 'not found' }, 404)
+  if (!row.data) return c.json({ error: 'Category not found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, row.data.company_id)
-  if (!member) return c.json({ error: 'forbidden' }, 403)
+  if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
 
-  const { data, error } = await db.from('categories').update(payload).eq('id', categoryId).select().single()
-  if (error) return c.json({ error: error.message }, 400)
+  // Whitelist allowed fields
+  const updates: Record<string, unknown> = {}
+  if (body.name !== undefined) {
+    if (!body.name.trim()) return c.json({ error: 'Name cannot be empty' }, 400)
+    updates.name = body.name.trim()
+  }
+  if (body.type !== undefined) updates.type = body.type
+  if (body.color !== undefined) updates.color = body.color
+
+  if (Object.keys(updates).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+
+  const { data, error } = await db.from('categories').update(updates).eq('id', categoryId).select().single()
+  if (error) return c.json({ error: 'Failed to update category' }, 500)
   return c.json(data)
 })
 

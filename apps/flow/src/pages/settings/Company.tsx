@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog } from '@syncero/ui'
-import { Pencil, RefreshCw, X, UserMinus, UserPlus } from 'lucide-react'
+import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { useAuthStore } from '@/store/auth'
@@ -222,6 +222,8 @@ function MembersTab() {
     onError: () => toastError(t('common_errorGeneric')),
   })
 
+  const [rolesOpen, setRolesOpen] = useState(false)
+
   const roleOptions = [
     { value: 'admin',  label: t('settings_admin') },
     { value: 'member', label: t('settings_member') },
@@ -236,6 +238,33 @@ function MembersTab() {
 
   return (
     <div className="flex flex-col gap-5 max-w-2xl">
+
+      {/* Card informativo de papéis */}
+      <div className="rounded-[var(--radius-lg)] border border-[var(--bg-border)] overflow-hidden">
+        <button
+          onClick={() => setRolesOpen((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-[var(--bg-elevated)] hover:bg-[var(--bg-border)] transition-colors cursor-pointer"
+        >
+          <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wide">{t('settings_rolesTitle')}</p>
+          <ChevronDown className={`h-3.5 w-3.5 text-[var(--text-muted)] transition-transform duration-200 ${rolesOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {rolesOpen && (
+          <div className="grid grid-cols-2 divide-x divide-y divide-[var(--bg-border)] border-t border-[var(--bg-border)]">
+            {([
+              { key: 'settings_owner',  desc: 'settings_roleOwnerDesc' },
+              { key: 'settings_admin',  desc: 'settings_roleAdminDesc' },
+              { key: 'settings_member', desc: 'settings_roleMemberDesc' },
+              { key: 'settings_viewer', desc: 'settings_roleViewerDesc' },
+            ] as const).map(({ key, desc }) => (
+              <div key={key} className="flex flex-col gap-1.5 px-4 py-3">
+                <Badge className="w-fit">{t(key)}</Badge>
+                <p className="text-xs text-[var(--text-muted)] leading-relaxed">{t(desc)}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-[var(--text-muted)]">
           {members.length} {members.length === 1 ? t('settings_member').toLowerCase() : t('settings_members').toLowerCase()}

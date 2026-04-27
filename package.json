@@ -15,7 +15,9 @@
     "dev:books": "turbo dev --filter=@syncero/books",
     "build:landing": "turbo build --filter=@syncero/landing",
     "build:flow": "turbo build --filter=@syncero/flow",
-    "build:books": "turbo build --filter=@syncero/books"
+    "build:books": "turbo build --filter=@syncero/books",
+    "db:migrate": "supabase db push --project-id kmcwjilzhiyooacdpfdo",
+    "db:types": "supabase gen types typescript --project-id kmcwjilzhiyooacdpfdo --schema public > apps/flow/src/types/database.types.ts"
   },
   "devDependencies": {
     "turbo": "^2.0.0"

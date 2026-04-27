@@ -3,12 +3,14 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table } from '@syncero/ui'
-import { Pencil } from 'lucide-react'
+import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog } from '@syncero/ui'
+import { Pencil, RefreshCw, X, UserMinus, UserPlus } from 'lucide-react'
+import { format } from 'date-fns'
+import { ptBR, enUS } from 'date-fns/locale'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, revokeCompanyMember } from '@/lib/backend'
+import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember } from '@/lib/backend'
 import type { MemberRole } from '@/types'
 
 const companySchema = z.object({
@@ -132,15 +134,42 @@ function CompanyTab() {
 
 // ── Aba Membros ───────────────────────────────────────────────
 
+function IconBtn({ onClick, disabled, tooltip, danger, children }: {
+  onClick: () => void
+  disabled?: boolean
+  tooltip: string
+  danger?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div className="relative group">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] transition-colors disabled:opacity-50 ${danger ? 'hover:text-[var(--danger)]' : 'hover:text-[var(--accent)]'}`}
+      >
+        {children}
+      </button>
+      <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        {tooltip}
+      </span>
+    </div>
+  )
+}
+
 function MembersTab() {
   const t = useT()
   const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const language = usePreferencesStore((s) => s.language)
   const isAdmin = activeCompany?.role === 'admin'
+  const dateLocale = language === 'pt' ? ptBR : enUS
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<MemberRole>('member')
+  const [removeId, setRemoveId] = useState<string | null>(null)
+  const [editRoleId, setEditRoleId] = useState<string | null>(null)
+  const [editRole, setEditRole] = useState<MemberRole>('member')
   const qc = useQueryClient()
 
   const { data: company } = useQuery({
@@ -161,35 +190,49 @@ function MembersTab() {
     enabled: !!activeCompany?.id,
   })
 
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['members', activeCompany?.id] })
+
   const invite = useMutation({
     mutationFn: async () => {
       const token = crypto.randomUUID()
       await inviteCompanyMember(activeCompany!.id, inviteEmail, inviteRole, token, language)
     },
     onSuccess: () => {
-      setInviteEmail('')
-      setInviteRole('member')
-      setInviteOpen(false)
-      qc.invalidateQueries({ queryKey: ['members', activeCompany?.id] })
-      success(t('common_inviteSent'))
+      setInviteEmail(''); setInviteRole('member'); setInviteOpen(false)
+      invalidate(); success(t('common_inviteSent'))
     },
     onError: (err) => toastError((err as Error)?.message ?? t('common_errorGeneric')),
   })
 
-  const revoke = useMutation({
-    mutationFn: async (id: string) => { await revokeCompanyMember(id) },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['members', activeCompany?.id] })
-      success(t('common_deletedSuccess'))
-    },
+  const resend = useMutation({
+    mutationFn: (id: string) => resendMemberInvite(id),
+    onSuccess: () => { invalidate(); success(t('common_inviteSent')) },
     onError: () => toastError(t('common_errorGeneric')),
   })
 
+  const remove = useMutation({
+    mutationFn: (id: string) => removeCompanyMember(id),
+    onSuccess: () => { invalidate(); success(t('common_deletedSuccess')) },
+    onError: () => toastError(t('common_errorGeneric')),
+  })
+
+  const changeRole = useMutation({
+    mutationFn: ({ id, role }: { id: string; role: string }) => updateMemberRole(id, role),
+    onSuccess: () => { setEditRoleId(null); invalidate(); success(t('common_savedSuccess')) },
+    onError: () => toastError(t('common_errorGeneric')),
+  })
+
+  const roleOptions = [
+    { value: 'admin',  label: t('settings_admin') },
+    { value: 'member', label: t('settings_member') },
+    { value: 'viewer', label: t('settings_viewer') },
+  ]
+
+  const roleLabel = (role: string) => roleOptions.find((o) => o.value === role)?.label ?? role
+
   const owner = members.find((m) => m.user_id === company?.owner_id)
   const rest = members.filter((m) => m.user_id !== company?.owner_id)
-
-  const displayName = (m: (typeof members)[number]) =>
-    m.profiles?.full_name || m.profiles?.email || m.email
+  const sorted = [...(owner ? [owner] : []), ...rest]
 
   return (
     <div className="flex flex-col gap-5 max-w-2xl">
@@ -199,6 +242,7 @@ function MembersTab() {
         </p>
         {isAdmin && (
           <Button size="sm" onClick={() => setInviteOpen(true)}>
+            <UserPlus className="h-3.5 w-3.5" />
             {t('settings_inviteMember')}
           </Button>
         )}
@@ -207,21 +251,27 @@ function MembersTab() {
       <Card padding="sm">
         <Table
           loading={isLoading}
-          data={[...(owner ? [owner] : []), ...rest]}
+          data={sorted}
           rowKey={(r) => r.id}
           emptyMessage={t('settings_noMembers')}
           columns={[
             {
-              key: 'name',
+              key: 'member',
               header: t('settings_member'),
-              render: (r) => (
-                <div className="flex flex-col">
-                  <span className="text-sm text-[var(--text-primary)]">{displayName(r)}</span>
-                  {r.profiles?.full_name && (
-                    <span className="text-xs text-[var(--text-muted)]">{r.profiles.email || r.email}</span>
-                  )}
-                </div>
-              ),
+              render: (r) => {
+                const p = r.profiles
+                return p ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar name={p.full_name} src={p.avatar_url} size="sm" />
+                    <div>
+                      <p className="text-sm text-[var(--text-primary)]">{p.full_name}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{p.email || r.email}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-sm text-[var(--text-muted)]">{r.email}</span>
+                )
+              },
             },
             {
               key: 'role',
@@ -230,7 +280,7 @@ function MembersTab() {
                 r.user_id === company?.owner_id ? (
                   <Badge variant="default">{t('settings_owner')}</Badge>
                 ) : (
-                  <Badge>{r.role}</Badge>
+                  <Badge>{roleLabel(r.role)}</Badge>
                 ),
             },
             {
@@ -239,60 +289,92 @@ function MembersTab() {
               render: (r) =>
                 r.user_id === company?.owner_id ? null : (
                   <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'default'}>
-                    {r.status}
+                    {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_rejected')}
                   </Badge>
+                ),
+            },
+            {
+              key: 'invited_at',
+              header: t('settings_invitedAt'),
+              render: (r) =>
+                r.user_id === company?.owner_id ? null : (
+                  <span className="text-sm text-[var(--text-muted)]">
+                    {format(new Date(r.invited_at ?? Date.now()), 'dd/MM/yyyy', { locale: dateLocale })}
+                  </span>
                 ),
             },
             {
               key: 'actions',
               header: '',
               align: 'right',
-              render: (r) =>
-                isAdmin && r.user_id !== company?.owner_id && r.status !== 'revoked' ? (
-                  <Button variant="danger" size="sm" onClick={() => revoke.mutate(r.id)} loading={revoke.isPending}>
-                    {t('settings_revoke')}
-                  </Button>
-                ) : null,
+              className: 'w-px !px-2',
+              render: (r) => {
+                if (!isAdmin || r.user_id === company?.owner_id) return null
+
+                if (r.status === 'pending') return (
+                  <div className="flex items-center justify-end gap-1">
+                    <IconBtn onClick={() => resend.mutate(r.id)} disabled={resend.isPending && resend.variables === r.id} tooltip={t('settings_resend')}>
+                      <RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />
+                    </IconBtn>
+                    <IconBtn onClick={() => setRemoveId(r.id)} tooltip={t('settings_cancel')} danger>
+                      <X className="h-3.5 w-3.5" />
+                    </IconBtn>
+                  </div>
+                )
+
+                if (r.status === 'accepted') return (
+                  <div className="flex items-center justify-end gap-1">
+                    <IconBtn
+                      onClick={() => { setEditRoleId(r.id); setEditRole(r.role as MemberRole) }}
+                      tooltip={t('settings_editRole')}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </IconBtn>
+                    <IconBtn onClick={() => setRemoveId(r.id)} tooltip={t('settings_unlink')} danger>
+                      <UserMinus className="h-3.5 w-3.5" />
+                    </IconBtn>
+                  </div>
+                )
+
+                return null
+              },
             },
           ]}
         />
       </Card>
 
-      <Modal
-        open={inviteOpen}
-        onClose={() => setInviteOpen(false)}
-        title={t('settings_inviteMember')}
-        size="sm"
-      >
+      {/* Modal convite */}
+      <Modal open={inviteOpen} onClose={() => { setInviteOpen(false); setInviteEmail('') }} title={t('settings_inviteMember')} size="sm">
         <div className="flex flex-col gap-4">
-          <Input
-            label={t('settings_email')}
-            placeholder="email@exemplo.com"
-            type="email"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            autoFocus
-          />
-          <Select
-            label={t('settings_role')}
-            options={[
-              { value: 'admin',  label: t('settings_admin') },
-              { value: 'member', label: t('settings_member') },
-              { value: 'viewer', label: t('settings_viewer') },
-            ]}
-            value={inviteRole}
-            onChange={(v) => setInviteRole(v as MemberRole)}
-          />
+          <Input label={t('settings_email')} placeholder="email@exemplo.com" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} autoFocus />
+          <Select label={t('settings_role')} options={roleOptions} value={inviteRole} onChange={(v) => setInviteRole(v as MemberRole)} />
+          {invite.isError && <p className="text-xs text-[var(--danger)]">{(invite.error as Error)?.message ?? t('settings_inviteError')}</p>}
         </div>
         <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
-          <Button variant="ghost" size="sm" onClick={() => setInviteOpen(false)}>
-            {t('settings_cancel')}
-          </Button>
-          <Button onClick={() => invite.mutate()} loading={invite.isPending} disabled={!inviteEmail}>
-            {t('settings_invite')}
-          </Button>
+          <Button variant="ghost" size="sm" onClick={() => { setInviteOpen(false); setInviteEmail('') }}>{t('settings_cancel')}</Button>
+          <Button onClick={() => invite.mutate()} loading={invite.isPending} disabled={!inviteEmail}>{t('settings_sendInvite')}</Button>
         </div>
       </Modal>
+
+      {/* Modal editar permissão */}
+      <Modal open={!!editRoleId} onClose={() => setEditRoleId(null)} title={t('settings_editRole')} size="sm">
+        <Select label={t('settings_role')} options={roleOptions} value={editRole} onChange={(v) => setEditRole(v as MemberRole)} />
+        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
+          <Button variant="ghost" size="sm" onClick={() => setEditRoleId(null)}>{t('settings_cancel')}</Button>
+          <Button onClick={() => changeRole.mutate({ id: editRoleId!, role: editRole })} loading={changeRole.isPending}>{t('settings_save')}</Button>
+        </div>
+      </Modal>
+
+      {/* Confirm remover/desvincular */}
+      <ConfirmDialog
+        open={!!removeId}
+        onClose={() => setRemoveId(null)}
+        onConfirm={() => { remove.mutate(removeId!); setRemoveId(null) }}
+        title={t('settings_removeMemberTitle')}
+        message={t('settings_removeMemberMessage')}
+        confirmLabel={t('settings_unlink')}
+        loading={remove.isPending}
+      />
     </div>
   )
 }

@@ -36,7 +36,7 @@ router.get('/', async (c) => {
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
   const { data, error } = await db.from('company_members')
-    .select('*, profiles(id, full_name, email, avatar_url)')
+    .select('*, profiles!company_members_user_id_fkey(id, full_name, email, avatar_url)')
     .eq('company_id', companyId)
     .order('invited_at', { ascending: false })
   if (error) return c.json({ error: error.message }, 400)
@@ -109,19 +109,87 @@ router.post('/', async (c) => {
   return c.json(data, 201)
 })
 
-router.patch('/:id', async (c) => {
+// ── PATCH /api/company-members/:id/role ───────────────────────
+router.patch('/:id/role', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const id = c.req.param('id')
-  const data = await c.req.json<{ status?: string }>()
+  const { role } = await c.req.json<{ role: string }>()
 
-  const row = await db.from('company_members').select('company_id').eq('id', id).single()
+  if (!role) return c.json({ error: 'role is required' }, 400)
+
+  const row = await db.from('company_members').select('company_id, user_id').eq('id', id).single()
   if (!row.data) return c.json({ error: 'not found' }, 404)
 
   const admin = await ensureCompanyAdmin(db, userId, row.data.company_id)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
-  const { error } = await db.from('company_members').update(data).eq('id', id)
+  const { error } = await db.from('company_members').update({ role }).eq('id', id)
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
+})
+
+// ── POST /api/company-members/:id/resend ──────────────────────
+router.post('/:id/resend', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const id = c.req.param('id')
+
+  const { data: invite } = await db.from('company_members')
+    .select('id, company_id, email, status, invite_token')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!invite) return c.json({ error: 'Invite not found' }, 404)
+  if (invite.status !== 'pending') return c.json({ error: 'Only pending invites can be resent' }, 400)
+
+  const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
+  if (!admin) return c.json({ error: 'forbidden' }, 403)
+
+  const new_token = crypto.randomUUID()
+  const { error: updateError } = await db.from('company_members')
+    .update({ invite_token: new_token, invited_at: new Date().toISOString() })
+    .eq('id', id)
+  if (updateError) return c.json({ error: 'Failed to update invite' }, 500)
+
+  const [companyRes, inviterRes] = await Promise.all([
+    db.from('companies').select('name').eq('id', invite.company_id).single(),
+    db.from('profiles').select('full_name').eq('id', userId).single(),
+  ])
+
+  const resendKey = process.env.RESEND_API_KEY
+  if (resendKey) {
+    const isProduction = process.env.VERCEL_ENV === 'production'
+    const flowUrl = isProduction ? process.env.VITE_FLOW_URL ?? 'https://syncero-flow.vercel.app' : 'http://localhost:5174'
+    const { subject, html } = memberInviteEmail({
+      companyName: companyRes.data?.name ?? '',
+      inviterName: inviterRes.data?.full_name ?? '',
+      inviteLink: `${flowUrl}/invite/${new_token}`,
+    })
+    const resendClient = new Resend(resendKey)
+    await resendClient.emails.send({ from: 'Syncero <onboarding@resend.dev>', to: invite.email!, subject, html })
+  }
+
+  return c.json({ ok: true })
+})
+
+// ── DELETE /api/company-members/:id ───────────────────────────
+router.delete('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const id = c.req.param('id')
+
+  const { data: invite } = await db.from('company_members')
+    .select('id, company_id, status')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!invite) return c.json({ error: 'not found' }, 404)
+
+  const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
+  if (!admin) return c.json({ error: 'forbidden' }, 403)
+
+  const { error } = await db.from('company_members').delete().eq('id', id)
   if (error) return c.json({ error: error.message }, 400)
   return c.json({ ok: true })
 })

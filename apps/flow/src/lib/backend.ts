@@ -32,11 +32,19 @@ export async function inviteCompanyMember(companyId: string, email: string, role
   })
 }
 
-export async function revokeCompanyMember(memberId: string) {
-  return apiFetch(`/api/company-members/${memberId}`, {
+export async function resendMemberInvite(id: string) {
+  return apiFetch(`/api/company-members/${id}/resend`, { method: 'POST', body: '{}' })
+}
+
+export async function updateMemberRole(id: string, role: string) {
+  return apiFetch(`/api/company-members/${id}/role`, {
     method: 'PATCH',
-    body: JSON.stringify({ status: 'revoked' }),
+    body: JSON.stringify({ role }),
   })
+}
+
+export async function removeCompanyMember(id: string) {
+  return apiFetch(`/api/company-members/${id}`, { method: 'DELETE' })
 }
 
 export async function getAccountantCompanies(companyId?: string) {

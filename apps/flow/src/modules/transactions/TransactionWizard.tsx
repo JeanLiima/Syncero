@@ -271,6 +271,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   const [phase, setPhase] = useState<Phase>('wizard')
   const [createdId, setCreatedId] = useState<string | null>(null)
+  const [skipCountdown, setSkipCountdown] = useState(0)
 
   const [step, setStep] = useState<Step>(1)
   const [type, setType] = useState<TransactionType | null>(null)
@@ -378,6 +379,19 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   useEffect(() => {
     if (phase === 'payment-form' && !paidAt) setPaidAt(format(new Date(), 'yyyy-MM-dd'))
+  }, [phase])
+
+  const SKIP_DURATION = 5
+  useEffect(() => {
+    if (phase !== 'payment-prompt') { setSkipCountdown(0); return }
+    setSkipCountdown(SKIP_DURATION)
+    const id = setInterval(() => {
+      setSkipCountdown((v) => {
+        if (v <= 1) { clearInterval(id); onClose(); return 0 }
+        return v - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
   }, [phase])
 
   const goTo = (s: Step) => setStep(s)
@@ -1108,9 +1122,24 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           <>
             <div className="min-h-52">{paymentPrompt}</div>
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--bg-border)]">
-              <Button variant="ghost" size="sm" onClick={onClose}>
-                {t('transactions_payment_skip')}
-              </Button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="group relative h-8 overflow-hidden rounded-[var(--radius-md)] px-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              >
+                <span
+                  aria-hidden
+                  className="absolute inset-y-0 left-0 rounded-[inherit] bg-[var(--bg-elevated)] group-hover:bg-[var(--bg-border)] transition-[width,background-color] ease-linear"
+                  style={{
+                    width: `${((SKIP_DURATION - skipCountdown) / SKIP_DURATION) * 100}%`,
+                    transitionDuration: `1000ms, 50ms`,
+                  }}
+                />
+                <span className="relative z-10 flex items-center gap-1.5">
+                  {t('transactions_payment_skip')}
+                  <span className="font-mono text-xs opacity-50">{skipCountdown}s</span>
+                </span>
+              </button>
               <Button onClick={() => setPhase('payment-form')}>
                 {t('transactions_payment_register')}
               </Button>

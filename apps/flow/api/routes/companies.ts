@@ -16,7 +16,7 @@ router.post('/', async (c) => {
   if (tax_regime) payload.tax_regime = tax_regime
 
   const { data, error } = await db.from('companies').insert(payload).select('id, name').single()
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'Failed to create company' }, 500)
   return c.json(data, 201)
 })
 
@@ -28,7 +28,7 @@ router.get('/:id', async (c) => {
 
   const { data: member } = await db.from('company_members')
     .select('id').eq('user_id', userId).eq('company_id', id).eq('status', 'accepted').maybeSingle()
-  if (!member) return c.json({ error: 'forbidden' }, 403)
+  if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
 
   const { data } = await db.from('companies').select('id, name, cnpj, tax_regime').eq('id', id).single()
   return c.json(data)
@@ -39,18 +39,31 @@ router.patch('/:id', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const { id } = c.req.param()
-  const updates = await c.req.json<Record<string, unknown>>()
+  const body = await c.req.json<{ name?: string; cnpj?: string; tax_regime?: string }>()
 
-  const { data: member } = await db.from('company_members')
+  // Check if user is admin member
+  const { data: admin } = await db.from('company_members')
     .select('id')
     .eq('user_id', userId)
     .eq('company_id', id)
     .eq('status', 'accepted')
+    .eq('role', 'admin')
     .maybeSingle()
-  if (!member) return c.json({ error: 'forbidden' }, 403)
+  if (!admin) return c.json({ error: 'Forbidden: admin access required' }, 403)
+
+  // Whitelist allowed fields
+  const updates: Record<string, unknown> = {}
+  if (body.name !== undefined) {
+    if (!body.name.trim()) return c.json({ error: 'Name cannot be empty' }, 400)
+    updates.name = body.name.trim()
+  }
+  if (body.cnpj !== undefined) updates.cnpj = body.cnpj
+  if (body.tax_regime !== undefined) updates.tax_regime = body.tax_regime
+
+  if (Object.keys(updates).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
 
   const { data, error } = await db.from('companies').update(updates).eq('id', id).select('id, name, cnpj, tax_regime').single()
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'Failed to update company' }, 500)
   return c.json(data)
 })
 

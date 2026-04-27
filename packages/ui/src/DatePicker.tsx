@@ -35,7 +35,7 @@ function NavBtn({ onClick, children }: { onClick: () => void; children: React.Re
 
 const REF_SUNDAY = new Date(2023, 0, 1)
 
-function DayCalendar({ selected, onSelect, locale }: {
+export function DayCalendar({ selected, onSelect, locale }: {
   selected: Date | undefined
   onSelect: (d: Date) => void
   locale: Locale
@@ -293,7 +293,7 @@ function Popover({ anchorRef, innerRef, children }: {
     <div
       ref={innerRef}
       style={style}
-      className="z-[9999] p-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-xl select-none"
+      className="z-[9999] w-fit p-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-xl select-none"
     >
       {children}
     </div>,

@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { Company, CompanyMember, AccountantCompany, Transaction, Category, PayableReceivable } from '@/types'
+import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, PayableReceivable, Bank, Contact } from '@/types'
 
 function buildQuery(params: Record<string, string | undefined>) {
   const query = new URLSearchParams()
@@ -73,6 +73,10 @@ export async function getTransactions(params: TransactionQueryParams) {
   return apiFetch<{ data: Transaction[]; count: number }>(`/api/transactions${buildQuery(params)}`)
 }
 
+export async function getTransactionDetail(id: string) {
+  return apiFetch<TransactionDetail>(`/api/transactions/${id}`)
+}
+
 export async function createTransaction(data: Partial<Transaction>) {
   return apiFetch<Transaction>('/api/transactions', {
     method: 'POST',
@@ -87,12 +91,69 @@ export async function updateTransaction(id: string, data: Partial<Transaction>) 
   })
 }
 
+export async function getContacts(companyId: string, search?: string) {
+  return apiFetch<Contact[]>(`/api/contacts${buildQuery({ companyId, search })}`)
+}
+
+export async function createContact(data: { company_id: string; name: string; cpf?: string; cnpj?: string }) {
+  return apiFetch<Contact>('/api/contacts', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function updateContact(id: string, data: { name?: string; cpf?: string | null; cnpj?: string | null }) {
+  return apiFetch<Contact>(`/api/contacts/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+export async function deleteContact(id: string) {
+  return apiFetch<{ ok: true }>(`/api/contacts/${id}`, { method: 'DELETE' })
+}
+
 export async function deleteTransaction(id: string) {
   return apiFetch<{ ok: true }>(`/api/transactions/${id}`, { method: 'DELETE' })
 }
 
 export async function getCategories(companyId: string) {
   return apiFetch<Category[]>(`/api/categories${buildQuery({ companyId })}`)
+}
+
+export async function getCategoryUsage(categoryId: string) {
+  return apiFetch<{ count: number }>(`/api/categories/${categoryId}/usage`)
+}
+
+export async function createCategory(data: { company_id: string; name: string; type: string; color: string | null }) {
+  return apiFetch<Category>('/api/categories', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateCategory(id: string, data: Partial<Pick<Category, 'name' | 'type' | 'color'>>) {
+  return apiFetch<Category>(`/api/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteCategory(id: string, transferTo?: string | null) {
+  return apiFetch<{ ok: true } | { error: string; count: number }>(
+    `/api/categories/${id}`,
+    { method: 'DELETE', body: JSON.stringify(transferTo !== undefined ? { transferTo } : {}) },
+  )
+}
+
+export async function getBanks(companyId: string) {
+  return apiFetch<Bank[]>(`/api/banks${buildQuery({ companyId })}`)
+}
+
+export async function createBank(data: { company_id: string; name: string; agency?: string; account_number?: string; account_type?: string; pix_key?: string }) {
+  return apiFetch<Bank>('/api/banks', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export async function updateBank(id: string, data: Partial<Pick<Bank, 'name' | 'agency' | 'account_number' | 'account_type' | 'pix_key'>>) {
+  return apiFetch<Bank>(`/api/banks/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+export async function deleteBank(id: string) {
+  return apiFetch<{ ok: true }>(`/api/banks/${id}`, { method: 'DELETE' })
 }
 
 export async function getPayables(companyId: string, type: string) {

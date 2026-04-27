@@ -24,7 +24,19 @@ export function Layout({ children }: { children: ReactNode }) {
     { to: '/cash-flow',    label: t('nav_cashFlow'),     icon: <TrendingUp      className="h-4 w-4 shrink-0" /> },
     { to: '/accounts',     label: t('nav_accounts'),     icon: <CreditCard      className="h-4 w-4 shrink-0" /> },
     { to: '/income-statement', label: t('nav_incomeStatement'),       icon: <BarChart2       className="h-4 w-4 shrink-0" /> },
-    { to: '/settings',     label: t('nav_settings'),     icon: <Settings        className="h-4 w-4 shrink-0" /> },
+    {
+      to: '/settings',
+      label: t('nav_settings'),
+      icon: <Settings className="h-4 w-4 shrink-0" />,
+      children: [
+        { to: '/settings/company',    label: t('settings_company') },
+        { to: '/settings/members',    label: t('settings_members') },
+        { to: '/settings/accountant', label: t('settings_accountant') },
+        { to: '/settings/categories', label: t('settings_categories') },
+        { to: '/settings/banks',      label: t('settings_banks') },
+        { to: '/settings/contacts',   label: t('settings_contacts') },
+      ],
+    },
   ]
 
   return (

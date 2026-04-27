@@ -13,6 +13,35 @@ async function ensureCompanyMember(db: ReturnType<typeof createServiceClient>, u
   return data
 }
 
+router.get('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const transactionId = c.req.param('id')
+
+  const { data: tx, error } = await db.from('transactions')
+    .select('*, categories(id, name, color), contacts(id, name, cpf, cnpj), banks(id, name)')
+    .eq('id', transactionId)
+    .single()
+
+  if (error || !tx) return c.json({ error: 'not found' }, 404)
+
+  const member = await ensureCompanyMember(db, userId, tx.company_id)
+  if (!member) return c.json({ error: 'forbidden' }, 403)
+
+  const profileIds = [...new Set([tx.created_by, tx.payment_registered_by].filter(Boolean))]
+  const profileMap: Record<string, string> = {}
+  if (profileIds.length > 0) {
+    const { data: rows } = await db.from('profiles').select('id, full_name').in('id', profileIds)
+    for (const p of rows ?? []) profileMap[p.id] = p.full_name
+  }
+
+  return c.json({
+    ...tx,
+    creator_name: profileMap[tx.created_by] ?? null,
+    payment_registrar_name: tx.payment_registered_by ? (profileMap[tx.payment_registered_by] ?? null) : null,
+  })
+})
+
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
@@ -23,7 +52,7 @@ router.get('/', async (c) => {
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
   let query = db.from('transactions')
-    .select('*, categories(id, name, color)', { count: 'exact' })
+    .select('*, categories(id, name, color), contacts(id, name, cpf, cnpj)', { count: 'exact' })
     .eq('company_id', companyId)
     .order('date', { ascending: false })
 
@@ -36,8 +65,12 @@ router.get('/', async (c) => {
   const page = Number(c.req.query('page') ?? '1')
   const pageSize = Math.min(Number(c.req.query('pageSize') ?? '20'), 1000)
 
+  const installmentGroupId = c.req.query('installment_group_id')
+
   if (type) query = query.eq('type', type)
-  if (categoryId) query = query.eq('category_id', categoryId)
+  if (categoryId === 'none') query = query.is('category_id', null)
+  else if (categoryId) query = query.eq('category_id', categoryId)
+  if (installmentGroupId) query = query.eq('installment_group_id', installmentGroupId)
   if (isPaid === 'true') query = query.eq('is_paid', true)
   if (isPaid === 'false') query = query.eq('is_paid', false)
   if (dateFrom) query = query.gte('date', dateFrom)
@@ -63,7 +96,7 @@ router.post('/', async (c) => {
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db.from('transactions').insert(body).select().single()
+  const { data, error } = await db.from('transactions').insert({ ...body, created_by: userId }).select().single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data, 201)
 })

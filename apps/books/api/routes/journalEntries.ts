@@ -14,11 +14,11 @@ router.get('/', async (c) => {
   if (companyId) {
     const { data: acct } = await db.from('accountant_companies')
       .select('id').eq('accountant_id', userId).eq('company_id', companyId).eq('status', 'accepted').maybeSingle()
-    if (!acct) return c.json({ error: 'forbidden' }, 403)
+    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
   } else {
     const { data: ec } = await db.from('external_companies')
       .select('id').eq('id', extCompanyId!).eq('accountant_id', userId).maybeSingle()
-    if (!ec) return c.json({ error: 'forbidden' }, 403)
+    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
   }
 
   const dateFrom = period ? `${period}-01` : undefined
@@ -32,7 +32,7 @@ router.get('/', async (c) => {
   if (dateFrom) q = q.gte('entry_date', dateFrom).lte('entry_date', dateTo!)
 
   const { data, error } = await q
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'Failed to fetch journal entries' }, 500)
   return c.json(data ?? [])
 })
 
@@ -46,6 +46,19 @@ router.post('/', async (c) => {
     companyId?: string; extCompanyId?: string
   }>()
 
+  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+
+  // Verify authorization
+  if (body.companyId) {
+    const { data: acct } = await db.from('accountant_companies')
+      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
+    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
+  } else {
+    const { data: ec } = await db.from('external_companies')
+      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
+    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
+  }
+
   const { data: entry, error } = await db.from('journal_entries').insert({
     ...(body.extCompanyId ? { ext_company_id: body.extCompanyId } : { company_id: body.companyId }),
     accountant_id: userId,
@@ -54,7 +67,7 @@ router.post('/', async (c) => {
     external_ref: body.external_ref || null,
     source: 'manual',
   }).select('id').single()
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'Failed to create journal entry' }, 500)
 
   const { error: linesErr } = await db.from('journal_entry_lines').insert(
     body.lines.map(l => ({
@@ -65,7 +78,7 @@ router.post('/', async (c) => {
       memo: l.memo || null,
     }))
   )
-  if (linesErr) return c.json({ error: linesErr.message }, 400)
+  if (linesErr) return c.json({ error: 'Failed to create journal entry lines' }, 500)
   return c.json({ id: entry.id }, 201)
 })
 
@@ -80,6 +93,19 @@ router.post('/import', async (c) => {
     }>
     companyId?: string; extCompanyId?: string
   }>()
+
+  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+
+  // Verify authorization
+  if (body.companyId) {
+    const { data: acct } = await db.from('accountant_companies')
+      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
+    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
+  } else {
+    const { data: ec } = await db.from('external_companies')
+      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
+    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
+  }
 
   const accountsQ = db.from('account_plans').select('id, code').eq('is_active', true)
   const { data: accountsData } = body.extCompanyId
@@ -97,7 +123,7 @@ router.post('/import', async (c) => {
       external_ref: pe.external_ref || null,
       source: 'dominio_import',
     }).select('id').single()
-    if (error) return c.json({ error: error.message }, 400)
+    if (error) return c.json({ error: 'Failed to create journal entry' }, 500)
 
     const lines = pe.lines
       .filter(l => codeToId.has(l.account_code))
@@ -108,7 +134,10 @@ router.post('/import', async (c) => {
         amount: l.amount,
         memo: l.memo || null,
       }))
-    if (lines.length) await db.from('journal_entry_lines').insert(lines)
+    if (lines.length) {
+      const { error: linesErr } = await db.from('journal_entry_lines').insert(lines)
+      if (linesErr) return c.json({ error: 'Failed to create journal entry lines' }, 500)
+    }
     inserted.push(entry.id)
   }
 

@@ -36,7 +36,9 @@ function useMonthSummary() {
 
       const income  = txRes.data?.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0) ?? 0
       const expense = txRes.data?.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0) ?? 0
-      const toReceive = prRes.reduce((s, t) => s + t.amount, 0)
+      const toReceive = prRes
+        .filter((t) => t.status !== 'paid' && t.status !== 'cancelled')
+        .reduce((s, t) => s + t.amount, 0)
 
       return { income, expense, toReceive }
     },
@@ -210,11 +212,11 @@ export function Component() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                   <Badge variant={tx.is_paid ? 'success' : 'warning'}>
                     {tx.is_paid ? t('transactions_paid') : t('transactions_pending')}
                   </Badge>
-                  <span className={`font-mono text-sm font-medium ${tx.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                  <span className={`font-mono text-sm font-medium w-28 text-right ${tx.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                     {tx.type === 'income' ? '+' : '-'} {fmt(tx.amount)}
                   </span>
                 </div>

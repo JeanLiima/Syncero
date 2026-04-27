@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { format, isPast, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle } from 'lucide-react'
-import { Button, Card, Table, Badge, Modal, Input, DatePicker, Tabs, TabList, Tab, TabPanel } from '@syncero/ui'
+import { Button, Card, Table, Badge, Modal, Input, DatePicker, Tabs, TabList, Tab, TabPanel, useToast } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { usePayables } from '@/modules/accounts/queries'
 import { useCreatePayable, useMarkPayablePaid, useDeletePayable } from '@/modules/accounts/mutations'
@@ -29,6 +29,7 @@ function statusBadge(item: PayableReceivable, t: ReturnType<typeof useT>) {
 
 function PayableTable({ type }: { type: PayableType }) {
   const t = useT()
+  const { success, error: toastError } = useToast()
   const { language } = usePreferencesStore()
   const [modalOpen, setModalOpen] = useState(false)
   const { data = [], isLoading } = usePayables(type)
@@ -50,9 +51,14 @@ function PayableTable({ type }: { type: PayableType }) {
   })
 
   const onSubmit = async (d: FormData) => {
-    await create.mutateAsync({ ...d, type })
-    reset()
-    setModalOpen(false)
+    try {
+      await create.mutateAsync({ ...d, type })
+      reset()
+      setModalOpen(false)
+      success(t('common_savedSuccess'))
+    } catch {
+      toastError(t('common_errorGeneric'))
+    }
   }
 
   const total = data.filter((d) => d.status !== 'paid').reduce((s, d) => s + d.amount, 0)
@@ -106,14 +112,14 @@ function PayableTable({ type }: { type: PayableType }) {
                 r.status !== 'paid' ? (
                   <div className="flex items-center gap-2 justify-end">
                     <button
-                      onClick={() => markPaid.mutate({ id: r.id, type: r.type })}
+                      onClick={() => markPaid.mutate({ id: r.id, type: r.type }, { onSuccess: () => success(t('accounts_markedPaid')), onError: () => toastError(t('common_errorGeneric')) })}
                       className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors cursor-pointer"
                       title={t('accounts_markPaid')}
                     >
                       <CheckCircle className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => deleteP.mutate({ id: r.id, type: r.type })}
+                      onClick={() => deleteP.mutate({ id: r.id, type: r.type }, { onSuccess: () => success(t('common_deletedSuccess')), onError: () => toastError(t('common_errorGeneric')) })}
                       className="p-1 text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors cursor-pointer"
                       title={t('accounts_delete')}
                     >

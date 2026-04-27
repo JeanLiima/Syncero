@@ -15,7 +15,10 @@
       "WebFetch(domain:finflow-swart-delta.vercel.app)",
       "mcp__23816a37-c23b-4297-9157-df97b8e34aa1__apply_migration",
       "Bash(npx tsc *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "mcp__claude_ai_Supabase__apply_migration",
+      "Bash(xargs grep:*)",
+      "Bash(gh pr:*)"
     ]
   }
 }

@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle, Search } from 'lucide-react'
-import { Button, Card, Table, Badge, Modal, Input, Select, DatePicker, DateRangePicker, Checkbox } from '@syncero/ui'
+import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useTransactions, useCategories } from '@/modules/transactions/queries'
-import { useCreateTransaction, useUpdateTransaction, useMarkAsPaid, useDeleteTransaction } from '@/modules/transactions/mutations'
+import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
+import { TransactionEditModal } from '@/modules/transactions/TransactionEditModal'
+import { TransactionDetailModal } from '@/modules/transactions/TransactionDetailModal'
+import { PaymentModal } from '@/modules/transactions/PaymentModal'
 import { useT } from '@/i18n'
 import type { Transaction } from '@/types'
 import type { TransactionFilters } from '@/modules/transactions/types'
@@ -17,73 +17,31 @@ export function Component() {
   const t = useT()
   const { language } = usePreferencesStore()
 
-  const schema = z.object({
-    description: z.string().min(1, t('transactions_errorDescription')),
-    amount: z.coerce.number().positive(t('transactions_errorAmount')),
-    type: z.enum(['income', 'expense']),
-    date: z.string().min(1, t('transactions_errorDate')),
-    category_id: z.string().optional(),
-    is_paid: z.boolean(),
-    notes: z.string().optional(),
-  })
-
-  type FormData = z.infer<typeof schema>
-
   const [filters, setFilters] = useState<TransactionFilters>({})
   const [page, setPage] = useState(1)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [detailId, setDetailId] = useState<string | null>(null)
+  const [paymentId, setPaymentId] = useState<string | null>(null)
+  const [wizardOpen, setWizardOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
 
   const { data, isLoading } = useTransactions(filters, page)
   const { data: categories = [] } = useCategories()
-  const create = useCreateTransaction()
-  const update = useUpdateTransaction()
-  const markPaid = useMarkAsPaid()
-  const deleteT = useDeleteTransaction()
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    control,
-    formState: { errors, isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { type: 'expense', is_paid: false, date: format(new Date(), 'yyyy-MM-dd') },
-  })
+  const filteredCategories = filters.type
+    ? categories.filter((c) => c.type === filters.type)
+    : categories
 
   const openCreate = () => {
     setEditing(null)
-    reset({ type: 'expense', is_paid: false, date: format(new Date(), 'yyyy-MM-dd') })
-    setModalOpen(true)
+    setWizardOpen(true)
   }
 
-  const openEdit = (t: Transaction) => {
-    setEditing(t)
-    reset({
-      description: t.description,
-      amount: t.amount,
-      type: t.type,
-      date: t.date,
-      category_id: t.category_id ?? undefined,
-      is_paid: t.is_paid,
-      notes: t.notes ?? undefined,
-    })
-    setModalOpen(true)
-  }
+  const openDetail = (row: Transaction) => setDetailId(row.id)
 
-  const onSubmit = async (data: FormData) => {
-    if (editing) {
-      await update.mutateAsync({ id: editing.id, data })
-    } else {
-      await create.mutateAsync(data)
-    }
-    setModalOpen(false)
-    reset()
+  const openEdit = (tx: Transaction) => {
+    setEditing(tx)
   }
 
   const totalPages = Math.ceil((data?.count ?? 0) / 20)
-  const categoryOptions = categories.map((c) => ({ value: c.id, label: c.name }))
 
   return (
     <div className="flex flex-col gap-6">
@@ -121,7 +79,7 @@ export function Component() {
               { value: 'expense', label: t('transactions_expense') },
             ]}
             value={filters.type ?? ''}
-            onChange={(v) => setFilters((f) => ({ ...f, type: v as TransactionFilters['type'] || undefined }))}
+            onChange={(v) => { setPage(1); setFilters((f) => ({ ...f, type: v as TransactionFilters['type'] || undefined, category_id: undefined })) }}
             className="w-40"
           />
           <Select
@@ -133,6 +91,17 @@ export function Component() {
             ]}
             value={filters.is_paid === undefined ? '' : String(filters.is_paid)}
             onChange={(v) => setFilters((f) => ({ ...f, is_paid: v === '' ? undefined : v === 'true' }))}
+            className="w-44"
+          />
+          <Select
+            size="sm"
+            options={[
+              { value: '', label: t('transactions_allCategories') },
+              { value: 'none', label: t('transactions_filterNoCategory') },
+              ...filteredCategories.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+            value={filters.category_id ?? ''}
+            onChange={(v) => { setPage(1); setFilters((f) => ({ ...f, category_id: v || undefined })) }}
             className="w-44"
           />
           <DateRangePicker
@@ -151,7 +120,7 @@ export function Component() {
           loading={isLoading}
           data={data?.data ?? []}
           rowKey={(r) => r.id}
-          onRowClick={openEdit}
+          onRowClick={openDetail}
           emptyMessage={t('transactions_empty')}
           columns={[
             {
@@ -195,13 +164,17 @@ export function Component() {
               align: 'right',
               render: (r) =>
                 !r.is_paid ? (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); markPaid.mutate(r.id) }}
-                    className="p-1 text-[var(--text-muted)] hover:text-[var(--success)] transition-colors cursor-pointer"
-                    title={t('transactions_markAsPaid')}
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                  </button>
+                  <div className="relative group flex justify-end">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setPaymentId(r.id) }}
+                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('transactions_markAsPaid')}
+                    </span>
+                  </div>
                 ) : null,
             },
           ]}
@@ -225,79 +198,34 @@ export function Component() {
         )}
       </Card>
 
-      {/* Modal form */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? t('transactions_editTitle') : t('transactions_newTitle')}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <Input label={t('transactions_description')} error={errors.description?.message} {...register('description')} />
-          <div className="grid grid-cols-2 gap-3">
-            <Input label={`${t('transactions_amount')} (R$)`} type="number" step="0.01" error={errors.amount?.message} {...register('amount')} />
-            <Controller
-              control={control}
-              name="date"
-              render={({ field }) => (
-                <DatePicker
-                  label={t('transactions_date')}
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  language={language}
-                  error={errors.date?.message}
-                />
-              )}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Controller
-              control={control}
-              name="type"
-              render={({ field }) => (
-                <Select
-                  label={t('transactions_type')}
-                  value={field.value ?? ''}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  error={errors.type?.message}
-                  options={[
-                    { value: 'income',  label: t('transactions_income_badge') },
-                    { value: 'expense', label: t('transactions_expense_badge') },
-                  ]}
-                />
-              )}
-            />
-            <Controller
-              control={control}
-              name="category_id"
-              render={({ field }) => (
-                <Select
-                  label={t('transactions_category')}
-                  placeholder={t('transactions_noCategory')}
-                  value={field.value ?? ''}
-                  onChange={(v) => field.onChange(v || undefined)}
-                  onBlur={field.onBlur}
-                  options={categoryOptions}
-                />
-              )}
-            />
-          </div>
-          <Input label={t('transactions_notes')} {...register('notes')} />
-          <Checkbox label={t('transactions_markAsPaid')} {...register('is_paid')} />
-          <div className="flex justify-between gap-3 mt-2">
-            {editing && (
-              <Button
-                type="button"
-                variant="danger"
-                size="sm"
-                onClick={async () => { await deleteT.mutateAsync(editing.id); setModalOpen(false) }}
-              >
-                {t('transactions_delete')}
-              </Button>
-            )}
-            <div className="flex gap-3 ml-auto">
-              <Button type="button" variant="ghost" onClick={() => setModalOpen(false)}>{t('transactions_cancel')}</Button>
-              <Button type="submit" loading={isSubmitting}>{t('transactions_save')}</Button>
-            </div>
-          </div>
-        </form>
-      </Modal>
+      <PaymentModal
+        transactionId={paymentId}
+        open={!!paymentId}
+        onClose={() => setPaymentId(null)}
+        language={language}
+      />
+
+      <TransactionDetailModal
+        transactionId={detailId}
+        open={!!detailId}
+        onClose={() => setDetailId(null)}
+        onEdit={openEdit}
+        language={language}
+      />
+
+      <TransactionWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        editing={null}
+        language={language}
+      />
+
+      <TransactionEditModal
+        transaction={editing}
+        open={!!editing}
+        onClose={() => setEditing(null)}
+        language={language}
+      />
     </div>
   )
 }

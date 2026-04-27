@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '@/store/auth'
-import { getTransactions, getCategories } from '@/lib/backend'
+import { getTransactions, getTransactionDetail, getCategories, getBanks, getContacts } from '@/lib/backend'
 import type { Transaction } from '@/types'
 import type { TransactionFilters } from './types'
 
@@ -30,6 +30,14 @@ export function useTransactions(filters: TransactionFilters = {}, page = 1, page
   })
 }
 
+export function useTransactionDetail(id: string | null) {
+  return useQuery({
+    queryKey: ['transaction', id],
+    queryFn: () => getTransactionDetail(id!),
+    enabled: !!id,
+  })
+}
+
 export function useCategories() {
   const activeCompany = useAuthStore((s) => s.activeCompany)
 
@@ -38,6 +46,45 @@ export function useCategories() {
     queryFn: async () => {
       if (!activeCompany?.id) return []
       return getCategories(activeCompany.id)
+    },
+    enabled: !!activeCompany?.id,
+  })
+}
+
+export function useContacts(search: string) {
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+
+  return useQuery({
+    queryKey: ['contacts', activeCompany?.id, search],
+    queryFn: async () => {
+      if (!activeCompany?.id) return []
+      return getContacts(activeCompany.id, search || undefined)
+    },
+    enabled: !!activeCompany?.id,
+  })
+}
+
+export function useInstallmentGroup(transaction: Transaction | null) {
+  const groupId = transaction?.installment_group_id ?? null
+  const companyId = transaction?.company_id ?? ''
+
+  return useQuery({
+    queryKey: ['installment-group', groupId],
+    queryFn: () => getTransactions({ companyId, installment_group_id: groupId!, pageSize: '100' }),
+    enabled: !!groupId && !!companyId,
+    select: (data) =>
+      [...data.data].sort((a, b) => (a.installment_number ?? 0) - (b.installment_number ?? 0)),
+  })
+}
+
+export function useBanks() {
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+
+  return useQuery({
+    queryKey: ['banks', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany?.id) return []
+      return getBanks(activeCompany.id)
     },
     enabled: !!activeCompany?.id,
   })

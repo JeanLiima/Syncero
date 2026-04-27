@@ -99,8 +99,10 @@ export function Component() {
                   </td>
                 </tr>
               ) : incomeRows.map((r) => (
-                <tr key={r.category_id ?? r.category_name} className="border-b border-[var(--bg-border)]">
-                  <td className="px-4 py-3 text-[var(--text-primary)]">{r.category_name}</td>
+                <tr key={r.category_id ?? '__none_income'} className="border-b border-[var(--bg-border)]">
+                  <td className="px-4 py-3 text-[var(--text-primary)]">
+                    {r.category_id === null ? t('transactions_noCategory') : r.category_name}
+                  </td>
                   <td className="px-4 py-3 text-right font-mono text-[var(--success)]">{fmt(r.total)}</td>
                 </tr>
               ))}
@@ -122,8 +124,10 @@ export function Component() {
                   </td>
                 </tr>
               ) : expenseRows.map((r) => (
-                <tr key={r.category_id ?? r.category_name} className="border-b border-[var(--bg-border)]">
-                  <td className="px-4 py-3 text-[var(--text-primary)]">{r.category_name}</td>
+                <tr key={r.category_id ?? '__none_expense'} className="border-b border-[var(--bg-border)]">
+                  <td className="px-4 py-3 text-[var(--text-primary)]">
+                    {r.category_id === null ? t('transactions_noCategory') : r.category_name}
+                  </td>
                   <td className="px-4 py-3 text-right font-mono text-[var(--danger)]">{fmt(r.total)}</td>
                 </tr>
               ))}

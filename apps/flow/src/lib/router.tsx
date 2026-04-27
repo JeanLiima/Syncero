@@ -140,6 +140,7 @@ export const router = createBrowserRouter([
           { path: 'accountant', lazy: lazyLoad(() => import('../pages/settings/Accountant')) },
           { path: 'categories', lazy: lazyLoad(() => import('../pages/settings/Categories')) },
           { path: 'banks',      lazy: lazyLoad(() => import('../pages/settings/Banks')) },
+          { path: 'contacts',   lazy: lazyLoad(() => import('../pages/settings/Contacts')) },
         ],
       },
       { path: '/preferences',   lazy: lazyLoad(() => import('../pages/Preferences')) },

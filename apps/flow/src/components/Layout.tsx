@@ -34,6 +34,7 @@ export function Layout({ children }: { children: ReactNode }) {
         { to: '/settings/accountant', label: t('settings_accountant') },
         { to: '/settings/categories', label: t('settings_categories') },
         { to: '/settings/banks',      label: t('settings_banks') },
+        { to: '/settings/contacts',   label: t('settings_contacts') },
       ],
     },
   ]

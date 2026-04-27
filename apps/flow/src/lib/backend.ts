@@ -99,6 +99,14 @@ export async function createContact(data: { company_id: string; name: string; cp
   return apiFetch<Contact>('/api/contacts', { method: 'POST', body: JSON.stringify(data) })
 }
 
+export async function updateContact(id: string, data: { name?: string; cpf?: string | null; cnpj?: string | null }) {
+  return apiFetch<Contact>(`/api/contacts/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+export async function deleteContact(id: string) {
+  return apiFetch<{ ok: true }>(`/api/contacts/${id}`, { method: 'DELETE' })
+}
+
 export async function deleteTransaction(id: string) {
   return apiFetch<{ ok: true }>(`/api/transactions/${id}`, { method: 'DELETE' })
 }

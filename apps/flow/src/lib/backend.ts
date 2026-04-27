@@ -25,10 +25,10 @@ export async function getCompanyMembers(companyId: string) {
   return apiFetch<CompanyMember[]>(`/api/company-members${buildQuery({ companyId })}`)
 }
 
-export async function inviteCompanyMember(companyId: string, email: string, role: string, invite_token: string) {
+export async function inviteCompanyMember(companyId: string, email: string, role: string, invite_token: string, language?: 'pt' | 'en') {
   return apiFetch(`/api/company-members`, {
     method: 'POST',
-    body: JSON.stringify({ companyId, email, role, invite_token }),
+    body: JSON.stringify({ companyId, email, role, invite_token, language }),
   })
 }
 

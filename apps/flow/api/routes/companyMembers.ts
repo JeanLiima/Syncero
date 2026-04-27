@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
+import { Resend } from 'resend'
 import { createServiceClient, type HonoVariables } from '../_shared'
+import { memberInviteEmail } from '../emails/memberInvite'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
@@ -44,8 +46,8 @@ router.get('/', async (c) => {
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const body = await c.req.json<{ companyId: string; email: string; role: string; invite_token: string }>()
-  const { companyId, email, role, invite_token } = body
+  const body = await c.req.json<{ companyId: string; email: string; role: string; invite_token: string; language?: 'pt' | 'en' }>()
+  const { companyId, email, role, invite_token, language } = body
 
   if (!companyId || !email || !invite_token) {
     return c.json({ error: 'companyId, email e invite_token são obrigatórios' }, 400)
@@ -54,12 +56,56 @@ router.post('/', async (c) => {
   const admin = await ensureCompanyAdmin(db, userId, companyId)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
+  // Verificar se já existe convite pendente para este email nesta empresa
+  const { data: existing } = await db.from('company_members')
+    .select('id, status')
+    .eq('company_id', companyId)
+    .eq('email', email)
+    .in('status', ['accepted', 'pending'])
+    .maybeSingle()
+
+  if (existing) {
+    const msg = existing.status === 'accepted'
+      ? 'Este usuário já é membro da empresa.'
+      : 'Já existe um convite pendente para este e-mail.'
+    return c.json({ error: msg }, 409)
+  }
+
+  const [companyRes, inviterRes] = await Promise.all([
+    db.from('companies').select('name').eq('id', companyId).single(),
+    db.from('profiles').select('full_name').eq('id', userId).single(),
+  ])
+  const companyName = companyRes.data?.name ?? ''
+  const inviterName = inviterRes.data?.full_name ?? ''
+
   const { data, error } = await db.from('company_members')
     .insert({ company_id: companyId, email, role, status: 'pending', invite_token })
     .select()
     .single()
 
   if (error) return c.json({ error: error.message }, 400)
+
+  const resendKey = process.env.RESEND_API_KEY
+  if (resendKey) {
+    const isProduction = process.env.VERCEL_ENV === 'production'
+    const flowUrl = isProduction
+      ? process.env.VITE_FLOW_URL ?? 'https://syncero-flow.vercel.app'
+      : 'http://localhost:5174'
+    const inviteLink = `${flowUrl}/invite/${invite_token}`
+
+    const { subject, html } = memberInviteEmail({ companyName, inviterName, inviteLink, language })
+    const resend = new Resend(resendKey)
+    const { error: emailError } = await resend.emails.send({
+      from: 'Syncero <onboarding@resend.dev>',
+      to: email,
+      subject,
+      html,
+    })
+    if (emailError) console.error('Failed to send member invite email:', emailError.message)
+  } else {
+    console.warn('RESEND_API_KEY not set — invite created but email not sent')
+  }
+
   return c.json(data, 201)
 })
 

@@ -17,7 +17,8 @@
       "Bash(npx tsc *)",
       "Bash(npm install *)",
       "mcp__claude_ai_Supabase__apply_migration",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(gh pr:*)"
     ]
   }
 }

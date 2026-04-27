@@ -64,7 +64,7 @@ router.post('/', async (c) => {
   const member = await ensureCompanyMember(db, userId, company_id)
   if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
 
-  const payload = { name: name.trim(), type, company_id }
+  const payload: { name: string; type: string; company_id: string; color?: string } = { name: name.trim(), type, company_id }
   if (color) payload.color = color
 
   const { data, error } = await db.from('categories').insert(payload).select().single()

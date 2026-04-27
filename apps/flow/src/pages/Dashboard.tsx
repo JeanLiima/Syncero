@@ -212,11 +212,11 @@ export function Component() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
                   <Badge variant={tx.is_paid ? 'success' : 'warning'}>
                     {tx.is_paid ? t('transactions_paid') : t('transactions_pending')}
                   </Badge>
-                  <span className={`font-mono text-sm font-medium ${tx.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                  <span className={`font-mono text-sm font-medium w-28 text-right ${tx.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                     {tx.type === 'income' ? '+' : '-'} {fmt(tx.amount)}
                   </span>
                 </div>

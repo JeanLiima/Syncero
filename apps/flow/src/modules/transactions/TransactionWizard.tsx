@@ -1,16 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { format, addMonths, parseISO, parse, isValid } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
-import { TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat, CheckCircle, UserPlus } from 'lucide-react'
-import { Button, Checkbox, DatePicker, DayCalendar, Input, Modal, Select } from '@syncero/ui'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat } from 'lucide-react'
+import { Button, Checkbox, DayCalendar, Input, Modal } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from './mutations'
 import { useCategories, useBanks, useContacts } from './queries'
-import { BankSelectField } from './PaymentModal'
-import { createContact } from '@/lib/backend'
-import { useAuthStore } from '@/store/auth'
-import type { Transaction, TransactionType, Contact } from '@/types'
+import { useAuthStore } from '@syncero/auth'
+import { ContactModal } from './ContactModal'
+import { ContactCombobox } from './ContactCombobox'
+import { useTransactionWizardState } from './useTransactionWizard'
+import { PaymentPromptStep } from './PaymentPromptStep'
+import { PaymentFormStep } from './PaymentFormStep'
+import type { Transaction } from '@/types'
 
 interface Props {
   open: boolean
@@ -20,243 +22,6 @@ interface Props {
 }
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7
-type Phase = 'wizard' | 'payment-prompt' | 'payment-form'
-
-// ── Quick-add contact modal ──────────────────────────────────
-
-function ContactModal({
-  open,
-  onClose,
-  onCreated,
-  initialName,
-}: {
-  open: boolean
-  onClose: () => void
-  onCreated: (contact: Contact) => void
-  initialName: string
-}) {
-  const t = useT()
-  const qc = useQueryClient()
-  const activeCompany = useAuthStore((s) => s.activeCompany)
-  const [name, setName] = useState(initialName)
-  const [cpf, setCpf] = useState('')
-  const [cnpj, setCnpj] = useState('')
-
-  useEffect(() => { if (open) { setName(initialName); setCpf(''); setCnpj('') } }, [open])
-
-  const save = useMutation({
-    mutationFn: () => createContact({
-      company_id: activeCompany!.id,
-      name: name.trim(),
-      cpf: cpf.trim() || undefined,
-      cnpj: cnpj.trim() || undefined,
-    }),
-    onSuccess: (contact) => {
-      qc.invalidateQueries({ queryKey: ['contacts', activeCompany?.id] })
-      onCreated(contact)
-    },
-  })
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && name.trim() && !save.isPending) save.mutate()
-  }
-
-  return (
-    <Modal open={open} onClose={onClose} title={t('contact_newTitle')} size="sm">
-      <div className="flex flex-col gap-4">
-        <Input
-          label={t('contact_name')}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={handleKeyDown}
-          autoFocus
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            label={`${t('contact_cpf')} (${t('transactions_wizard_optional')})`}
-            value={cpf}
-            onChange={(e) => setCpf(e.target.value)}
-            placeholder="000.000.000-00"
-          />
-          <Input
-            label={`${t('contact_cnpj')} (${t('transactions_wizard_optional')})`}
-            value={cnpj}
-            onChange={(e) => setCnpj(e.target.value)}
-            placeholder="00.000.000/0000-00"
-          />
-        </div>
-      </div>
-      <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          {t('contact_cancel')}
-        </Button>
-        <Button
-          onClick={() => save.mutate()}
-          loading={save.isPending}
-          disabled={!name.trim()}
-        >
-          {t('contact_save')}
-        </Button>
-      </div>
-    </Modal>
-  )
-}
-
-// ── Contact combobox ─────────────────────────────────────────
-
-function ContactCombobox({
-  value,
-  onChange,
-  onAddNew,
-  onConfirm,
-  contacts,
-  placeholder,
-  addLabel,
-}: {
-  value: string
-  onChange: (name: string, contact?: Contact) => void
-  onAddNew: (query: string) => void
-  onConfirm?: () => void
-  contacts: Contact[]
-  placeholder: string
-  addLabel: string
-}) {
-  const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState(value)
-  const [highlightedIndex, setHighlightedIndex] = useState(-1)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const listRef = useRef<HTMLDivElement>(null)
-
-  const filtered = query.trim()
-    ? contacts.filter((c) =>
-        c.name.toLowerCase().includes(query.toLowerCase()) ||
-        (c.cpf ?? '').replace(/\D/g, '').includes(query.replace(/\D/g, '')) ||
-        (c.cnpj ?? '').replace(/\D/g, '').includes(query.replace(/\D/g, ''))
-      )
-    : contacts
-
-  const showAddNew = query.trim().length > 0 &&
-    !contacts.some((c) => c.name.toLowerCase() === query.trim().toLowerCase())
-
-  const totalItems = filtered.length + (showAddNew ? 1 : 0)
-  const showDropdown = open && totalItems > 0
-
-  useEffect(() => { setQuery(value) }, [value])
-  useEffect(() => { setHighlightedIndex(-1) }, [query])
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (!containerRef.current?.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', h)
-    return () => document.removeEventListener('mousedown', h)
-  }, [])
-
-  // Scroll highlighted item into view
-  useEffect(() => {
-    if (!listRef.current || highlightedIndex < 0) return
-    const items = listRef.current.querySelectorAll('[data-item]')
-    items[highlightedIndex]?.scrollIntoView({ block: 'nearest' })
-  }, [highlightedIndex])
-
-  const commit = (contact: Contact) => {
-    onChange(contact.name, contact)
-    setQuery(contact.name)
-    setOpen(false)
-  }
-
-  const formatDoc = (c: Contact) => {
-    if (c.cpf) return `CPF ${c.cpf}`
-    if (c.cnpj) return `CNPJ ${c.cnpj}`
-    return null
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setOpen(true)
-      setHighlightedIndex((i) => Math.min(i + 1, totalItems - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setHighlightedIndex((i) => Math.max(i - 1, 0))
-    } else if (e.key === 'Escape') {
-      setOpen(false)
-      setHighlightedIndex(-1)
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      e.stopPropagation()
-      if (showDropdown) {
-        if (highlightedIndex >= 0 && highlightedIndex < filtered.length) {
-          commit(filtered[highlightedIndex])
-        } else if (highlightedIndex === filtered.length && showAddNew) {
-          onAddNew(query.trim())
-          setOpen(false)
-        } else if (filtered.length === 1) {
-          commit(filtered[0])
-        } else if (filtered.length === 0 && showAddNew) {
-          onAddNew(query.trim())
-          setOpen(false)
-        }
-      } else if (value.trim()) {
-        onConfirm?.()
-      }
-    }
-  }
-
-  return (
-    <div ref={containerRef} className="relative">
-      <input
-        type="text"
-        value={query}
-        placeholder={placeholder}
-        autoFocus
-        onChange={(e) => {
-          setQuery(e.target.value)
-          onChange(e.target.value)
-          setOpen(true)
-        }}
-        onFocus={() => setOpen(true)}
-        onKeyDown={handleKeyDown}
-        className="w-full h-10 px-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-      />
-      {showDropdown && (
-        <div ref={listRef} className="absolute z-10 w-full mt-1 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg overflow-hidden max-h-52 overflow-y-auto">
-          {filtered.map((c, i) => (
-            <button
-              key={c.id}
-              type="button"
-              data-item
-              onMouseDown={(e) => { e.preventDefault(); commit(c) }}
-              className={`w-full text-left px-3 py-2.5 transition-colors hover:bg-[var(--bg-elevated)] cursor-pointer ${
-                i === highlightedIndex || c.name === value ? 'bg-[var(--bg-elevated)]' : ''
-              }`}
-            >
-              <p className={`text-sm ${c.name === value ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
-                {c.name}
-              </p>
-              {formatDoc(c) && (
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">{formatDoc(c)}</p>
-              )}
-            </button>
-          ))}
-          {showAddNew && (
-            <button
-              type="button"
-              data-item
-              onMouseDown={(e) => { e.preventDefault(); onAddNew(query.trim()) }}
-              className={`w-full text-left px-3 py-2.5 text-sm text-[var(--accent)] hover:bg-[var(--bg-elevated)] cursor-pointer flex items-center gap-2 border-t border-[var(--bg-border)] ${
-                highlightedIndex === filtered.length ? 'bg-[var(--bg-elevated)]' : ''
-              }`}
-            >
-              <UserPlus className="h-3.5 w-3.5 shrink-0" />
-              {addLabel} &ldquo;{query.trim()}&rdquo;
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ── Wizard ───────────────────────────────────────────────────
 
@@ -269,150 +34,28 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const { data: categories = [] } = useCategories()
   const { data: banks = [] } = useBanks()
 
-  const [phase, setPhase] = useState<Phase>('wizard')
-  const [createdId, setCreatedId] = useState<string | null>(null)
-  const [skipCountdown, setSkipCountdown] = useState(0)
+  const state = useTransactionWizardState(open, editing, language)
+  const { data: contacts = [] } = useContacts(state.contactSearch)
 
-  const [step, setStep] = useState<Step>(1)
-  const [type, setType] = useState<TransactionType | null>(null)
-  const [amountCents, setAmountCents] = useState(0)
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [categoryId, setCategoryId] = useState<string | undefined>()
-  const [description, setDescription] = useState('')
-  const [notes, setNotes] = useState('')
-  const [counterpart, setCounterpart] = useState('')
-  const [contactId, setContactId] = useState<string | undefined>()
-  const [isInstallment, setIsInstallment] = useState(false)
-  const [installmentCount, setInstallmentCount] = useState(2)
-  const [createFutureInstallments, setCreateFutureInstallments] = useState(false)
-  const [amountError, setAmountError] = useState('')
-  const [descError, setDescError] = useState('')
-
-  // Installment overrides: { [installmentNumber]: { date, amountStr } }
-  const [installmentOverrides, setInstallmentOverrides] = useState<Record<number, { date: string; amountStr: string }>>({})
-
-  // Contact search & modal
-  const [contactSearch, setContactSearch] = useState('')
-  const [contactModalOpen, setContactModalOpen] = useState(false)
-  const [contactModalInitialName, setContactModalInitialName] = useState('')
-  const { data: contacts = [] } = useContacts(contactSearch)
-
-  // Payment phase state
-  const [paidAt, setPaidAt] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank' | null>(null)
-  const [bankId, setBankId] = useState<string | undefined>()
-  const [methodError, setMethodError] = useState('')
-
-  const amountRef = useRef<HTMLInputElement>(null)
   const isCreating = !editing
   const isPending = create.isPending || update.isPending
 
-  const formatCents = (cents: number) => {
-    const padded = String(cents).padStart(3, '0')
-    return padded.slice(0, -2) + ',' + padded.slice(-2)
-  }
-
+  // Close modal when countdown reaches zero
   useEffect(() => {
-    if (!open) return
-    setPhase('wizard')
-    setCreatedId(null)
-    setAmountError('')
-    setDescError('')
-    setPaidAt('')
-    setPaymentMethod(null)
-    setBankId(undefined)
-    setMethodError('')
-    setContactSearch('')
-    if (editing) {
-      setStep(1)
-      setType(editing.type)
-      setAmountCents(Math.round(editing.amount * 100))
-      setDate(editing.date)
-      setCategoryId(editing.category_id ?? undefined)
-      setDescription(editing.description ?? '')
-      setNotes(editing.notes ?? '')
-      setCounterpart(editing.counterpart ?? '')
-      setContactId(editing.contact_id ?? undefined)
-      setIsInstallment(editing.is_installment)
-      setInstallmentCount(editing.installment_count ?? 2)
-      setCreateFutureInstallments(false)
-    } else {
-      setStep(1)
-      setType(null)
-      setAmountCents(0)
-      setDate(format(new Date(), 'yyyy-MM-dd'))
-      setCategoryId(undefined)
-      setDescription('')
-      setNotes('')
-      setCounterpart('')
-      setContactId(undefined)
-      setIsInstallment(false)
-      setInstallmentCount(2)
-      setCreateFutureInstallments(true)
-    }
-    setInstallmentOverrides({})
-  }, [open])
+    if (state.phase === 'payment-prompt' && state.skipCountdown === 0) onClose()
+  }, [state.skipCountdown]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Reset overrides whenever the base installment values change
-  useEffect(() => { setInstallmentOverrides({}) }, [installmentCount, amountCents, date])
+  // ── Handlers ────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (step === 3) setTimeout(() => amountRef.current?.focus(), 50)
-
-    if (step === 7 && !description.trim() && type) {
-      const name = counterpart.trim()
-      if (name) {
-        setDescription(
-          type === 'income'
-            ? `${t('transactions_wizard_descPrefixIncomeWith')} ${name}`
-            : `${t('transactions_wizard_descPrefixExpenseWith')} ${name}`
-        )
-      } else {
-        setDescription(
-          type === 'income'
-            ? t('transactions_wizard_descPrefixIncome')
-            : t('transactions_wizard_descPrefixExpense')
-        )
-      }
-    }
-  }, [step])
-
-  useEffect(() => {
-    if (phase === 'payment-form' && !paidAt) setPaidAt(format(new Date(), 'yyyy-MM-dd'))
-  }, [phase])
-
-  const SKIP_DURATION = 5
-  useEffect(() => {
-    if (phase !== 'payment-prompt') { setSkipCountdown(0); return }
-    setSkipCountdown(SKIP_DURATION)
-    const id = setInterval(() => {
-      setSkipCountdown((v) => {
-        if (v <= 1) { clearInterval(id); onClose(); return 0 }
-        return v - 1
-      })
-    }, 1000)
-    return () => clearInterval(id)
-  }, [phase])
-
-  const goTo = (s: Step) => setStep(s)
-  const goBack = () => setStep((s) => Math.max(s - 1, 1) as Step)
-
-  const selectType = (v: TransactionType) => {
-    if (v !== type) setCategoryId(undefined)
-    setType(v)
-    goTo(2)
-  }
-
-  const selectInstallment = (v: boolean) => setIsInstallment(v)
-
-  const selectCategory = (id: string | undefined) => {
-    setCategoryId(id)
-    if (isCreating) goTo(6)
+  const handleNext = () => {
+    if (state.step === 1 && !state.type) return
+    if (state.step === 3 && !validateAmount()) return
+    state.goTo((state.step + 1) as Step)
   }
 
   const validateAmount = () => {
-    if (amountCents <= 0) { setAmountError(t('transactions_errorAmount')); return false }
-    setAmountError('')
+    if (state.amountCents <= 0) { state.setAmountError(t('transactions_errorAmount')); return false }
+    state.setAmountError('')
     return true
   }
 
@@ -420,11 +63,12 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (e.key >= '0' && e.key <= '9') {
       e.preventDefault()
       const digit = parseInt(e.key)
-      setAmountCents((prev) => (prev * 10 + digit > 9999999 ? prev : prev * 10 + digit))
-      setAmountError('')
+      const newCents = state.amountCents * 10 + digit
+      state.setAmountCents(newCents > 9999999 ? state.amountCents : newCents)
+      state.setAmountError('')
     } else if (e.key === 'Backspace') {
       e.preventDefault()
-      setAmountCents((prev) => Math.floor(prev / 10))
+      state.setAmountCents(Math.floor(state.amountCents / 10))
     } else if (e.key === 'Enter') {
       e.preventDefault()
     } else if (!['Tab', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
@@ -432,33 +76,29 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     }
   }
 
-  // Keyboard handler ref — always has fresh closures, registered once on open
-  const wizardKeyRef = useRef<(e: KeyboardEvent) => void>()
-
-  const handleNext = () => {
-    if (step === 1 && !type) return
-    if (step === 3 && !validateAmount()) return
-    goTo((step + 1) as Step)
+  const selectCategory = (id: string | undefined) => {
+    state.setCategoryId(id)
+    if (isCreating) state.goTo(6)
   }
 
   const handleSave = async () => {
-    if (!type) return
-    setDescError('')
-    if (!description.trim()) { setDescError(t('transactions_errorDescription')); return }
-    if (amountCents <= 0) { setAmountError(t('transactions_errorAmount')); goTo(3); return }
+    if (!state.type) return
+    state.setDescError('')
+    if (!state.description.trim()) { state.setDescError(t('transactions_errorDescription')); return }
+    if (state.amountCents <= 0) { state.setAmountError(t('transactions_errorAmount')); state.goTo(3); return }
 
     const basePayload = {
-      type,
-      amount: amountCents / 100,
-      date,
-      category_id: categoryId || undefined,
-      description: description.trim(),
-      notes: notes.trim() || undefined,
-      counterpart: counterpart.trim() || undefined,
-      contact_id: contactId || undefined,
+      type: state.type,
+      amount: state.amountCents / 100,
+      date: state.date,
+      category_id: state.categoryId || undefined,
+      description: state.description.trim(),
+      notes: state.notes.trim() || undefined,
+      counterpart: state.counterpart.trim() || undefined,
+      contact_id: state.contactId || undefined,
       is_paid: false,
-      is_installment: isInstallment,
-      installment_count: isInstallment ? installmentCount : undefined,
+      is_installment: state.isInstallment,
+      installment_count: state.isInstallment ? state.installmentCount : undefined,
     }
 
     if (editing) {
@@ -467,16 +107,16 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       return
     }
 
-    if (isInstallment && createFutureInstallments && installmentCount >= 2) {
+    if (state.isInstallment && state.createFutureInstallments && state.installmentCount >= 2) {
       const groupId = crypto.randomUUID()
       let firstId: string | null = null
-      const perInstallment = Math.floor(amountCents / installmentCount)
-      const remainder = amountCents - perInstallment * (installmentCount - 1)
-      for (let i = 0; i < installmentCount; i++) {
+      const perInstallment = Math.floor(state.amountCents / state.installmentCount)
+      const remainder = state.amountCents - perInstallment * (state.installmentCount - 1)
+      for (let i = 0; i < state.installmentCount; i++) {
         const num = i + 1
-        const override = installmentOverrides[num]
-        const defaultCents = i === installmentCount - 1 ? remainder : perInstallment
-        const installDate = override?.date ?? format(addMonths(parseISO(date), i), 'yyyy-MM-dd')
+        const override = state.installmentOverrides[num]
+        const defaultCents = i === state.installmentCount - 1 ? remainder : perInstallment
+        const installDate = override?.date ?? format(addMonths(parseISO(state.date), i), 'yyyy-MM-dd')
         const installAmount = override?.amountStr !== undefined
           ? (parseFloat(override.amountStr.replace(',', '.')) || defaultCents / 100)
           : defaultCents / 100
@@ -484,45 +124,45 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           ...basePayload,
           amount: installAmount,
           date: installDate,
-          description: `${description.trim()} (${num}/${installmentCount})`,
+          description: `${state.description.trim()} (${num}/${state.installmentCount})`,
           installment_number: num,
           installment_group_id: groupId,
         })
         if (i === 0) firstId = result?.id ?? null
       }
-      setCreatedId(firstId)
+      state.setCreatedId(firstId)
     } else {
       const result = await create.mutateAsync({
         ...basePayload,
-        description: isInstallment
-          ? `${description.trim()} (1/${installmentCount})`
-          : description.trim(),
-        installment_number: isInstallment ? 1 : undefined,
-        installment_group_id: isInstallment ? crypto.randomUUID() : undefined,
+        description: state.isInstallment
+          ? `${state.description.trim()} (1/${state.installmentCount})`
+          : state.description.trim(),
+        installment_number: state.isInstallment ? 1 : undefined,
+        installment_group_id: state.isInstallment ? crypto.randomUUID() : undefined,
       })
-      setCreatedId(result?.id ?? null)
+      state.setCreatedId(result?.id ?? null)
     }
 
-    setPhase('payment-prompt')
+    state.setPhase('payment-prompt')
   }
 
   const validatePayment = () => {
     let ok = true
-    if (!paymentMethod) { setMethodError(t('transactions_payment_methodRequired')); ok = false }
-    else setMethodError('')
-    if (paymentMethod === 'bank' && !bankId) { ok = false }
+    if (!state.paymentMethod) { state.setMethodError(t('transactions_payment_methodRequired')); ok = false }
+    else state.setMethodError('')
+    if (state.paymentMethod === 'bank' && !state.bankId) { ok = false }
     return ok
   }
 
   const handleRegisterPayment = async () => {
-    if (!createdId || !paidAt || !validatePayment()) return
+    if (!state.createdId || !state.paidAt || !validatePayment()) return
     await update.mutateAsync({
-      id: createdId,
+      id: state.createdId,
       data: {
         is_paid: true,
-        paid_at: paidAt,
-        payment_method: paymentMethod ?? undefined,
-        bank_id: paymentMethod === 'bank' ? bankId ?? undefined : undefined,
+        paid_at: state.paidAt,
+        payment_method: state.paymentMethod ?? undefined,
+        bank_id: state.paymentMethod === 'bank' ? state.bankId ?? undefined : undefined,
         payment_registered_at: new Date().toISOString(),
         payment_registered_by: user?.id ?? undefined,
       },
@@ -538,71 +178,68 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   // ── Global keyboard handler ──────────────────────────────────
 
   // Always update ref with fresh closures — registered once on open
+  const wizardKeyRef = useRef<(e: KeyboardEvent) => void>(() => {})
   wizardKeyRef.current = (e: KeyboardEvent) => {
     const target = e.target as HTMLElement
 
-    // Payment prompt: Enter confirms
-    if (phase === 'payment-prompt') {
-      if (e.key === 'Enter') { e.preventDefault(); setPhase('payment-form') }
+    if (state.phase === 'payment-prompt') {
+      if (e.key === 'Enter') { e.preventDefault(); state.setPhase('payment-form') }
       return
     }
 
-    // Payment form: Enter saves
-    if (phase === 'payment-form') {
+    if (state.phase === 'payment-form') {
       if (e.key === 'Enter' && !update.isPending) { e.preventDefault(); handleRegisterPayment() }
       return
     }
 
-    if (phase !== 'wizard') return
+    if (state.phase !== 'wizard') return
     if (target.tagName === 'TEXTAREA') return
 
-    // Step 6 handles its own Enter/Arrow keys via the combobox
-    if (step === 6) return
+    if (state.step === 6) return
 
-    if (step === 3) {
-      if (e.key === 'Enter') { e.preventDefault(); if (validateAmount()) goTo(4) }
+    if (state.step === 3) {
+      if (e.key === 'Enter') { e.preventDefault(); if (validateAmount()) state.goTo(4) }
       return
     }
 
-    // Card steps: arrow keys cycle options
-    if (step === 1) {
+    if (state.step === 1) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault()
-        setType((prev) => prev === 'income' ? 'expense' : 'income')
-        setCategoryId(undefined)
+        state.selectType(state.type === 'income' ? 'expense' : 'income')
+        state.setCategoryId(undefined)
       }
-      if (e.key === 'Enter' && type) { e.preventDefault(); goTo(2) }
+      if (e.key === 'Enter' && state.type) { e.preventDefault(); state.goTo(2) }
       return
     }
 
-    if (step === 4) {
+    if (state.step === 4) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault()
-        setIsInstallment((prev) => !prev)
+        state.setIsInstallment(!state.isInstallment)
       }
       if (e.key === 'Enter') { e.preventDefault(); handleNext() }
       return
     }
 
-    if (step === 5) {
+    if (state.step === 5) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault()
-        const filtered = categories.filter((c) => c.type === type)
+        const filtered = categories.filter((c) => c.type === state.type)
         const options: (string | undefined)[] = [...filtered.map((c) => c.id), undefined]
-        const currentIdx = categoryId === undefined ? options.length - 1 : options.indexOf(categoryId)
+        const currentIdx = state.categoryId === undefined ? options.length - 1 : options.indexOf(state.categoryId)
         const nextIdx = e.key === 'ArrowRight'
           ? (currentIdx + 1) % options.length
           : (currentIdx - 1 + options.length) % options.length
-        setCategoryId(options[nextIdx])
+        state.setCategoryId(options[nextIdx])
       }
-      if (e.key === 'Enter') { e.preventDefault(); isCreating ? goTo(6) : handleNext() }
+      if (e.key === 'Enter') { e.preventDefault(); isCreating ? state.goTo(6) : handleNext() }
       return
     }
 
     if (e.key !== 'Enter') return
 
-    if (step === 7) {
-      if (!isPending && description.trim()) { e.preventDefault(); handleSave() }
+    if (state.step === 7) {
+      if (!isPending && state.description.trim()) { e.preventDefault(); handleSave() }
       return
     }
 
@@ -619,39 +256,37 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   // ── Installment preview ──────────────────────────────────────
 
   const installmentPreview = (() => {
-    if (!isInstallment || installmentCount < 2 || amountCents <= 0 || !date) return null
-    const perInstallment = Math.floor(amountCents / installmentCount)
-    const remainder = amountCents - perInstallment * (installmentCount - 1)
-    return Array.from({ length: installmentCount }, (_, i) => ({
+    if (!state.isInstallment || state.installmentCount < 2 || state.amountCents <= 0 || !state.date) return null
+    const perInstallment = Math.floor(state.amountCents / state.installmentCount)
+    const remainder = state.amountCents - perInstallment * (state.installmentCount - 1)
+    return Array.from({ length: state.installmentCount }, (_, i) => ({
       number: i + 1,
-      rawDate: format(addMonths(parseISO(date), i), 'yyyy-MM-dd'),
-      cents: i === installmentCount - 1 ? remainder : perInstallment,
+      rawDate: format(addMonths(parseISO(state.date), i), 'yyyy-MM-dd'),
+      cents: i === state.installmentCount - 1 ? remainder : perInstallment,
     }))
   })()
 
-  const getOverrideDate = (num: number, rawDate: string) => installmentOverrides[num]?.date ?? rawDate
+  const getOverrideDate = (num: number, rawDate: string) => state.installmentOverrides[num]?.date ?? rawDate
   const getOverrideAmountStr = (num: number, cents: number) =>
-    installmentOverrides[num]?.amountStr ?? (cents / 100).toFixed(2).replace('.', ',')
+    state.installmentOverrides[num]?.amountStr ?? (cents / 100).toFixed(2).replace('.', ',')
 
   const updateInstallmentOverride = (num: number, field: 'date' | 'amountStr', value: string) => {
-    setInstallmentOverrides((prev) => {
-      const base = installmentPreview?.find((p) => p.number === num)
-      const current = prev[num] ?? {
-        date: base?.rawDate ?? '',
-        amountStr: base ? (base.cents / 100).toFixed(2).replace('.', ',') : '0',
-      }
-      return { ...prev, [num]: { ...current, [field]: value } }
-    })
+    const base = installmentPreview?.find((p) => p.number === num)
+    const current = state.installmentOverrides[num] ?? {
+      date: base?.rawDate ?? '',
+      amountStr: base ? (base.cents / 100).toFixed(2).replace('.', ',') : '0',
+    }
+    state.setInstallmentOverrides({ ...state.installmentOverrides, [num]: { ...current, [field]: value } })
   }
 
   const installmentEditedTotal = installmentPreview
     ? installmentPreview.reduce((sum, p) => {
-        const str = installmentOverrides[p.number]?.amountStr
+        const str = state.installmentOverrides[p.number]?.amountStr
         return sum + (str !== undefined ? parseFloat(str.replace(',', '.')) || 0 : p.cents / 100)
       }, 0)
     : 0
   const installmentTotalChanged =
-    !!installmentPreview && Math.abs(installmentEditedTotal - amountCents / 100) > 0.005
+    !!installmentPreview && Math.abs(installmentEditedTotal - state.amountCents / 100) > 0.005
 
   // ── Step content ────────────────────────────────────────────
 
@@ -666,9 +301,9 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
             <button
               key={v}
               type="button"
-              onClick={() => selectType(v)}
+              onClick={() => state.selectType(v)}
               className={`flex flex-col items-center gap-3 py-6 rounded-xl border-2 transition-all cursor-pointer ${
-                type === v
+                state.type === v
                   ? v === 'income'
                     ? 'border-[var(--success)] bg-[var(--success)]/10'
                     : 'border-[var(--danger)] bg-[var(--danger)]/10'
@@ -676,12 +311,12 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
               }`}
             >
               <Icon className={`h-8 w-8 ${
-                type === v
+                state.type === v
                   ? v === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
                   : 'text-[var(--text-muted)]'
               }`} />
               <span className={`text-sm font-medium ${
-                type === v
+                state.type === v
                   ? v === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
                   : 'text-[var(--text-secondary)]'
               }`}>
@@ -694,19 +329,19 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     ),
 
     2: (() => {
-      const parsed = date ? parse(date, 'yyyy-MM-dd', new Date()) : undefined
+      const parsed = state.date ? parse(state.date, 'yyyy-MM-dd', new Date()) : undefined
       const selected = parsed && isValid(parsed) ? parsed : undefined
       const locale = language === 'en' ? enUS : ptBR
       return (
         <div className="flex flex-col items-center gap-5">
           <p className="text-sm text-[var(--text-muted)] text-center">
-            {type === 'income'
+            {state.type === 'income'
               ? t('transactions_wizard_dateIncomeLabel')
               : t('transactions_wizard_dateExpenseLabel')}
           </p>
           <DayCalendar
             selected={selected}
-            onSelect={(d) => setDate(format(d, 'yyyy-MM-dd'))}
+            onSelect={(d) => state.setDate(format(d, 'yyyy-MM-dd'))}
             locale={locale}
           />
         </div>
@@ -721,24 +356,24 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         <div className="flex flex-col items-center gap-1">
           <div className="flex items-baseline gap-2">
             <span className={`text-xl font-medium ${
-              type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
+              state.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
             }`}>R$</span>
             <input
-              ref={amountRef}
+              ref={state.amountRef}
               type="text"
               inputMode="numeric"
-              value={formatCents(amountCents)}
+              value={state.formatCents(state.amountCents)}
               onChange={() => {}}
               onKeyDown={handleAmountKey}
               className={`w-56 font-semibold text-center bg-transparent outline-none border-b-2 pb-1 transition-all text-[var(--text-primary)] ${
-                amountError ? 'border-[var(--danger)]' : 'border-[var(--bg-border)] focus:border-[var(--accent)]'
+                state.amountError ? 'border-[var(--danger)]' : 'border-[var(--bg-border)] focus:border-[var(--accent)]'
               } ${
-                formatCents(amountCents).length <= 6 ? 'text-5xl' :
-                formatCents(amountCents).length <= 7 ? 'text-4xl' : 'text-3xl'
+                state.formatCents(state.amountCents).length <= 6 ? 'text-5xl' :
+                state.formatCents(state.amountCents).length <= 7 ? 'text-4xl' : 'text-3xl'
               }`}
             />
           </div>
-          {amountError && <p className="text-xs text-[var(--danger)]">{amountError}</p>}
+          {state.amountError && <p className="text-xs text-[var(--danger)]">{state.amountError}</p>}
         </div>
       </div>
     ),
@@ -756,18 +391,18 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
             <button
               key={String(v)}
               type="button"
-              onClick={() => selectInstallment(v)}
+              onClick={() => state.setIsInstallment(v)}
               className={`flex flex-col items-center gap-3 py-6 rounded-xl border-2 transition-all cursor-pointer ${
-                isInstallment === v
+                state.isInstallment === v
                   ? 'border-[var(--accent)] bg-[var(--accent)]/10'
                   : 'border-[var(--bg-border)] hover:bg-[var(--bg-elevated)]'
               }`}
             >
               <Icon className={`h-8 w-8 ${
-                isInstallment === v ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
+                state.isInstallment === v ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
               }`} />
               <span className={`text-sm font-medium ${
-                isInstallment === v ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                state.isInstallment === v ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
               }`}>
                 {label}
               </span>
@@ -775,40 +410,37 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           ))}
         </div>
 
-        {isInstallment && (
+        {state.isInstallment && (
           <div className="flex flex-col gap-3 mt-2 pl-1">
             <Input
               label={t('transactions_installmentCount')}
               type="number"
               min="2"
               max="120"
-              value={String(installmentCount)}
-              onChange={(e) => setInstallmentCount(Math.max(2, parseInt(e.target.value) || 2))}
+              value={String(state.installmentCount)}
+              onChange={(e) => state.setInstallmentCount(Math.max(2, parseInt(e.target.value) || 2))}
             />
             {isCreating && (
               <Checkbox
                 label={t('transactions_createFutureInstallments')}
-                checked={createFutureInstallments}
-                onChange={(e) => setCreateFutureInstallments(e.target.checked)}
+                checked={state.createFutureInstallments}
+                onChange={(e) => state.setCreateFutureInstallments(e.target.checked)}
               />
             )}
             {installmentPreview && (
               <div className="flex flex-col gap-1 rounded-lg border border-[var(--bg-border)] overflow-hidden">
-                {/* Header */}
                 <div className="grid grid-cols-[2rem_1fr_6.5rem] gap-2 px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--bg-border)]">
                   <span className="text-xs text-[var(--text-muted)]">#</span>
                   <span className="text-xs text-[var(--text-muted)]">{t('transactions_date')}</span>
                   <span className="text-xs text-[var(--text-muted)] text-right">{t('transactions_amount')}</span>
                 </div>
 
-                {/* Rows */}
                 <div className="max-h-44 overflow-y-auto divide-y divide-[var(--bg-border)]">
                   {installmentPreview.map((p) =>
-                    createFutureInstallments ? (
-                      // Editable row
+                    state.createFutureInstallments ? (
                       <div key={p.number} className="grid grid-cols-[2rem_1fr_6.5rem] items-center gap-2 px-3 py-1.5 hover:bg-[var(--bg-elevated)]">
                         <span className="text-xs font-mono text-[var(--text-muted)] text-center">
-                          {p.number}/{installmentCount}
+                          {p.number}/{state.installmentCount}
                         </span>
                         <input
                           type="date"
@@ -828,25 +460,23 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
                         </div>
                       </div>
                     ) : (
-                      // Read-only row
                       <div key={p.number} className="grid grid-cols-[2rem_1fr_6.5rem] items-center gap-2 px-3 py-2">
                         <span className="text-xs font-mono text-[var(--text-muted)] text-center">
-                          {p.number}/{installmentCount}
+                          {p.number}/{state.installmentCount}
                         </span>
                         <span className="text-xs text-[var(--text-secondary)]">
                           {format(parseISO(p.rawDate), 'dd/MM/yyyy')}
                         </span>
                         <span className={`text-xs font-medium tabular-nums text-right ${
-                          type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
+                          state.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
                         }`}>
-                          R$ {formatCents(p.cents)}
+                          R$ {state.formatCents(p.cents)}
                         </span>
                       </div>
                     )
                   )}
                 </div>
 
-                {/* Total footer */}
                 <div className="grid grid-cols-[2rem_1fr_auto] items-center gap-2 px-3 py-1.5 bg-[var(--bg-elevated)] border-t border-[var(--bg-border)]">
                   <span />
                   <span className="text-xs text-[var(--text-muted)]">{t('transactions_installment_total')}</span>
@@ -854,7 +484,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
                     {installmentTotalChanged ? (
                       <>
                         <span className="text-[var(--text-muted)] line-through">
-                          {(amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          {(state.amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </span>
                         <span className="text-[var(--warning)] font-medium">
                           {installmentEditedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -862,7 +492,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
                       </>
                     ) : (
                       <span className="text-[var(--text-secondary)]">
-                        {(amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        {(state.amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                       </span>
                     )}
                   </div>
@@ -875,7 +505,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     ),
 
     5: (() => {
-      const filtered = categories.filter((c) => c.type === type)
+      const filtered = categories.filter((c) => c.type === state.type)
       return (
         <div className="flex flex-col gap-3">
           <p className="text-sm text-[var(--text-muted)] text-center">
@@ -891,7 +521,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
                 type="button"
                 onClick={() => selectCategory(cat.id)}
                 className={`flex items-center gap-2 px-3 py-3.5 rounded-lg border transition-all cursor-pointer text-left ${
-                  categoryId === cat.id
+                  state.categoryId === cat.id
                     ? 'border-[var(--accent)] bg-[var(--accent)]/10'
                     : 'border-[var(--bg-border)] hover:bg-[var(--bg-elevated)]'
                 }`}
@@ -907,7 +537,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
               type="button"
               onClick={() => selectCategory(undefined)}
               className={`flex items-center gap-2 px-3 py-3.5 rounded-lg border transition-all cursor-pointer text-left ${
-                categoryId === undefined
+                state.categoryId === undefined
                   ? 'border-[var(--accent)] bg-[var(--accent)]/10'
                   : 'border-[var(--bg-border)] hover:bg-[var(--bg-elevated)]'
               }`}
@@ -928,20 +558,20 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     6: (
       <div className="flex flex-col gap-5">
         <p className="text-sm text-[var(--text-muted)] text-center">
-          {type === 'income'
+          {state.type === 'income'
             ? t('transactions_wizard_counterpartIncomeLabel')
             : t('transactions_wizard_counterpartExpenseLabel')}
         </p>
         <ContactCombobox
-          value={counterpart}
+          value={state.counterpart}
           onChange={(name, contact) => {
-            setCounterpart(name)
-            setContactSearch(name)
-            setContactId(contact?.id)
+            state.setCounterpart(name)
+            state.setContactSearch(name)
+            state.setContactId(contact?.id)
           }}
           onAddNew={(name) => {
-            setContactModalInitialName(name)
-            setContactModalOpen(true)
+            state.setContactModalInitialName(name)
+            state.setContactModalOpen(true)
           }}
           onConfirm={handleNext}
           contacts={contacts}
@@ -958,97 +588,43 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         </p>
         <Input
           label={t('transactions_description')}
-          value={description}
-          onChange={(e) => { setDescription(e.target.value); setDescError('') }}
-          error={descError}
+          value={state.description}
+          onChange={(e) => { state.setDescription(e.target.value); state.setDescError('') }}
+          error={state.descError}
         />
         <Input
           label={`${t('transactions_notes')} (${t('transactions_wizard_optional')})`}
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          value={state.notes}
+          onChange={(e) => state.setNotes(e.target.value)}
         />
       </div>
     ),
   }
 
-  // ── Payment prompt & form ────────────────────────────────────
-
-  const paymentPrompt = (
-    <div className="flex flex-col items-center gap-5 py-4">
-      <div className="flex items-center justify-center h-14 w-14 rounded-full bg-[var(--success)]/10">
-        <CheckCircle className="h-7 w-7 text-[var(--success)]" />
-      </div>
-      <div className="text-center">
-        <p className="text-base font-medium text-[var(--text-primary)]">
-          {t('transactions_payment_promptTitle')}
-        </p>
-        <p className="text-sm text-[var(--text-muted)] mt-1">
-          {t('transactions_payment_promptSubtitle')}
-        </p>
-      </div>
-    </div>
-  )
-
-  const paymentForm = (
-    <div className="flex flex-col gap-4">
-      <DatePicker
-        label={t('transactions_paidAt')}
-        value={paidAt}
-        onChange={setPaidAt}
-        language={language}
-      />
-      <div className="flex flex-col gap-1">
-        <Select
-          label={t('transactions_paymentMethod')}
-          placeholder={t('common_select')}
-          value={paymentMethod ?? ''}
-          onChange={(v) => {
-            setPaymentMethod((v as 'cash' | 'bank') || null)
-            setMethodError('')
-            if (v !== 'bank') setBankId(undefined)
-          }}
-          options={[
-            { value: 'cash', label: t('transactions_paymentCash') },
-            { value: 'bank', label: t('transactions_paymentBank') },
-          ]}
-        />
-        {methodError && <p className="text-xs text-[var(--danger)]">{methodError}</p>}
-      </div>
-      {paymentMethod === 'bank' && (
-        <BankSelectField
-          label={t('transactions_bankAccount')}
-          value={bankId ?? ''}
-          onChange={(v) => setBankId(v || undefined)}
-          banks={banks}
-        />
-      )}
-    </div>
-  )
-
   // ── Render ──────────────────────────────────────────────────
 
-  const showNext = step < 7 && (
-    step === 2 ||
-    step === 3 ||
-    step === 4 ||
-    step === 5 ||
-    (step === 6 && counterpart.trim().length > 0) ||
+  const showNext = state.step < 7 && (
+    state.step === 2 ||
+    state.step === 3 ||
+    state.step === 4 ||
+    state.step === 5 ||
+    (state.step === 6 && state.counterpart.trim().length > 0) ||
     !!editing
   )
-  const nextDisabled = step === 1 && !type
+  const nextDisabled = state.step === 1 && !state.type
 
-  const modalTitle = phase === 'payment-form'
+  const modalTitle = state.phase === 'payment-form'
     ? t('transactions_payment_formTitle')
     : editing
     ? t('transactions_editTitle')
     : t('transactions_newTitle')
 
   const keyboardHint = (() => {
-    if (phase === 'payment-prompt') return t('transactions_wizard_keyHintPaymentPrompt')
-    if (phase === 'payment-form') return t('transactions_wizard_keyHintPaymentForm')
-    if (step === 1 || step === 4 || step === 5) return t('transactions_wizard_keyHintCards')
-    if (step === 6) return t('transactions_wizard_keyHintContact')
-    if (step === 7) return t('transactions_wizard_keyHintSave')
+    if (state.phase === 'payment-prompt') return t('transactions_wizard_keyHintPaymentPrompt')
+    if (state.phase === 'payment-form') return t('transactions_wizard_keyHintPaymentForm')
+    if (state.step === 1 || state.step === 4 || state.step === 5) return t('transactions_wizard_keyHintCards')
+    if (state.step === 6) return t('transactions_wizard_keyHintContact')
+    if (state.step === 7) return t('transactions_wizard_keyHintSave')
     return t('transactions_wizard_keyHintEnter')
   })()
 
@@ -1064,16 +640,16 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         </div>
 
         {/* ── Wizard phase ── */}
-        {phase === 'wizard' && (
+        {state.phase === 'wizard' && (
           <>
             <div className="flex justify-center gap-2 mb-6">
               {([1, 2, 3, 4, 5, 6, 7] as const).map((s) => (
                 <div
                   key={s}
                   className={`h-1.5 rounded-full transition-all duration-200 ${
-                    s === step
+                    s === state.step
                       ? 'w-6 bg-[var(--accent)]'
-                      : s < step
+                      : s < state.step
                       ? 'w-3 bg-[var(--accent)] opacity-40'
                       : 'w-3 bg-[var(--bg-border)]'
                   }`}
@@ -1081,23 +657,23 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
               ))}
             </div>
 
-            <div className="min-h-52">{stepContent[step]}</div>
+            <div className="min-h-52">{stepContent[state.step]}</div>
 
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--bg-border)]">
               <div>
-                {step === 1 ? (
+                {state.step === 1 ? (
                   <Button variant="ghost" size="sm" onClick={onClose}>
                     {t('transactions_cancel')}
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={goBack}>
+                  <Button variant="ghost" size="sm" onClick={state.goBack}>
                     <ChevronLeft className="h-4 w-4" />
                     {t('transactions_wizard_back')}
                   </Button>
                 )}
               </div>
               <div className="flex gap-2">
-                {editing && step === 7 && (
+                {editing && state.step === 7 && (
                   <Button variant="danger" size="sm" onClick={handleDelete} loading={deleteT.isPending}>
                     {t('transactions_delete')}
                   </Button>
@@ -1107,8 +683,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
                     {t('transactions_wizard_next')}
                   </Button>
                 )}
-                {step === 7 && (
-                  <Button onClick={handleSave} loading={isPending} disabled={!description.trim()}>
+                {state.step === 7 && (
+                  <Button onClick={handleSave} loading={isPending} disabled={!state.description.trim()}>
                     {t('transactions_save')}
                   </Button>
                 )}
@@ -1118,67 +694,45 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         )}
 
         {/* ── Payment prompt phase ── */}
-        {phase === 'payment-prompt' && (
-          <>
-            <div className="min-h-52">{paymentPrompt}</div>
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--bg-border)]">
-              <button
-                type="button"
-                onClick={onClose}
-                className="group relative h-8 overflow-hidden rounded-[var(--radius-md)] px-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-              >
-                <span
-                  aria-hidden
-                  className="absolute inset-y-0 left-0 rounded-[inherit] bg-[var(--bg-elevated)] group-hover:bg-[var(--bg-border)] transition-[width,background-color] ease-linear"
-                  style={{
-                    width: `${((SKIP_DURATION - skipCountdown) / SKIP_DURATION) * 100}%`,
-                    transitionDuration: `1000ms, 50ms`,
-                  }}
-                />
-                <span className="relative z-10 flex items-center gap-1.5">
-                  {t('transactions_payment_skip')}
-                  <span className="font-mono text-xs opacity-50">{skipCountdown}s</span>
-                </span>
-              </button>
-              <Button onClick={() => setPhase('payment-form')}>
-                {t('transactions_payment_register')}
-              </Button>
-            </div>
-          </>
+        {state.phase === 'payment-prompt' && (
+          <PaymentPromptStep
+            onRegisterPayment={() => state.setPhase('payment-form')}
+            onSkip={onClose}
+            skipCountdown={state.skipCountdown}
+          />
         )}
 
         {/* ── Payment form phase ── */}
-        {phase === 'payment-form' && (
-          <>
-            <div className="min-h-52">{paymentForm}</div>
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--bg-border)]">
-              <Button variant="ghost" size="sm" onClick={() => setPhase('payment-prompt')}>
-                <ChevronLeft className="h-4 w-4" />
-                {t('transactions_wizard_back')}
-              </Button>
-              <Button
-                onClick={handleRegisterPayment}
-                loading={update.isPending}
-                disabled={!paidAt || !paymentMethod || (paymentMethod === 'bank' && !bankId)}
-              >
-                {t('transactions_payment_confirm')}
-              </Button>
-            </div>
-          </>
+        {state.phase === 'payment-form' && (
+          <PaymentFormStep
+            paidAt={state.paidAt}
+            setPaidAt={state.setPaidAt}
+            paymentMethod={state.paymentMethod}
+            setPaymentMethod={state.setPaymentMethod}
+            bankId={state.bankId}
+            setBankId={state.setBankId}
+            methodError={state.methodError}
+            setMethodError={state.setMethodError}
+            banks={banks}
+            language={language}
+            onBack={() => state.setPhase('payment-prompt')}
+            onConfirm={handleRegisterPayment}
+            isLoading={update.isPending}
+          />
         )}
 
       </Modal>
 
       {/* Quick-add contact — rendered outside wizard modal so both stack */}
       <ContactModal
-        open={contactModalOpen}
-        onClose={() => setContactModalOpen(false)}
-        initialName={contactModalInitialName}
+        open={state.contactModalOpen}
+        onClose={() => state.setContactModalOpen(false)}
+        initialName={state.contactModalInitialName}
         onCreated={(contact) => {
-          setCounterpart(contact.name)
-          setContactSearch(contact.name)
-          setContactId(contact.id)
-          setContactModalOpen(false)
+          state.setCounterpart(contact.name)
+          state.setContactSearch(contact.name)
+          state.setContactId(contact.id)
+          state.setContactModalOpen(false)
         }}
       />
     </>

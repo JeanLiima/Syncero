@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TrendingUp, TrendingDown, AlertCircle, Landmark, Tag, Users, Sparkles } from 'lucide-react'
 import { Badge, Button, Input, Modal, Select } from '@syncero/ui'
@@ -314,8 +314,26 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
     [transaction, accounts, suggestion],
   )
 
-  const isIncome = transaction?.type === 'income'
-  const amount   = transaction?.amount ?? 0
+  // Auto-apply best account for each side when accounts load
+  useEffect(() => {
+    if (!transaction || rawAccounts.length === 0) return
+    const analytic = rawAccounts.filter(a => a.is_analytic && a.is_active)
+
+    const autoSelect = (side: 'debit' | 'credit', type: AccountType): string => {
+      // 1. matching hint
+      const hint = hints.find(h => h.side === side && h.action === 'select' && h.accountId)
+      if (hint?.accountId) return hint.accountId
+      // 2. first analytic of suggested type
+      return analytic.find(a => a.account_type === type)?.id ?? ''
+    }
+
+    setDebitId(prev  => prev || autoSelect('debit',  suggestion.debitType))
+    setCreditId(prev => prev || autoSelect('credit', suggestion.creditType))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawAccounts, transaction])
+
+  const isIncome  = transaction?.type === 'income'
+  const amount    = transaction?.amount ?? 0
   const canSubmit = debitId && creditId && debitId !== creditId
 
   const handleClose = () => {
@@ -456,7 +474,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
 
           {/* Debit / Credit pickers */}
           <AccountPicker
-            label={t('classify_debit')}
+            label={isIncome ? t('classify_debit_income') : t('classify_debit_expense')}
             accountType={suggestion.debitType}
             accounts={accounts}
             value={debitId}
@@ -467,7 +485,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
           />
 
           <AccountPicker
-            label={t('classify_credit')}
+            label={isIncome ? t('classify_credit_income') : t('classify_credit_expense')}
             accountType={suggestion.creditType}
             accounts={accounts}
             value={creditId}

@@ -231,8 +231,12 @@ export const en: Record<TranslationKey, string> = {
 
   // Transaction classification
   classify_title: 'Classify Transaction',
-  classify_debit: 'Debit',
-  classify_credit: 'Credit',
+  classify_debit: 'Debit (out)',
+  classify_credit: 'Credit (in)',
+  classify_debit_income: 'Received in',
+  classify_debit_expense: 'Classify as',
+  classify_credit_income: 'Revenue source',
+  classify_credit_expense: 'Paid from',
   classify_nature: 'Accounting nature',
   classify_selectAccount: 'Select account…',
   classify_noAccounts: 'No accounts found',

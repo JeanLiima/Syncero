@@ -229,8 +229,12 @@ export const pt = {
 
   // Transaction classification
   classify_title: 'Classificar Lançamento',
-  classify_debit: 'Débito',
-  classify_credit: 'Crédito',
+  classify_debit: 'Débito (saída)',
+  classify_credit: 'Crédito (entrada)',
+  classify_debit_income: 'Recebido em',
+  classify_debit_expense: 'Classificar como',
+  classify_credit_income: 'Origem da receita',
+  classify_credit_expense: 'Pago de',
   classify_nature: 'Natureza contábil',
   classify_selectAccount: 'Selecionar conta…',
   classify_noAccounts: 'Nenhuma conta encontrada',

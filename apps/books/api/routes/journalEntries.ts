@@ -42,6 +42,7 @@ router.post('/', async (c) => {
   const db = createServiceClient()
   const body = await c.req.json<{
     entry_date: string; description: string; external_ref?: string
+    flow_transaction_id?: string
     lines: Array<{ account_plan_id: string; side: 'debit' | 'credit'; amount: number; memo?: string }>
     companyId?: string; extCompanyId?: string
   }>()
@@ -65,7 +66,8 @@ router.post('/', async (c) => {
     entry_date: body.entry_date,
     description: body.description,
     external_ref: body.external_ref || null,
-    source: 'manual',
+    flow_transaction_id: body.flow_transaction_id || null,
+    source: body.flow_transaction_id ? 'syncero_import' : 'manual',
   }).select('id').single()
   if (error) return c.json({ error: 'Failed to create journal entry' }, 500)
 

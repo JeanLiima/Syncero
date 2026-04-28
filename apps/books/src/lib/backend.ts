@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { Category, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
+import type { AccountPlan, Category, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
 
 function buildQuery(params: Record<string, string | undefined>) {
   const query = new URLSearchParams()
@@ -43,4 +43,30 @@ export async function getTransactionDetail(id: string) {
 
 export async function getCategories(companyId: string) {
   return apiFetch<Category[]>(`/api/categories${buildQuery({ companyId })}`)
+}
+
+export async function getAccountPlans(companyId: string) {
+  return apiFetch<AccountPlan[]>(`/api/account-plans${buildQuery({ companyId })}`)
+}
+
+export async function createAccountPlan(body: {
+  companyId: string
+  code: string
+  name: string
+  account_type: string
+  nature: string
+  is_analytic: boolean
+  parent_id: string | null
+}) {
+  return apiFetch<AccountPlan>('/api/account-plans', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export async function createJournalEntry(body: {
+  companyId: string
+  entry_date: string
+  description: string
+  flow_transaction_id: string
+  lines: Array<{ account_plan_id: string; side: 'debit' | 'credit'; amount: number; memo?: string }>
+}) {
+  return apiFetch<{ id: string }>('/api/journal-entries', { method: 'POST', body: JSON.stringify(body) })
 }

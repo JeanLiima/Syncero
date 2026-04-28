@@ -291,6 +291,8 @@ export const pt = {
   settings_cnpj: 'CNPJ',
   settings_taxRegime: 'Regime tributário',
   settings_segment: 'Segmento',
+  settings_segmentHint: 'O segmento da empresa pode habilitar opções adicionais nos lançamentos.',
+  settings_segmentCostHint: 'Com este segmento, a natureza "Custo de produto/serviço" ficará disponível nos lançamentos.',
   settings_simplesNacional: 'Simples Nacional',
   settings_lucroPresumido: 'Lucro Presumido',
   settings_lucroReal: 'Lucro Real',
@@ -363,6 +365,8 @@ export const pt = {
   noCompany_taxRegimePlaceholder: 'Selecionar',
   noCompany_segmentLabel: 'Segmento',
   noCompany_segmentPlaceholder: 'Selecionar',
+  noCompany_segmentHint: 'O segmento pode habilitar opções adicionais nos lançamentos.',
+  noCompany_segmentCostHint: 'Com este segmento, a natureza "Custo de produto/serviço" ficará disponível nos lançamentos.',
   noCompany_submit: 'Criar empresa',
   noCompany_success: 'Empresa criada com sucesso!',
 

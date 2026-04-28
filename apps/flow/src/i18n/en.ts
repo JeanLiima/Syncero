@@ -293,6 +293,8 @@ export const en: Record<TranslationKey, string> = {
   settings_cnpj: 'CNPJ',
   settings_taxRegime: 'Tax regime',
   settings_segment: 'Segment',
+  settings_segmentHint: 'The company segment may enable additional options in transactions.',
+  settings_segmentCostHint: 'With this segment, the "Product/service cost" nature will be available in transactions.',
   settings_simplesNacional: 'Simples Nacional',
   settings_lucroPresumido: 'Lucro Presumido',
   settings_lucroReal: 'Lucro Real',
@@ -365,6 +367,8 @@ export const en: Record<TranslationKey, string> = {
   noCompany_taxRegimePlaceholder: 'Select',
   noCompany_segmentLabel: 'Segment',
   noCompany_segmentPlaceholder: 'Select',
+  noCompany_segmentHint: 'The segment may enable additional options in transactions.',
+  noCompany_segmentCostHint: 'With this segment, the "Product/service cost" nature will be available in transactions.',
   noCompany_submit: 'Create company',
   noCompany_success: 'Company created successfully!',
 

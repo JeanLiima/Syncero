@@ -15,9 +15,8 @@ import { ContactCombobox } from './ContactCombobox'
 import { useTransactionWizardState } from './useTransactionWizard'
 import { PaymentPromptStep } from './PaymentPromptStep'
 import { PaymentFormStep } from './PaymentFormStep'
+import { SEGMENTS_WITH_COST } from '@/lib/segments'
 import type { Transaction, TransactionNature } from '@/types'
-
-const SEGMENTS_WITH_COST = new Set(['comercio', 'industria', 'agronegocio', 'construcao_civil'])
 
 interface Props {
   open: boolean

@@ -22,10 +22,11 @@ const segmentLabel: Record<string, string> = Object.fromEntries(
 )
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog } from '@syncero/ui'
-import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown } from 'lucide-react'
+import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown, Info } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { useAuthStore } from '@/store/auth'
+import { SEGMENTS_WITH_COST } from '@/lib/segments'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
@@ -68,7 +69,7 @@ function CompanyTab() {
     enabled: !!activeCompany?.id,
   })
 
-  const { register, handleSubmit, reset, control, formState: { errors, isSubmitting } } = useForm<CompanyForm>({
+  const { register, handleSubmit, reset, control, watch, formState: { errors, isSubmitting } } = useForm<CompanyForm>({
     resolver: zodResolver(companySchema),
   })
 
@@ -160,21 +161,31 @@ function CompanyTab() {
               />
             )}
           />
-          <Controller
-            control={control}
-            name="segment"
-            render={({ field }) => (
-              <Select
-                label={t('settings_segment')}
-                placeholder={t('common_select')}
-                value={field.value ?? ''}
-                onChange={(v) => field.onChange(v || undefined)}
-                onBlur={field.onBlur}
-                options={segmentOptions}
-                searchable
-              />
+          <div className="flex flex-col gap-1.5">
+            <Controller
+              control={control}
+              name="segment"
+              render={({ field }) => (
+                <Select
+                  label={t('settings_segment')}
+                  placeholder={t('common_select')}
+                  value={field.value ?? ''}
+                  onChange={(v) => field.onChange(v || undefined)}
+                  onBlur={field.onBlur}
+                  options={segmentOptions}
+                  searchable
+                />
+              )}
+            />
+            {SEGMENTS_WITH_COST.has(watch('segment') ?? '') ? (
+              <div className="flex items-start gap-1.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2.5 py-2">
+                <Info className="h-3.5 w-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
+                <p className="text-xs text-[var(--text-secondary)]">{t('settings_segmentCostHint')}</p>
+              </div>
+            ) : (
+              <p className="text-xs text-[var(--text-muted)]">{t('settings_segmentHint')}</p>
             )}
-          />
+          </div>
           <div className="flex items-center justify-end gap-3 mt-2 pt-4 border-t border-[var(--bg-border)]">
             <Button variant="ghost" size="sm" type="button" onClick={() => setEditOpen(false)}>
               {t('settings_cancel')}

@@ -20,7 +20,13 @@ export function Component() {
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const canWrite = activeCompany?.role !== 'viewer'
 
-  const [filters, setFilters] = useState<TransactionFilters>({})
+  const [filters, setFilters] = useState<TransactionFilters>(() => {
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, '0')
+    const last = new Date(y, now.getMonth() + 1, 0).getDate()
+    return { date_from: `${y}-${m}-01`, date_to: `${y}-${m}-${String(last).padStart(2, '0')}` }
+  })
   const [page, setPage] = useState(1)
   const [detailId, setDetailId] = useState<string | null>(null)
   const [paymentTarget, setPaymentTarget] = useState<{ id: string; type: TransactionType } | null>(null)

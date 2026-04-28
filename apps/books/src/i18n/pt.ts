@@ -197,6 +197,7 @@ export const pt = {
   classify_badge_done: 'Classificado',
   classify_badge_pending: 'Não classificado',
   classify_action: 'Classificar',
+  classify_awaitingPayment: 'Aguarda pagamento',
   classify_newAccount_title: 'Nova conta',
   classify_newAccount_code: 'Código',
   classify_newAccount_name: 'Nome',

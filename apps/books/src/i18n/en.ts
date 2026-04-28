@@ -199,6 +199,7 @@ export const en: Record<TranslationKey, string> = {
   classify_badge_done: 'Classified',
   classify_badge_pending: 'Unclassified',
   classify_action: 'Classify',
+  classify_awaitingPayment: 'Awaiting payment',
   classify_newAccount_title: 'New account',
   classify_newAccount_code: 'Code',
   classify_newAccount_name: 'Name',

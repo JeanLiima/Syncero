@@ -206,7 +206,13 @@ export function Component() {
   const { companyId } = useParams<{ companyId: string }>()
   const { language } = usePreferencesStore()
 
-  const [filters, setFilters] = useState<TransactionFilters>({})
+  const [filters, setFilters] = useState<TransactionFilters>(() => {
+    const now = new Date()
+    const y = now.getFullYear()
+    const m = String(now.getMonth() + 1).padStart(2, '0')
+    const last = new Date(y, now.getMonth() + 1, 0).getDate()
+    return { date_from: `${y}-${m}-01`, date_to: `${y}-${m}-${String(last).padStart(2, '0')}` }
+  })
   const [page, setPage]       = useState(1)
   const [detailId,  setDetailId]  = useState<string | null>(null)
   const [classifyTx, setClassifyTx] = useState<TxRow | null>(null)
@@ -330,15 +336,20 @@ export function Component() {
               key: 'actions',
               header: '',
               align: 'right',
-              render: (r: TxRow) =>
-                !r.is_classified ? (
+              render: (r: TxRow) => {
+                if (r.is_classified) return null
+                if (!r.is_paid) return (
+                  <span className="text-xs text-[var(--text-muted)]">{t('classify_awaitingPayment')}</span>
+                )
+                return (
                   <button
                     onClick={(e) => { e.stopPropagation(); setClassifyTx(r) }}
                     className="cursor-pointer text-xs font-medium text-[var(--accent)] hover:underline"
                   >
                     {t('classify_action')}
                   </button>
-                ) : null,
+                )
+              },
             },
           ]}
         />

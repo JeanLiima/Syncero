@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { Button, Input, Select, Card, Checkbox } from '@syncero/ui'
 import { useT } from '@/i18n'
-import type { TaxRegime, CompanyIntegration, CompanySegment } from '@/types'
+import type { TaxRegime, CompanySegment } from '@/types'
 
 const segmentOptions = [
   { value: '', label: '— Não definido —' },
@@ -29,10 +29,6 @@ const taxRegimeOptions = [
   { value: 'lucro_real', label: 'Lucro Real' },
 ]
 
-const integrationOptions = [
-  { value: 'manual', label: 'Manual' },
-  { value: 'other', label: 'Outro sistema' },
-]
 
 export function Component() {
   const t = useT()
@@ -44,7 +40,6 @@ export function Component() {
   const [cnpj, setCnpj] = useState('')
   const [tradeName, setTradeName] = useState('')
   const [taxRegime, setTaxRegime] = useState<TaxRegime | ''>('')
-  const [integration, setIntegration] = useState<CompanyIntegration>('manual')
   const [segment, setSegment] = useState<CompanySegment | ''>('')
   const [notes, setNotes] = useState('')
   const [seedPlan, setSeedPlan] = useState(true)
@@ -67,7 +62,7 @@ export function Component() {
           cnpj: rawCnpj || null,
           trade_name: tradeName.trim() || null,
           tax_regime: taxRegime || null,
-          integration,
+          integration: 'manual',
           segment: segment || null,
           notes: notes.trim() || null,
           seedPlan,
@@ -129,12 +124,6 @@ export function Component() {
             options={segmentOptions}
             value={segment}
             onChange={v => setSegment(v as CompanySegment | '')}
-          />
-          <Select
-            label={t('external_integration')}
-            options={integrationOptions}
-            value={integration}
-            onChange={v => setIntegration(v as CompanyIntegration)}
           />
           <Input
             label={t('external_notes')}

@@ -10,7 +10,6 @@ interface CompanyCardProps {
   cnpj: string | null
   taxRegime: TaxRegime | null
   isExternal: boolean
-  integration?: string
 }
 
 const taxRegimeLabel: Record<TaxRegime, string> = {
@@ -19,7 +18,7 @@ const taxRegimeLabel: Record<TaxRegime, string> = {
   lucro_real: 'Lucro Real',
 }
 
-export function CompanyCard({ id, name, cnpj, taxRegime, isExternal, integration }: CompanyCardProps) {
+export function CompanyCard({ id, name, cnpj, taxRegime, isExternal }: CompanyCardProps) {
   const href = isExternal ? `/accountant/external/${id}` : `/accountant/company/${id}`
 
   const formattedCnpj = cnpj
@@ -40,7 +39,7 @@ export function CompanyCard({ id, name, cnpj, taxRegime, isExternal, integration
           <p className="text-xs text-[var(--text-muted)] mb-2 font-mono">{formattedCnpj}</p>
         )}
         <div className="flex flex-wrap gap-1.5 mt-auto pt-1">
-          <CompanyTypeBadge isExternal={isExternal} integration={integration} />
+          <CompanyTypeBadge isExternal={isExternal} />
           {taxRegime && (
             <Badge variant="info" className="text-xs">
               {taxRegimeLabel[taxRegime]}

@@ -197,7 +197,6 @@ export interface TaxCalculation {
 
 // ── External companies & accounting ──────────────────────────
 
-export type CompanyIntegration = 'manual' | 'other'
 export type EntrySource = 'manual' | 'api' | 'syncero_import'
 export type AccountType = 'ativo' | 'passivo' | 'patrimonio_liquido' | 'receita' | 'despesa' | 'custo'
 export type AccountNature = 'devedora' | 'credora'
@@ -215,7 +214,7 @@ export interface ExternalCompany {
   cnpj: string | null
   trade_name: string | null
   tax_regime: TaxRegime | null
-  integration: CompanyIntegration
+  integration: string
   segment: CompanySegment | null
   is_active: boolean
   notes: string | null

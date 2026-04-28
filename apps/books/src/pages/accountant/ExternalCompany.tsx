@@ -79,7 +79,7 @@ export function Component() {
         <div className="flex items-center gap-2 mb-1">
           <p className="text-xs text-[var(--text-muted)]">{t('overview_externalCompany')}</p>
           {company && (
-            <CompanyTypeBadge isExternal integration={company.integration} />
+            <CompanyTypeBadge isExternal />
           )}
         </div>
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{company?.name ?? '…'}</h1>

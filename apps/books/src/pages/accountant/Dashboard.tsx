@@ -103,7 +103,6 @@ export function Component() {
                 cnpj={ec.cnpj}
                 taxRegime={ec.tax_regime}
                 isExternal={true}
-                integration={ec.integration}
               />
             ))}
         </div>

@@ -292,7 +292,6 @@ export const pt = {
   external_cnpjPlaceholder: '00.000.000/0000-00',
   external_taxRegime: 'Regime tributário',
   external_segment: 'Segmento',
-  external_integration: 'Sistema de origem',
   external_notes: 'Observações',
   external_notesPlaceholder: 'Notas internas sobre a empresa',
   external_seedPlan: 'Criar Plano de Contas padrão CFC',

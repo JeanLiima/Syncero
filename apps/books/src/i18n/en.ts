@@ -294,7 +294,6 @@ export const en: Record<TranslationKey, string> = {
   external_cnpjPlaceholder: '00.000.000/0000-00',
   external_taxRegime: 'Tax regime',
   external_segment: 'Segment',
-  external_integration: 'Source system',
   external_notes: 'Notes',
   external_notesPlaceholder: 'Internal notes about the company',
   external_seedPlan: 'Create default CFC chart of accounts',

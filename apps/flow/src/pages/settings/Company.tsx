@@ -37,7 +37,7 @@ const companySchema = z.object({
   trade_name: z.string().optional(),
   cnpj:       z.string().optional(),
   tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
-  segment:    z.string().optional(),
+  segment:    z.string().min(1, 'Obrigatório'),
 })
 
 type CompanyForm = z.infer<typeof companySchema>
@@ -165,15 +165,16 @@ function CompanyTab() {
             <Controller
               control={control}
               name="segment"
-              render={({ field }) => (
+              render={({ field, fieldState }) => (
                 <Select
                   label={t('settings_segment')}
                   placeholder={t('common_select')}
                   value={field.value ?? ''}
-                  onChange={(v) => field.onChange(v || undefined)}
+                  onChange={(v) => field.onChange(v || '')}
                   onBlur={field.onBlur}
                   options={segmentOptions}
                   searchable
+                  error={fieldState.error?.message}
                 />
               )}
             />

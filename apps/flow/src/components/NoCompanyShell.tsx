@@ -27,7 +27,7 @@ const schema = z.object({
   trade_name: z.string().optional(),
   cnpj:       z.string().optional(),
   tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
-  segment:    z.string().optional(),
+  segment:    z.string().min(1, 'Obrigatório'),
 })
 type FormData = z.infer<typeof schema>
 
@@ -138,15 +138,16 @@ export function NoCompanyShell() {
               <Controller
                 control={control}
                 name="segment"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <Select
                     label={t('noCompany_segmentLabel')}
                     placeholder={t('noCompany_segmentPlaceholder')}
                     value={field.value ?? ''}
-                    onChange={(v) => field.onChange(v || undefined)}
+                    onChange={(v) => field.onChange(v || '')}
                     onBlur={field.onBlur}
                     options={segmentOptions}
                     searchable
+                    error={fieldState.error?.message}
                   />
                 )}
               />

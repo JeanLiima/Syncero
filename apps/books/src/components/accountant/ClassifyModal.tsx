@@ -19,6 +19,7 @@ const NATURE_SUGGESTIONS: Record<string, Suggestion> = {
   loan_received:        { debitType: 'ativo',             creditType: 'passivo',           natureKey: 'nature_loan_received' },
   capital_contribution: { debitType: 'ativo',             creditType: 'patrimonio_liquido', natureKey: 'nature_capital_contribution' },
   operational_expense:  { debitType: 'despesa',           creditType: 'ativo',             natureKey: 'nature_operational_expense' },
+  product_cost:         { debitType: 'custo',             creditType: 'ativo',             natureKey: 'nature_product_cost' },
   asset_purchase:       { debitType: 'ativo',             creditType: 'ativo',             natureKey: 'nature_asset_purchase' },
   debt_payment:         { debitType: 'passivo',           creditType: 'ativo',             natureKey: 'nature_debt_payment' },
   owner_withdrawal:     { debitType: 'patrimonio_liquido', creditType: 'ativo',             natureKey: 'nature_owner_withdrawal' },

@@ -17,6 +17,8 @@ import { PaymentPromptStep } from './PaymentPromptStep'
 import { PaymentFormStep } from './PaymentFormStep'
 import type { Transaction, TransactionNature } from '@/types'
 
+const SEGMENTS_WITH_COST = new Set(['comercio', 'industria', 'agronegocio', 'construcao_civil'])
+
 interface Props {
   open: boolean
   onClose: () => void
@@ -42,8 +44,9 @@ const INCOME_NATURES: NatureOption[] = [
   { value: 'capital_contribution', labelKey: 'transactions_nature_capital_contribution', descKey: 'transactions_nature_capital_contribution_desc', icon: Users         },
 ]
 
-const EXPENSE_NATURES: NatureOption[] = [
+const BASE_EXPENSE_NATURES: NatureOption[] = [
   { value: 'operational_expense', labelKey: 'transactions_nature_operational_expense', descKey: 'transactions_nature_operational_expense_desc', icon: Receipt,      common: true },
+  { value: 'product_cost',        labelKey: 'transactions_nature_product_cost',        descKey: 'transactions_nature_product_cost_desc',        icon: Package,      common: true },
   { value: 'asset_purchase',      labelKey: 'transactions_nature_asset_purchase',      descKey: 'transactions_nature_asset_purchase_desc',      icon: Package        },
   { value: 'debt_payment',        labelKey: 'transactions_nature_debt_payment',        descKey: 'transactions_nature_debt_payment_desc',        icon: ArrowDownLeft  },
   { value: 'owner_withdrawal',    labelKey: 'transactions_nature_owner_withdrawal',    descKey: 'transactions_nature_owner_withdrawal_desc',    icon: ArrowUpRight   },
@@ -53,6 +56,11 @@ const EXPENSE_NATURES: NatureOption[] = [
 
 export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const t = useT()
+  const activeCompany  = useAuthStore(s => s.activeCompany)
+  const hasCostSegment = activeCompany?.segment ? SEGMENTS_WITH_COST.has(activeCompany.segment) : false
+  const EXPENSE_NATURES = hasCostSegment
+    ? BASE_EXPENSE_NATURES
+    : BASE_EXPENSE_NATURES.filter(n => n.value !== 'product_cost')
   const create = useCreateTransaction()
   const update = useUpdateTransaction()
   const deleteT = useDeleteTransaction()

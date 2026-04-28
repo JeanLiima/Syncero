@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Search, X, BookMarked, Sparkles, AlertTriangle } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
@@ -10,6 +10,8 @@ import { useT } from '@/i18n'
 import type { AccountPlan, AccountType } from '@/types'
 
 // ── constants ─────────────────────────────────────────────────
+
+const SEGMENTS_WITH_COST = new Set(['comercio', 'industria', 'agronegocio', 'construcao_civil'])
 
 const ACCOUNT_SECTIONS: { type: AccountType; labelKey: string; color: string; subtleColor: string }[] = [
   { type: 'ativo',             labelKey: 'plano_ativo',             color: 'text-blue-400',   subtleColor: 'bg-blue-500/10'   },
@@ -208,8 +210,22 @@ export function Component() {
   const [filterType,  setFilterType]  = useState('')
   const hasFilter = !!(search || filterType)
 
-  const queryKey    = ['account-plans', id]
+  const queryKey     = ['account-plans', id]
   const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
+
+  // Fetch segment to conditionally show Custo section
+  const { data: companyData } = useQuery({
+    queryKey: isExternal ? ['external-company', id] : ['company-readonly', id],
+    queryFn: () => apiFetch<{ segment?: string | null }>(
+      isExternal ? `/api/external-companies/${id}` : `/api/companies/${id}`
+    ),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const hasCostSegment = companyData?.segment
+    ? SEGMENTS_WITH_COST.has(companyData.segment)
+    : null // null = still loading, show all
 
   const { data: plans = [], isLoading } = useQuery({
     queryKey,
@@ -297,6 +313,17 @@ export function Component() {
     }
   }
 
+  // Hide Custo when segment doesn't need it AND no custo accounts exist
+  const visibleSections = useMemo(() => {
+    const hasExistingCusto = plans.some(p => p.account_type === 'custo')
+    return ACCOUNT_SECTIONS.filter(s => {
+      if (s.type !== 'custo') return true
+      if (hasExistingCusto) return true          // always show if accounts exist
+      if (hasCostSegment === null) return true   // still loading — show all
+      return hasCostSegment
+    })
+  }, [plans, hasCostSegment])
+
   // Filter plans for search/type filter
   const filtered = hasFilter
     ? plans.filter(p => {
@@ -383,7 +410,7 @@ export function Component() {
       {/* Sections */}
       {(plans.length > 0 || fromScratch) && (
         <div className="flex flex-col gap-4">
-          {ACCOUNT_SECTIONS.map(({ type, labelKey, color, subtleColor }) => {
+          {visibleSections.map(({ type, labelKey, color, subtleColor }) => {
             const sectionPlans = hasFilter
               ? filtered.filter(p => p.account_type === type)
               : plans.filter(p => p.account_type === type)

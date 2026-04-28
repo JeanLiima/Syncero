@@ -7,6 +7,7 @@ export type TransactionNature =
   | 'loan_received'
   | 'capital_contribution'
   | 'operational_expense'
+  | 'product_cost'
   | 'asset_purchase'
   | 'debt_payment'
   | 'owner_withdrawal'

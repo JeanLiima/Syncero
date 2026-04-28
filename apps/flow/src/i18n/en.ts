@@ -178,6 +178,8 @@ export const en: Record<TranslationKey, string> = {
   transactions_nature_capital_contribution_desc: 'Capital invested by partners',
   transactions_nature_operational_expense: 'Operational expense',
   transactions_nature_operational_expense_desc: 'Day-to-day business expense',
+  transactions_nature_product_cost: 'Product/service cost',
+  transactions_nature_product_cost_desc: 'COGS, CSP — direct cost of what was sold',
   transactions_nature_asset_purchase: 'Asset purchase',
   transactions_nature_asset_purchase_desc: 'Equipment, vehicle or real estate',
   transactions_nature_debt_payment: 'Debt payment',

@@ -176,6 +176,8 @@ export const pt = {
   transactions_nature_capital_contribution_desc: 'Capital investido pelos sócios na empresa',
   transactions_nature_operational_expense: 'Despesa operacional',
   transactions_nature_operational_expense_desc: 'Gasto do dia a dia da empresa',
+  transactions_nature_product_cost: 'Custo de produto/serviço',
+  transactions_nature_product_cost_desc: 'CMV, CSP — custo direto do que foi vendido',
   transactions_nature_asset_purchase: 'Compra de bem',
   transactions_nature_asset_purchase_desc: 'Equipamento, veículo ou imóvel',
   transactions_nature_debt_payment: 'Pagamento de dívida',

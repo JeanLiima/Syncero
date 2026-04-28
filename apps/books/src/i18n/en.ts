@@ -249,6 +249,7 @@ export const en: Record<TranslationKey, string> = {
   nature_loan_received: 'Loan received',
   nature_capital_contribution: 'Capital contribution',
   nature_operational_expense: 'Operational expense',
+  nature_product_cost: 'Product/service cost',
   nature_asset_purchase: 'Asset purchase',
   nature_debt_payment: 'Debt payment',
   nature_owner_withdrawal: "Owner's withdrawal",

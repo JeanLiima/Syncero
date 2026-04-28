@@ -14,7 +14,7 @@ router.get('/', async (c) => {
       .eq('id', userId)
       .single(),
     db.from('company_members')
-      .select('role, companies(id, name)')
+      .select('role, companies(id, name, segment)')
       .eq('user_id', userId)
       .eq('status', 'accepted')
       .limit(1)
@@ -23,8 +23,8 @@ router.get('/', async (c) => {
 
   let activeCompany = null
   if (memberRes.data?.companies) {
-    const co = memberRes.data.companies as unknown as { id: string; name: string }
-    activeCompany = { id: co.id, name: co.name, role: memberRes.data.role }
+    const co = memberRes.data.companies as unknown as { id: string; name: string; segment: string | null }
+    activeCompany = { id: co.id, name: co.name, role: memberRes.data.role, segment: co.segment }
   }
 
   return c.json({ profile: profileRes.data, activeCompany })

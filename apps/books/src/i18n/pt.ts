@@ -247,6 +247,7 @@ export const pt = {
   nature_loan_received: 'Empréstimo recebido',
   nature_capital_contribution: 'Aporte de capital',
   nature_operational_expense: 'Despesa operacional',
+  nature_product_cost: 'Custo de produto/serviço',
   nature_asset_purchase: 'Compra de ativo',
   nature_debt_payment: 'Pagamento de dívida',
   nature_owner_withdrawal: 'Retirada do sócio',

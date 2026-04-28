@@ -92,7 +92,7 @@ function CompanyTab() {
       return updateCompany(activeCompany!.id, payload)
     },
     onSuccess: (_, vars) => {
-      setActiveCompany({ ...activeCompany!, name: vars.name })
+      setActiveCompany({ ...activeCompany!, name: vars.name, segment: vars.segment ?? activeCompany!.segment })
       qc.invalidateQueries({ queryKey: ['company', activeCompany?.id] })
       success(t('common_savedSuccess'))
       setEditOpen(false)

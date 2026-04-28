@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { FiscalBook, FiscalDocument, TaxCalculation } from '@/types'
+import type { Category, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
 
 function buildQuery(params: Record<string, string | undefined>) {
   const query = new URLSearchParams()
@@ -20,4 +20,27 @@ export async function getFiscalDocuments(companyId: string, opts: { doc_type?: s
 
 export async function getTaxCalculations(companyId: string) {
   return apiFetch<TaxCalculation[]>(`/api/tax-calculations${buildQuery({ companyId })}`)
+}
+
+export type TransactionQueryParams = {
+  companyId: string
+  type?: string
+  category_id?: string
+  is_paid?: string
+  date_from?: string
+  date_to?: string
+  page?: string
+  pageSize?: string
+} & Record<string, string | undefined>
+
+export async function getTransactions(params: TransactionQueryParams) {
+  return apiFetch<{ data: Transaction[]; count: number }>(`/api/transactions${buildQuery(params)}`)
+}
+
+export async function getTransactionDetail(id: string) {
+  return apiFetch<TransactionDetail>(`/api/transactions/${id}`)
+}
+
+export async function getCategories(companyId: string) {
+  return apiFetch<Category[]>(`/api/categories${buildQuery({ companyId })}`)
 }

@@ -3,7 +3,7 @@ import { NavLink, useMatch } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   Building2, ArrowLeft, LayoutDashboard,
-  FileText, BookOpen, Calculator, LayoutList, BookMarked, Key,
+  FileText, BookOpen, Calculator, LayoutList, BookMarked, Key, ArrowDownUp,
 } from 'lucide-react'
 import { AppLayout, type NavItem } from '@syncero/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -50,13 +50,14 @@ export function Layout({ children }: { children: ReactNode }) {
   const companyNavItems: NavItem[] = [
     { to: basePath, label: t('nav_overview'),    icon: icon(LayoutDashboard), end: true },
     ...(companyId ? [
-      { to: `${basePath}/nfe`,   label: t('nav_fiscalDocs'), icon: icon(FileText)   },
-      { to: `${basePath}/sped`,  label: t('nav_sped'),       icon: icon(BookOpen)   },
-      { to: `${basePath}/taxes`, label: t('nav_taxes'),      icon: icon(Calculator) },
+      { to: `${basePath}/nfe`,          label: t('nav_fiscalDocs'),   icon: icon(FileText)      },
+      { to: `${basePath}/sped`,         label: t('nav_sped'),         icon: icon(BookOpen)      },
+      { to: `${basePath}/taxes`,        label: t('nav_taxes'),        icon: icon(Calculator)    },
+      { to: `${basePath}/transactions`, label: t('nav_transactions'), icon: icon(ArrowDownUp)   },
     ] : []),
     { to: `${basePath}/chart-of-accounts`, label: t('nav_accountPlan'), icon: icon(LayoutList) },
     { to: `${basePath}/journal-entries`,   label: t('nav_journal'),     icon: icon(BookMarked) },
-    { to: `${basePath}/api-keys`,    label: t('nav_apiKeys'),     icon: icon(Key)        },
+    { to: `${basePath}/api-keys`,          label: t('nav_apiKeys'),     icon: icon(Key)        },
   ]
 
   const defaultNavItems: NavItem[] = [

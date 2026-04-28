@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Search, X, BookMarked, Sparkles, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Search, X, LayoutList, Sparkles, AlertTriangle } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { seedAccountPlan } from '@/lib/backend'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
@@ -36,29 +36,24 @@ function isVisible(plan: AccountPlan, plans: AccountPlan[], collapsed: Set<strin
 
 // ── First-access onboarding ───────────────────────────────────
 
-function FirstAccess({ onSeed, onSkip, seeding }: {
-  onSeed: () => void; onSkip: () => void; seeding: boolean
+function FirstAccess({ onSeed, seeding }: {
+  onSeed: () => void; seeding: boolean
 }) {
   const t = useT()
   return (
     <Card>
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <div className="h-14 w-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--bg-border)] flex items-center justify-center">
-          <BookMarked className="h-7 w-7 text-[var(--text-muted)]" />
+          <LayoutList className="h-7 w-7 text-[var(--text-muted)]" />
         </div>
         <div>
           <p className="text-sm font-medium text-[var(--text-primary)]">{t('plano_seedTitle')}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1 max-w-xs">{t('plano_seedSubtitle')}</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 mt-2">
-          <Button size="sm" onClick={onSeed} loading={seeding}>
-            <Sparkles className="h-3.5 w-3.5" />
-            {t('plano_seedCfc')}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={onSkip} disabled={seeding}>
-            {t('plano_seedCustom')}
-          </Button>
-        </div>
+        <Button size="sm" onClick={onSeed} loading={seeding}>
+          <Sparkles className="h-3.5 w-3.5" />
+          {t('plano_seedCfc')}
+        </Button>
       </div>
     </Card>
   )
@@ -199,7 +194,6 @@ export function Component() {
   const [preset,      setPreset]      = useState<AccountPlanModalProps['preset']>(null)
   const [collapsed,   setCollapsed]   = useState<Set<string>>(new Set())
   const [sections,    setSections]    = useState<Set<AccountType>>(new Set())
-  const [fromScratch,  setFromScratch]  = useState(false)
   const [seeding,      setSeeding]      = useState(false)
   const [previewOpen,  setPreviewOpen]  = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AccountPlan | null>(null)
@@ -342,7 +336,7 @@ export function Component() {
     : plans
 
   // Show first-access screen when empty and not in "from scratch" mode
-  const showFirstAccess = !isLoading && plans.length === 0 && !fromScratch
+  const showFirstAccess = !isLoading && plans.length === 0
 
   return (
     <div className="flex flex-col gap-6">
@@ -366,11 +360,7 @@ export function Component() {
 
       {/* First access */}
       {showFirstAccess && (
-        <FirstAccess
-          onSeed={handleSeedCfc}
-          onSkip={() => setFromScratch(true)}
-          seeding={seeding}
-        />
+        <FirstAccess onSeed={handleSeedCfc} seeding={seeding} />
       )}
 
       {/* Filter bar — only when plans exist */}
@@ -416,7 +406,7 @@ export function Component() {
       )}
 
       {/* Sections */}
-      {(plans.length > 0 || fromScratch) && (
+      {plans.length > 0 && (
         <div className="flex flex-col gap-4">
           {visibleSections.map(({ type, labelKey, color, subtleColor }) => {
             const sectionPlans = hasFilter
@@ -495,6 +485,7 @@ export function Component() {
         onConfirm={handleConfirmSeed}
         seeding={seeding}
         hasCostSegment={hasCostSegment}
+        segment={companyData?.segment}
       />
 
       {/* Delete — has children: simple confirm blocking */}

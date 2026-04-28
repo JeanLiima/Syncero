@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Pencil, Check, ChevronDown, ChevronRight } from 'lucide-react'
-import { Button, Modal } from '@syncero/ui'
+import { Pencil, Check, ChevronDown, ChevronRight, Info } from 'lucide-react'
+import { Button, Checkbox, Modal } from '@syncero/ui'
 import { useT } from '@/i18n'
 import type { PlanEntry } from '@/lib/backend'
 import { DEFAULT_PLAN } from '@/lib/defaultPlan'
@@ -16,6 +16,24 @@ const SECTIONS: { type: AccountType; label: string; color: string; subtleColor: 
   { type: 'despesa',           label: 'Despesa',           color: 'text-red-400',    subtleColor: 'bg-red-500/10',    description: 'Gastos necessários para manter a operação.' },
   { type: 'custo',             label: 'Custo',             color: 'text-yellow-400', subtleColor: 'bg-yellow-500/10', description: 'Custo direto dos produtos/serviços vendidos (CMV/CSP).' },
 ]
+
+// Segments that recommend each account type beyond the always-required core.
+// Core types (ativo/passivo/pl/receita/despesa) are always recommended — null means all.
+const SEGMENT_RECOMMENDATIONS: Partial<Record<AccountType, string[] | null>> = {
+  ativo:             null, // always
+  passivo:           null, // always
+  patrimonio_liquido:null, // always
+  receita:           null, // always
+  despesa:           null, // always
+  custo:             ['comercio', 'industria', 'agronegocio', 'construcao_civil'],
+}
+
+function isRecommended(type: AccountType, segment: string | null | undefined): boolean {
+  const rule = SEGMENT_RECOMMENDATIONS[type]
+  if (rule === null) return true                             // always recommended
+  if (!segment) return false                                 // segment unknown → don't badge
+  return rule?.includes(segment) ?? false
+}
 
 function getDepth(code: string) { return code.split('.').length - 1 }
 
@@ -49,11 +67,9 @@ function PlanRow({
     <tr className={`border-b border-[var(--bg-border)]/40 hover:bg-[var(--bg-elevated)]/50 group/row ${checked ? '' : 'opacity-40'} transition-opacity`}>
       {/* Checkbox */}
       <td className="pl-3 pr-1 py-2 w-8 shrink-0">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={checked}
-          onChange={e => onToggle(entry._key, e.target.checked)}
-          className="accent-[var(--accent)] cursor-pointer"
+          onChange={e => onToggle(entry._key, (e.target as HTMLInputElement).checked)}
         />
       </td>
 
@@ -129,9 +145,10 @@ interface Props {
   onConfirm: (accounts: PlanEntry[]) => void
   seeding: boolean
   hasCostSegment: boolean | null
+  segment?: string | null
 }
 
-export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegment }: Props) {
+export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegment, segment }: Props) {
   const t = useT()
 
   // Build keyed entries (key = original index for stable identity)
@@ -142,9 +159,12 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
   )
 
   const [selected, setSelected] = useState<Set<string>>(() =>
-    new Set(DEFAULT_PLAN
-      .filter(e => e.account_type !== 'custo' || hasCostSegment !== false)
-      .map((_, i) => String(i))
+    new Set(
+      DEFAULT_PLAN
+        .filter(e => e.account_type !== 'custo' || hasCostSegment !== false)
+        .map((e, i) => ({ key: String(i), type: e.account_type }))
+        .filter(({ type }) => isRecommended(type as AccountType, segment))
+        .map(({ key }) => key)
     )
   )
 
@@ -195,9 +215,20 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
     }))
   }
 
-  const toggleSection = (type: AccountType) => {
+  const toggleCollapse = (type: AccountType) => {
     setCollapsed(prev => {
       const next = new Set(prev); next.has(type) ? next.delete(type) : next.add(type); return next
+    })
+  }
+
+  const toggleSectionSelection = (type: AccountType) => {
+    const sectionKeys = entries.filter(e => e.account_type === type).map(e => e._key)
+    const allIn = sectionKeys.every(k => selected.has(k))
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (allIn) sectionKeys.forEach(k => next.delete(k))
+      else       sectionKeys.forEach(k => next.add(k))
+      return next
     })
   }
 
@@ -222,7 +253,7 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
       </Button>
       <div className="flex items-center gap-3">
         <span className="text-xs text-[var(--text-muted)]">
-          {selectedCount} {selectedCount !== 1 ? t('plano_countPlural') : t('plano_countSingular')} selecionadas
+          {selectedCount} {selectedCount !== 1 ? t('plano_countPlural') : t('plano_countSingular')}
         </span>
         <Button size="sm" onClick={handleConfirm} loading={seeding} disabled={selectedCount === 0}>
           <Check className="h-3.5 w-3.5" />
@@ -234,6 +265,10 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
 
   return (
     <Modal open={open} onClose={onClose} title={t('plano_previewTitle')} size="xl" footer={footer}>
+      <div className="flex items-start gap-2.5 rounded-lg border border-[var(--bg-border)] bg-[var(--bg-elevated)] px-3 py-2.5 mb-4">
+        <Info className="h-4 w-4 text-[var(--text-muted)] shrink-0 mt-0.5" />
+        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{t('plano_previewInfo')}</p>
+      </div>
       <p className="text-xs text-[var(--text-muted)] mb-4">{t('plano_previewSubtitle')}</p>
 
       <div className="flex flex-col gap-3">
@@ -242,32 +277,60 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
             .filter(e => e.account_type === section.type)
             .sort((a, b) => a.code.localeCompare(b.code))
 
-          const sectionSelected = sectionEntries.filter(e => selected.has(e._key)).length
-          const isCollapsed = collapsed.has(section.type)
+          const sectionSelectedCount = sectionEntries.filter(e => selected.has(e._key)).length
+          const noneInSection = sectionSelectedCount === 0
+          const allInSection  = sectionSelectedCount === sectionEntries.length
+          const isCollapsed   = collapsed.has(section.type)
 
           return (
-            <div key={section.type} className="rounded-[var(--radius-lg)] border border-[var(--bg-border)] overflow-hidden">
+            <div key={section.type} className="rounded-[var(--radius-lg)] border border-[var(--bg-border)]">
               {/* Section header */}
-              <button
-                onClick={() => toggleSection(section.type)}
-                className={`w-full flex items-start justify-between px-3 py-2.5 ${section.subtleColor} cursor-pointer`}
-              >
-                <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 px-3 py-2.5 rounded-t-[var(--radius-lg)] ${section.subtleColor}`}>
+                {/* Arrow — collapse toggle, leftmost */}
+                <button
+                  onClick={() => toggleCollapse(section.type)}
+                  className="cursor-pointer p-0.5 shrink-0 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+                >
                   {isCollapsed
-                    ? <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${section.color}`} />
-                    : <ChevronDown  className={`h-3.5 w-3.5 shrink-0 ${section.color}`} />
+                    ? <ChevronRight className="h-3.5 w-3.5" />
+                    : <ChevronDown  className="h-3.5 w-3.5" />
                   }
-                  <div className="text-left">
+                </button>
+
+                {/* Section checkbox */}
+                <div className="relative group/stoggle shrink-0">
+                  <Checkbox
+                    checked={!noneInSection}
+                    indeterminate={!noneInSection && !allInSection}
+                    onChange={() => toggleSectionSelection(section.type)}
+                  />
+                  <span className="pointer-events-none absolute -top-8 left-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/stoggle:opacity-100 transition-opacity z-50">
+                    {noneInSection ? t('plano_previewSelectAll') : t('plano_previewDeselectAll')}
+                  </span>
+                </div>
+
+                {/* Title + description — clicking expands/collapses */}
+                <button
+                  onClick={() => toggleCollapse(section.type)}
+                  className="flex-1 text-left min-w-0 cursor-pointer ml-1"
+                >
+                  <div className="flex items-center gap-2">
                     <span className={`text-xs font-semibold uppercase tracking-wider ${section.color}`}>
                       {section.label}
                     </span>
-                    <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{section.description}</p>
+                    {isRecommended(section.type, segment) && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--success)]/15 text-[var(--success)]">
+                        {t('plano_recommended')}
+                      </span>
+                    )}
                   </div>
-                </div>
-                <span className="text-xs text-[var(--text-muted)] shrink-0 ml-4 mt-0.5">
-                  {sectionSelected}/{sectionEntries.length}
+                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5 truncate">{section.description}</p>
+                </button>
+
+                <span className="text-xs text-[var(--text-muted)] shrink-0 ml-2">
+                  {sectionSelectedCount}/{sectionEntries.length}
                 </span>
-              </button>
+              </div>
 
               {!isCollapsed && (
                 <table className="w-full text-sm">

@@ -130,7 +130,6 @@ export const router = createBrowserRouter([
       { path: '/accountant/company/:companyId/taxes',           lazy: lazyLoad(() => import('../pages/accountant/Taxes')) },
       { path: '/accountant/company/:companyId/chart-of-accounts', lazy: lazyLoad(() => import('../pages/accountant/ChartOfAccounts')) },
       { path: '/accountant/company/:companyId/journal-entries',   lazy: lazyLoad(() => import('../pages/accountant/JournalEntries')) },
-      { path: '/accountant/external/new',                       lazy: lazyLoad(() => import('../pages/accountant/ExternalCompanyNew')) },
       { path: '/accountant/external/:extCompanyId',             lazy: lazyLoad(() => import('../pages/accountant/ExternalCompany')) },
       { path: '/accountant/external/:extCompanyId/chart-of-accounts', lazy: lazyLoad(() => import('../pages/accountant/ChartOfAccounts')) },
       { path: '/accountant/external/:extCompanyId/journal-entries',   lazy: lazyLoad(() => import('../pages/accountant/JournalEntries')) },

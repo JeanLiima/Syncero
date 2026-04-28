@@ -36,58 +36,21 @@ function isVisible(plan: AccountPlan, plans: AccountPlan[], collapsed: Set<strin
 
 // ── First-access onboarding ───────────────────────────────────
 
-const GROUP_PREVIEW: { labelKey: string; color: string; subtleColor: string; type: AccountType }[] = [
-  { type: 'ativo',             labelKey: 'plano_ativo',             color: 'text-blue-400',   subtleColor: 'bg-blue-500/10'   },
-  { type: 'passivo',           labelKey: 'plano_passivo',           color: 'text-orange-400', subtleColor: 'bg-orange-500/10' },
-  { type: 'patrimonio_liquido',labelKey: 'plano_patrimonioLiquido', color: 'text-violet-400', subtleColor: 'bg-violet-500/10' },
-  { type: 'receita',           labelKey: 'plano_receita',           color: 'text-green-400',  subtleColor: 'bg-green-500/10'  },
-  { type: 'despesa',           labelKey: 'plano_despesa',           color: 'text-red-400',    subtleColor: 'bg-red-500/10'    },
-  { type: 'custo',             labelKey: 'plano_custo',             color: 'text-yellow-400', subtleColor: 'bg-yellow-500/10' },
-]
-
-function FirstAccess({ onSeed, onSkip, seeding, hasCostSegment }: {
-  onSeed: () => void; onSkip: () => void; seeding: boolean; hasCostSegment: boolean | null
+function FirstAccess({ onSeed, onSkip, seeding }: {
+  onSeed: () => void; onSkip: () => void; seeding: boolean
 }) {
   const t = useT()
-
-  const visibleGroups = GROUP_PREVIEW.filter(g =>
-    g.type !== 'custo' || hasCostSegment !== false
-  )
-
   return (
     <Card>
-      <div className="flex flex-col items-center gap-5 py-8 text-center">
+      <div className="flex flex-col items-center gap-4 py-8 text-center">
         <div className="h-14 w-14 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--bg-border)] flex items-center justify-center">
           <BookMarked className="h-7 w-7 text-[var(--text-muted)]" />
         </div>
-
         <div>
           <p className="text-sm font-medium text-[var(--text-primary)]">{t('plano_seedTitle')}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1 max-w-xs">{t('plano_seedSubtitle')}</p>
         </div>
-
-        {/* Group preview */}
-        <div className="flex flex-wrap justify-center gap-2 max-w-sm">
-          {visibleGroups.map(g => (
-            <span
-              key={g.type}
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${g.subtleColor} ${g.color} border-current/20`}
-            >
-              {t(g.labelKey as any)}
-              {g.type === 'custo' && hasCostSegment === true && (
-                <span className="text-[10px] opacity-70">{t('plano_seedCostSuggested')}</span>
-              )}
-            </span>
-          ))}
-        </div>
-
-        {hasCostSegment === true && (
-          <p className="text-xs text-[var(--text-muted)] max-w-xs">
-            {t('plano_seedCostSegmentNote')}
-          </p>
-        )}
-
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
           <Button size="sm" onClick={onSeed} loading={seeding}>
             <Sparkles className="h-3.5 w-3.5" />
             {t('plano_seedCfc')}
@@ -407,7 +370,6 @@ export function Component() {
           onSeed={handleSeedCfc}
           onSkip={() => setFromScratch(true)}
           seeding={seeding}
-          hasCostSegment={hasCostSegment}
         />
       )}
 

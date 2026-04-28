@@ -46,8 +46,9 @@ function PlanRow({
   }
 
   return (
-    <tr className={`border-b border-[var(--bg-border)]/40 ${checked ? '' : 'opacity-40'} transition-opacity`}>
-      <td className="px-3 py-1.5 w-8">
+    <tr className={`border-b border-[var(--bg-border)]/40 hover:bg-[var(--bg-elevated)]/50 group/row ${checked ? '' : 'opacity-40'} transition-opacity`}>
+      {/* Checkbox */}
+      <td className="pl-3 pr-1 py-2 w-8 shrink-0">
         <input
           type="checkbox"
           checked={checked}
@@ -55,8 +56,10 @@ function PlanRow({
           className="accent-[var(--accent)] cursor-pointer"
         />
       </td>
-      <td className="px-2 py-1.5 w-36">
-        <div style={{ paddingLeft: `${depth * 12}px` }}>
+
+      {/* Code */}
+      <td className="px-2 py-2 w-40 shrink-0">
+        <div style={{ paddingLeft: `${depth * 14}px` }}>
           {editingField === 'code' ? (
             <input
               autoFocus
@@ -64,12 +67,13 @@ function PlanRow({
               onChange={e => setEditValue(e.target.value)}
               onBlur={commitEdit}
               onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingField(null) }}
-              className="w-full bg-[var(--bg-elevated)] border border-[var(--accent)] rounded px-1 py-0.5 text-xs font-mono text-[var(--text-primary)] outline-none"
+              className="w-full bg-[var(--bg-elevated)] border border-[var(--accent)] rounded px-1.5 py-0.5 text-xs font-mono text-[var(--text-primary)] outline-none"
             />
           ) : (
             <button
               onClick={() => startEdit('code')}
-              className="flex items-center gap-1 group/code cursor-pointer"
+              title="Clique para editar"
+              className="flex items-center gap-1.5 group/code cursor-pointer"
             >
               <span className="font-mono text-xs text-[var(--text-secondary)]">{entry.code}</span>
               <Pencil className="h-2.5 w-2.5 text-[var(--text-muted)] opacity-0 group-hover/code:opacity-100 transition-opacity" />
@@ -77,7 +81,9 @@ function PlanRow({
           )}
         </div>
       </td>
-      <td className="px-2 py-1.5">
+
+      {/* Name */}
+      <td className="px-2 py-2">
         {editingField === 'name' ? (
           <input
             autoFocus
@@ -85,25 +91,28 @@ function PlanRow({
             onChange={e => setEditValue(e.target.value)}
             onBlur={commitEdit}
             onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingField(null) }}
-            className="w-full bg-[var(--bg-elevated)] border border-[var(--accent)] rounded px-1.5 py-0.5 text-sm text-[var(--text-primary)] outline-none"
+            className="w-full bg-[var(--bg-elevated)] border border-[var(--accent)] rounded px-2 py-0.5 text-sm text-[var(--text-primary)] outline-none"
           />
         ) : (
           <button
             onClick={() => startEdit('name')}
-            className="flex items-center gap-1 group/name cursor-pointer text-left"
+            title="Clique para editar"
+            className="flex items-center gap-1.5 group/name cursor-pointer text-left w-full"
           >
-            <span className={`text-sm ${entry.is_analytic ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] font-medium'}`}>
+            <span className={`text-sm leading-snug ${entry.is_analytic ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] font-medium'}`}>
               {entry.name}
             </span>
             <Pencil className="h-2.5 w-2.5 text-[var(--text-muted)] opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
           </button>
         )}
       </td>
-      <td className="px-2 py-1.5 w-24 text-right">
-        <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+
+      {/* Class */}
+      <td className="px-3 py-2 w-28 text-right shrink-0">
+        <span className={`text-[10px] px-2 py-0.5 rounded-full ${
           entry.is_analytic
             ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
-            : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
+            : 'bg-[var(--bg-border)] text-[var(--text-muted)]'
         }`}>
           {entry.is_analytic ? 'Analítica' : 'Sintética'}
         </span>
@@ -224,10 +233,10 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
   )
 
   return (
-    <Modal open={open} onClose={onClose} title={t('plano_previewTitle')} size="lg" footer={footer}>
+    <Modal open={open} onClose={onClose} title={t('plano_previewTitle')} size="xl" footer={footer}>
       <p className="text-xs text-[var(--text-muted)] mb-4">{t('plano_previewSubtitle')}</p>
 
-      <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1">
+      <div className="flex flex-col gap-3">
         {visibleSections.map(section => {
           const sectionEntries = entries
             .filter(e => e.account_type === section.type)

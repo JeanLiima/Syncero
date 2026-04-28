@@ -8,7 +8,7 @@ interface ModalProps {
   title?: string
   children: ReactNode
   footer?: ReactNode
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 export function Modal({ open, onClose, title, children, footer, size = 'md' }: ModalProps) {
@@ -27,9 +27,10 @@ export function Modal({ open, onClose, title, children, footer, size = 'md' }: M
         className={clsx(
           'relative z-10 bg-[var(--bg-surface)] border border-[var(--bg-border)] rounded-[var(--radius-lg)] shadow-2xl flex flex-col max-h-[90vh]',
           {
-            'w-full max-w-sm': size === 'sm',
-            'w-full max-w-lg': size === 'md',
+            'w-full max-w-sm':  size === 'sm',
+            'w-full max-w-lg':  size === 'md',
             'w-full max-w-2xl': size === 'lg',
+            'w-full max-w-4xl': size === 'xl',
           }
         )}
       >

@@ -35,6 +35,7 @@ function CompanyTab() {
   const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
+  const isAdmin = activeCompany?.role === 'admin'
   const qc = useQueryClient()
   const [editOpen, setEditOpen] = useState(false)
 
@@ -76,10 +77,12 @@ function CompanyTab() {
       <div className="flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium text-[var(--text-secondary)]">{t('settings_companyInfo')}</h2>
-          <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)}>
-            <Pencil className="h-3.5 w-3.5" />
-            {t('settings_edit')}
-          </Button>
+          {isAdmin && (
+            <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)}>
+              <Pencil className="h-3.5 w-3.5" />
+              {t('settings_edit')}
+            </Button>
+          )}
         </div>
 
         <div className="flex flex-col divide-y divide-[var(--bg-border)] rounded-[var(--radius-lg)] border border-[var(--bg-border)] overflow-hidden">
@@ -414,6 +417,7 @@ function AccountantTab() {
   const t = useT()
   const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
+  const isAdmin = activeCompany?.role === 'admin'
   const language = usePreferencesStore((s) => s.language)
   const [modalOpen, setModalOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -472,12 +476,14 @@ function AccountantTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center justify-end">
-        <Button size="sm" onClick={() => setModalOpen(true)}>
-          <UserPlus className="h-3.5 w-3.5" />
-          {t('settings_inviteAccountant')}
-        </Button>
-      </div>
+      {isAdmin && (
+        <div className="flex items-center justify-end">
+          <Button size="sm" onClick={() => setModalOpen(true)}>
+            <UserPlus className="h-3.5 w-3.5" />
+            {t('settings_inviteAccountant')}
+          </Button>
+        </div>
+      )}
 
       <Card padding="sm">
         <Table
@@ -524,6 +530,7 @@ function AccountantTab() {
               align: 'right',
               className: 'w-px !px-2',
               render: (r) => {
+                if (!isAdmin) return null
                 if (r.status === 'pending') return (
                   <div className="flex items-center justify-end gap-1">
                     <IconBtn onClick={() => resend.mutate(r.id)} disabled={resend.isPending && resend.variables === r.id} tooltip={t('settings_resend')}>

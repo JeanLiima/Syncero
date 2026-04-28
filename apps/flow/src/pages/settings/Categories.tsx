@@ -39,6 +39,7 @@ export function Component() {
   const t = useT()
   const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
+  const canWrite = activeCompany?.role !== 'viewer'
   const qc = useQueryClient()
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -117,10 +118,12 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_categories')}</h1>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          {t('categories_new')}
-        </Button>
+        {canWrite && (
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            {t('categories_new')}
+          </Button>
+        )}
       </div>
 
       <Card padding="sm">
@@ -178,12 +181,12 @@ export function Component() {
                 </Badge>
               ),
             },
-            {
+            ...(canWrite ? [{
               key: 'actions',
               header: '',
-              align: 'right',
+              align: 'right' as const,
               className: 'w-px !px-2',
-              render: (r) => (
+              render: (r: Category) => (
                 <div className="flex items-center justify-end gap-1">
                   <div className="relative group">
                     <button
@@ -209,7 +212,7 @@ export function Component() {
                   </div>
                 </div>
               ),
-            },
+            }] : []),
           ]}
         />
       </Card>

@@ -6,6 +6,7 @@ import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle } from 'lucide-react'
 import { Button, Card, Table, Badge, Modal, Input, DatePicker, Tabs, TabList, Tab, TabPanel, useToast } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
+import { useAuthStore } from '@/store/auth'
 import { usePayables } from '@/modules/accounts/queries'
 import { useCreatePayable, useMarkPayablePaid, useDeletePayable } from '@/modules/accounts/mutations'
 import { useT } from '@/i18n'
@@ -31,6 +32,8 @@ function PayableTable({ type }: { type: PayableType }) {
   const t = useT()
   const { success, error: toastError } = useToast()
   const { language } = usePreferencesStore()
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+  const canWrite = activeCompany?.role !== 'viewer'
   const [modalOpen, setModalOpen] = useState(false)
   const { data = [], isLoading } = usePayables(type)
   const create = useCreatePayable()
@@ -74,9 +77,11 @@ function PayableTable({ type }: { type: PayableType }) {
             {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </span>
         </p>
-        <Button size="sm" onClick={() => setModalOpen(true)}>
-          <Plus className="h-4 w-4" /> {t('accounts_add')}
-        </Button>
+        {canWrite && (
+          <Button size="sm" onClick={() => setModalOpen(true)}>
+            <Plus className="h-4 w-4" /> {t('accounts_add')}
+          </Button>
+        )}
       </div>
 
       <Card padding="sm">
@@ -104,11 +109,11 @@ function PayableTable({ type }: { type: PayableType }) {
               ),
             },
             { key: 'status', header: t('accounts_status'), render: (r) => statusBadge(r, t) },
-            {
+            ...(canWrite ? [{
               key: 'actions',
               header: '',
-              align: 'right',
-              render: (r) =>
+              align: 'right' as const,
+              render: (r: PayableReceivable) =>
                 r.status !== 'paid' ? (
                   <div className="flex items-center gap-2 justify-end">
                     <button
@@ -127,7 +132,7 @@ function PayableTable({ type }: { type: PayableType }) {
                     </button>
                   </div>
                 ) : null,
-            },
+            }] : []),
           ]}
         />
       </Card>

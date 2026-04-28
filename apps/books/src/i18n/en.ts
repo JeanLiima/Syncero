@@ -18,15 +18,22 @@ export const en: Record<TranslationKey, string> = {
 
   // Settings
   settings_company: 'Company',
+  settings_companyInfo: 'Company information',
   settings_name: 'Legal name',
   settings_tradeName: 'Trade name',
   settings_cnpj: 'Tax ID',
   settings_taxRegime: 'Tax regime',
   settings_segment: 'Segment',
-  settings_save: 'Save changes',
-  settings_saved: 'Changes saved!',
+  settings_edit: 'Edit',
+  settings_editCompany: 'Edit company',
+  settings_cancel: 'Cancel',
+  settings_save: 'Save',
+  settings_saved: 'Saved successfully!',
   settings_errorSave: 'Error saving changes.',
   settings_readOnly: 'This data is managed by the company in Syncero Flow.',
+  settings_simplesNacional: 'Simples Nacional',
+  settings_lucroPresumido: 'Lucro Presumido',
+  settings_lucroReal: 'Lucro Real',
 
   // Router
   router_flow: 'Access Syncero Flow',

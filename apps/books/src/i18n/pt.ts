@@ -16,15 +16,22 @@ export const pt = {
 
   // Settings
   settings_company: 'Empresa',
+  settings_companyInfo: 'Informações da empresa',
   settings_name: 'Razão social',
   settings_tradeName: 'Nome fantasia',
   settings_cnpj: 'CNPJ',
   settings_taxRegime: 'Regime tributário',
   settings_segment: 'Segmento',
-  settings_save: 'Salvar alterações',
-  settings_saved: 'Alterações salvas!',
+  settings_edit: 'Editar',
+  settings_editCompany: 'Editar empresa',
+  settings_cancel: 'Cancelar',
+  settings_save: 'Salvar',
+  settings_saved: 'Salvo com sucesso!',
   settings_errorSave: 'Erro ao salvar.',
   settings_readOnly: 'Esses dados são gerenciados pela empresa no Syncero Flow.',
+  settings_simplesNacional: 'Simples Nacional',
+  settings_lucroPresumido: 'Lucro Presumido',
+  settings_lucroReal: 'Lucro Real',
 
   // Router
   router_flow: 'Acessar Syncero Flow',

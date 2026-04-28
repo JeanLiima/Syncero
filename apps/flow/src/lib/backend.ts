@@ -25,18 +25,26 @@ export async function getCompanyMembers(companyId: string) {
   return apiFetch<CompanyMember[]>(`/api/company-members${buildQuery({ companyId })}`)
 }
 
-export async function inviteCompanyMember(companyId: string, email: string, role: string, invite_token: string) {
+export async function inviteCompanyMember(companyId: string, email: string, role: string, invite_token: string, language?: 'pt' | 'en') {
   return apiFetch(`/api/company-members`, {
     method: 'POST',
-    body: JSON.stringify({ companyId, email, role, invite_token }),
+    body: JSON.stringify({ companyId, email, role, invite_token, language }),
   })
 }
 
-export async function revokeCompanyMember(memberId: string) {
-  return apiFetch(`/api/company-members/${memberId}`, {
+export async function resendMemberInvite(id: string) {
+  return apiFetch(`/api/company-members/${id}/resend`, { method: 'POST', body: '{}' })
+}
+
+export async function updateMemberRole(id: string, role: string) {
+  return apiFetch(`/api/company-members/${id}/role`, {
     method: 'PATCH',
-    body: JSON.stringify({ status: 'revoked' }),
+    body: JSON.stringify({ role }),
   })
+}
+
+export async function removeCompanyMember(id: string) {
+  return apiFetch(`/api/company-members/${id}`, { method: 'DELETE' })
 }
 
 export async function getAccountantCompanies(companyId?: string) {

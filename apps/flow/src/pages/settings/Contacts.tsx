@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus, Search } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Input, Modal, Select, Table, ConfirmDialog, useToast } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
@@ -31,6 +31,7 @@ export function Component() {
   const t = useT()
   const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
+  const canWrite = activeCompany?.role !== 'viewer'
   const qc = useQueryClient()
 
   const [search, setSearch] = useState('')
@@ -99,20 +100,29 @@ export function Component() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_contacts')}</h1>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          {t('contact_newTitle')}
-        </Button>
+        {canWrite && (
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            {t('contact_newTitle')}
+          </Button>
+        )}
       </div>
 
-      <Input
-        placeholder={t('contact_searchPlaceholder')}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <Card padding="sm">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+          <Input
+            size="sm"
+            placeholder={t('contact_searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+      </Card>
 
       <Card padding="sm">
         <Table
@@ -138,12 +148,12 @@ export function Component() {
                 </div>
               ),
             },
-            {
+            ...(canWrite ? [{
               key: 'actions',
               header: '',
-              align: 'right',
+              align: 'right' as const,
               className: 'w-px !px-2',
-              render: (r) => (
+              render: (r: Contact) => (
                 <div className="flex items-center justify-end gap-1">
                   <div className="relative group">
                     <button
@@ -169,7 +179,7 @@ export function Component() {
                   </div>
                 </div>
               ),
-            },
+            }] : []),
           ]}
         />
       </Card>

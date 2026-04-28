@@ -4,6 +4,7 @@ import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle, Search } from 'lucide-react'
 import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
+import { useAuthStore } from '@/store/auth'
 import { useTransactions, useCategories } from '@/modules/transactions/queries'
 import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 import { TransactionEditModal } from '@/modules/transactions/TransactionEditModal'
@@ -16,6 +17,8 @@ import type { TransactionFilters } from '@/modules/transactions/types'
 export function Component() {
   const t = useT()
   const { language } = usePreferencesStore()
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+  const canWrite = activeCompany?.role !== 'viewer'
 
   const [filters, setFilters] = useState<TransactionFilters>({})
   const [page, setPage] = useState(1)
@@ -53,9 +56,11 @@ export function Component() {
             {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('transactions_countPlural') : t('transactions_countSingular')}
           </p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> {t('transactions_new')}
-        </Button>
+        {canWrite && (
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4" /> {t('transactions_new')}
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -158,11 +163,11 @@ export function Component() {
                 </Badge>
               ),
             },
-            {
+            ...(canWrite ? [{
               key: 'actions',
               header: '',
-              align: 'right',
-              render: (r) =>
+              align: 'right' as const,
+              render: (r: Transaction) =>
                 !r.is_paid ? (
                   <div className="relative group flex justify-end">
                     <button
@@ -176,7 +181,7 @@ export function Component() {
                     </span>
                   </div>
                 ) : null,
-            },
+            }] : []),
           ]}
         />
 
@@ -209,7 +214,7 @@ export function Component() {
         transactionId={detailId}
         open={!!detailId}
         onClose={() => setDetailId(null)}
-        onEdit={openEdit}
+        onEdit={canWrite ? openEdit : undefined}
         language={language}
       />
 

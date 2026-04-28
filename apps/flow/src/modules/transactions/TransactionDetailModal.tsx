@@ -12,7 +12,7 @@ interface Props {
   transactionId: string | null
   open: boolean
   onClose: () => void
-  onEdit: (tx: Transaction) => void
+  onEdit?: (tx: Transaction) => void
   language: 'pt' | 'en'
 }
 
@@ -153,7 +153,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
             {t('transactions_payment_register')}
           </Button>
         )}
-        {tx && (
+        {tx && onEdit && (
           <Button size="sm" onClick={() => { onClose(); onEdit(tx) }}>
             <Edit2 className="h-3.5 w-3.5" />
             {t('transactions_detail_edit')}

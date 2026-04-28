@@ -47,6 +47,12 @@ export interface CompanyMember {
   invite_token: string | null
   invited_at: string
   joined_at: string | null
+  profiles?: {
+    id: string
+    full_name: string
+    email: string
+    avatar_url: string | null
+  } | null
 }
 
 export interface AccountantCompany {

@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Input, Select, Table, Badge, useToast } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
-import { getCompanyMembers, inviteCompanyMember, revokeCompanyMember } from '@/lib/backend'
+import { getCompanyMembers, inviteCompanyMember, removeCompanyMember } from '@/lib/backend'
 import type { MemberRole } from '@/types'
 
 export function Component() {
@@ -37,7 +37,7 @@ export function Component() {
   })
 
   const revoke = useMutation({
-    mutationFn: async (id: string) => { await revokeCompanyMember(id) },
+    mutationFn: async (id: string) => { await removeCompanyMember(id) },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['members', activeCompany?.id] })
       success(t('common_deletedSuccess'))

@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
+import { Resend } from 'resend'
 import { createServiceClient, type HonoVariables } from '../_shared'
+import { memberInviteEmail } from '../emails/memberInvite'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
@@ -34,7 +36,7 @@ router.get('/', async (c) => {
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
   const { data, error } = await db.from('company_members')
-    .select('*, profiles(id, full_name, email, avatar_url)')
+    .select('*, profiles!company_members_user_id_fkey(id, full_name, email, avatar_url)')
     .eq('company_id', companyId)
     .order('invited_at', { ascending: false })
   if (error) return c.json({ error: error.message }, 400)
@@ -44,8 +46,8 @@ router.get('/', async (c) => {
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const body = await c.req.json<{ companyId: string; email: string; role: string; invite_token: string }>()
-  const { companyId, email, role, invite_token } = body
+  const body = await c.req.json<{ companyId: string; email: string; role: string; invite_token: string; language?: 'pt' | 'en' }>()
+  const { companyId, email, role, invite_token, language } = body
 
   if (!companyId || !email || !invite_token) {
     return c.json({ error: 'companyId, email e invite_token são obrigatórios' }, 400)
@@ -54,28 +56,140 @@ router.post('/', async (c) => {
   const admin = await ensureCompanyAdmin(db, userId, companyId)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
+  // Verificar se já existe convite pendente para este email nesta empresa
+  const { data: existing } = await db.from('company_members')
+    .select('id, status')
+    .eq('company_id', companyId)
+    .eq('email', email)
+    .in('status', ['accepted', 'pending'])
+    .maybeSingle()
+
+  if (existing) {
+    const msg = existing.status === 'accepted'
+      ? 'Este usuário já é membro da empresa.'
+      : 'Já existe um convite pendente para este e-mail.'
+    return c.json({ error: msg }, 409)
+  }
+
+  const [companyRes, inviterRes] = await Promise.all([
+    db.from('companies').select('name').eq('id', companyId).single(),
+    db.from('profiles').select('full_name').eq('id', userId).single(),
+  ])
+  const companyName = companyRes.data?.name ?? ''
+  const inviterName = inviterRes.data?.full_name ?? ''
+
   const { data, error } = await db.from('company_members')
     .insert({ company_id: companyId, email, role, status: 'pending', invite_token })
     .select()
     .single()
 
   if (error) return c.json({ error: error.message }, 400)
+
+  const resendKey = process.env.RESEND_API_KEY
+  if (resendKey) {
+    const isProduction = process.env.VERCEL_ENV === 'production'
+    const flowUrl = isProduction
+      ? process.env.VITE_FLOW_URL ?? 'https://syncero-flow.vercel.app'
+      : 'http://localhost:5174'
+    const inviteLink = `${flowUrl}/invite/${invite_token}`
+
+    const { subject, html } = memberInviteEmail({ companyName, inviterName, inviteLink, language })
+    const resend = new Resend(resendKey)
+    const { error: emailError } = await resend.emails.send({
+      from: 'Syncero <onboarding@resend.dev>',
+      to: email,
+      subject,
+      html,
+    })
+    if (emailError) console.error('Failed to send member invite email:', emailError.message)
+  } else {
+    console.warn('RESEND_API_KEY not set — invite created but email not sent')
+  }
+
   return c.json(data, 201)
 })
 
-router.patch('/:id', async (c) => {
+// ── PATCH /api/company-members/:id/role ───────────────────────
+router.patch('/:id/role', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const id = c.req.param('id')
-  const data = await c.req.json<{ status?: string }>()
+  const { role } = await c.req.json<{ role: string }>()
 
-  const row = await db.from('company_members').select('company_id').eq('id', id).single()
+  if (!role) return c.json({ error: 'role is required' }, 400)
+
+  const row = await db.from('company_members').select('company_id, user_id').eq('id', id).single()
   if (!row.data) return c.json({ error: 'not found' }, 404)
 
   const admin = await ensureCompanyAdmin(db, userId, row.data.company_id)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
-  const { error } = await db.from('company_members').update(data).eq('id', id)
+  const { error } = await db.from('company_members').update({ role }).eq('id', id)
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
+})
+
+// ── POST /api/company-members/:id/resend ──────────────────────
+router.post('/:id/resend', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const id = c.req.param('id')
+
+  const { data: invite } = await db.from('company_members')
+    .select('id, company_id, email, status, invite_token')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!invite) return c.json({ error: 'Invite not found' }, 404)
+  if (invite.status !== 'pending') return c.json({ error: 'Only pending invites can be resent' }, 400)
+
+  const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
+  if (!admin) return c.json({ error: 'forbidden' }, 403)
+
+  const new_token = crypto.randomUUID()
+  const { error: updateError } = await db.from('company_members')
+    .update({ invite_token: new_token, invited_at: new Date().toISOString() })
+    .eq('id', id)
+  if (updateError) return c.json({ error: 'Failed to update invite' }, 500)
+
+  const [companyRes, inviterRes] = await Promise.all([
+    db.from('companies').select('name').eq('id', invite.company_id).single(),
+    db.from('profiles').select('full_name').eq('id', userId).single(),
+  ])
+
+  const resendKey = process.env.RESEND_API_KEY
+  if (resendKey) {
+    const isProduction = process.env.VERCEL_ENV === 'production'
+    const flowUrl = isProduction ? process.env.VITE_FLOW_URL ?? 'https://syncero-flow.vercel.app' : 'http://localhost:5174'
+    const { subject, html } = memberInviteEmail({
+      companyName: companyRes.data?.name ?? '',
+      inviterName: inviterRes.data?.full_name ?? '',
+      inviteLink: `${flowUrl}/invite/${new_token}`,
+    })
+    const resendClient = new Resend(resendKey)
+    await resendClient.emails.send({ from: 'Syncero <onboarding@resend.dev>', to: invite.email!, subject, html })
+  }
+
+  return c.json({ ok: true })
+})
+
+// ── DELETE /api/company-members/:id ───────────────────────────
+router.delete('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const id = c.req.param('id')
+
+  const { data: invite } = await db.from('company_members')
+    .select('id, company_id, status')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (!invite) return c.json({ error: 'not found' }, 404)
+
+  const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
+  if (!admin) return c.json({ error: 'forbidden' }, 403)
+
+  const { error } = await db.from('company_members').delete().eq('id', id)
   if (error) return c.json({ error: error.message }, 400)
   return c.json({ ok: true })
 })

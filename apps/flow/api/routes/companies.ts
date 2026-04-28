@@ -17,6 +17,18 @@ router.post('/', async (c) => {
 
   const { data, error } = await db.from('companies').insert(payload).select('id, name').single()
   if (error) return c.json({ error: 'Failed to create company' }, 500)
+
+  // Inserir o dono como membro admin aceito
+  const { error: memberError } = await db.from('company_members').insert({
+    company_id: data.id,
+    user_id: userId,
+    email: (await db.from('profiles').select('email').eq('id', userId).single()).data?.email ?? '',
+    role: 'admin',
+    status: 'accepted',
+    joined_at: new Date().toISOString(),
+  })
+  if (memberError) return c.json({ error: 'Failed to add owner as member' }, 500)
+
   return c.json(data, 201)
 })
 
@@ -28,9 +40,14 @@ router.get('/:id', async (c) => {
 
   const { data: member } = await db.from('company_members')
     .select('id').eq('user_id', userId).eq('company_id', id).eq('status', 'accepted').maybeSingle()
-  if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
 
-  const { data } = await db.from('companies').select('id, name, cnpj, tax_regime').eq('id', id).single()
+  // Fallback: owner pode não ter linha em company_members (empresas criadas antes da correção)
+  if (!member) {
+    const { data: company } = await db.from('companies').select('owner_id').eq('id', id).single()
+    if (company?.owner_id !== userId) return c.json({ error: 'Forbidden: not a company member' }, 403)
+  }
+
+  const { data } = await db.from('companies').select('id, name, cnpj, tax_regime, owner_id').eq('id', id).single()
   return c.json(data)
 })
 

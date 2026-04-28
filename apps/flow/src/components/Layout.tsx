@@ -30,8 +30,6 @@ export function Layout({ children }: { children: ReactNode }) {
       icon: <Settings className="h-4 w-4 shrink-0" />,
       children: [
         { to: '/settings/company',    label: t('settings_company') },
-        { to: '/settings/members',    label: t('settings_members') },
-        { to: '/settings/accountant', label: t('settings_accountant') },
         { to: '/settings/categories', label: t('settings_categories') },
         { to: '/settings/banks',      label: t('settings_banks') },
         { to: '/settings/contacts',   label: t('settings_contacts') },

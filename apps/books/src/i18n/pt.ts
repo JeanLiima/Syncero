@@ -9,9 +9,22 @@ export const pt = {
   nav_accountPlan: 'Plano de Contas',
   nav_journal: 'Lançamentos Cont.',
   nav_apiKeys: 'API Keys',
+  nav_settings: 'Configurações',
   nav_externalBadge: 'Externa',
   nav_preferences: 'Preferências',
   nav_signOut: 'Sair',
+
+  // Settings
+  settings_company: 'Empresa',
+  settings_name: 'Razão social',
+  settings_tradeName: 'Nome fantasia',
+  settings_cnpj: 'CNPJ',
+  settings_taxRegime: 'Regime tributário',
+  settings_segment: 'Segmento',
+  settings_save: 'Salvar alterações',
+  settings_saved: 'Alterações salvas!',
+  settings_errorSave: 'Erro ao salvar.',
+  settings_readOnly: 'Esses dados são gerenciados pela empresa no Syncero Flow.',
 
   // Router
   router_flow: 'Acessar Syncero Flow',

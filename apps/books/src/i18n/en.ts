@@ -11,9 +11,22 @@ export const en: Record<TranslationKey, string> = {
   nav_accountPlan: 'Chart of Accounts',
   nav_journal: 'Journal',
   nav_apiKeys: 'API Keys',
+  nav_settings: 'Settings',
   nav_externalBadge: 'External',
   nav_preferences: 'Preferences',
   nav_signOut: 'Sign Out',
+
+  // Settings
+  settings_company: 'Company',
+  settings_name: 'Legal name',
+  settings_tradeName: 'Trade name',
+  settings_cnpj: 'Tax ID',
+  settings_taxRegime: 'Tax regime',
+  settings_segment: 'Segment',
+  settings_save: 'Save changes',
+  settings_saved: 'Changes saved!',
+  settings_errorSave: 'Error saving changes.',
+  settings_readOnly: 'This data is managed by the company in Syncero Flow.',
 
   // Router
   router_flow: 'Access Syncero Flow',

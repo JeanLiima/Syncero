@@ -202,7 +202,7 @@ export const pt = {
   plano_synthetic: 'Sintética',
   plano_ativo: 'Ativo',
   plano_passivo: 'Passivo',
-  plano_patrimonioLiquido: 'PL',
+  plano_patrimonioLiquido: 'Patrimônio Líquido',
   plano_receita: 'Receita',
   plano_despesa: 'Despesa',
   plano_custo: 'Custo',

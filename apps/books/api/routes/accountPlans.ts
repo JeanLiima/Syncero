@@ -75,6 +75,23 @@ router.patch('/:id', async (c) => {
   return c.json(data)
 })
 
+// ── GET /api/account-plans/:id/usage ─────────────────────────
+router.get('/:id/usage', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+
+  const { data: existing } = await db.from('account_plans')
+    .select('accountant_id').eq('id', id).maybeSingle()
+  if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
+
+  const { count } = await db.from('journal_entry_lines')
+    .select('id', { count: 'exact', head: true })
+    .eq('account_plan_id', id)
+
+  return c.json({ usageCount: count ?? 0 })
+})
+
 // ── DELETE /api/account-plans/:id ────────────────────────────
 router.delete('/:id', async (c) => {
   const userId = c.get('userId')
@@ -87,6 +104,36 @@ router.delete('/:id', async (c) => {
 
   const { error } = await db.from('account_plans').update({ is_active: false }).eq('id', id)
   if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
+})
+
+// ── POST /api/account-plans/:id/transfer ──────────────────────
+// Move all journal_entry_lines from one account to another, then delete
+router.post('/:id/transfer', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+  const { targetId } = await c.req.json<{ targetId: string }>()
+
+  if (!targetId) return c.json({ error: 'targetId required' }, 400)
+
+  const { data: existing } = await db.from('account_plans')
+    .select('accountant_id').eq('id', id).maybeSingle()
+  if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
+
+  const { data: target } = await db.from('account_plans')
+    .select('accountant_id, is_analytic').eq('id', targetId).maybeSingle()
+  if (!target || target.accountant_id !== userId) return c.json({ error: 'target forbidden' }, 403)
+  if (!target.is_analytic) return c.json({ error: 'target must be analytic' }, 400)
+
+  const { error: updateErr } = await db.from('journal_entry_lines')
+    .update({ account_plan_id: targetId })
+    .eq('account_plan_id', id)
+  if (updateErr) return c.json({ error: updateErr.message }, 500)
+
+  const { error: deleteErr } = await db.from('account_plans').update({ is_active: false }).eq('id', id)
+  if (deleteErr) return c.json({ error: deleteErr.message }, 500)
+
   return c.json({ ok: true })
 })
 

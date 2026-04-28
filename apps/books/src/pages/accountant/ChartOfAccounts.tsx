@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Pencil, ChevronRight, ChevronDown, Search, X, BookMarked, Sparkles } from 'lucide-react'
+import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Search, X, BookMarked, Sparkles, AlertTriangle } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { seedAccountPlan } from '@/lib/backend'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, Input, Select, useToast } from '@syncero/ui'
+import { Button, Card, ConfirmDialog, Input, Modal, Select, useToast } from '@syncero/ui'
 import { AccountPlanModal, type AccountPlanModalProps } from '@/components/accountant/AccountPlanModal'
 import { useT } from '@/i18n'
 import type { AccountPlan, AccountType } from '@/types'
@@ -95,10 +95,11 @@ function SectionHeader({ label, count, color, subtleColor, collapsed, onToggle, 
 
 // ── Account row ───────────────────────────────────────────────
 
-function AccountRow({ plan, plans, collapsed, onToggle, onEdit, onAddChild, canWrite, hasFilter }: {
+function AccountRow({ plan, plans, collapsed, onToggle, onEdit, onAddChild, onDelete, canWrite, hasFilter }: {
   plan: AccountPlan; plans: AccountPlan[]; collapsed: Set<string>
   onToggle: (id: string) => void; onEdit: (p: AccountPlan) => void
-  onAddChild: (p: AccountPlan) => void; canWrite: boolean; hasFilter: boolean
+  onAddChild: (p: AccountPlan) => void; onDelete: (p: AccountPlan) => void
+  canWrite: boolean; hasFilter: boolean
 }) {
   const t = useT()
   const depth      = getDepth(plan.code)
@@ -137,7 +138,7 @@ function AccountRow({ plan, plans, collapsed, onToggle, onEdit, onAddChild, canW
         </span>
       </td>
       {canWrite && (
-        <td className="px-2 py-2 w-16">
+        <td className="px-2 py-2 w-20">
           <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="relative group/tip">
               <button
@@ -150,12 +151,28 @@ function AccountRow({ plan, plans, collapsed, onToggle, onEdit, onAddChild, canW
                 {t('plano_addChild')}
               </span>
             </div>
-            <button
-              onClick={() => onEdit(plan)}
-              className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
+            <div className="relative group/edit">
+              <button
+                onClick={() => onEdit(plan)}
+                className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/edit:opacity-100 transition-opacity z-10">
+                {t('plano_edit')}
+              </span>
+            </div>
+            <div className="relative group/del">
+              <button
+                onClick={() => onDelete(plan)}
+                className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+              <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/del:opacity-100 transition-opacity z-10">
+                {t('plano_delete')}
+              </span>
+            </div>
           </div>
         </td>
       )}
@@ -174,13 +191,18 @@ export function Component() {
   // Accountants always manage their own chart — write enabled for both types
   const canWrite = true
 
-  const [modalOpen,  setModalOpen]  = useState(false)
-  const [editing,    setEditing]    = useState<AccountPlan | null>(null)
-  const [preset,     setPreset]     = useState<AccountPlanModalProps['preset']>(null)
-  const [collapsed,  setCollapsed]  = useState<Set<string>>(new Set())
-  const [sections,   setSections]   = useState<Set<AccountType>>(new Set()) // collapsed sections
+  const [modalOpen,   setModalOpen]   = useState(false)
+  const [editing,     setEditing]     = useState<AccountPlan | null>(null)
+  const [preset,      setPreset]      = useState<AccountPlanModalProps['preset']>(null)
+  const [collapsed,   setCollapsed]   = useState<Set<string>>(new Set())
+  const [sections,    setSections]    = useState<Set<AccountType>>(new Set())
   const [fromScratch, setFromScratch] = useState(false)
-  const [seeding,    setSeeding]    = useState(false)
+  const [seeding,     setSeeding]     = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<AccountPlan | null>(null)
+  const [deleting,     setDeleting]     = useState(false)
+  const [usageCount,   setUsageCount]   = useState(0)
+  const [transferTo,   setTransferTo]   = useState('')
+  const [checkingUse,  setCheckingUse]  = useState(false)
 
   const [search,      setSearch]      = useState('')
   const [filterType,  setFilterType]  = useState('')
@@ -219,6 +241,42 @@ export function Component() {
 
   const openEdit = (plan: AccountPlan) => {
     setEditing(plan); setPreset(null); setModalOpen(true)
+  }
+
+  const openDelete = async (plan: AccountPlan) => {
+    setTransferTo('')
+    setUsageCount(0)
+    setDeleteTarget(plan)
+    setCheckingUse(true)
+    try {
+      const { usageCount: count } = await apiFetch<{ usageCount: number }>(`/api/account-plans/${plan.id}/usage`)
+      setUsageCount(count)
+    } catch {
+      // ignore — proceed with simple confirm
+    } finally {
+      setCheckingUse(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      if (transferTo) {
+        await apiFetch(`/api/account-plans/${deleteTarget.id}/transfer`, {
+          method: 'POST',
+          body: JSON.stringify({ targetId: transferTo }),
+        })
+      } else {
+        await apiFetch(`/api/account-plans/${deleteTarget.id}`, { method: 'DELETE' })
+      }
+      qc.invalidateQueries({ queryKey })
+      setDeleteTarget(null)
+    } catch {
+      toastError(t('plano_deleteError'))
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const openAddChild = (plan: AccountPlan) => {
@@ -381,6 +439,7 @@ export function Component() {
                             onToggle={toggleRow}
                             onEdit={openEdit}
                             onAddChild={openAddChild}
+                            onDelete={openDelete}
                             canWrite={canWrite}
                             hasFilter={hasFilter}
                           />
@@ -393,6 +452,71 @@ export function Component() {
             )
           })}
         </div>
+      )}
+
+      {/* Delete — has children: simple confirm blocking */}
+      <ConfirmDialog
+        open={!!deleteTarget && plans.some(p => p.parent_id === deleteTarget.id)}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => setDeleteTarget(null)}
+        title={t('plano_deleteTitle')}
+        message={t('plano_deleteHasChildren')}
+        confirmLabel="Entendi"
+      />
+
+      {/* Delete — no children, check usage */}
+      {deleteTarget && !plans.some(p => p.parent_id === deleteTarget.id) && (
+        <Modal
+          open={!!deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          title={t('plano_deleteTitle')}
+          size="sm"
+          footer={
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                {t('plano_cancel')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleDelete}
+                loading={deleting || checkingUse}
+                disabled={usageCount > 0 && !transferTo}
+                className="bg-[var(--danger)] hover:bg-[var(--danger)]/90 text-white"
+              >
+                {transferTo ? t('plano_transferAndDelete') : t('plano_deleteConfirm')}
+              </Button>
+            </div>
+          }
+        >
+          {checkingUse ? (
+            <div className="flex items-center justify-center py-6">
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent" />
+            </div>
+          ) : usageCount > 0 ? (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start gap-3 rounded-lg border border-[var(--warning)]/40 bg-[var(--warning)]/10 px-3 py-2.5">
+                <AlertTriangle className="h-4 w-4 text-[var(--warning)] shrink-0 mt-0.5" />
+                <p className="text-sm text-[var(--text-secondary)]">
+                  {t('plano_deleteInUse').replace('{count}', String(usageCount))}
+                </p>
+              </div>
+              <Select
+                label={t('plano_transferTo')}
+                options={[
+                  { value: '', label: t('plano_transferSelect') },
+                  ...plans
+                    .filter(p => p.is_analytic && p.is_active && p.id !== deleteTarget.id && p.account_type === deleteTarget.account_type)
+                    .map(p => ({ value: p.id, label: `${p.code} — ${p.name}` })),
+                ]}
+                value={transferTo}
+                onChange={setTransferTo}
+                searchable
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-[var(--text-secondary)]">{t('plano_deleteMessage')}</p>
+          )}
+        </Modal>
       )}
 
       <AccountPlanModal

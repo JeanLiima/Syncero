@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Pencil, Check, ChevronDown, ChevronRight, Info } from 'lucide-react'
 import { Button, Checkbox, Modal } from '@syncero/ui'
 import { useT } from '@/i18n'
@@ -158,15 +158,19 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
       .map((e, i) => ({ ...e, _key: String(i) }))
   )
 
-  const [selected, setSelected] = useState<Set<string>>(() =>
-    new Set(
-      DEFAULT_PLAN
-        .filter(e => e.account_type !== 'custo' || hasCostSegment !== false)
-        .map((e, i) => ({ key: String(i), type: e.account_type }))
-        .filter(({ type }) => isRecommended(type as AccountType, segment))
-        .map(({ key }) => key)
-    )
+  const buildSelected = () => new Set(
+    entries
+      .filter(e => isRecommended(e.account_type as AccountType, segment))
+      .map(e => e._key)
   )
+
+  const [selected, setSelected] = useState<Set<string>>(buildSelected)
+
+  // Re-compute selection each time the modal opens (segment may load after mount)
+  useEffect(() => {
+    if (open) setSelected(buildSelected())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, segment])
 
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
 

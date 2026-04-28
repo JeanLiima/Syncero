@@ -306,7 +306,7 @@ export function Component() {
         ...(isExternal ? { extCompanyId: id } : { companyId: id }),
         accounts,
       })
-      qc.invalidateQueries({ queryKey })
+      await qc.refetchQueries({ queryKey })
       setPreviewOpen(false)
     } catch {
       toastError(t('plano_seedError'))

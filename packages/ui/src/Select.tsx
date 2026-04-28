@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useId } from 'react'
-import { ChevronDown, Check } from 'lucide-react'
+import { ChevronDown, Check, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 
 interface SelectOption {
@@ -19,6 +19,8 @@ interface SelectProps {
   name?: string
   size?: 'sm' | 'md'
   onBlur?: () => void
+  searchable?: boolean
+  searchPlaceholder?: string
 }
 
 export function Select({
@@ -32,17 +34,26 @@ export function Select({
   className,
   size = 'md',
   onBlur,
+  searchable = false,
+  searchPlaceholder = 'Buscar…',
 }: SelectProps) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
   const id = useId()
 
   const selected = options.find((o) => o.value === value)
+
+  const filtered = searchable && query
+    ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
+    : options
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false)
+        setQuery('')
         onBlur?.()
       }
     }
@@ -50,9 +61,17 @@ export function Select({
     return () => document.removeEventListener('mousedown', handler)
   }, [onBlur])
 
+  useEffect(() => {
+    if (open && searchable) {
+      setTimeout(() => searchRef.current?.focus(), 0)
+    }
+    if (!open) setQuery('')
+  }, [open, searchable])
+
   const handleSelect = (optValue: string) => {
     onChange?.(optValue)
     setOpen(false)
+    setQuery('')
     onBlur?.()
   }
 
@@ -93,23 +112,41 @@ export function Select({
         </button>
 
         {open && (
-          <div className="absolute z-50 mt-1 w-full rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg py-1 animate-in">
-            {options.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => handleSelect(opt.value)}
-                className={clsx(
-                  'w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors cursor-pointer',
-                  opt.value === value
-                    ? 'bg-[var(--accent)] text-white'
-                    : 'text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
-                )}
-              >
-                <span>{opt.label}</span>
-                {opt.value === value && <Check className="h-3.5 w-3.5 flex-shrink-0" />}
-              </button>
-            ))}
+          <div className="absolute z-50 mt-1 w-full rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg animate-in overflow-hidden">
+            {searchable && (
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--bg-border)]">
+                <Search className="h-3.5 w-3.5 text-[var(--text-muted)] shrink-0" />
+                <input
+                  ref={searchRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
+                />
+              </div>
+            )}
+            <div className="py-1 max-h-56 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <p className="px-3 py-2 text-sm text-[var(--text-muted)]">Nenhum resultado</p>
+              ) : (
+                filtered.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleSelect(opt.value)}
+                    className={clsx(
+                      'w-full flex items-center justify-between px-3 py-2 text-sm text-left transition-colors cursor-pointer',
+                      opt.value === value
+                        ? 'bg-[var(--accent)] text-white'
+                        : 'text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                    )}
+                  >
+                    <span>{opt.label}</span>
+                    {opt.value === value && <Check className="h-3.5 w-3.5 flex-shrink-0" />}
+                  </button>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>

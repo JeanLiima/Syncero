@@ -44,14 +44,13 @@ export function CreateExternalCompanyModal({ open, onClose }: Props) {
   const [cnpj,      setCnpj]      = useState('')
   const [taxRegime, setTaxRegime] = useState<TaxRegime | ''>('')
   const [segment,   setSegment]   = useState<CompanySegment | ''>('')
-  const [notes,     setNotes]     = useState('')
   const [seedPlan,  setSeedPlan]  = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error,      setError]      = useState<string | null>(null)
 
   const reset = () => {
     setName(''); setTradeName(''); setCnpj('')
-    setTaxRegime(''); setSegment(''); setNotes('')
+    setTaxRegime(''); setSegment('')
     setSeedPlan(true); setError(null)
   }
 
@@ -75,7 +74,6 @@ export function CreateExternalCompanyModal({ open, onClose }: Props) {
           tax_regime: taxRegime || null,
           integration: 'manual',
           segment: segment || null,
-          notes: notes.trim() || null,
           seedPlan,
         }),
       })
@@ -132,12 +130,7 @@ export function CreateExternalCompanyModal({ open, onClose }: Props) {
           options={segmentOptions}
           value={segment}
           onChange={v => setSegment(v as CompanySegment | '')}
-        />
-        <Input
-          label={t('external_notes')}
-          placeholder={t('external_notesPlaceholder')}
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
+          searchable
         />
         <Checkbox
           label={t('external_seedPlan')}

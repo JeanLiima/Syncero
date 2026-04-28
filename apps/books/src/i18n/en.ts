@@ -174,7 +174,7 @@ export const en: Record<TranslationKey, string> = {
   plano_title: 'Chart of Accounts',
   plano_seedTitle: 'No chart of accounts yet',
   plano_seedSubtitle: 'Import the default CFC chart or start from scratch.',
-  plano_seedCfc: 'Import CFC Chart',
+  plano_seedCfc: 'Generate default CFC chart',
   plano_seedCustom: 'Start from scratch',
   plano_seeding: 'Importing…',
   plano_seedError: 'Error importing chart.',

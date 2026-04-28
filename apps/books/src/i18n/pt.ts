@@ -172,7 +172,7 @@ export const pt = {
   plano_title: 'Plano de Contas',
   plano_seedTitle: 'Nenhum plano de contas ainda',
   plano_seedSubtitle: 'Importe o plano padrão CFC ou crie do zero.',
-  plano_seedCfc: 'Importar Plano CFC',
+  plano_seedCfc: 'Gerar plano padrão CFC',
   plano_seedCustom: 'Criar do zero',
   plano_seeding: 'Importando…',
   plano_seedError: 'Erro ao importar o plano.',

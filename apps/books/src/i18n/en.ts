@@ -113,7 +113,6 @@ export const en: Record<TranslationKey, string> = {
   lancamentos_countSingular: 'entry',
   lancamentos_countPlural: 'entries',
   lancamentos_emptyPeriod: 'No entries in',
-  lancamentos_importDominio: 'Import Domínio',
   lancamentos_new: 'New entry',
   lancamentos_loading: 'Loading…',
   lancamentos_create: 'Create entry',
@@ -124,7 +123,6 @@ export const en: Record<TranslationKey, string> = {
   lancamentos_colValue: 'Amount',
   lancamentos_colSource: 'Source',
   lancamentos_sourceManual: 'Manual',
-  lancamentos_sourceDominio: 'Domínio',
   lancamentos_sourceApi: 'API',
   lancamentos_sourceSyncero: 'Syncero',
 

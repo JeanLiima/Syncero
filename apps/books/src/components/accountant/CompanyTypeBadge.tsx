@@ -15,7 +15,7 @@ export function CompanyTypeBadge({ isExternal, integration, className }: Company
     )
   }
 
-  const integrationLabel = integration === 'dominio' ? 'Domínio' : integration === 'other' ? 'Externo' : 'Manual'
+  const integrationLabel = integration === 'other' ? 'Externo' : 'Manual'
 
   return (
     <span className={clsx('inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[var(--bg-elevated)] text-[var(--text-muted)]', className)}>

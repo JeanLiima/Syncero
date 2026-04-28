@@ -197,8 +197,8 @@ export interface TaxCalculation {
 
 // ── External companies & accounting ──────────────────────────
 
-export type CompanyIntegration = 'manual' | 'dominio' | 'other'
-export type EntrySource = 'manual' | 'dominio_import' | 'api' | 'syncero_import'
+export type CompanyIntegration = 'manual' | 'other'
+export type EntrySource = 'manual' | 'api' | 'syncero_import'
 export type AccountType = 'ativo' | 'passivo' | 'patrimonio_liquido' | 'receita' | 'despesa' | 'custo'
 export type AccountNature = 'devedora' | 'credora'
 export type JournalSide = 'debit' | 'credit'

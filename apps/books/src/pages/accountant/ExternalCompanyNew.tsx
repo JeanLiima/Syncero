@@ -31,7 +31,6 @@ const taxRegimeOptions = [
 
 const integrationOptions = [
   { value: 'manual', label: 'Manual' },
-  { value: 'dominio', label: 'Domínio Sistemas' },
   { value: 'other', label: 'Outro sistema' },
 ]
 

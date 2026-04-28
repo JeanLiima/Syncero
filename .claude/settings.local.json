@@ -22,7 +22,9 @@
       "Bash(gh repo:*)",
       "Bash(git commit -m ' *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(rm \"J:/Users/Jean/Projetos/Syncero/apps/books/src/components/accountant/DomainImportModal.tsx\")",
+      "Bash(rm \"J:/Users/Jean/Projetos/Syncero/apps/books/src/lib/domain.ts\")"
     ]
   }
 }

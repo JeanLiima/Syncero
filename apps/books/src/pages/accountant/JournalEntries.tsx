@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Upload } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { apiFetch } from '@/lib/api'
@@ -8,14 +8,11 @@ import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card, Badge, MonthPicker, SkeletonRows } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
-import { DomainImportModal } from '@/components/accountant/DomainImportModal'
 import { useT } from '@/i18n'
 import type { JournalEntry, AccountPlan, EntrySource } from '@/types'
-import type { ParsedEntry } from '@/lib/domain'
 
 const sourceVariant: Record<EntrySource, 'default' | 'info' | 'success' | 'warning'> = {
   manual: 'default',
-  dominio_import: 'info',
   api: 'success',
   syncero_import: 'warning',
 }
@@ -24,7 +21,6 @@ export function Component() {
   const t = useT()
   const sourceLabel: Record<string, string> = {
     manual: t('lancamentos_sourceManual'),
-    dominio_import: t('lancamentos_sourceDominio'),
     api: t('lancamentos_sourceApi'),
     syncero_import: t('lancamentos_sourceSyncero'),
   }
@@ -34,7 +30,6 @@ export function Component() {
   const qc = useQueryClient()
 
   const [entryModalOpen, setEntryModalOpen] = useState(false)
-  const [importModalOpen, setImportModalOpen] = useState(false)
   const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7))
 
   const periodLabel = (() => {
@@ -73,17 +68,6 @@ export function Component() {
     qc.invalidateQueries({ queryKey })
   }
 
-  const handleDominioImport = async (parsedEntries: ParsedEntry[], _accountsByCode: Map<string, string>) => {
-    await apiFetch('/api/journal-entries/import', {
-      method: 'POST',
-      body: JSON.stringify({
-        entries: parsedEntries,
-        ...(isExternal ? { extCompanyId: id } : { companyId: id }),
-      }),
-    })
-    qc.invalidateQueries({ queryKey })
-  }
-
   const getEntryTotal = (entry: JournalEntry) => {
     const lines = (entry as any).journal_entry_lines ?? []
     return lines.filter((l: any) => l.side === 'debit').reduce((s: number, l: any) => s + Number(l.amount), 0)
@@ -104,16 +88,10 @@ export function Component() {
             size="sm"
           />
           {canWrite && (
-            <>
-              <Button size="sm" variant="ghost" onClick={() => setImportModalOpen(true)}>
-                <Upload className="h-4 w-4" />
-                {t('lancamentos_importDominio')}
-              </Button>
-              <Button size="sm" onClick={() => setEntryModalOpen(true)}>
-                <Plus className="h-4 w-4" />
-                {t('lancamentos_new')}
-              </Button>
-            </>
+            <Button size="sm" onClick={() => setEntryModalOpen(true)}>
+              <Plus className="h-4 w-4" />
+              {t('lancamentos_new')}
+            </Button>
           )}
         </div>
       </div>
@@ -182,20 +160,12 @@ export function Component() {
       )}
 
       {canWrite && (
-        <>
-          <JournalEntryModal
-            open={entryModalOpen}
-            onClose={() => setEntryModalOpen(false)}
-            onSubmit={handleCreateEntry}
-            accounts={accounts}
-          />
-          <DomainImportModal
-            open={importModalOpen}
-            onClose={() => setImportModalOpen(false)}
-            onImport={handleDominioImport}
-            accounts={accounts}
-          />
-        </>
+        <JournalEntryModal
+          open={entryModalOpen}
+          onClose={() => setEntryModalOpen(false)}
+          onSubmit={handleCreateEntry}
+          accounts={accounts}
+        />
       )}
     </div>
   )

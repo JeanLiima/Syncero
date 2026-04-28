@@ -111,7 +111,6 @@ export const pt = {
   lancamentos_countSingular: 'lançamento',
   lancamentos_countPlural: 'lançamentos',
   lancamentos_emptyPeriod: 'Nenhum lançamento em',
-  lancamentos_importDominio: 'Importar Domínio',
   lancamentos_new: 'Novo lançamento',
   lancamentos_loading: 'Carregando…',
   lancamentos_create: 'Criar lançamento',
@@ -122,7 +121,6 @@ export const pt = {
   lancamentos_colValue: 'Valor',
   lancamentos_colSource: 'Origem',
   lancamentos_sourceManual: 'Manual',
-  lancamentos_sourceDominio: 'Domínio',
   lancamentos_sourceApi: 'API',
   lancamentos_sourceSyncero: 'Syncero',
 

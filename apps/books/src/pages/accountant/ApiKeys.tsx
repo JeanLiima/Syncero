@@ -44,10 +44,7 @@ export function Component() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('apiKeys_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">{t('apiKeys_subtitle')}</p>
-        </div>
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('apiKeys_title')}</h1>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" />
           {t('apiKeys_new')}

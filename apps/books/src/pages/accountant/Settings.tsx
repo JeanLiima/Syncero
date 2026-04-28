@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Lock, Pencil } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
-import { Button, Card, Input, Modal, Select, useToast } from '@syncero/ui'
+import { Button, Input, Modal, Select, useToast } from '@syncero/ui'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { useT } from '@/i18n'
 import type { ExternalCompany, TaxRegime, CompanySegment } from '@/types'
@@ -211,13 +211,11 @@ export function Component() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('nav_settings')}</h1>
-      <Card>
-        {isExternal
-          ? <ExternalCompanySettings id={id} />
-          : <IntegratedCompanySettings id={id} />
-        }
-      </Card>
+      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_company')}</h1>
+      {isExternal
+        ? <ExternalCompanySettings id={id} />
+        : <IntegratedCompanySettings id={id} />
+      }
     </div>
   )
 }

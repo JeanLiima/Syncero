@@ -10,8 +10,8 @@ import { ptBR, enUS } from 'date-fns/locale'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember } from '@/lib/backend'
-import type { MemberRole } from '@/types'
+import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
+import type { MemberRole, AccountantCompany } from '@/types'
 
 const companySchema = z.object({
   name: z.string().min(2, 'Nome muito curto'),
@@ -73,7 +73,7 @@ function CompanyTab() {
 
   return (
     <>
-      <div className="flex flex-col gap-5 max-w-lg">
+      <div className="flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium text-[var(--text-secondary)]">{t('settings_companyInfo')}</h2>
           <Button variant="ghost" size="sm" onClick={() => setEditOpen(true)}>
@@ -237,7 +237,7 @@ function MembersTab() {
   const sorted = [...(owner ? [owner] : []), ...rest]
 
   return (
-    <div className="flex flex-col gap-5 max-w-2xl">
+    <div className="flex flex-col gap-5">
 
       {/* Card informativo de papéis */}
       <div className="rounded-[var(--radius-lg)] border border-[var(--bg-border)] overflow-hidden">
@@ -408,6 +408,168 @@ function MembersTab() {
   )
 }
 
+// ── Aba Contador ──────────────────────────────────────────────
+
+function AccountantTab() {
+  const t = useT()
+  const { success, error: toastError } = useToast()
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+  const language = usePreferencesStore((s) => s.language)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [unlinkId, setUnlinkId] = useState<string | null>(null)
+  const qc = useQueryClient()
+
+  const { data: accountants = [], isLoading } = useQuery<AccountantCompany[]>({
+    queryKey: ['accountants', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany?.id) return []
+      return getAccountantCompanies(activeCompany.id)
+    },
+    enabled: !!activeCompany?.id,
+  })
+
+  const invite = useMutation({
+    mutationFn: async () => {
+      const token = crypto.randomUUID()
+      await inviteAccountant(activeCompany!.id, inviteEmail, token, language)
+    },
+    onSuccess: () => {
+      setInviteEmail(''); setModalOpen(false)
+      qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
+      success(t('common_inviteSent'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
+  })
+
+  const resend = useMutation({
+    mutationFn: (id: string) => resendAccountantInvite(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
+      success(t('common_inviteSent'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
+  })
+
+  const cancel = useMutation({
+    mutationFn: (id: string) => cancelAccountantInvite(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
+      success(t('common_deletedSuccess'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
+  })
+
+  const unlink = useMutation({
+    mutationFn: (id: string) => cancelAccountantInvite(id),
+    onSuccess: () => {
+      setUnlinkId(null)
+      qc.invalidateQueries({ queryKey: ['accountants', activeCompany?.id] })
+      success(t('common_deletedSuccess'))
+    },
+    onError: () => toastError(t('common_errorGeneric')),
+  })
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center justify-end">
+        <Button size="sm" onClick={() => setModalOpen(true)}>
+          <UserPlus className="h-3.5 w-3.5" />
+          {t('settings_inviteAccountant')}
+        </Button>
+      </div>
+
+      <Card padding="sm">
+        <Table
+          loading={isLoading}
+          data={accountants}
+          rowKey={(r) => r.id}
+          emptyMessage={t('settings_noAccountants')}
+          columns={[
+            {
+              key: 'accountant',
+              header: t('settings_accountant'),
+              render: (r) => {
+                const p = r.profiles as unknown as { full_name: string; email: string; avatar_url: string | null } | null
+                return p ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar name={p.full_name} src={p.avatar_url} size="sm" />
+                    <div>
+                      <p className="text-sm text-[var(--text-primary)]">{p.full_name}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{p.email}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-sm text-[var(--text-muted)]">{r.email}</span>
+                )
+              },
+            },
+            {
+              key: 'status',
+              header: t('accountant_status'),
+              render: (r) => (
+                <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'danger'}>
+                  {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_rejected')}
+                </Badge>
+              ),
+            },
+            {
+              key: 'invited_at',
+              header: t('settings_invitedAt'),
+              render: (r) => format(new Date(r.invited_at), 'dd/MM/yyyy', { locale: ptBR }),
+            },
+            {
+              key: 'actions',
+              header: '',
+              align: 'right',
+              className: 'w-px !px-2',
+              render: (r) => {
+                if (r.status === 'pending') return (
+                  <div className="flex items-center justify-end gap-1">
+                    <IconBtn onClick={() => resend.mutate(r.id)} disabled={resend.isPending && resend.variables === r.id} tooltip={t('settings_resend')}>
+                      <RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />
+                    </IconBtn>
+                    <IconBtn onClick={() => cancel.mutate(r.id)} disabled={cancel.isPending && cancel.variables === r.id} tooltip={t('settings_cancel')} danger>
+                      <X className="h-3.5 w-3.5" />
+                    </IconBtn>
+                  </div>
+                )
+                if (r.status === 'accepted') return (
+                  <IconBtn onClick={() => setUnlinkId(r.id)} tooltip={t('settings_unlink')} danger>
+                    <UserMinus className="h-3.5 w-3.5" />
+                  </IconBtn>
+                )
+                return null
+              },
+            },
+          ]}
+        />
+      </Card>
+
+      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setInviteEmail('') }} title={t('settings_inviteAccountant')} size="sm">
+        <div className="flex flex-col gap-4">
+          <Input label="Email" placeholder="contador@escritorio.com" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} autoFocus />
+          {invite.isError && <p className="text-xs text-[var(--danger)]">{(invite.error as Error)?.message ?? t('settings_inviteError')}</p>}
+        </div>
+        <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
+          <Button variant="ghost" size="sm" onClick={() => { setModalOpen(false); setInviteEmail('') }}>{t('settings_cancel')}</Button>
+          <Button onClick={() => invite.mutate()} loading={invite.isPending} disabled={!inviteEmail}>{t('settings_sendInvite')}</Button>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={!!unlinkId}
+        onClose={() => setUnlinkId(null)}
+        onConfirm={() => { unlink.mutate(unlinkId!); setUnlinkId(null) }}
+        title={t('settings_unlinkTitle')}
+        message={t('settings_unlinkMessage')}
+        confirmLabel={t('settings_unlink')}
+        loading={unlink.isPending}
+      />
+    </div>
+  )
+}
+
 // ── Página ────────────────────────────────────────────────────
 
 export function Component() {
@@ -420,6 +582,7 @@ export function Component() {
         <TabList>
           <Tab id="company">{t('settings_company')}</Tab>
           <Tab id="members">{t('settings_members')}</Tab>
+          <Tab id="accountant">{t('settings_accountant')}</Tab>
         </TabList>
         <TabPanel id="company">
           <div className="pt-6">
@@ -429,6 +592,11 @@ export function Component() {
         <TabPanel id="members">
           <div className="pt-6">
             <MembersTab />
+          </div>
+        </TabPanel>
+        <TabPanel id="accountant">
+          <div className="pt-6">
+            <AccountantTab />
           </div>
         </TabPanel>
       </Tabs>

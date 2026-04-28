@@ -136,7 +136,6 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/settings/company" replace /> },
           { path: 'company',    lazy: lazyLoad(() => import('../pages/settings/Company')) },
-          { path: 'accountant', lazy: lazyLoad(() => import('../pages/settings/Accountant')) },
           { path: 'categories', lazy: lazyLoad(() => import('../pages/settings/Categories')) },
           { path: 'banks',      lazy: lazyLoad(() => import('../pages/settings/Banks')) },
           { path: 'contacts',   lazy: lazyLoad(() => import('../pages/settings/Contacts')) },

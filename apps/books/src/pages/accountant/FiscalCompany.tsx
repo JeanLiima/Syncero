@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { FileText, BookOpen, Calculator, LayoutList, BookMarked, ArrowDownUp, ArrowRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
+import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
 
 const taxRegimeLabel: Record<string, string> = {
@@ -43,7 +44,10 @@ export function Component() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="text-xs text-[var(--text-muted)] mb-1">{t('overview_company')}</p>
+        <div className="flex items-center gap-2 mb-1">
+          <p className="text-xs text-[var(--text-muted)]">{t('overview_company')}</p>
+          <CompanyTypeBadge isExternal={false} />
+        </div>
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{company?.name ?? '…'}</h1>
         {formattedCnpj && <p className="text-sm text-[var(--text-muted)] font-mono">{formattedCnpj}</p>}
         {company?.tax_regime && (

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus, Search } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Input, Modal, Select, Table, ConfirmDialog, useToast } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
@@ -99,7 +99,7 @@ export function Component() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_contacts')}</h1>
         <Button size="sm" onClick={openCreate}>
@@ -108,11 +108,18 @@ export function Component() {
         </Button>
       </div>
 
-      <Input
-        placeholder={t('contact_searchPlaceholder')}
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      <Card padding="sm">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+          <Input
+            size="sm"
+            placeholder={t('contact_searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+      </Card>
 
       <Card padding="sm">
         <Table

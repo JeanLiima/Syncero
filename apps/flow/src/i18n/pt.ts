@@ -122,7 +122,7 @@ export const pt = {
   contact_docTypePerson: 'Pessoa física (CPF)',
   contact_docTypeCompany: 'Pessoa jurídica (CNPJ)',
   contact_docTypeNone: 'Sem documento',
-  settings_contacts: 'Pessoas',
+  settings_contacts: 'Contatos',
   transactions_origin: 'Origem',
   transactions_destination: 'Destino',
   transactions_counterpartPlaceholder: 'Nome do cliente, fornecedor...',

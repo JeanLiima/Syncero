@@ -123,7 +123,7 @@ export const en: Record<TranslationKey, string> = {
   contact_docTypePerson: 'Individual (CPF)',
   contact_docTypeCompany: 'Company (CNPJ)',
   contact_docTypeNone: 'No document',
-  settings_contacts: 'People',
+  settings_contacts: 'Contacts',
   contact_searchPlaceholder: 'Search by name, CPF or CNPJ...',
   transactions_origin: 'Origin',
   transactions_destination: 'Destination',

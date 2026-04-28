@@ -61,12 +61,12 @@ function FirstAccess({ onSeed, seeding }: {
 
 // ── Section header ────────────────────────────────────────────
 
-function SectionHeader({ label, count, color, subtleColor, collapsed, onToggle, onAdd, canWrite }: {
+function SectionHeader({ label, count, color, subtleColor, collapsed, onToggle }: {
   label: string; count: number; color: string; subtleColor: string
-  collapsed: boolean; onToggle: () => void; onAdd: () => void; canWrite: boolean
+  collapsed: boolean; onToggle: () => void
 }) {
   return (
-    <div className={`flex items-center justify-between px-4 py-2.5 rounded-t-[var(--radius-lg)] border border-[var(--bg-border)] ${subtleColor}`}>
+    <div className={`flex items-center px-4 py-2.5 rounded-t-[var(--radius-lg)] border border-[var(--bg-border)] ${subtleColor}`}>
       <button
         onClick={onToggle}
         className="flex items-center gap-2 cursor-pointer group"
@@ -78,15 +78,6 @@ function SectionHeader({ label, count, color, subtleColor, collapsed, onToggle, 
         <span className={`text-xs font-semibold uppercase tracking-wider ${color}`}>{label}</span>
         <span className="text-xs text-[var(--text-muted)]">({count})</span>
       </button>
-      {canWrite && !collapsed && (
-        <button
-          onClick={onAdd}
-          className="flex items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
-        >
-          <Plus className="h-3 w-3" />
-          Nova conta
-        </button>
-      )}
     </div>
   )
 }
@@ -434,23 +425,12 @@ export function Component() {
                   subtleColor={subtleColor}
                   collapsed={isCollapsedSection}
                   onToggle={() => toggleSection(type)}
-                  onAdd={() => openCreate(type)}
-                  canWrite={canWrite}
                 />
 
                 {!isCollapsedSection && (
                   sectionPlans.length === 0 ? (
                     <div className="px-4 py-6 text-center">
                       <p className="text-xs text-[var(--text-muted)]">{t('plano_sectionEmpty')}</p>
-                      {canWrite && (
-                        <button
-                          onClick={() => openCreate(type)}
-                          className="mt-2 text-xs text-[var(--accent)] hover:underline cursor-pointer"
-                        >
-                          <Plus className="inline h-3 w-3 mr-0.5" />
-                          Nova conta
-                        </button>
-                      )}
                     </div>
                   ) : (
                     <table className="w-full text-sm">

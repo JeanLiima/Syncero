@@ -2,6 +2,14 @@
 
 export type UserType = 'company_user' | 'accountant'
 export type TransactionType = 'income' | 'expense'
+export type TransactionNature =
+  | 'sale_service'
+  | 'loan_received'
+  | 'capital_contribution'
+  | 'operational_expense'
+  | 'asset_purchase'
+  | 'debt_payment'
+  | 'owner_withdrawal'
 export type PaymentMethod = 'cash' | 'bank'
 export type BankAccountType = 'checking' | 'savings'
 export type TaxRegime = 'simples' | 'lucro_presumido' | 'lucro_real'
@@ -116,6 +124,7 @@ export interface Transaction {
   bank_id: string | null
   payment_registered_at: string | null
   payment_registered_by: string | null
+  nature: TransactionNature | null
   is_installment: boolean
   installment_count: number | null
   installment_number: number | null

@@ -117,7 +117,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
         key: 'paid_at',
         icon: <CheckCircle className="h-3 w-3 text-white" />,
         color: 'bg-[var(--success)]',
-        label: t('transactions_detail_histPaidAt'),
+        label: isIncome ? t('transactions_detail_histReceivedAt') : t('transactions_detail_histPaidAt'),
         date: fmt(tx.paid_at),
       })
     }
@@ -133,7 +133,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
         key: 'registered',
         icon: <Clock className="h-3 w-3 text-white" />,
         color: 'bg-[var(--warning)]',
-        label: t('transactions_detail_histRegistered'),
+        label: isIncome ? t('transactions_detail_histRegisteredIncome') : t('transactions_detail_histRegistered'),
         date: fmt(tx.payment_registered_at, true),
         by: tx.payment_registrar_name,
         sub: methodLabel,
@@ -150,7 +150,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
         {tx && !tx.is_paid && (
           <Button variant="ghost" size="sm" onClick={() => setPaymentOpen(true)}>
             <CheckCircle className="h-3.5 w-3.5" />
-            {t('transactions_payment_register')}
+            {isIncome ? t('transactions_payment_registerIncome') : t('transactions_payment_register')}
           </Button>
         )}
         {tx && onEdit && (
@@ -190,7 +190,9 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
                 {isIncome ? t('transactions_income_badge') : t('transactions_expense_badge')}
               </Badge>
               <Badge variant={tx.is_paid ? 'success' : 'warning'}>
-                {tx.is_paid ? t('transactions_paid') : t('transactions_pending')}
+                {tx.is_paid
+                  ? (isIncome ? t('transactions_received') : t('transactions_paid'))
+                  : (isIncome ? t('transactions_toReceive') : t('transactions_pending'))}
               </Badge>
             </div>
           </div>
@@ -251,6 +253,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
 
       <PaymentModal
         transactionId={transactionId}
+        transactionType={tx?.type}
         open={paymentOpen}
         onClose={() => setPaymentOpen(false)}
         language={language}

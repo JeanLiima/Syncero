@@ -1,4 +1,4 @@
-import type { TransactionType } from '@/types'
+import type { TransactionNature, TransactionType } from '@/types'
 
 export interface TransactionFilters {
   type?: TransactionType
@@ -14,6 +14,7 @@ export interface TransactionFormData {
   amount: number
   type: TransactionType
   date: string
+  nature?: TransactionNature | null
   category_id?: string | null
   contact_id?: string | null
   counterpart?: string | null

@@ -1,14 +1,18 @@
 import { CheckCircle } from 'lucide-react'
+import { Button } from '@syncero/ui'
 import { useT } from '@/i18n'
+import type { TransactionType } from '@/types'
 
 interface PaymentPromptStepProps {
+  type: TransactionType
   onRegisterPayment: () => void
   onSkip: () => void
   skipCountdown: number
 }
 
-export function PaymentPromptStep({ onRegisterPayment, onSkip, skipCountdown }: PaymentPromptStepProps) {
+export function PaymentPromptStep({ type, onRegisterPayment, onSkip, skipCountdown }: PaymentPromptStepProps) {
   const t = useT()
+  const isIncome = type === 'income'
 
   return (
     <div className="flex flex-col items-center gap-5 py-4">
@@ -42,12 +46,9 @@ export function PaymentPromptStep({ onRegisterPayment, onSkip, skipCountdown }: 
             <span className="font-mono text-xs opacity-50">{skipCountdown}s</span>
           </span>
         </button>
-        <button
-          onClick={onRegisterPayment}
-          className="px-4 py-2 bg-[var(--accent)] text-white rounded-[var(--radius-md)] hover:opacity-90 transition-opacity"
-        >
-          {t('transactions_payment_register')}
-        </button>
+        <Button onClick={onRegisterPayment}>
+          {isIncome ? t('transactions_payment_registerIncome') : t('transactions_payment_register')}
+        </Button>
       </div>
     </div>
   )

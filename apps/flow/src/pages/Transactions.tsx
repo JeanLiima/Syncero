@@ -11,7 +11,7 @@ import { TransactionEditModal } from '@/modules/transactions/TransactionEditModa
 import { TransactionDetailModal } from '@/modules/transactions/TransactionDetailModal'
 import { PaymentModal } from '@/modules/transactions/PaymentModal'
 import { useT } from '@/i18n'
-import type { Transaction } from '@/types'
+import type { Transaction, TransactionType } from '@/types'
 import type { TransactionFilters } from '@/modules/transactions/types'
 
 export function Component() {
@@ -23,7 +23,7 @@ export function Component() {
   const [filters, setFilters] = useState<TransactionFilters>({})
   const [page, setPage] = useState(1)
   const [detailId, setDetailId] = useState<string | null>(null)
-  const [paymentId, setPaymentId] = useState<string | null>(null)
+  const [paymentTarget, setPaymentTarget] = useState<{ id: string; type: TransactionType } | null>(null)
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
 
@@ -159,7 +159,9 @@ export function Component() {
               header: t('transactions_status'),
               render: (r) => (
                 <Badge variant={r.is_paid ? 'success' : 'warning'}>
-                  {r.is_paid ? t('transactions_paid') : t('transactions_pending')}
+                  {r.is_paid
+                    ? (r.type === 'income' ? t('transactions_received') : t('transactions_paid'))
+                    : (r.type === 'income' ? t('transactions_toReceive') : t('transactions_pending'))}
                 </Badge>
               ),
             },
@@ -171,13 +173,13 @@ export function Component() {
                 !r.is_paid ? (
                   <div className="relative group flex justify-end">
                     <button
-                      onClick={(e) => { e.stopPropagation(); setPaymentId(r.id) }}
+                      onClick={(e) => { e.stopPropagation(); setPaymentTarget({ id: r.id, type: r.type }) }}
                       className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
                     >
                       <CheckCircle className="h-4 w-4" />
                     </button>
                     <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('transactions_markAsPaid')}
+                      {r.type === 'income' ? t('transactions_markAsReceived') : t('transactions_markAsPaid')}
                     </span>
                   </div>
                 ) : null,
@@ -204,9 +206,10 @@ export function Component() {
       </Card>
 
       <PaymentModal
-        transactionId={paymentId}
-        open={!!paymentId}
-        onClose={() => setPaymentId(null)}
+        transactionId={paymentTarget?.id ?? null}
+        transactionType={paymentTarget?.type}
+        open={!!paymentTarget}
+        onClose={() => setPaymentTarget(null)}
         language={language}
       />
 

@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { LayoutList, BookMarked, Key, ArrowRight } from 'lucide-react'
+import { LayoutList, BookMarked, ArrowRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
@@ -64,12 +64,6 @@ export function Component() {
       value: `${entryCount} ${entryCount !== 1 ? t('overview_entryCountPlural') : t('overview_entryCount')}`,
       icon: <LayoutList className="h-6 w-6 text-[var(--warning)]" />,
       to: 'lancamentos',
-    },
-    {
-      label: t('overview_apiKeys'),
-      value: t('overview_manage'),
-      icon: <Key className="h-6 w-6 text-[var(--success)]" />,
-      to: 'api-keys',
     },
   ]
 

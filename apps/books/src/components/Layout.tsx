@@ -92,11 +92,6 @@ export function Layout({ children }: { children: ReactNode }) {
         <p className="text-[13px] font-semibold text-[var(--text-primary)] truncate leading-snug">
           {companyName ?? '…'}
         </p>
-        {isExternal && (
-          <span className="inline-block mt-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-[var(--success-subtle)] text-[var(--success)]">
-            {t('nav_externalBadge')}
-          </span>
-        )}
       </div>
     </div>
   ) : undefined

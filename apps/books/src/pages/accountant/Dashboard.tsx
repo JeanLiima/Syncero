@@ -89,6 +89,7 @@ export function Component() {
                   name={c.name}
                   cnpj={c.cnpj}
                   taxRegime={c.tax_regime as TaxRegime | null}
+                  segment={(c as any).segment ?? null}
                   isExternal={false}
                 />
               )
@@ -101,6 +102,7 @@ export function Component() {
                 name={ec.name}
                 cnpj={ec.cnpj}
                 taxRegime={ec.tax_regime}
+                segment={ec.segment ?? null}
                 isExternal={true}
               />
             ))}

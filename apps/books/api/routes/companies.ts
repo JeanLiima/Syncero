@@ -9,7 +9,7 @@ router.get('/', async (c) => {
   const db = createServiceClient()
 
   const { data, error } = await db.from('accountant_companies')
-    .select('*, companies(id, name, cnpj, tax_regime)')
+    .select('*, companies(id, name, cnpj, tax_regime, segment)')
     .eq('accountant_id', userId)
     .eq('status', 'accepted')
     .order('accepted_at', { ascending: false })

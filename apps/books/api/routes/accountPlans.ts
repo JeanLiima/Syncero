@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { createServiceClient, type HonoVariables } from '../_shared'
 import { DEFAULT_ACCOUNT_PLAN } from '../defaultAccountPlan'
+import { randomUUID } from 'crypto'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
@@ -82,24 +83,26 @@ router.post('/seed', async (c) => {
     return c.json({ error: 'No accounts to seed' }, 400)
   }
 
+  // Pre-generate UUIDs so parent_id references can be resolved without sequential inserts
   const codeToId = new Map<string, string>()
-  for (const account of accounts) {
-    const parentId = account.parent_code ? (codeToId.get(account.parent_code) ?? null) : null
-    const { data: row, error: insertErr } = await db.from('account_plans').insert({
-      ...(extCompanyId ? { ext_company_id: extCompanyId } : { company_id: companyId }),
-      accountant_id: userId,
-      parent_id: parentId,
-      code: account.code,
-      name: account.name,
-      account_type: account.account_type,
-      nature: account.nature,
-      is_analytic: account.is_analytic,
-    }).select('id').single()
-    if (insertErr) return c.json({ error: `Failed to insert account ${account.code}: ${insertErr.message}` }, 500)
-    if (row) codeToId.set(account.code, row.id)
-  }
+  for (const account of accounts) codeToId.set(account.code, randomUUID())
 
-  return c.json({ seeded: codeToId.size }, 201)
+  const rows = accounts.map(account => ({
+    id:           codeToId.get(account.code)!,
+    ...(extCompanyId ? { ext_company_id: extCompanyId } : { company_id: companyId }),
+    accountant_id: userId,
+    parent_id:    account.parent_code ? (codeToId.get(account.parent_code) ?? null) : null,
+    code:         account.code,
+    name:         account.name,
+    account_type: account.account_type,
+    nature:       account.nature,
+    is_analytic:  account.is_analytic,
+  }))
+
+  const { error } = await db.from('account_plans').insert(rows)
+  if (error) return c.json({ error: error.message }, 500)
+
+  return c.json({ seeded: rows.length }, 201)
 })
 
 // ── PATCH /api/account-plans/:id ─────────────────────────────

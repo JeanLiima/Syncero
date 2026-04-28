@@ -2,6 +2,24 @@ import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+
+const segmentOptions = [
+  { value: '',              label: '— Não definido —' },
+  { value: 'comercio',         label: 'Comércio' },
+  { value: 'servicos',         label: 'Serviços' },
+  { value: 'industria',        label: 'Indústria' },
+  { value: 'construcao_civil', label: 'Construção Civil' },
+  { value: 'agronegocio',      label: 'Agronegócio' },
+  { value: 'saude',            label: 'Saúde' },
+  { value: 'educacao',         label: 'Educação' },
+  { value: 'tecnologia',       label: 'Tecnologia' },
+  { value: 'financeiro',       label: 'Financeiro' },
+  { value: 'outros',           label: 'Outros' },
+]
+
+const segmentLabel: Record<string, string> = Object.fromEntries(
+  segmentOptions.filter(o => o.value).map(o => [o.value, o.label])
+)
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog } from '@syncero/ui'
 import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown } from 'lucide-react'
@@ -14,9 +32,11 @@ import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, rese
 import type { MemberRole, AccountantCompany } from '@/types'
 
 const companySchema = z.object({
-  name: z.string().min(2, 'Nome muito curto'),
-  cnpj: z.string().optional(),
+  name:       z.string().min(2, 'Nome muito curto'),
+  trade_name: z.string().optional(),
+  cnpj:       z.string().optional(),
   tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
+  segment:    z.string().optional(),
 })
 
 type CompanyForm = z.infer<typeof companySchema>
@@ -53,14 +73,22 @@ function CompanyTab() {
   })
 
   useEffect(() => {
-    if (company) reset({ name: company.name, cnpj: company.cnpj ?? '', tax_regime: company.tax_regime ?? undefined })
+    if (company) reset({
+      name:       company.name,
+      trade_name: company.trade_name ?? '',
+      cnpj:       company.cnpj       ?? '',
+      tax_regime: company.tax_regime  ?? undefined,
+      segment:    company.segment     ?? '',
+    })
   }, [company, reset])
 
   const save = useMutation({
     mutationFn: async (data: CompanyForm) => {
       const payload: Record<string, unknown> = { name: data.name }
-      if (data.cnpj !== undefined) payload.cnpj = data.cnpj || null
+      if (data.trade_name !== undefined) payload.trade_name = data.trade_name || null
+      if (data.cnpj       !== undefined) payload.cnpj       = data.cnpj       || null
       payload.tax_regime = data.tax_regime ?? null
+      payload.segment    = data.segment    || null
       return updateCompany(activeCompany!.id, payload)
     },
     onSuccess: (_, vars) => {
@@ -91,6 +119,10 @@ function CompanyTab() {
             <span className="text-sm font-medium text-[var(--text-primary)]">{company?.name ?? '—'}</span>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-sm text-[var(--text-muted)]">{t('settings_tradeName')}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">{company?.trade_name ?? '—'}</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-[var(--text-muted)]">{t('settings_cnpj')}</span>
             <span className="text-sm font-medium text-[var(--text-primary)]">{company?.cnpj ?? '—'}</span>
           </div>
@@ -98,12 +130,17 @@ function CompanyTab() {
             <span className="text-sm text-[var(--text-muted)]">{t('settings_taxRegime')}</span>
             <span className="text-sm font-medium text-[var(--text-primary)]">{taxRegimeLabel(company?.tax_regime, t)}</span>
           </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-sm text-[var(--text-muted)]">{t('settings_segment')}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">{company?.segment ? segmentLabel[company.segment] : '—'}</span>
+          </div>
         </div>
       </div>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title={t('settings_editCompany')} size="sm">
         <form onSubmit={handleSubmit((d) => save.mutateAsync(d))} className="flex flex-col gap-4">
           <Input label={t('settings_companyName')} error={errors.name?.message} {...register('name')} />
+          <Input label={t('settings_tradeName')} {...register('trade_name')} />
           <Input label={t('settings_cnpj')} {...register('cnpj')} />
           <Controller
             control={control}
@@ -120,6 +157,21 @@ function CompanyTab() {
                   { value: 'lucro_presumido', label: t('settings_lucroPresumido') },
                   { value: 'lucro_real',      label: t('settings_lucroReal') },
                 ]}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="segment"
+            render={({ field }) => (
+              <Select
+                label={t('settings_segment')}
+                placeholder={t('common_select')}
+                value={field.value ?? ''}
+                onChange={(v) => field.onChange(v || undefined)}
+                onBlur={field.onBlur}
+                options={segmentOptions}
+                searchable
               />
             )}
           />

@@ -8,10 +8,25 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast, Button, Card, Input, Select, Avatar } from '@syncero/ui'
 import { useT } from '@/i18n'
 
+const segmentOptions = [
+  { value: 'comercio',         label: 'Comércio' },
+  { value: 'servicos',         label: 'Serviços' },
+  { value: 'industria',        label: 'Indústria' },
+  { value: 'construcao_civil', label: 'Construção Civil' },
+  { value: 'agronegocio',      label: 'Agronegócio' },
+  { value: 'saude',            label: 'Saúde' },
+  { value: 'educacao',         label: 'Educação' },
+  { value: 'tecnologia',       label: 'Tecnologia' },
+  { value: 'financeiro',       label: 'Financeiro' },
+  { value: 'outros',           label: 'Outros' },
+]
+
 const schema = z.object({
-  name: z.string().min(2),
-  cnpj: z.string().optional(),
+  name:       z.string().min(2),
+  trade_name: z.string().optional(),
+  cnpj:       z.string().optional(),
   tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
+  segment:    z.string().optional(),
 })
 type FormData = z.infer<typeof schema>
 
@@ -37,7 +52,13 @@ export function NoCompanyShell() {
     try {
       const company = await apiFetch<{ id: string; name: string }>('/api/companies', {
         method: 'POST',
-        body: JSON.stringify({ name: data.name, cnpj: data.cnpj, tax_regime: data.tax_regime }),
+        body: JSON.stringify({
+          name:       data.name,
+          trade_name: data.trade_name || undefined,
+          cnpj:       data.cnpj       || undefined,
+          tax_regime: data.tax_regime || undefined,
+          segment:    data.segment    || undefined,
+        }),
       })
       setActiveCompany({ id: company.id, name: company.name, role: 'admin' })
       success(t('noCompany_success'))
@@ -85,6 +106,11 @@ export function NoCompanyShell() {
               {...register('name')}
             />
             <Input
+              label={t('noCompany_tradeNameLabel')}
+              placeholder={t('noCompany_tradeNamePlaceholder')}
+              {...register('trade_name')}
+            />
+            <Input
               label={t('noCompany_cnpjLabel')}
               placeholder={t('noCompany_cnpjPlaceholder')}
               {...register('cnpj')}
@@ -104,6 +130,21 @@ export function NoCompanyShell() {
                     { value: 'lucro_presumido', label: t('settings_lucroPresumido') },
                     { value: 'lucro_real',      label: t('settings_lucroReal') },
                   ]}
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="segment"
+              render={({ field }) => (
+                <Select
+                  label={t('noCompany_segmentLabel')}
+                  placeholder={t('noCompany_segmentPlaceholder')}
+                  value={field.value ?? ''}
+                  onChange={(v) => field.onChange(v || undefined)}
+                  onBlur={field.onBlur}
+                  options={segmentOptions}
+                  searchable
                 />
               )}
             />

@@ -3,7 +3,7 @@ import { NavLink, useMatch } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   Building2, ArrowLeft, LayoutDashboard,
-  FileText, BookOpen, Calculator, LayoutList, BookMarked, Key, ArrowDownUp, Settings,
+  FileText, BookOpen, Calculator, LayoutList, BookMarked, ArrowDownUp, Settings,
 } from 'lucide-react'
 import { AppLayout, type NavItem } from '@syncero/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -57,8 +57,15 @@ export function Layout({ children }: { children: ReactNode }) {
     ] : []),
     { to: `${basePath}/chart-of-accounts`, label: t('nav_accountPlan'), icon: icon(LayoutList) },
     { to: `${basePath}/journal-entries`,   label: t('nav_journal'),     icon: icon(BookMarked) },
-    { to: `${basePath}/api-keys`,          label: t('nav_apiKeys'),     icon: icon(Key)        },
-    { to: `${basePath}/settings`,          label: t('nav_settings'),    icon: icon(Settings)   },
+    {
+      to: `${basePath}/settings`,
+      label: t('nav_settings'),
+      icon: icon(Settings),
+      children: [
+        { to: `${basePath}/settings`,  label: t('settings_company') },
+        { to: `${basePath}/api-keys`,  label: t('nav_apiKeys') },
+      ],
+    },
   ]
 
   const defaultNavItems: NavItem[] = [

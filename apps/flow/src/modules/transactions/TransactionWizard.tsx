@@ -45,7 +45,7 @@ const INCOME_NATURES: NatureOption[] = [
 
 const BASE_EXPENSE_NATURES: NatureOption[] = [
   { value: 'operational_expense', labelKey: 'transactions_nature_operational_expense', descKey: 'transactions_nature_operational_expense_desc', icon: Receipt,      common: true },
-  { value: 'product_cost',        labelKey: 'transactions_nature_product_cost',        descKey: 'transactions_nature_product_cost_desc',        icon: Package,      common: true },
+  { value: 'product_cost',        labelKey: 'transactions_nature_product_cost',        descKey: 'transactions_nature_product_cost_desc',        icon: Package       },
   { value: 'asset_purchase',      labelKey: 'transactions_nature_asset_purchase',      descKey: 'transactions_nature_asset_purchase_desc',      icon: Package        },
   { value: 'debt_payment',        labelKey: 'transactions_nature_debt_payment',        descKey: 'transactions_nature_debt_payment_desc',        icon: ArrowDownLeft  },
   { value: 'owner_withdrawal',    labelKey: 'transactions_nature_owner_withdrawal',    descKey: 'transactions_nature_owner_withdrawal_desc',    icon: ArrowUpRight   },

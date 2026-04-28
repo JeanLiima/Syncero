@@ -178,6 +178,8 @@ export const en: Record<TranslationKey, string> = {
   plano_seedCustom: 'Start from scratch',
   plano_seeding: 'Importing…',
   plano_seedError: 'Error importing chart.',
+  plano_seedCostSuggested: '✓ recommended',
+  plano_seedCostSegmentNote: "This company's segment includes Cost (COGS/CSP). The generated chart already covers this group.",
   plano_addChild: 'New sub-account',
   plano_sectionEmpty: 'No accounts in this group.',
   plano_edit: 'Edit account',

@@ -176,6 +176,8 @@ export const pt = {
   plano_seedCustom: 'Criar do zero',
   plano_seeding: 'Importando…',
   plano_seedError: 'Erro ao importar o plano.',
+  plano_seedCostSuggested: '✓ recomendado',
+  plano_seedCostSegmentNote: 'O segmento desta empresa inclui Custo (CMV/CSP). O plano gerado já contempla esse grupo.',
   plano_addChild: 'Nova subconta',
   plano_sectionEmpty: 'Nenhuma conta neste grupo.',
   plano_edit: 'Editar conta',

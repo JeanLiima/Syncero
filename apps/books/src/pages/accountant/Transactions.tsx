@@ -211,7 +211,7 @@ export function Component() {
     const y = now.getFullYear()
     const m = String(now.getMonth() + 1).padStart(2, '0')
     const last = new Date(y, now.getMonth() + 1, 0).getDate()
-    return { date_from: `${y}-${m}-01`, date_to: `${y}-${m}-${String(last).padStart(2, '0')}` }
+    return { date_from: `${y}-${m}-01`, date_to: `${y}-${m}-${String(last).padStart(2, '0')}`, is_paid: true }
   })
   const [page, setPage]       = useState(1)
   const [detailId,  setDetailId]  = useState<string | null>(null)

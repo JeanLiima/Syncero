@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
-import { Search, TrendingUp, TrendingDown, CheckCircle, Clock, Edit2 } from 'lucide-react'
+import { Search, TrendingUp, TrendingDown, CheckCircle, Clock, Edit2, BookOpen } from 'lucide-react'
 import { Badge, Button, Card, Input, Modal, Select, Table, DateRangePicker } from '@syncero/ui'
 import { getTransactions, getTransactionDetail } from '@/lib/backend'
 import { ClassifyModal } from '@/components/accountant/ClassifyModal'
@@ -339,15 +339,27 @@ export function Component() {
               render: (r: TxRow) => {
                 if (r.is_classified) return null
                 if (!r.is_paid) return (
-                  <span className="text-xs text-[var(--text-muted)]">{t('classify_awaitingPayment')}</span>
+                  <div className="relative group flex justify-end">
+                    <span className="p-1.5 text-[var(--text-muted)] opacity-40">
+                      <BookOpen className="h-4 w-4" />
+                    </span>
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('classify_awaitingPayment')}
+                    </span>
+                  </div>
                 )
                 return (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setClassifyTx(r) }}
-                    className="cursor-pointer text-xs font-medium text-[var(--accent)] hover:underline"
-                  >
-                    {t('classify_action')}
-                  </button>
+                  <div className="relative group flex justify-end">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setClassifyTx(r) }}
+                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                    </button>
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('classify_action')}
+                    </span>
+                  </div>
                 )
               },
             },

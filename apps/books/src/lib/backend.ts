@@ -61,7 +61,20 @@ export async function createAccountPlan(body: {
   return apiFetch<AccountPlan>('/api/account-plans', { method: 'POST', body: JSON.stringify(body) })
 }
 
-export async function seedAccountPlan(body: { companyId?: string; extCompanyId?: string }) {
+export interface PlanEntry {
+  code: string
+  name: string
+  account_type: string
+  nature: string
+  is_analytic: boolean
+  parent_code: string | null
+}
+
+export async function seedAccountPlan(body: {
+  companyId?: string
+  extCompanyId?: string
+  accounts?: PlanEntry[]
+}) {
   return apiFetch<{ seeded: number }>('/api/account-plans/seed', { method: 'POST', body: JSON.stringify(body) })
 }
 

@@ -141,7 +141,11 @@ router.post('/:id/transfer', async (c) => {
 router.post('/seed', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { companyId, extCompanyId } = await c.req.json<{ companyId?: string; extCompanyId?: string }>()
+  const { companyId, extCompanyId, accounts } = await c.req.json<{
+    companyId?: string
+    extCompanyId?: string
+    accounts?: Array<{ code: string; name: string; account_type: string; nature: string; is_analytic: boolean; parent_code: string | null }>
+  }>()
 
   if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
 
@@ -155,8 +159,9 @@ router.post('/seed', async (c) => {
     if (!ec) return c.json({ error: 'forbidden' }, 403)
   }
 
+  const planToSeed = accounts ?? DEFAULT_ACCOUNT_PLAN
   const codeToId = new Map<string, string>()
-  for (const account of DEFAULT_ACCOUNT_PLAN) {
+  for (const account of planToSeed) {
     const parentId = account.parent_code ? (codeToId.get(account.parent_code) ?? null) : null
     const { data: row } = await db.from('account_plans').insert({
       ...(extCompanyId ? { ext_company_id: extCompanyId } : { company_id: companyId }),

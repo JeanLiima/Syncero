@@ -6,6 +6,7 @@ import { seedAccountPlan } from '@/lib/backend'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { Button, Card, ConfirmDialog, Input, Modal, Select, useToast } from '@syncero/ui'
 import { AccountPlanModal, type AccountPlanModalProps } from '@/components/accountant/AccountPlanModal'
+import { CfcPreviewModal } from '@/components/accountant/CfcPreviewModal'
 import { useT } from '@/i18n'
 import type { AccountPlan, AccountType } from '@/types'
 
@@ -235,8 +236,9 @@ export function Component() {
   const [preset,      setPreset]      = useState<AccountPlanModalProps['preset']>(null)
   const [collapsed,   setCollapsed]   = useState<Set<string>>(new Set())
   const [sections,    setSections]    = useState<Set<AccountType>>(new Set())
-  const [fromScratch, setFromScratch] = useState(false)
-  const [seeding,     setSeeding]     = useState(false)
+  const [fromScratch,  setFromScratch]  = useState(false)
+  const [seeding,      setSeeding]      = useState(false)
+  const [previewOpen,  setPreviewOpen]  = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<AccountPlan | null>(null)
   const [deleting,     setDeleting]     = useState(false)
   const [usageCount,   setUsageCount]   = useState(0)
@@ -338,11 +340,17 @@ export function Component() {
     setModalOpen(true)
   }
 
-  const handleSeedCfc = async () => {
+  const handleSeedCfc = () => setPreviewOpen(true)
+
+  const handleConfirmSeed = async (accounts: Parameters<typeof seedAccountPlan>[0]['accounts']) => {
     setSeeding(true)
     try {
-      await seedAccountPlan(isExternal ? { extCompanyId: id } : { companyId: id })
+      await seedAccountPlan({
+        ...(isExternal ? { extCompanyId: id } : { companyId: id }),
+        accounts,
+      })
       qc.invalidateQueries({ queryKey })
+      setPreviewOpen(false)
     } catch {
       toastError(t('plano_seedError'))
     } finally {
@@ -518,6 +526,14 @@ export function Component() {
           })}
         </div>
       )}
+
+      <CfcPreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        onConfirm={handleConfirmSeed}
+        seeding={seeding}
+        hasCostSegment={hasCostSegment}
+      />
 
       {/* Delete — has children: simple confirm blocking */}
       <ConfirmDialog

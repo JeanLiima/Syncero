@@ -56,4 +56,36 @@ router.get('/', async (c) => {
   })
 })
 
+// ── GET /api/transactions/:id ─────────────────────────────────
+router.get('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+
+  const { data: tx, error } = await db.from('transactions')
+    .select(`
+      *,
+      categories(id, name, color),
+      banks(id, name),
+      contacts(id, name, cpf, cnpj),
+      creator:profiles!transactions_created_by_fkey(full_name),
+      registrar:profiles!transactions_payment_registered_by_fkey(full_name)
+    `)
+    .eq('id', id)
+    .single()
+
+  if (error || !tx) return c.json({ error: 'Not found' }, 404)
+
+  // Verify accountant is linked to the company
+  const { data: acct } = await db.from('accountant_companies')
+    .select('id').eq('accountant_id', userId).eq('company_id', tx.company_id).eq('status', 'accepted').maybeSingle()
+  if (!acct) return c.json({ error: 'Forbidden' }, 403)
+
+  return c.json({
+    ...tx,
+    creator_name:           (tx.creator as { full_name: string } | null)?.full_name ?? null,
+    payment_registrar_name: (tx.registrar as { full_name: string } | null)?.full_name ?? null,
+  })
+})
+
 export default router

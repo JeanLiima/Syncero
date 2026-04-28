@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { createServiceClient, type HonoVariables } from '../_shared'
+import { DEFAULT_ACCOUNT_PLAN } from '../defaultAccountPlan'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
@@ -87,6 +88,43 @@ router.delete('/:id', async (c) => {
   const { error } = await db.from('account_plans').update({ is_active: false }).eq('id', id)
   if (error) return c.json({ error: error.message }, 400)
   return c.json({ ok: true })
+})
+
+// ── POST /api/account-plans/seed ─────────────────────────────
+router.post('/seed', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { companyId, extCompanyId } = await c.req.json<{ companyId?: string; extCompanyId?: string }>()
+
+  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+
+  if (companyId) {
+    const { data: acct } = await db.from('accountant_companies')
+      .select('id').eq('accountant_id', userId).eq('company_id', companyId).eq('status', 'accepted').maybeSingle()
+    if (!acct) return c.json({ error: 'forbidden' }, 403)
+  } else {
+    const { data: ec } = await db.from('external_companies')
+      .select('id').eq('id', extCompanyId!).eq('accountant_id', userId).maybeSingle()
+    if (!ec) return c.json({ error: 'forbidden' }, 403)
+  }
+
+  const codeToId = new Map<string, string>()
+  for (const account of DEFAULT_ACCOUNT_PLAN) {
+    const parentId = account.parent_code ? (codeToId.get(account.parent_code) ?? null) : null
+    const { data: row } = await db.from('account_plans').insert({
+      ...(extCompanyId ? { ext_company_id: extCompanyId } : { company_id: companyId }),
+      accountant_id: userId,
+      parent_id: parentId,
+      code: account.code,
+      name: account.name,
+      account_type: account.account_type,
+      nature: account.nature,
+      is_analytic: account.is_analytic,
+    }).select('id').single()
+    if (row) codeToId.set(account.code, row.id)
+  }
+
+  return c.json({ seeded: codeToId.size }, 201)
 })
 
 export default router

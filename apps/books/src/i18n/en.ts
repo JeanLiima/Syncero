@@ -172,6 +172,14 @@ export const en: Record<TranslationKey, string> = {
 
   // Plano de Contas
   plano_title: 'Chart of Accounts',
+  plano_seedTitle: 'No chart of accounts yet',
+  plano_seedSubtitle: 'Import the default CFC chart or start from scratch.',
+  plano_seedCfc: 'Import CFC Chart',
+  plano_seedCustom: 'Start from scratch',
+  plano_seeding: 'Importing…',
+  plano_seedError: 'Error importing chart.',
+  plano_addChild: 'New sub-account',
+  plano_sectionEmpty: 'No accounts in this group.',
   plano_countSingular: 'account',
   plano_countPlural: 'accounts',
   plano_new: 'New account',

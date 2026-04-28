@@ -61,6 +61,10 @@ export async function createAccountPlan(body: {
   return apiFetch<AccountPlan>('/api/account-plans', { method: 'POST', body: JSON.stringify(body) })
 }
 
+export async function seedAccountPlan(body: { companyId?: string; extCompanyId?: string }) {
+  return apiFetch<{ seeded: number }>('/api/account-plans/seed', { method: 'POST', body: JSON.stringify(body) })
+}
+
 export async function createJournalEntry(body: {
   companyId: string
   entry_date: string

@@ -1,47 +1,153 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react'
+import { TrendingUp, TrendingDown, AlertCircle, Landmark, Tag, Users, Sparkles } from 'lucide-react'
 import { Badge, Button, Input, Modal, Select } from '@syncero/ui'
 import { getAccountPlans, createAccountPlan, createJournalEntry } from '@/lib/backend'
 import { useT } from '@/i18n'
 import type { AccountPlan, AccountType, Transaction, TransactionNature } from '@/types'
 
-// ── Suggestion engine ─────────────────────────────────────────
+// ── Accounting suggestion engine ──────────────────────────────
 
-interface Suggestion {
+interface AccountingSuggestion {
   debitType: AccountType
   creditType: AccountType
   natureKey: string
 }
 
-const NATURE_SUGGESTIONS: Record<string, Suggestion> = {
-  sale_service:         { debitType: 'ativo',             creditType: 'receita',           natureKey: 'nature_sale_service' },
-  loan_received:        { debitType: 'ativo',             creditType: 'passivo',           natureKey: 'nature_loan_received' },
-  capital_contribution: { debitType: 'ativo',             creditType: 'patrimonio_liquido', natureKey: 'nature_capital_contribution' },
-  operational_expense:  { debitType: 'despesa',           creditType: 'ativo',             natureKey: 'nature_operational_expense' },
-  product_cost:         { debitType: 'custo',             creditType: 'ativo',             natureKey: 'nature_product_cost' },
-  asset_purchase:       { debitType: 'ativo',             creditType: 'ativo',             natureKey: 'nature_asset_purchase' },
-  debt_payment:         { debitType: 'passivo',           creditType: 'ativo',             natureKey: 'nature_debt_payment' },
-  owner_withdrawal:     { debitType: 'patrimonio_liquido', creditType: 'ativo',             natureKey: 'nature_owner_withdrawal' },
+const NATURE_SUGGESTIONS: Record<string, AccountingSuggestion> = {
+  sale_service:         { debitType: 'ativo',              creditType: 'receita',            natureKey: 'nature_sale_service' },
+  loan_received:        { debitType: 'ativo',              creditType: 'passivo',            natureKey: 'nature_loan_received' },
+  capital_contribution: { debitType: 'ativo',              creditType: 'patrimonio_liquido', natureKey: 'nature_capital_contribution' },
+  operational_expense:  { debitType: 'despesa',            creditType: 'ativo',              natureKey: 'nature_operational_expense' },
+  product_cost:         { debitType: 'custo',              creditType: 'ativo',              natureKey: 'nature_product_cost' },
+  asset_purchase:       { debitType: 'ativo',              creditType: 'ativo',              natureKey: 'nature_asset_purchase' },
+  debt_payment:         { debitType: 'passivo',            creditType: 'ativo',              natureKey: 'nature_debt_payment' },
+  owner_withdrawal:     { debitType: 'patrimonio_liquido', creditType: 'ativo',              natureKey: 'nature_owner_withdrawal' },
 }
 
-const TYPE_FALLBACK: Record<string, Suggestion> = {
-  income:  { debitType: 'ativo',    creditType: 'receita', natureKey: 'nature_income' },
-  expense: { debitType: 'despesa',  creditType: 'ativo',   natureKey: 'nature_expense' },
+const TYPE_FALLBACK: Record<string, AccountingSuggestion> = {
+  income:  { debitType: 'ativo',   creditType: 'receita', natureKey: 'nature_income' },
+  expense: { debitType: 'despesa', creditType: 'ativo',   natureKey: 'nature_expense' },
 }
 
-function getSuggestion(nature: TransactionNature | null, type: string): Suggestion {
+function getSuggestion(nature: TransactionNature | null, type: string): AccountingSuggestion {
   if (nature && NATURE_SUGGESTIONS[nature]) return NATURE_SUGGESTIONS[nature]
   return TYPE_FALLBACK[type] ?? TYPE_FALLBACK['expense']
 }
 
 const NATURE_FROM_TYPE: Record<AccountType, 'devedora' | 'credora'> = {
-  ativo:             'devedora',
-  passivo:           'credora',
+  ativo:              'devedora',
+  passivo:            'credora',
   patrimonio_liquido: 'credora',
-  receita:           'credora',
-  despesa:           'devedora',
-  custo:             'devedora',
+  receita:            'credora',
+  despesa:            'devedora',
+  custo:              'devedora',
+}
+
+// ── Smart hints ───────────────────────────────────────────────
+
+type HintSide = 'debit' | 'credit'
+
+interface SmartHint {
+  id: string
+  Icon: React.ElementType
+  label: string
+  sub: string
+  side: HintSide
+  action: 'select' | 'create'
+  accountId?: string
+  createPreset?: { account_type: AccountType; name: string }
+}
+
+function normName(s: string) { return s.toLowerCase().trim() }
+
+function buildHints(
+  tx: Transaction,
+  accounts: AccountPlan[],
+  suggestion: AccountingSuggestion,
+): SmartHint[] {
+  const hints: SmartHint[] = []
+  const analytic = accounts.filter(a => a.is_analytic && a.is_active)
+  const isIncome = tx.type === 'income'
+  const bankSide: HintSide = isIncome ? 'debit' : 'credit'
+
+  // 1 — Bank
+  if (tx.payment_method === 'bank' && tx.banks?.name) {
+    const bankName = tx.banks.name
+    const match = analytic.find(a =>
+      a.account_type === 'ativo' && normName(a.name).includes(normName(bankName))
+    )
+    if (match) {
+      hints.push({
+        id: 'bank-select',
+        Icon: Landmark,
+        label: match.name,
+        sub: `Conta bancária identificada para ${bankName}`,
+        side: bankSide,
+        action: 'select',
+        accountId: match.id,
+      })
+    } else {
+      hints.push({
+        id: 'bank-create',
+        Icon: Landmark,
+        label: `Criar conta para ${bankName}`,
+        sub: `Banco "${bankName}" ainda não tem conta no plano`,
+        side: bankSide,
+        action: 'create',
+        createPreset: { account_type: 'ativo', name: bankName },
+      })
+    }
+  }
+
+  // 2 — Category
+  if (tx.categories?.name) {
+    const catName = tx.categories.name
+    const targetType = isIncome ? suggestion.creditType : suggestion.debitType
+    const catSide: HintSide = isIncome ? 'credit' : 'debit'
+    const match = analytic.find(a =>
+      a.account_type === targetType && normName(a.name).includes(normName(catName))
+    )
+    if (match) {
+      hints.push({
+        id: 'category-select',
+        Icon: Tag,
+        label: match.name,
+        sub: `Conta sugerida pela categoria "${catName}"`,
+        side: catSide,
+        action: 'select',
+        accountId: match.id,
+      })
+    }
+  }
+
+  // 3 — Contact
+  if (tx.contacts?.name) {
+    const contactName = tx.contacts.name
+    // income → Clientes a receber (ativo);  expense → Fornecedores a pagar (passivo)
+    const targetType: AccountType = isIncome ? 'ativo' : 'passivo'
+    const contactSide: HintSide   = isIncome ? 'debit' : 'credit'
+    const keywords = isIncome ? ['cliente', 'receber'] : ['fornecedor', 'pagar']
+    const match = analytic.find(a =>
+      a.account_type === targetType &&
+      keywords.some(k => normName(a.name).includes(k))
+    )
+    if (match) {
+      hints.push({
+        id: 'contact-select',
+        Icon: Users,
+        label: match.name,
+        sub: isIncome
+          ? `Conta de clientes para "${contactName}"`
+          : `Conta de fornecedores para "${contactName}"`,
+        side: contactSide,
+        action: 'select',
+        accountId: match.id,
+      })
+    }
+  }
+
+  return hints
 }
 
 // ── Inline account creator ────────────────────────────────────
@@ -49,21 +155,21 @@ const NATURE_FROM_TYPE: Record<AccountType, 'devedora' | 'credora'> = {
 interface InlineCreateProps {
   accountType: AccountType
   companyId: string
+  presetName?: string
   onCreated: (account: AccountPlan) => void
   onCancel: () => void
 }
 
-function InlineCreate({ accountType, companyId, onCreated, onCancel }: InlineCreateProps) {
+function InlineCreate({ accountType, companyId, presetName, onCreated, onCancel }: InlineCreateProps) {
   const t = useT()
-  const [code, setCode] = useState('')
-  const [name, setName] = useState('')
+  const [code, setCode]   = useState('')
+  const [name, setName]   = useState(presetName ?? '')
   const [saving, setSaving] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
+  const [err, setErr]       = useState<string | null>(null)
 
   const save = async () => {
     if (!code.trim() || !name.trim()) return
-    setSaving(true)
-    setErr(null)
+    setSaving(true); setErr(null)
     try {
       const account = await createAccountPlan({
         companyId,
@@ -85,26 +191,12 @@ function InlineCreate({ accountType, companyId, onCreated, onCancel }: InlineCre
     <div className="mt-2 rounded-lg border border-[var(--bg-border)] bg-[var(--bg-elevated)] p-3 flex flex-col gap-2">
       <p className="text-xs font-semibold text-[var(--text-secondary)]">{t('classify_newAccount_title')}</p>
       <div className="flex gap-2">
-        <Input
-          size="sm"
-          placeholder={t('classify_newAccount_code')}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className="w-28"
-        />
-        <Input
-          size="sm"
-          placeholder={t('classify_newAccount_name')}
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="flex-1"
-        />
+        <Input size="sm" placeholder={t('classify_newAccount_code')} value={code} onChange={e => setCode(e.target.value)} className="w-28" />
+        <Input size="sm" placeholder={t('classify_newAccount_name')} value={name} onChange={e => setName(e.target.value)} className="flex-1" />
       </div>
       {err && <p className="text-xs text-[var(--danger)]">{err}</p>}
       <div className="flex gap-2 justify-end">
-        <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
-          {t('classify_newAccount_cancel')}
-        </Button>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>{t('classify_newAccount_cancel')}</Button>
         <Button size="sm" onClick={save} disabled={saving || !code.trim() || !name.trim()}>
           {saving ? t('classify_newAccount_creating') : t('classify_newAccount_save')}
         </Button>
@@ -123,14 +215,14 @@ interface AccountPickerProps {
   onChange: (id: string) => void
   companyId: string
   onAccountCreated: (account: AccountPlan) => void
+  createPreset?: string
 }
 
-function AccountPicker({ label, accountType, accounts, value, onChange, companyId, onAccountCreated }: AccountPickerProps) {
+function AccountPicker({ label, accountType, accounts, value, onChange, companyId, onAccountCreated, createPreset }: AccountPickerProps) {
   const t = useT()
   const [creating, setCreating] = useState(false)
 
   const filtered = accounts.filter(a => a.account_type === accountType && a.is_analytic && a.is_active)
-
   const typeLabel = t(`accountType_${accountType}` as Parameters<typeof t>[0])
 
   return (
@@ -160,11 +252,7 @@ function AccountPicker({ label, accountType, accounts, value, onChange, companyI
       )}
 
       {!creating && (
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="text-left text-xs text-[var(--accent)] hover:underline"
-        >
+        <button type="button" onClick={() => setCreating(true)} className="text-left text-xs text-[var(--accent)] hover:underline">
           {t('classify_createAccount')} {typeLabel.toLowerCase()}
         </button>
       )}
@@ -173,11 +261,8 @@ function AccountPicker({ label, accountType, accounts, value, onChange, companyI
         <InlineCreate
           accountType={accountType}
           companyId={companyId}
-          onCreated={(account) => {
-            onAccountCreated(account)
-            onChange(account.id)
-            setCreating(false)
-          }}
+          presetName={createPreset}
+          onCreated={account => { onAccountCreated(account); onChange(account.id); setCreating(false) }}
           onCancel={() => setCreating(false)}
         />
       )}
@@ -200,8 +285,12 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
 
   const [debitId,  setDebitId]  = useState('')
   const [creditId, setCreditId] = useState('')
-  const [saving, setSaving]     = useState(false)
-  const [error,  setError]      = useState<string | null>(null)
+  const [saving,   setSaving]   = useState(false)
+  const [error,    setError]    = useState<string | null>(null)
+
+  // Presets from hints that want to open the inline creator
+  const [debitCreatePreset,  setDebitCreatePreset]  = useState<string | undefined>()
+  const [creditCreatePreset, setCreditCreatePreset] = useState<string | undefined>()
 
   const { data: rawAccounts = [], refetch: refetchAccounts } = useQuery({
     queryKey: ['account-plans', companyId],
@@ -220,17 +309,19 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
     ? getSuggestion(transaction.nature, transaction.type)
     : TYPE_FALLBACK['expense']
 
+  const hints = useMemo(
+    () => transaction ? buildHints(transaction, accounts, suggestion) : [],
+    [transaction, accounts, suggestion],
+  )
+
   const isIncome = transaction?.type === 'income'
   const amount   = transaction?.amount ?? 0
-
   const canSubmit = debitId && creditId && debitId !== creditId
 
   const handleClose = () => {
-    setDebitId('')
-    setCreditId('')
-    setError(null)
-    setSaving(false)
-    setLocalAccounts([])
+    setDebitId(''); setCreditId('')
+    setDebitCreatePreset(undefined); setCreditCreatePreset(undefined)
+    setError(null); setSaving(false); setLocalAccounts([])
     onClose()
   }
 
@@ -239,10 +330,20 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
     refetchAccounts()
   }
 
+  const applyHint = async (hint: SmartHint) => {
+    if (hint.action === 'select' && hint.accountId) {
+      if (hint.side === 'debit')  setDebitId(hint.accountId)
+      else                        setCreditId(hint.accountId)
+    } else if (hint.action === 'create' && hint.createPreset) {
+      // Signal the relevant AccountPicker to open its inline creator
+      if (hint.side === 'debit')  setDebitCreatePreset(hint.createPreset.name)
+      else                        setCreditCreatePreset(hint.createPreset.name)
+    }
+  }
+
   const submit = async () => {
     if (!transaction || !canSubmit) return
-    setSaving(true)
-    setError(null)
+    setSaving(true); setError(null)
     try {
       await createJournalEntry({
         companyId,
@@ -302,6 +403,57 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
             </div>
           </div>
 
+          {/* Smart hints */}
+          {hints.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+                <span className="text-xs font-semibold text-[var(--text-secondary)]">{t('classify_hints')}</span>
+              </div>
+              {hints.map(hint => {
+                const applied = hint.side === 'debit'
+                  ? debitId === hint.accountId
+                  : creditId === hint.accountId
+                return (
+                  <button
+                    key={hint.id}
+                    type="button"
+                    onClick={() => applyHint(hint)}
+                    disabled={applied}
+                    className={`flex items-start gap-3 rounded-lg border px-3 py-2 text-left transition-colors cursor-pointer ${
+                      applied
+                        ? 'border-[var(--accent)]/40 bg-[var(--accent)]/8 cursor-default'
+                        : 'border-[var(--bg-border)] hover:border-[var(--accent)]/40 hover:bg-[var(--accent)]/5'
+                    }`}
+                  >
+                    <hint.Icon className={`h-4 w-4 shrink-0 mt-0.5 ${applied ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-[var(--text-primary)] truncate">{hint.label}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded shrink-0 ${
+                          hint.side === 'debit'
+                            ? 'bg-blue-500/15 text-blue-400'
+                            : 'bg-green-500/15 text-green-400'
+                        }`}>
+                          {hint.side === 'debit' ? t('classify_debit') : t('classify_credit')}
+                        </span>
+                        {hint.action === 'create' && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--warning)]/15 text-[var(--warning)] shrink-0">
+                            {t('classify_hintNew')}
+                          </span>
+                        )}
+                        {applied && (
+                          <span className="text-[10px] text-[var(--accent)] shrink-0">{t('classify_hintApplied')}</span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-[var(--text-muted)] mt-0.5">{hint.sub}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
           {/* Debit / Credit pickers */}
           <AccountPicker
             label={t('classify_debit')}
@@ -311,6 +463,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
             onChange={setDebitId}
             companyId={companyId}
             onAccountCreated={handleAccountCreated}
+            createPreset={debitCreatePreset}
           />
 
           <AccountPicker
@@ -321,6 +474,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
             onChange={setCreditId}
             companyId={companyId}
             onAccountCreated={handleAccountCreated}
+            createPreset={creditCreatePreset}
           />
 
           {error && (

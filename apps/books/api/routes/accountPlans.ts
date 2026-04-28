@@ -56,6 +56,52 @@ router.post('/', async (c) => {
   return c.json(data, 201)
 })
 
+// ── POST /api/account-plans/seed ─────────────────────────────
+router.post('/seed', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { companyId, extCompanyId, accounts } = await c.req.json<{
+    companyId?: string
+    extCompanyId?: string
+    accounts?: Array<{ code: string; name: string; account_type: string; nature: string; is_analytic: boolean; parent_code: string | null }>
+  }>()
+
+  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+
+  if (companyId) {
+    const { data: acct } = await db.from('accountant_companies')
+      .select('id').eq('accountant_id', userId).eq('company_id', companyId).eq('status', 'accepted').maybeSingle()
+    if (!acct) return c.json({ error: 'forbidden' }, 403)
+  } else {
+    const { data: ec } = await db.from('external_companies')
+      .select('id').eq('id', extCompanyId!).eq('accountant_id', userId).maybeSingle()
+    if (!ec) return c.json({ error: 'forbidden' }, 403)
+  }
+
+  if (!accounts || accounts.length === 0) {
+    return c.json({ error: 'No accounts to seed' }, 400)
+  }
+
+  const codeToId = new Map<string, string>()
+  for (const account of accounts) {
+    const parentId = account.parent_code ? (codeToId.get(account.parent_code) ?? null) : null
+    const { data: row, error: insertErr } = await db.from('account_plans').insert({
+      ...(extCompanyId ? { ext_company_id: extCompanyId } : { company_id: companyId }),
+      accountant_id: userId,
+      parent_id: parentId,
+      code: account.code,
+      name: account.name,
+      account_type: account.account_type,
+      nature: account.nature,
+      is_analytic: account.is_analytic,
+    }).select('id').single()
+    if (insertErr) return c.json({ error: `Failed to insert account ${account.code}: ${insertErr.message}` }, 500)
+    if (row) codeToId.set(account.code, row.id)
+  }
+
+  return c.json({ seeded: codeToId.size }, 201)
+})
+
 // ── PATCH /api/account-plans/:id ─────────────────────────────
 router.patch('/:id', async (c) => {
   const userId = c.get('userId')
@@ -135,48 +181,6 @@ router.post('/:id/transfer', async (c) => {
   if (deleteErr) return c.json({ error: deleteErr.message }, 500)
 
   return c.json({ ok: true })
-})
-
-// ── POST /api/account-plans/seed ─────────────────────────────
-router.post('/seed', async (c) => {
-  const userId = c.get('userId')
-  const db = createServiceClient()
-  const { companyId, extCompanyId, accounts } = await c.req.json<{
-    companyId?: string
-    extCompanyId?: string
-    accounts?: Array<{ code: string; name: string; account_type: string; nature: string; is_analytic: boolean; parent_code: string | null }>
-  }>()
-
-  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
-
-  if (companyId) {
-    const { data: acct } = await db.from('accountant_companies')
-      .select('id').eq('accountant_id', userId).eq('company_id', companyId).eq('status', 'accepted').maybeSingle()
-    if (!acct) return c.json({ error: 'forbidden' }, 403)
-  } else {
-    const { data: ec } = await db.from('external_companies')
-      .select('id').eq('id', extCompanyId!).eq('accountant_id', userId).maybeSingle()
-    if (!ec) return c.json({ error: 'forbidden' }, 403)
-  }
-
-  const planToSeed = accounts ?? DEFAULT_ACCOUNT_PLAN
-  const codeToId = new Map<string, string>()
-  for (const account of planToSeed) {
-    const parentId = account.parent_code ? (codeToId.get(account.parent_code) ?? null) : null
-    const { data: row } = await db.from('account_plans').insert({
-      ...(extCompanyId ? { ext_company_id: extCompanyId } : { company_id: companyId }),
-      accountant_id: userId,
-      parent_id: parentId,
-      code: account.code,
-      name: account.name,
-      account_type: account.account_type,
-      nature: account.nature,
-      is_analytic: account.is_analytic,
-    }).select('id').single()
-    if (row) codeToId.set(account.code, row.id)
-  }
-
-  return c.json({ seeded: codeToId.size }, 201)
 })
 
 export default router

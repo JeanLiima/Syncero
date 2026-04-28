@@ -308,8 +308,8 @@ export function Component() {
       })
       await qc.refetchQueries({ queryKey })
       setPreviewOpen(false)
-    } catch {
-      toastError(t('plano_seedError'))
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : t('plano_seedError'))
     } finally {
       setSeeding(false)
     }

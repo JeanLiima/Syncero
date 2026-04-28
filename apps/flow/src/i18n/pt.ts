@@ -301,6 +301,7 @@ export const pt = {
   categories_deleteUsed: 'Esta categoria está sendo usada em {count} lançamento(s). Selecione uma categoria para transferi-los, ou deixe em branco para remover a categoria dos lançamentos.',
   categories_transferTo: 'Transferir lançamentos para',
   categories_transferNone: 'Sem categoria',
+  categories_searchPlaceholder: 'Buscar por nome…',
   categories_saveError: 'Erro ao salvar categoria.',
   categories_deleteError: 'Erro ao excluir categoria.',
 

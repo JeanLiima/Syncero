@@ -303,6 +303,7 @@ export const en: Record<TranslationKey, string> = {
   categories_deleteUsed: 'This category is used in {count} transaction(s). Select a category to transfer them to, or leave blank to remove the category from those transactions.',
   categories_transferTo: 'Transfer transactions to',
   categories_transferNone: 'No category',
+  categories_searchPlaceholder: 'Search by name…',
   categories_saveError: 'Error saving category.',
   categories_deleteError: 'Error deleting category.',
 

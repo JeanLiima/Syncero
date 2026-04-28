@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, Trash2, Plus } from 'lucide-react'
+import { Pencil, Trash2, Plus, Search } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Input, Modal, Select, Table, Badge, useToast } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
@@ -45,6 +45,7 @@ export function Component() {
   const [editing, setEditing] = useState<Category | null>(null)
   const [form, setForm] = useState<CategoryForm>({ name: '', type: 'income', color: COLORS[0] })
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all')
+  const [nameFilter, setNameFilter] = useState('')
 
   const [deleting, setDeleting] = useState<Category | null>(null)
   const [usageCount, setUsageCount] = useState<number | null>(null)
@@ -56,7 +57,11 @@ export function Component() {
     enabled: !!activeCompany?.id,
   })
 
-  const filtered = typeFilter === 'all' ? categories : categories.filter((c) => c.type === typeFilter)
+  const filtered = categories.filter((c) => {
+    if (typeFilter !== 'all' && c.type !== typeFilter) return false
+    if (nameFilter.trim() && !c.name.toLowerCase().includes(nameFilter.toLowerCase())) return false
+    return true
+  })
 
   const openCreate = () => {
     setEditing(null)
@@ -109,30 +114,40 @@ export function Component() {
   )
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_categories')}</h1>
-
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex gap-1">
-          {(['all', 'income', 'expense'] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setTypeFilter(f)}
-              className={`cursor-pointer px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                typeFilter === f
-                  ? 'bg-[var(--accent)] text-white'
-                  : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
-              }`}
-            >
-              {f === 'all' ? t('categories_all') : f === 'income' ? t('categories_income') : t('categories_expense')}
-            </button>
-          ))}
-        </div>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_categories')}</h1>
         <Button size="sm" onClick={openCreate}>
           <Plus className="h-4 w-4" />
           {t('categories_new')}
         </Button>
       </div>
+
+      <Card padding="sm">
+        <div className="flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-40">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+            <Input
+              size="sm"
+              placeholder={t('categories_searchPlaceholder')}
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Select
+            size="sm"
+            options={[
+              { value: 'all',     label: t('categories_all') },
+              { value: 'income',  label: t('categories_income') },
+              { value: 'expense', label: t('categories_expense') },
+            ]}
+            value={typeFilter}
+            onChange={(v) => setTypeFilter(v as 'all' | TransactionType)}
+            className="w-40"
+          />
+        </div>
+      </Card>
 
       <Card padding="sm">
         <Table

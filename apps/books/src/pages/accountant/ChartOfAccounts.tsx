@@ -220,15 +220,56 @@ export function Component() {
     enabled: !!id,
   })
 
+  const patchPlan = (planId: string, data: Record<string, unknown>) =>
+    apiFetch(`/api/account-plans/${planId}`, { method: 'PATCH', body: JSON.stringify(data) })
+
+  const cascadeCodeRename = async (oldCode: string, newCode: string) => {
+    const prefix = oldCode + '.'
+    const children = plans.filter(p => p.code.startsWith(prefix))
+    if (children.length === 0) return
+    await Promise.all(children.map(c =>
+      patchPlan(c.id, {
+        code:        newCode + c.code.slice(oldCode.length),
+        parent_id:   c.parent_id, // unchanged (references by ID, not code)
+      })
+    ))
+  }
+
   const handleSubmit = async (data: {
     code: string; name: string; account_type: string; nature: string; is_analytic: boolean; parent_id: string | null
   }) => {
     const payload = { ...data, ...(isExternal ? { extCompanyId: id } : { companyId: id }) }
     if (editing) {
-      await apiFetch(`/api/account-plans/${editing.id}`, { method: 'PATCH', body: JSON.stringify(payload) })
+      await patchPlan(editing.id, payload)
+      if (editing.code !== data.code) {
+        await cascadeCodeRename(editing.code, data.code)
+      }
     } else {
       await apiFetch('/api/account-plans', { method: 'POST', body: JSON.stringify(payload) })
     }
+    qc.invalidateQueries({ queryKey })
+    setEditing(null); setPreset(null)
+  }
+
+  const handleSwapConfirm = async (data: {
+    code: string; name: string; account_type: string; nature: string; is_analytic: boolean; parent_id: string | null
+  }, conflictingId: string) => {
+    if (!editing) return
+    const planA = editing
+    const planB = plans.find(p => p.id === conflictingId)
+    if (!planB) return
+    const codeA = planA.code
+    const codeB = planB.code
+    // Swap the two root codes
+    await Promise.all([
+      patchPlan(planA.id, { ...data, code: codeB }),
+      patchPlan(planB.id, { code: codeA }),
+    ])
+    // Cascade children of each
+    await Promise.all([
+      cascadeCodeRename(codeA, codeB),
+      cascadeCodeRename(codeB, codeA),
+    ])
     qc.invalidateQueries({ queryKey })
     setEditing(null); setPreset(null)
   }
@@ -310,10 +351,14 @@ export function Component() {
   const visibleSections = useMemo(() => {
     const hasExistingCusto = plans.some(p => p.account_type === 'custo')
     return ACCOUNT_SECTIONS.filter(s => {
-      if (s.type !== 'custo') return true
-      if (hasExistingCusto) return true          // always show if accounts exist
-      if (hasCostSegment === null) return true   // still loading — show all
-      return hasCostSegment
+      // Hide Custo when segment doesn't apply and no accounts exist
+      if (s.type === 'custo') {
+        if (hasExistingCusto) return true
+        if (hasCostSegment === null) return true
+        if (!hasCostSegment) return false
+      }
+      // Hide any section with no accounts
+      return plans.some(p => p.account_type === s.type)
     })
   }, [plans, hasCostSegment])
 
@@ -537,6 +582,7 @@ export function Component() {
         open={modalOpen}
         onClose={() => { setModalOpen(false); setEditing(null); setPreset(null) }}
         onSubmit={handleSubmit}
+        onSwapConfirm={handleSwapConfirm}
         allPlans={plans}
         editing={editing}
         preset={preset}

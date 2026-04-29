@@ -1,9 +1,14 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Modal, Button, Input, Select, Checkbox } from '@syncero/ui'
+import { Modal, Button, Input, Select } from '@syncero/ui'
 import type { AccountPlan, AccountType, AccountNature } from '@/types'
+
+type FormData = {
+  code: string; name: string; account_type: AccountType
+  nature: AccountNature; is_analytic: boolean; parent_id: string | null
+}
 
 // ── helpers ───────────────────────────────────────────────────
 
@@ -41,8 +46,6 @@ const schema = z.object({
   parent_id:    z.string().nullable(),
 })
 
-type FormData = z.infer<typeof schema>
-
 const accountTypeOptions: { value: AccountType; label: string }[] = [
   { value: 'ativo',             label: 'Ativo' },
   { value: 'passivo',           label: 'Passivo' },
@@ -53,16 +56,16 @@ const accountTypeOptions: { value: AccountType; label: string }[] = [
 ]
 
 export interface AccountPlanModalProps {
-  open:      boolean
-  onClose:   () => void
-  onSubmit:  (data: FormData) => Promise<void>
-  allPlans:  AccountPlan[]
-  editing?:  AccountPlan | null
-  /** Pre-select type and parent when opening via + child button */
-  preset?:   { account_type: AccountType; parent_id: string; parent_code: string } | null
+  open:             boolean
+  onClose:          () => void
+  onSubmit:         (data: FormData) => Promise<void>
+  onSwapConfirm?:   (data: FormData, conflictingId: string) => Promise<void>
+  allPlans:         AccountPlan[]
+  editing?:         AccountPlan | null
+  preset?:          { account_type: AccountType; parent_id: string; parent_code: string } | null
 }
 
-export function AccountPlanModal({ open, onClose, onSubmit, allPlans, editing, preset }: AccountPlanModalProps) {
+export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPlans, editing, preset }: AccountPlanModalProps) {
   const {
     register, handleSubmit, watch, setValue, reset,
     formState: { errors, isSubmitting },
@@ -103,6 +106,22 @@ export function AccountPlanModal({ open, onClose, onSubmit, allPlans, editing, p
 
   const accountType = watch('account_type')
   const parentId    = watch('parent_id')
+  const currentCode = watch('code')
+
+  // Split code into locked prefix + editable suffix when parent exists
+  const parentPlan   = allPlans.find(p => p.id === parentId)
+  const codePrefix   = parentPlan ? parentPlan.code + '.' : ''
+
+  const [suffixInput, setSuffixInput] = useState('')
+
+  // Keep suffixInput in sync when code changes externally (reset/suggest)
+  useEffect(() => {
+    const suffix = codePrefix && currentCode.startsWith(codePrefix)
+      ? currentCode.slice(codePrefix.length)
+      : currentCode
+    setSuffixInput(suffix)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentCode])
 
   // auto-set nature when type changes
   useEffect(() => {
@@ -129,10 +148,69 @@ export function AccountPlanModal({ open, onClose, onSubmit, allPlans, editing, p
   const nature = watch('nature')
   const natureLabel = nature === 'devedora' ? 'Devedora' : 'Credora'
 
+  const [swapTarget,   setSwapTarget]   = useState<AccountPlan | null>(null)
+  const [pendingData,  setPendingData]  = useState<FormData | null>(null)
+
   const handleFormSubmit = handleSubmit(async (data) => {
-    await onSubmit({ ...data, parent_id: data.parent_id || null })
+    const finalData = { ...data, parent_id: data.parent_id || null } as FormData
+    const conflicting = allPlans.find(p => p.code === data.code && p.id !== editing?.id)
+    if (conflicting && onSwapConfirm) {
+      setSwapTarget(conflicting)
+      setPendingData(finalData)
+      return
+    }
+    await onSubmit(finalData)
     onClose()
   })
+
+  // Swap confirmation dialog
+  if (swapTarget && pendingData) {
+    const codeA = editing?.code ?? pendingData.code
+    const codeB = swapTarget.code
+    return (
+      <Modal
+        open
+        onClose={() => { setSwapTarget(null); setPendingData(null) }}
+        title="Trocar códigos?"
+        size="sm"
+        footer={
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={() => { setSwapTarget(null); setPendingData(null) }}>
+              Cancelar
+            </Button>
+            <Button size="sm" onClick={async () => {
+              await onSwapConfirm!(pendingData, swapTarget.id)
+              setSwapTarget(null); setPendingData(null)
+              onClose()
+            }}>
+              Trocar
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-[var(--text-secondary)] mb-4">
+          O código <span className="font-mono font-semibold text-[var(--text-primary)]">{codeB}</span> já
+          está em uso por <span className="font-semibold text-[var(--text-primary)]">{swapTarget.name}</span>.
+        </p>
+        <div className="flex items-center gap-3 rounded-lg border border-[var(--bg-border)] bg-[var(--bg-elevated)] p-3 text-sm">
+          <div className="flex flex-col gap-1 flex-1 text-center">
+            <span className="text-xs text-[var(--text-muted)]">{editing?.name ?? pendingData.name}</span>
+            <span className="font-mono font-semibold text-[var(--text-primary)]">{codeA}</span>
+            <span className="text-[10px] text-[var(--text-muted)]">→ {codeB}</span>
+          </div>
+          <span className="text-[var(--text-muted)]">⇄</span>
+          <div className="flex flex-col gap-1 flex-1 text-center">
+            <span className="text-xs text-[var(--text-muted)]">{swapTarget.name}</span>
+            <span className="font-mono font-semibold text-[var(--text-primary)]">{codeB}</span>
+            <span className="text-[10px] text-[var(--text-muted)]">→ {codeA}</span>
+          </div>
+        </div>
+        <p className="text-xs text-[var(--text-muted)] mt-3">
+          Todos os subitens de ambos os grupos serão renumerados automaticamente.
+        </p>
+      </Modal>
+    )
+  }
 
   return (
     <Modal
@@ -142,21 +220,8 @@ export function AccountPlanModal({ open, onClose, onSubmit, allPlans, editing, p
       size="md"
     >
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Código"
-            placeholder="ex: 1.1.1.01"
-            error={errors.code?.message}
-            {...register('code')}
-          />
-          <Input
-            label="Nome"
-            placeholder="ex: Caixa"
-            error={errors.name?.message}
-            {...register('name')}
-          />
-        </div>
 
+        {/* 1 — Tipo (filters parent options) + Natureza */}
         <div className="grid grid-cols-2 gap-4">
           <Select
             label="Tipo"
@@ -172,6 +237,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, allPlans, editing, p
           </div>
         </div>
 
+        {/* 2 — Conta pai (filtered by type, locks code prefix) */}
         <Select
           label="Conta pai"
           options={parentOptions}
@@ -180,7 +246,62 @@ export function AccountPlanModal({ open, onClose, onSubmit, allPlans, editing, p
           searchable
         />
 
-        <Checkbox label="Conta analítica (aceita lançamentos)" {...register('is_analytic')} />
+        {/* 3 — Código (prefix locked when parent selected) + Nome */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-[var(--text-secondary)]">Código</span>
+            {codePrefix ? (
+              <div className={`flex items-center h-10 rounded-[var(--radius-md)] border bg-[var(--bg-elevated)] font-mono text-sm transition-colors ${errors.code ? 'border-[var(--danger)]' : 'border-[var(--bg-border)] focus-within:border-[var(--accent)]'}`}>
+                <span className="pl-3 text-[var(--text-muted)] select-none shrink-0">{codePrefix}</span>
+                <input
+                  value={suffixInput}
+                  onChange={e => {
+                    setSuffixInput(e.target.value)
+                    setValue('code', codePrefix + e.target.value, { shouldValidate: true })
+                  }}
+                  placeholder="01"
+                  className="flex-1 bg-transparent outline-none pr-3 text-[var(--text-primary)] min-w-0"
+                />
+              </div>
+            ) : (
+              <Input
+                placeholder="ex: 1"
+                error={errors.code?.message}
+                {...register('code')}
+              />
+            )}
+            {errors.code && codePrefix && (
+              <span className="text-xs text-[var(--danger)]">{errors.code.message}</span>
+            )}
+          </div>
+          <Input
+            label="Nome"
+            placeholder="ex: Caixa"
+            error={errors.name?.message}
+            {...register('name')}
+          />
+        </div>
+
+        {/* 4 — Analítica / Sintética */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-[var(--text-secondary)]">Tipo de conta</span>
+          <div className="flex gap-2">
+            {([true, false] as const).map(analytic => (
+              <button
+                key={String(analytic)}
+                type="button"
+                onClick={() => setValue('is_analytic', analytic)}
+                className={`flex-1 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${
+                  watch('is_analytic') === analytic
+                    ? 'bg-[var(--accent)] text-white'
+                    : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                }`}
+              >
+                {analytic ? 'Analítica' : 'Sintética'}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-[var(--bg-border)]">
           <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>

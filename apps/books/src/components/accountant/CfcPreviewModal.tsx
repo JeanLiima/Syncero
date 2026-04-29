@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Pencil, Check, ChevronDown, ChevronRight, Info } from 'lucide-react'
+import { Pencil, Check, ChevronDown, ChevronRight, Info, Plus } from 'lucide-react'
 import { Button, Checkbox, Modal } from '@syncero/ui'
 import { useT } from '@/i18n'
 import type { PlanEntry } from '@/lib/backend'
@@ -40,27 +40,54 @@ function getDepth(code: string) { return code.split('.').length - 1 }
 // ── Inline edit row ───────────────────────────────────────────
 
 function PlanRow({
-  entry, checked, onToggle, onEdit,
+  entry, checked, onToggle, onEdit, onAddChild, onSwapRequest, allEntries,
 }: {
   entry: PlanEntry & { _key: string }
   checked: boolean
   onToggle: (key: string, checked: boolean) => void
   onEdit: (key: string, field: 'code' | 'name', value: string) => void
+  onAddChild: (key: string) => void
+  onSwapRequest: (keyA: string, keyB: string) => void
+  allEntries: (PlanEntry & { _key: string })[]
 }) {
   const [editingField, setEditingField] = useState<'code' | 'name' | null>(null)
   const [editValue, setEditValue]       = useState('')
+  const [codeError, setCodeError]       = useState<string | null>(null)
   const depth = getDepth(entry.code)
+
+  // For child entries, only the last segment is editable; prefix is locked
+  const codePrefix  = entry.parent_code ? entry.code.slice(0, entry.code.lastIndexOf('.') + 1) : ''
+  const codeSuffix  = entry.parent_code ? entry.code.slice(entry.code.lastIndexOf('.') + 1)    : entry.code
 
   const startEdit = (field: 'code' | 'name') => {
     setEditingField(field)
-    setEditValue(field === 'code' ? entry.code : entry.name)
+    setCodeError(null)
+    setEditValue(field === 'code' ? codeSuffix : entry.name)
   }
 
   const commitEdit = () => {
-    if (editingField && editValue.trim()) {
-      onEdit(entry._key, editingField, editValue.trim())
+    if (!editingField) return
+    const val = editValue.trim()
+    if (!val) { setEditingField(null); return }
+
+    if (editingField === 'code') {
+      const fullCode   = codePrefix + val
+      const conflicting = allEntries.find(e => e.code === fullCode && e._key !== entry._key)
+      if (conflicting) {
+        onSwapRequest(entry._key, conflicting._key)
+        setEditingField(null)
+        setCodeError(null)
+        return
+      }
+      onEdit(entry._key, 'code', fullCode)
+      setEditingField(null)
+      setCodeError(null)
+      return
     }
+
+    onEdit(entry._key, editingField, val)
     setEditingField(null)
+    setCodeError(null)
   }
 
   return (
@@ -77,14 +104,22 @@ function PlanRow({
       <td className="px-2 py-2 w-40 shrink-0">
         <div style={{ paddingLeft: `${depth * 14}px` }}>
           {editingField === 'code' ? (
-            <input
-              autoFocus
-              value={editValue}
-              onChange={e => setEditValue(e.target.value)}
-              onBlur={commitEdit}
-              onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') setEditingField(null) }}
-              className="w-full bg-[var(--bg-elevated)] border border-[var(--accent)] rounded px-1.5 py-0.5 text-xs font-mono text-[var(--text-primary)] outline-none"
-            />
+            <div className="flex flex-col gap-1">
+              <div className={`flex items-center rounded border text-xs font-mono bg-[var(--bg-elevated)] ${codeError ? 'border-[var(--danger)]' : 'border-[var(--accent)]'}`}>
+                {codePrefix && (
+                  <span className="pl-1.5 text-[var(--text-muted)] select-none">{codePrefix}</span>
+                )}
+                <input
+                  autoFocus
+                  value={editValue}
+                  onChange={e => { setEditValue(e.target.value); setCodeError(null) }}
+                  onBlur={commitEdit}
+                  onKeyDown={e => { if (e.key === 'Enter') commitEdit(); if (e.key === 'Escape') { setEditingField(null); setCodeError(null) } }}
+                  className={`bg-transparent text-[var(--text-primary)] outline-none py-0.5 ${codePrefix ? 'pl-0.5 pr-1.5' : 'px-1.5'} min-w-0 w-10`}
+                />
+              </div>
+              {codeError && <span className="text-[10px] text-[var(--danger)] whitespace-nowrap">{codeError}</span>}
+            </div>
           ) : (
             <button
               onClick={() => startEdit('code')}
@@ -123,15 +158,28 @@ function PlanRow({
         )}
       </td>
 
-      {/* Class */}
-      <td className="px-3 py-2 w-28 text-right shrink-0">
-        <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-          entry.is_analytic
-            ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
-            : 'bg-[var(--bg-border)] text-[var(--text-muted)]'
-        }`}>
-          {entry.is_analytic ? 'Analítica' : 'Sintética'}
-        </span>
+      {/* Class + add child */}
+      <td className="px-2 py-2 w-36 shrink-0">
+        <div className="flex items-center justify-end gap-2">
+          <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+            entry.is_analytic
+              ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
+              : 'bg-[var(--bg-border)] text-[var(--text-muted)]'
+          }`}>
+            {entry.is_analytic ? 'Analítica' : 'Sintética'}
+          </span>
+          <div className="relative group/add">
+            <button
+              onClick={() => onAddChild(entry._key)}
+              className="cursor-pointer p-1 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--success)] transition-colors opacity-0 group-hover/row:opacity-100"
+            >
+              <Plus className="h-3 w-3" />
+            </button>
+            <span className="pointer-events-none absolute -top-7 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/add:opacity-100 transition-opacity z-50">
+              Adicionar subconta
+            </span>
+          </div>
+        </div>
       </td>
     </tr>
   )
@@ -205,18 +253,114 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
   }
 
   const editEntry = (key: string, field: 'code' | 'name', value: string) => {
+    setEntries(prev => {
+      const entry = prev.find(e => e._key === key)
+      if (!entry) return prev
+      if (field === 'name') return prev.map(e => e._key === key ? { ...e, name: value } : e)
+
+      // Code change: cascade to all descendants in one pass
+      const oldCode = entry.code
+      const prefix  = oldCode + '.'
+      return prev.map(e => {
+        if (e._key === key) return { ...e, code: value }
+
+        const codeUpdated = e.code.startsWith(prefix)
+          ? value + e.code.slice(oldCode.length)
+          : null
+
+        const parentUpdated = e.parent_code === oldCode
+          ? value
+          : e.parent_code?.startsWith(prefix)
+            ? value + e.parent_code.slice(oldCode.length)
+            : null
+
+        if (codeUpdated === null && parentUpdated === null) return e
+        return {
+          ...e,
+          ...(codeUpdated   !== null ? { code:        codeUpdated   } : {}),
+          ...(parentUpdated !== null ? { parent_code: parentUpdated } : {}),
+        }
+      })
+    })
+  }
+
+  // ── Swap ────────────────────────────────────────────────────
+  const [swapPending, setSwapPending] = useState<{ keyA: string; keyB: string } | null>(null)
+
+  const swapEntryA = swapPending ? entries.find(e => e._key === swapPending.keyA) : null
+  const swapEntryB = swapPending ? entries.find(e => e._key === swapPending.keyB) : null
+
+  const confirmSwap = () => {
+    if (!swapEntryA || !swapEntryB) return
+    const codeA   = swapEntryA.code
+    const codeB   = swapEntryB.code
+    const prefixA = codeA + '.'
+    const prefixB = codeB + '.'
+
+    const mapCode = (c: string | null | undefined): string | null => {
+      if (!c) return c ?? null
+      if (c === codeA) return codeB
+      if (c === codeB) return codeA
+      if (c.startsWith(prefixA)) return codeB + c.slice(codeA.length)
+      if (c.startsWith(prefixB)) return codeA + c.slice(codeB.length)
+      return c
+    }
+
     setEntries(prev => prev.map(e => {
-      if (e._key !== key) return e
-      if (field === 'code') {
-        // Update parent_code references in children
-        const oldCode = e.code
-        setEntries(prev2 => prev2.map(e2 =>
-          e2.parent_code === oldCode ? { ...e2, parent_code: value } : e2
-        ))
-        return { ...e, code: value }
-      }
-      return { ...e, name: value }
+      const newCode       = mapCode(e.code)       ?? e.code
+      const newParentCode = mapCode(e.parent_code ?? undefined)
+      if (newCode === e.code && newParentCode === e.parent_code) return e
+      return { ...e, code: newCode, ...(newParentCode !== undefined ? { parent_code: newParentCode } : {}) }
     }))
+    setSwapPending(null)
+  }
+
+  const suggestChildCode = (parentCode: string): string => {
+    const prefix = parentCode + '.'
+    const siblings = entries.filter(e => {
+      if (!e.code.startsWith(prefix)) return false
+      return !e.code.slice(prefix.length).includes('.')
+    })
+    if (siblings.length === 0) return `${parentCode}.01`
+    const nums = siblings.map(s => parseInt(s.code.slice(prefix.length), 10) || 0)
+    const max = Math.max(...nums)
+    const padLen = Math.max(...siblings.map(s => s.code.slice(prefix.length).length))
+    return prefix + String(max + 1).padStart(padLen, '0')
+  }
+
+  const addChild = (parentKey: string) => {
+    const parent = entries.find(e => e._key === parentKey)
+    if (!parent) return
+    const newKey  = `new-${Date.now()}`
+    const newCode = suggestChildCode(parent.code)
+    const newEntry: PlanEntry & { _key: string } = {
+      _key:         newKey,
+      code:         newCode,
+      name:         '',
+      account_type: parent.account_type,
+      nature:       parent.nature,
+      is_analytic:  true,
+      parent_code:  parent.code,
+    }
+    // Insert right after the last descendant of the parent
+    setEntries(prev => {
+      const parentIdx = prev.findIndex(e => e._key === parentKey)
+      const prefix    = parent.code + '.'
+      let insertAt    = parentIdx + 1
+      for (let i = parentIdx + 1; i < prev.length; i++) {
+        if (prev[i].code.startsWith(prefix)) insertAt = i + 1
+        else break
+      }
+      const next = [...prev]
+      next.splice(insertAt, 0, newEntry)
+      return next
+    })
+    // Auto-select the new entry
+    setSelected(prev => new Set([...prev, newKey]))
+    // If parent was analytic, mark it as synthetic now it has a child
+    if (parent.is_analytic) {
+      setEntries(prev => prev.map(e => e._key === parentKey ? { ...e, is_analytic: false } : e))
+    }
   }
 
   const toggleCollapse = (type: AccountType) => {
@@ -346,6 +490,9 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
                         checked={selected.has(entry._key)}
                         onToggle={toggle}
                         onEdit={editEntry}
+                        onAddChild={addChild}
+                        onSwapRequest={(kA, kB) => setSwapPending({ keyA: kA, keyB: kB })}
+                        allEntries={entries}
                       />
                     ))}
                   </tbody>
@@ -355,6 +502,47 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
           )
         })}
       </div>
+
+      {/* Swap confirmation dialog */}
+      {swapPending && swapEntryA && swapEntryB && (
+        <Modal
+          open
+          onClose={() => setSwapPending(null)}
+          title="Trocar códigos?"
+          size="sm"
+          footer={
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={() => setSwapPending(null)}>
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={confirmSwap}>
+                Trocar
+              </Button>
+            </div>
+          }
+        >
+          <p className="text-sm text-[var(--text-secondary)] mb-4">
+            O código <span className="font-mono font-semibold text-[var(--text-primary)]">{swapEntryB.code}</span> já
+            está em uso por <span className="font-semibold text-[var(--text-primary)]">{swapEntryB.name}</span>.
+          </p>
+          <div className="flex items-center gap-3 rounded-lg border border-[var(--bg-border)] bg-[var(--bg-elevated)] p-3 text-sm">
+            <div className="flex flex-col gap-1 flex-1 text-center">
+              <span className="text-xs text-[var(--text-muted)]">{swapEntryA.name}</span>
+              <span className="font-mono font-semibold text-[var(--text-primary)]">{swapEntryA.code}</span>
+              <span className="text-[10px] text-[var(--text-muted)]">→ {swapEntryB.code}</span>
+            </div>
+            <span className="text-[var(--text-muted)]">⇄</span>
+            <div className="flex flex-col gap-1 flex-1 text-center">
+              <span className="text-xs text-[var(--text-muted)]">{swapEntryB.name}</span>
+              <span className="font-mono font-semibold text-[var(--text-primary)]">{swapEntryB.code}</span>
+              <span className="text-[10px] text-[var(--text-muted)]">→ {swapEntryA.code}</span>
+            </div>
+          </div>
+          <p className="text-xs text-[var(--text-muted)] mt-3">
+            Todos os subitens de ambos os grupos serão renumerados automaticamente.
+          </p>
+        </Modal>
+      )}
     </Modal>
   )
 }

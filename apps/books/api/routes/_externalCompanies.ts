@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { createServiceClient, type HonoVariables } from '../_shared'
-import { DEFAULT_ACCOUNT_PLAN } from '../defaultAccountPlan'
+import { DEFAULT_ACCOUNT_PLAN } from '../_defaultAccountPlan'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 

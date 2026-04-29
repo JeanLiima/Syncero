@@ -24,7 +24,8 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(rm \"J:/Users/Jean/Projetos/Syncero/apps/books/src/components/accountant/DomainImportModal.tsx\")",
-      "Bash(rm \"J:/Users/Jean/Projetos/Syncero/apps/books/src/lib/domain.ts\")"
+      "Bash(rm \"J:/Users/Jean/Projetos/Syncero/apps/books/src/lib/domain.ts\")",
+      "Bash(git push *)"
     ]
   }
 }

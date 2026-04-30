@@ -235,6 +235,7 @@ function AccountPicker({ label, accountType, accounts, value, onChange, companyI
       {filtered.length > 0 ? (
         <Select
           size="sm"
+          searchable
           options={[
             { value: '', label: t('classify_selectAccount') },
             ...filtered.map(a => ({ value: a.id, label: `${a.code} — ${a.name}` })),
@@ -252,7 +253,7 @@ function AccountPicker({ label, accountType, accounts, value, onChange, companyI
       )}
 
       {!creating && (
-        <button type="button" onClick={() => setCreating(true)} className="text-left text-xs text-[var(--accent)] hover:underline">
+        <button type="button" onClick={() => setCreating(true)} className="cursor-pointer text-left text-xs text-[var(--accent)] hover:underline">
           {t('classify_createAccount')} {typeLabel.toLowerCase()}
         </button>
       )}

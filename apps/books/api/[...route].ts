@@ -1,17 +1,18 @@
 import { Hono } from 'hono'
 import { handle } from 'hono/vercel'
 import { authMiddleware, type HonoVariables } from './_shared'
-import authRouter from './routes/auth'
-import companiesRouter from './routes/companies'
-import companiesExtraRouter from './routes/companiesExtra'
-import externalCompaniesRouter from './routes/externalCompanies'
-import accountPlansRouter from './routes/accountPlans'
-import journalEntriesRouter from './routes/journalEntries'
-import apiKeysRouter from './routes/apiKeys'
-import fiscalDocumentsRouter from './routes/fiscalDocuments'
-import fiscalBooksRouter from './routes/fiscalBooks'
-import taxCalculationsRouter from './routes/taxCalculations'
-import invitesRouter from './routes/invites'
+import authRouter from './routes/_auth'
+import companiesRouter from './routes/_companies'
+import companiesExtraRouter from './routes/_companiesExtra'
+import externalCompaniesRouter from './routes/_externalCompanies'
+import accountPlansRouter from './routes/_accountPlans'
+import journalEntriesRouter from './routes/_journalEntries'
+import apiKeysRouter from './routes/_apiKeys'
+import fiscalDocumentsRouter from './routes/_fiscalDocuments'
+import fiscalBooksRouter from './routes/_fiscalBooks'
+import taxCalculationsRouter from './routes/_taxCalculations'
+import invitesRouter from './routes/_invites'
+import transactionsRouter from './routes/_transactions'
 
 export const config = { runtime: 'edge' }
 
@@ -40,6 +41,8 @@ app.use('/fiscal-books', authMiddleware)
 app.use('/fiscal-books/*', authMiddleware)
 app.use('/tax-calculations', authMiddleware)
 app.use('/tax-calculations/*', authMiddleware)
+app.use('/transactions', authMiddleware)
+app.use('/transactions/*', authMiddleware)
 
 // ── Route registrations ────────────────────────────────────────
 app.route('/me', authRouter)
@@ -53,5 +56,6 @@ app.route('/fiscal-documents', fiscalDocumentsRouter)
 app.route('/fiscal-books', fiscalBooksRouter)
 app.route('/tax-calculations', taxCalculationsRouter)
 app.route('/invites', invitesRouter)
+app.route('/transactions', transactionsRouter)
 
 export default handle(app)

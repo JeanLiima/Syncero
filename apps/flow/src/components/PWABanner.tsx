@@ -38,7 +38,7 @@ export function PWABanner() {
 
       <button
         onClick={dismiss}
-        aria-label="Fechar banner"
+        aria-label={t('pwa_close')}
         className="flex-shrink-0 rounded p-1 text-[var(--text-muted)] hover:bg-[var(--bg-border)] transition-colors cursor-pointer"
       >
         <X className="h-4 w-4" />

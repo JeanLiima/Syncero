@@ -1,33 +1,33 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { LayoutList, BookMarked, Key, ArrowRight } from 'lucide-react'
+import { LayoutList, BookMarked, ArrowRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
 import type { ExternalCompany } from '@/types'
 
-const taxRegimeLabel: Record<string, string> = {
-  simples: 'Simples Nacional',
-  lucro_presumido: 'Lucro Presumido',
-  lucro_real: 'Lucro Real',
-}
-
-const segmentLabel: Record<string, string> = {
-  comercio: 'Comércio',
-  servicos: 'Serviços',
-  industria: 'Indústria',
-  construcao_civil: 'Construção Civil',
-  agronegocio: 'Agronegócio',
-  saude: 'Saúde',
-  educacao: 'Educação',
-  tecnologia: 'Tecnologia',
-  financeiro: 'Financeiro',
-  outros: 'Outros',
-}
-
 export function Component() {
   const t = useT()
+
+  const taxRegimeLabel: Record<string, string> = {
+    simples:          t('settings_simplesNacional'),
+    lucro_presumido:  t('settings_lucroPresumido'),
+    lucro_real:       t('settings_lucroReal'),
+  }
+
+  const segmentLabel: Record<string, string> = {
+    retail:        t('settings_segmentComercio'),
+    services:      t('settings_segmentServicos'),
+    manufacturing: t('settings_segmentIndustria'),
+    construction:  t('settings_segmentConstrucao'),
+    agribusiness:  t('settings_segmentAgronegocio'),
+    healthcare:    t('settings_segmentSaude'),
+    education:     t('settings_segmentEducacao'),
+    technology:    t('settings_segmentTecnologia'),
+    financial:     t('settings_segmentFinanceiro'),
+    other:         t('settings_segmentOutros'),
+  }
   const { extCompanyId } = useParams<{ extCompanyId: string }>()
 
   const { data: company } = useQuery({
@@ -65,12 +65,6 @@ export function Component() {
       icon: <LayoutList className="h-6 w-6 text-[var(--warning)]" />,
       to: 'lancamentos',
     },
-    {
-      label: t('overview_apiKeys'),
-      value: t('overview_manage'),
-      icon: <Key className="h-6 w-6 text-[var(--success)]" />,
-      to: 'api-keys',
-    },
   ]
 
   return (
@@ -79,7 +73,7 @@ export function Component() {
         <div className="flex items-center gap-2 mb-1">
           <p className="text-xs text-[var(--text-muted)]">{t('overview_externalCompany')}</p>
           {company && (
-            <CompanyTypeBadge isExternal integration={company.integration} />
+            <CompanyTypeBadge isExternal />
           )}
         </div>
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{company?.name ?? '…'}</h1>

@@ -7,13 +7,17 @@ const router = new Hono<{ Variables: HonoVariables }>()
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { name, cnpj, tax_regime } = await c.req.json<{ name: string; cnpj?: string; tax_regime?: string }>()
+  const { name, cnpj, trade_name, tax_regime, segment } = await c.req.json<{
+    name: string; cnpj?: string; trade_name?: string; tax_regime?: string; segment?: string
+  }>()
 
   if (!name?.trim()) return c.json({ error: 'Nome é obrigatório' }, 400)
 
   const payload: Record<string, unknown> = { name: name.trim(), owner_id: userId }
-  if (cnpj) payload.cnpj = cnpj
+  if (cnpj)       payload.cnpj       = cnpj
+  if (trade_name) payload.trade_name = trade_name
   if (tax_regime) payload.tax_regime = tax_regime
+  if (segment)    payload.segment    = segment
 
   const { data, error } = await db.from('companies').insert(payload).select('id, name').single()
   if (error) return c.json({ error: 'Failed to create company' }, 500)
@@ -56,7 +60,7 @@ router.patch('/:id', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const { id } = c.req.param()
-  const body = await c.req.json<{ name?: string; cnpj?: string; tax_regime?: string }>()
+  const body = await c.req.json<{ name?: string; cnpj?: string; trade_name?: string; tax_regime?: string; segment?: string }>()
 
   // Check if user is admin member
   const { data: admin } = await db.from('company_members')
@@ -74,8 +78,10 @@ router.patch('/:id', async (c) => {
     if (!body.name.trim()) return c.json({ error: 'Name cannot be empty' }, 400)
     updates.name = body.name.trim()
   }
-  if (body.cnpj !== undefined) updates.cnpj = body.cnpj
+  if (body.cnpj       !== undefined) updates.cnpj       = body.cnpj
+  if (body.trade_name !== undefined) updates.trade_name = body.trade_name
   if (body.tax_regime !== undefined) updates.tax_regime = body.tax_regime
+  if (body.segment    !== undefined) updates.segment    = body.segment
 
   if (Object.keys(updates).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
 

@@ -1,18 +1,18 @@
-import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
-import { Edit2, TrendingUp, TrendingDown, CheckCircle, Clock } from 'lucide-react'
+import { TrendingUp, TrendingDown, CheckCircle, Clock, Edit2, BookOpen } from 'lucide-react'
 import { Badge, Button, Modal } from '@syncero/ui'
+import { useQuery } from '@tanstack/react-query'
+import { getTransactionDetail } from '@/lib/backend'
 import { useT } from '@/i18n'
-import { useTransactionDetail } from './queries'
-import { PaymentModal } from './PaymentModal'
-import type { Transaction } from '@/types'
+import type { TransactionDetail } from '@/types'
 
 interface Props {
   transactionId: string | null
   open: boolean
   onClose: () => void
-  onEdit?: (tx: Transaction) => void
+  onClassify?: () => void
+  isClassified?: boolean
   language: 'pt' | 'en'
 }
 
@@ -34,20 +34,9 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   )
 }
 
-function TimelineEvent({
-  icon,
-  color,
-  label,
-  date,
-  by,
-  sub,
-}: {
-  icon: React.ReactNode
-  color: string
-  label: string
-  date: string
-  by?: string | null
-  sub?: string | null
+function TimelineEvent({ icon, color, label, date, by, sub }: {
+  icon: React.ReactNode; color: string; label: string
+  date: string; by?: string | null; sub?: string | null
 }) {
   return (
     <div className="flex gap-3">
@@ -63,11 +52,15 @@ function TimelineEvent({
   )
 }
 
-export function TransactionDetailModal({ transactionId, open, onClose, onEdit, language }: Props) {
+export function TransactionDetailModal({ transactionId, open, onClose, onClassify, isClassified, language }: Props) {
   const t = useT()
   const locale = language === 'en' ? enUS : ptBR
-  const { data: tx, isLoading } = useTransactionDetail(open ? transactionId : null)
-  const [paymentOpen, setPaymentOpen] = useState(false)
+
+  const { data: tx, isLoading } = useQuery({
+    queryKey: ['transaction', transactionId],
+    queryFn: () => getTransactionDetail(transactionId!),
+    enabled: !!transactionId && open,
+  })
 
   const fmt = (iso: string, withTime = false) => {
     const d = parseISO(iso)
@@ -78,15 +71,9 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
 
   const isIncome = tx?.type === 'income'
 
-  // Build timeline events
   const timeline: Array<{
-    key: string
-    icon: React.ReactNode
-    color: string
-    label: string
-    date: string
-    by?: string | null
-    sub?: string | null
+    key: string; icon: React.ReactNode; color: string
+    label: string; date: string; by?: string | null; sub?: string | null
   }> = []
 
   if (tx) {
@@ -96,13 +83,10 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
       color: 'bg-[var(--accent)]',
       label: t('transactions_detail_histCreated'),
       date: fmt(tx.created_at, true),
-      by: tx.creator_name,
+      by: (tx as TransactionDetail).creator_name,
     })
 
-    // Only show "Updated" if meaningfully different from created_at (> 1 min)
-    const createdMs = new Date(tx.created_at).getTime()
-    const updatedMs = new Date(tx.updated_at).getTime()
-    if (updatedMs - createdMs > 60_000) {
+    if (new Date(tx.updated_at).getTime() - new Date(tx.created_at).getTime() > 60_000) {
       timeline.push({
         key: 'updated',
         icon: <Edit2 className="h-3 w-3 text-white" />,
@@ -135,7 +119,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
         color: 'bg-[var(--warning)]',
         label: isIncome ? t('transactions_detail_histRegisteredIncome') : t('transactions_detail_histRegistered'),
         date: fmt(tx.payment_registered_at, true),
-        by: tx.payment_registrar_name,
+        by: (tx as TransactionDetail).payment_registrar_name,
         sub: methodLabel,
       })
     }
@@ -144,22 +128,14 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
   const footer = (
     <div className="flex items-center justify-between">
       <Button variant="ghost" size="sm" onClick={onClose}>
-        {t('transactions_cancel')}
+        {t('transactions_close')}
       </Button>
-      <div className="flex gap-2">
-        {tx && !tx.is_paid && (
-          <Button variant="ghost" size="sm" onClick={() => setPaymentOpen(true)}>
-            <CheckCircle className="h-3.5 w-3.5" />
-            {isIncome ? t('transactions_payment_registerIncome') : t('transactions_payment_register')}
-          </Button>
-        )}
-        {tx && onEdit && (
-          <Button size="sm" onClick={() => { onClose(); onEdit(tx) }}>
-            <Edit2 className="h-3.5 w-3.5" />
-            {t('transactions_detail_edit')}
-          </Button>
-        )}
-      </div>
+      {tx && tx.is_paid && !isClassified && onClassify && (
+        <Button size="sm" onClick={() => { onClose(); onClassify() }}>
+          <BookOpen className="h-3.5 w-3.5" />
+          {t('classify_action')}
+        </Button>
+      )}
     </div>
   )
 
@@ -178,7 +154,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
           <div className="flex flex-col items-center gap-2 py-2">
             <div className="flex items-center gap-2">
               {isIncome
-                ? <TrendingUp className="h-5 w-5 text-[var(--success)]" />
+                ? <TrendingUp  className="h-5 w-5 text-[var(--success)]" />
                 : <TrendingDown className="h-5 w-5 text-[var(--danger)]" />
               }
               <span className={`text-3xl font-bold font-mono ${isIncome ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
@@ -194,6 +170,9 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
                   ? (isIncome ? t('transactions_received') : t('transactions_paid'))
                   : (isIncome ? t('transactions_toReceive') : t('transactions_pending'))}
               </Badge>
+              {isClassified && (
+                <Badge variant="info">{t('classify_badge_done')}</Badge>
+              )}
             </div>
           </div>
 
@@ -219,7 +198,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
               <Row label={t('transactions_detail_contact')}>
                 <span className="flex flex-col items-end gap-0.5">
                   <span>{tx.contacts.name}</span>
-                  {tx.contacts.cpf && <span className="text-xs text-[var(--text-muted)]">CPF {tx.contacts.cpf}</span>}
+                  {tx.contacts.cpf  && <span className="text-xs text-[var(--text-muted)]">CPF {tx.contacts.cpf}</span>}
                   {tx.contacts.cnpj && <span className="text-xs text-[var(--text-muted)]">CNPJ {tx.contacts.cnpj}</span>}
                 </span>
               </Row>
@@ -250,14 +229,6 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
 
         </div>
       )}
-
-      <PaymentModal
-        transactionId={transactionId}
-        transactionType={tx?.type}
-        open={paymentOpen}
-        onClose={() => setPaymentOpen(false)}
-        language={language}
-      />
     </Modal>
   )
 }

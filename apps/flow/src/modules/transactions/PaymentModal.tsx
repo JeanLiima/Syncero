@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
-import { Plus, Landmark } from 'lucide-react'
+import { Plus, Landmark, Wallet } from 'lucide-react'
 import { Button, DatePicker, Modal, Select, useToast } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { BankFormModal } from '@/modules/banks/BankFormModal'
-import type { Bank } from '@/types'
+import type { Bank, TransactionType } from '@/types'
 import { useBanks } from './queries'
 import { useUpdateTransaction } from './mutations'
 import { useAuthStore } from '@/store/auth'
@@ -69,13 +69,15 @@ export function BankSelectField({
 
 interface Props {
   transactionId: string | null
+  transactionType?: TransactionType
   open: boolean
   onClose: () => void
   language: 'pt' | 'en'
 }
 
-export function PaymentModal({ transactionId, open, onClose, language }: Props) {
+export function PaymentModal({ transactionId, transactionType, open, onClose, language }: Props) {
   const t = useT()
+  const isIncome = transactionType === 'income'
   const { success, error: toastError } = useToast()
   const user = useAuthStore((s) => s.user)
   const update = useUpdateTransaction()
@@ -109,7 +111,7 @@ export function PaymentModal({ transactionId, open, onClose, language }: Props) 
           payment_registered_by: user?.id ?? undefined,
         },
       })
-      success(t('transactions_paymentRegistered'))
+      success(isIncome ? t('transactions_paymentReceivedToast') : t('transactions_paymentRegistered'))
       onClose()
     } catch {
       toastError(t('common_errorGeneric'))
@@ -117,29 +119,57 @@ export function PaymentModal({ transactionId, open, onClose, language }: Props) 
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={t('transactions_payment_formTitle')} size="sm">
+    <Modal open={open} onClose={onClose} title={isIncome ? t('transactions_payment_formTitleIncome') : t('transactions_payment_formTitle')} size="sm">
       <div className="flex flex-col gap-4">
         <DatePicker
-          label={t('transactions_paidAt')}
+          label={isIncome ? t('transactions_receivedAt') : t('transactions_paidAt')}
           value={paidAt}
           onChange={setPaidAt}
           language={language}
         />
 
-        <div className="flex flex-col gap-1">
-          <Select
-            label={t('transactions_paymentMethod')}
-            placeholder={t('common_select')}
-            value={paymentMethod}
-            onChange={(v) => {
-              setPaymentMethod(v as 'cash' | 'bank' | '')
-              if (v !== 'bank') setBankId('')
-            }}
-            options={[
-              { value: 'cash', label: t('transactions_paymentCash') },
-              { value: 'bank', label: t('transactions_paymentBank') },
-            ]}
-          />
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-[var(--text-secondary)]">
+            {isIncome ? t('transactions_receivementMethod') : t('transactions_paymentMethod')}
+          </span>
+          <div className="flex flex-col gap-2">
+            {([
+              { value: 'cash', icon: Wallet,    labelKey: 'transactions_paymentCash',     descKey: 'transactions_paymentCash_desc'  },
+              { value: 'bank', icon: Landmark,  labelKey: 'transactions_paymentBank',     descKey: 'transactions_paymentBank_desc'  },
+            ] as const).map(({ value, icon: Icon, labelKey, descKey }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => {
+                  setPaymentMethod(value)
+                  if (value !== 'bank') setBankId('')
+                }}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer text-left ${
+                  paymentMethod === value
+                    ? isIncome
+                      ? 'border-[var(--success)] bg-[var(--success)]/10'
+                      : 'border-[var(--danger)] bg-[var(--danger)]/10'
+                    : 'border-[var(--bg-border)] hover:bg-[var(--bg-elevated)]'
+                }`}
+              >
+                <Icon className={`h-5 w-5 shrink-0 ${
+                  paymentMethod === value
+                    ? isIncome ? 'text-[var(--success)]' : 'text-[var(--danger)]'
+                    : 'text-[var(--text-muted)]'
+                }`} />
+                <div className="flex flex-col min-w-0">
+                  <span className={`text-sm font-medium leading-tight ${
+                    paymentMethod === value ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'
+                  }`}>
+                    {t(labelKey)}
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">
+                    {t(descKey)}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {paymentMethod === 'bank' && (
@@ -157,7 +187,7 @@ export function PaymentModal({ transactionId, open, onClose, language }: Props) 
           {t('transactions_cancel')}
         </Button>
         <Button onClick={handleConfirm} loading={update.isPending} disabled={!canConfirm}>
-          {t('transactions_payment_confirm')}
+          {isIncome ? t('transactions_payment_confirmIncome') : t('transactions_payment_confirm')}
         </Button>
       </div>
     </Modal>

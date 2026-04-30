@@ -1,26 +1,42 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { LogOut } from 'lucide-react'
+import { LogOut, Info } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast, Button, Card, Input, Select, Avatar } from '@syncero/ui'
 import { useT } from '@/i18n'
+import { SEGMENTS_WITH_COST } from '@/lib/segments'
+
 
 const schema = z.object({
-  name: z.string().min(2),
-  cnpj: z.string().optional(),
+  name:       z.string().min(2),
+  trade_name: z.string().optional(),
+  cnpj:       z.string().optional(),
   tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
+  segment:    z.string().min(1, 'Obrigatório'),
 })
 type FormData = z.infer<typeof schema>
 
 export function NoCompanyShell() {
   const t = useT()
+  const segmentOptions = [
+    { value: 'retail',        label: t('settings_segmentComercio') },
+    { value: 'services',      label: t('settings_segmentServicos') },
+    { value: 'manufacturing', label: t('settings_segmentIndustria') },
+    { value: 'construction',  label: t('settings_segmentConstrucao') },
+    { value: 'agribusiness',  label: t('settings_segmentAgronegocio') },
+    { value: 'healthcare',    label: t('settings_segmentSaude') },
+    { value: 'education',     label: t('settings_segmentEducacao') },
+    { value: 'technology',    label: t('settings_segmentTecnologia') },
+    { value: 'financial',     label: t('settings_segmentFinanceiro') },
+    { value: 'other',         label: t('settings_segmentOutros') },
+  ]
   const { user, profile, signOut } = useAuth()
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
   const { success, error: toastError } = useToast()
-  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, control, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -28,7 +44,7 @@ export function NoCompanyShell() {
     user?.user_metadata?.full_name ??
     user?.user_metadata?.name ??
     user?.email?.split('@')[0] ??
-    'Usuário'
+    t('layout_userFallback')
 
   const avatarUrl: string | null =
     profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? null
@@ -37,9 +53,15 @@ export function NoCompanyShell() {
     try {
       const company = await apiFetch<{ id: string; name: string }>('/api/companies', {
         method: 'POST',
-        body: JSON.stringify({ name: data.name, cnpj: data.cnpj, tax_regime: data.tax_regime }),
+        body: JSON.stringify({
+          name:       data.name,
+          trade_name: data.trade_name || undefined,
+          cnpj:       data.cnpj       || undefined,
+          tax_regime: data.tax_regime || undefined,
+          segment:    data.segment    || undefined,
+        }),
       })
-      setActiveCompany({ id: company.id, name: company.name, role: 'admin' })
+      setActiveCompany({ id: company.id, name: company.name, role: 'admin', segment: data.segment ?? null })
       success(t('noCompany_success'))
     } catch (err) {
       toastError(err instanceof Error ? err.message : 'Erro ao criar empresa.')
@@ -85,6 +107,11 @@ export function NoCompanyShell() {
               {...register('name')}
             />
             <Input
+              label={t('noCompany_tradeNameLabel')}
+              placeholder={t('noCompany_tradeNamePlaceholder')}
+              {...register('trade_name')}
+            />
+            <Input
               label={t('noCompany_cnpjLabel')}
               placeholder={t('noCompany_cnpjPlaceholder')}
               {...register('cnpj')}
@@ -107,6 +134,32 @@ export function NoCompanyShell() {
                 />
               )}
             />
+            <div className="flex flex-col gap-1.5">
+              <Controller
+                control={control}
+                name="segment"
+                render={({ field, fieldState }) => (
+                  <Select
+                    label={t('noCompany_segmentLabel')}
+                    placeholder={t('noCompany_segmentPlaceholder')}
+                    value={field.value ?? ''}
+                    onChange={(v) => field.onChange(v || '')}
+                    onBlur={field.onBlur}
+                    options={segmentOptions}
+                    searchable
+                    error={fieldState.error?.message}
+                  />
+                )}
+              />
+              {SEGMENTS_WITH_COST.has(watch('segment') ?? '') ? (
+                <div className="flex items-start gap-1.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2.5 py-2">
+                  <Info className="h-3.5 w-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
+                  <p className="text-xs text-[var(--text-secondary)]">{t('noCompany_segmentCostHint')}</p>
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--text-muted)]">{t('noCompany_segmentHint')}</p>
+              )}
+            </div>
             <Button type="submit" loading={isSubmitting} className="w-full mt-2">
               {t('noCompany_submit')}
             </Button>

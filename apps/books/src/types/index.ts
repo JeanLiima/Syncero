@@ -2,6 +2,16 @@
 
 export type UserType = 'company_user' | 'accountant'
 export type TransactionType = 'income' | 'expense'
+export type TransactionNature =
+  | 'sale_service'
+  | 'loan_received'
+  | 'capital_contribution'
+  | 'operational_expense'
+  | 'product_cost'
+  | 'asset_purchase'
+  | 'debt_payment'
+  | 'owner_withdrawal'
+export type PaymentMethod = 'cash' | 'bank'
 export type TaxRegime = 'simples' | 'lucro_presumido' | 'lucro_real'
 export type MemberRole = 'admin' | 'member' | 'viewer'
 export type MemberStatus = 'active' | 'invited' | 'inactive'
@@ -62,6 +72,23 @@ export interface AccountantCompany {
 
 // ── Financial ─────────────────────────────────────────────────
 
+export interface Contact {
+  id: string
+  company_id: string
+  name: string
+  cpf: string | null
+  cnpj: string | null
+  created_at: string
+}
+
+export interface Bank {
+  id: string
+  company_id: string
+  name: string
+  account_type: string
+  created_at: string
+}
+
 export interface Category {
   id: string
   company_id: string
@@ -75,16 +102,35 @@ export interface Transaction {
   id: string
   company_id: string
   category_id: string | null
+  contact_id: string | null
   description: string
   amount: number
   type: TransactionType
   date: string
   is_paid: boolean
   notes: string | null
+  counterpart: string | null
+  paid_at: string | null
+  payment_method: PaymentMethod | null
+  bank_id: string | null
+  payment_registered_at: string | null
+  payment_registered_by: string | null
+  nature: TransactionNature | null
+  is_installment: boolean
+  installment_count: number | null
+  installment_number: number | null
+  installment_group_id: string | null
   created_by: string
   created_at: string
   updated_at: string
   categories?: Pick<Category, 'id' | 'name' | 'color'>
+  banks?: Pick<Bank, 'id' | 'name'>
+  contacts?: Pick<Contact, 'id' | 'name' | 'cpf' | 'cnpj'>
+}
+
+export interface TransactionDetail extends Transaction {
+  creator_name: string | null
+  payment_registrar_name: string | null
 }
 
 export interface PayableReceivable {
@@ -152,16 +198,15 @@ export interface TaxCalculation {
 
 // ── External companies & accounting ──────────────────────────
 
-export type CompanyIntegration = 'manual' | 'dominio' | 'other'
-export type EntrySource = 'manual' | 'dominio_import' | 'api' | 'syncero_import'
-export type AccountType = 'ativo' | 'passivo' | 'patrimonio_liquido' | 'receita' | 'despesa' | 'custo'
-export type AccountNature = 'devedora' | 'credora'
+export type EntrySource = 'manual' | 'api' | 'syncero_import'
+export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense' | 'cost'
+export type AccountNature = 'debit' | 'credit'
 export type JournalSide = 'debit' | 'credit'
 
 export type CompanySegment =
-  | 'comercio' | 'servicos' | 'industria' | 'construcao_civil'
-  | 'agronegocio' | 'saude' | 'educacao' | 'tecnologia'
-  | 'financeiro' | 'outros'
+  | 'retail' | 'services' | 'manufacturing' | 'construction'
+  | 'agribusiness' | 'healthcare' | 'education' | 'technology'
+  | 'financial' | 'other'
 
 export interface ExternalCompany {
   id: string
@@ -170,7 +215,7 @@ export interface ExternalCompany {
   cnpj: string | null
   trade_name: string | null
   tax_regime: TaxRegime | null
-  integration: CompanyIntegration
+  integration: string
   segment: CompanySegment | null
   is_active: boolean
   notes: string | null

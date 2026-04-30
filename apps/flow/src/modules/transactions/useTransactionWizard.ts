@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { useT } from '@/i18n'
-import type { Transaction, TransactionType } from '@/types'
+import type { Transaction, TransactionNature, TransactionType } from '@/types'
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 type Phase = 'wizard' | 'payment-prompt' | 'payment-form'
 
 interface UseTransactionWizardState {
@@ -20,6 +20,8 @@ interface UseTransactionWizardState {
   setStep: (step: Step) => void
   type: TransactionType | null
   setType: (type: TransactionType | null) => void
+  nature: TransactionNature | null
+  setNature: (nature: TransactionNature | null) => void
   amountCents: number
   setAmountCents: (cents: number) => void
   date: string
@@ -73,6 +75,7 @@ interface UseTransactionWizardState {
   goTo: (step: Step) => void
   goBack: () => void
   selectType: (type: TransactionType) => void
+  selectNature: (nature: TransactionNature) => void
   reset: () => void
 }
 
@@ -91,6 +94,7 @@ export function useTransactionWizardState(
   // Wizard state
   const [step, setStep] = useState<Step>(1)
   const [type, setType] = useState<TransactionType | null>(null)
+  const [nature, setNature] = useState<TransactionNature | null>(null)
   const [amountCents, setAmountCents] = useState(0)
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
   const [categoryId, setCategoryId] = useState<string | undefined>()
@@ -138,6 +142,7 @@ export function useTransactionWizardState(
     if (editing) {
       setStep(1)
       setType(editing.type)
+      setNature(editing.nature ?? (editing.type === 'income' ? 'sale_service' : 'operational_expense'))
       setAmountCents(Math.round(editing.amount * 100))
       setDate(editing.date)
       setCategoryId(editing.category_id ?? undefined)
@@ -151,6 +156,7 @@ export function useTransactionWizardState(
     } else {
       setStep(1)
       setType(null)
+      setNature(null)
       setAmountCents(0)
       setDate(format(new Date(), 'yyyy-MM-dd'))
       setCategoryId(undefined)
@@ -175,7 +181,7 @@ export function useTransactionWizardState(
 
   // Auto-focus amount input
   useEffect(() => {
-    if (step === 3) setTimeout(() => amountRef.current?.focus(), 50)
+    if (step === 4) setTimeout(() => amountRef.current?.focus(), 50)
   }, [step])
 
   // Auto-generate description
@@ -222,7 +228,12 @@ export function useTransactionWizardState(
 
   const selectType = (v: TransactionType) => {
     setType(v)
+    setNature(v === 'income' ? 'sale_service' : 'operational_expense')
     goTo(2)
+  }
+
+  const selectNature = (v: TransactionNature) => {
+    setNature(v)
   }
 
   return {
@@ -239,6 +250,8 @@ export function useTransactionWizardState(
     setStep,
     type,
     setType,
+    nature,
+    setNature,
     amountCents,
     setAmountCents,
     date,
@@ -292,6 +305,7 @@ export function useTransactionWizardState(
     goTo,
     goBack,
     selectType,
+    selectNature,
     reset,
   }
 }

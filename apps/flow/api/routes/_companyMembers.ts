@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { Resend } from 'resend'
 import { createServiceClient, type HonoVariables } from '../_shared'
-import { memberInviteEmail } from '../emails/memberInvite'
+import { memberInviteEmail } from '../emails/_memberInvite'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 

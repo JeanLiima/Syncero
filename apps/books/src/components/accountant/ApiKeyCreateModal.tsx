@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Copy, Check, Eye } from 'lucide-react'
 import { Modal, Button, Input, DatePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
+import { useT } from '@/i18n'
 
 interface ApiKeyCreateModalProps {
   open: boolean
@@ -10,6 +11,7 @@ interface ApiKeyCreateModalProps {
 }
 
 export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModalProps) {
+  const t = useT()
   const language = usePreferencesStore(s => s.language)
   const [name, setName] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
@@ -20,13 +22,13 @@ export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModal
 
   const handleCreate = async () => {
     setError(null)
-    if (!name.trim()) { setError('Informe um nome para a chave.'); return }
+    if (!name.trim()) { setError(t('apiKeys_errorName')); return }
     setSubmitting(true)
     try {
       const key = await onCreate({ name: name.trim(), expiresAt: expiresAt || null })
       setRawKey(key)
     } catch {
-      setError('Erro ao criar chave. Tente novamente.')
+      setError(t('apiKeys_errorCreate'))
     } finally {
       setSubmitting(false)
     }
@@ -49,14 +51,12 @@ export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModal
   }
 
   return (
-    <Modal open={open} onClose={handleClose} title="Nova API Key" size="md">
+    <Modal open={open} onClose={handleClose} title={t('apiKeys_new')} size="md">
       {rawKey ? (
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2 p-3 rounded-[var(--radius-md)] bg-[var(--success)]/10 border border-[var(--success)]/30">
             <Eye className="h-4 w-4 text-[var(--success)] flex-shrink-0" />
-            <p className="text-xs text-[var(--success)]">
-              Copie esta chave agora — ela <strong>não será exibida novamente</strong>.
-            </p>
+            <p className="text-xs text-[var(--success)]">{t('apiKeys_warningOnce')}</p>
           </div>
           <div className="flex items-center gap-2 p-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)]">
             <code className="flex-1 text-xs font-mono text-[var(--text-primary)] break-all">{rawKey}</code>
@@ -65,29 +65,29 @@ export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModal
               className="cursor-pointer flex items-center gap-1 px-2 py-1 rounded text-xs text-[var(--accent)] hover:bg-[var(--bg-surface)] transition-colors flex-shrink-0"
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              {copied ? 'Copiado!' : 'Copiar'}
+              {copied ? t('apiKeys_copied') : t('apiKeys_copy')}
             </button>
           </div>
-          <Button onClick={handleClose} className="self-end">Concluir</Button>
+          <Button onClick={handleClose} className="self-end">{t('apiKeys_done')}</Button>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
           <Input
-            label="Nome da chave"
-            placeholder="ex: Domínio Produção"
+            label={t('apiKeys_fieldName')}
+            placeholder={t('apiKeys_namePlaceholder')}
             value={name}
             onChange={e => setName(e.target.value)}
           />
           <DatePicker
-            label="Expira em (opcional)"
+            label={t('apiKeys_fieldExpiry')}
             value={expiresAt}
             onChange={setExpiresAt}
             language={language}
           />
           {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
           <div className="flex justify-end gap-2 pt-2 border-t border-[var(--bg-border)]">
-            <Button variant="ghost" onClick={handleClose}>Cancelar</Button>
-            <Button onClick={handleCreate} loading={submitting}>Criar chave</Button>
+            <Button variant="ghost" onClick={handleClose}>{t('settings_cancel')}</Button>
+            <Button onClick={handleCreate} loading={submitting}>{t('apiKeys_createKey')}</Button>
           </div>
         </div>
       )}

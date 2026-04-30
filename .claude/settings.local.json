@@ -19,7 +19,17 @@
       "mcp__claude_ai_Supabase__apply_migration",
       "Bash(xargs grep:*)",
       "Bash(gh pr:*)",
-      "Bash(gh repo:*)"
+      "Bash(gh repo:*)",
+      "Bash(git commit -m ' *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(rm \"J:/Users/Jean/Projetos/Syncero/apps/books/src/components/accountant/DomainImportModal.tsx\")",
+      "Bash(rm \"J:/Users/Jean/Projetos/Syncero/apps/books/src/lib/domain.ts\")",
+      "Bash(git push *)",
+      "Bash(gh api *)",
+      "mcp__claude_ai_Vercel__list_teams",
+      "mcp__claude_ai_Vercel__list_projects",
+      "mcp__claude_ai_Vercel__list_deployments"
     ]
   }
 }

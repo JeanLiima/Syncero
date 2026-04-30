@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { format, addMonths, parseISO, parse, isValid } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
-import { TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat } from 'lucide-react'
+import {
+  TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat,
+  ShoppingCart, Banknote, Users, Receipt, Package, ArrowDownLeft, ArrowUpRight,
+} from 'lucide-react'
 import { Button, Checkbox, DayCalendar, Input, Modal } from '@syncero/ui'
-import { useT } from '@/i18n'
+import { useT, type TranslationKey } from '@/i18n'
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from './mutations'
 import { useCategories, useBanks, useContacts } from './queries'
 import { useAuthStore } from '@syncero/auth'
@@ -12,7 +15,8 @@ import { ContactCombobox } from './ContactCombobox'
 import { useTransactionWizardState } from './useTransactionWizard'
 import { PaymentPromptStep } from './PaymentPromptStep'
 import { PaymentFormStep } from './PaymentFormStep'
-import type { Transaction } from '@/types'
+import { SEGMENTS_WITH_COST } from '@/lib/segments'
+import type { Transaction, TransactionNature } from '@/types'
 
 interface Props {
   open: boolean
@@ -21,12 +25,41 @@ interface Props {
   language: 'pt' | 'en'
 }
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+
+// ── Nature option config ────────────────────────────────────────
+
+type NatureOption = {
+  value: TransactionNature
+  labelKey: TranslationKey
+  descKey: TranslationKey
+  icon: React.ElementType
+  common?: true
+}
+
+const INCOME_NATURES: NatureOption[] = [
+  { value: 'sale_service',         labelKey: 'transactions_nature_sale_service',         descKey: 'transactions_nature_sale_service_desc',         icon: ShoppingCart, common: true },
+  { value: 'loan_received',        labelKey: 'transactions_nature_loan_received',        descKey: 'transactions_nature_loan_received_desc',        icon: Banknote      },
+  { value: 'capital_contribution', labelKey: 'transactions_nature_capital_contribution', descKey: 'transactions_nature_capital_contribution_desc', icon: Users         },
+]
+
+const BASE_EXPENSE_NATURES: NatureOption[] = [
+  { value: 'operational_expense', labelKey: 'transactions_nature_operational_expense', descKey: 'transactions_nature_operational_expense_desc', icon: Receipt,      common: true },
+  { value: 'product_cost',        labelKey: 'transactions_nature_product_cost',        descKey: 'transactions_nature_product_cost_desc',        icon: Package       },
+  { value: 'asset_purchase',      labelKey: 'transactions_nature_asset_purchase',      descKey: 'transactions_nature_asset_purchase_desc',      icon: Package        },
+  { value: 'debt_payment',        labelKey: 'transactions_nature_debt_payment',        descKey: 'transactions_nature_debt_payment_desc',        icon: ArrowDownLeft  },
+  { value: 'owner_withdrawal',    labelKey: 'transactions_nature_owner_withdrawal',    descKey: 'transactions_nature_owner_withdrawal_desc',    icon: ArrowUpRight   },
+]
 
 // ── Wizard ───────────────────────────────────────────────────
 
 export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const t = useT()
+  const activeCompany  = useAuthStore(s => s.activeCompany)
+  const hasCostSegment = activeCompany?.segment ? SEGMENTS_WITH_COST.has(activeCompany.segment) : false
+  const EXPENSE_NATURES = hasCostSegment
+    ? BASE_EXPENSE_NATURES
+    : BASE_EXPENSE_NATURES.filter(n => n.value !== 'product_cost')
   const create = useCreateTransaction()
   const update = useUpdateTransaction()
   const deleteT = useDeleteTransaction()
@@ -49,7 +82,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   const handleNext = () => {
     if (state.step === 1 && !state.type) return
-    if (state.step === 3 && !validateAmount()) return
+    if (state.step === 2 && !state.nature) return
+    if (state.step === 4 && !validateAmount()) return
     state.goTo((state.step + 1) as Step)
   }
 
@@ -78,17 +112,18 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   const selectCategory = (id: string | undefined) => {
     state.setCategoryId(id)
-    if (isCreating) state.goTo(6)
+    if (isCreating) state.goTo(7)
   }
 
   const handleSave = async () => {
     if (!state.type) return
     state.setDescError('')
     if (!state.description.trim()) { state.setDescError(t('transactions_errorDescription')); return }
-    if (state.amountCents <= 0) { state.setAmountError(t('transactions_errorAmount')); state.goTo(3); return }
+    if (state.amountCents <= 0) { state.setAmountError(t('transactions_errorAmount')); state.goTo(4); return }
 
     const basePayload = {
       type: state.type,
+      nature: state.nature ?? undefined,
       amount: state.amountCents / 100,
       date: state.date,
       category_id: state.categoryId || undefined,
@@ -177,7 +212,6 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   // ── Global keyboard handler ──────────────────────────────────
 
-  // Always update ref with fresh closures — registered once on open
   const wizardKeyRef = useRef<(e: KeyboardEvent) => void>(() => {})
   wizardKeyRef.current = (e: KeyboardEvent) => {
     const target = e.target as HTMLElement
@@ -195,24 +229,41 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (state.phase !== 'wizard') return
     if (target.tagName === 'TEXTAREA') return
 
-    if (state.step === 6) return
+    if (state.step === 7) return // contact — handled by combobox
 
-    if (state.step === 3) {
-      if (e.key === 'Enter') { e.preventDefault(); if (validateAmount()) state.goTo(4) }
+    if (state.step === 4) {
+      if (e.key === 'Enter') { e.preventDefault(); if (validateAmount()) state.goTo(5) }
       return
     }
 
     if (state.step === 1) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault()
-        state.selectType(state.type === 'income' ? 'expense' : 'income')
-        state.setCategoryId(undefined)
+        // Toggle type without auto-advancing — just update the selection
+        const next = state.type === 'income' ? 'expense' : 'income'
+        state.setType(next)
+        state.setNature(null)
       }
       if (e.key === 'Enter' && state.type) { e.preventDefault(); state.goTo(2) }
       return
     }
 
-    if (state.step === 4) {
+    if (state.step === 2) {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        const natures = state.type === 'income' ? INCOME_NATURES : EXPENSE_NATURES
+        const options = natures.map((n) => n.value)
+        const currentIdx = state.nature == null ? -1 : options.indexOf(state.nature)
+        const nextIdx = e.key === 'ArrowDown'
+          ? (currentIdx + 1) % options.length
+          : (currentIdx - 1 + options.length) % options.length
+        state.setNature(options[nextIdx])
+      }
+      if (e.key === 'Enter' && state.nature) { e.preventDefault(); state.goTo(3) }
+      return
+    }
+
+    if (state.step === 5) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault()
         state.setIsInstallment(!state.isInstallment)
@@ -221,7 +272,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       return
     }
 
-    if (state.step === 5) {
+    if (state.step === 6) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault()
         const filtered = categories.filter((c) => c.type === state.type)
@@ -232,13 +283,13 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           : (currentIdx - 1 + options.length) % options.length
         state.setCategoryId(options[nextIdx])
       }
-      if (e.key === 'Enter') { e.preventDefault(); isCreating ? state.goTo(6) : handleNext() }
+      if (e.key === 'Enter') { e.preventDefault(); isCreating ? state.goTo(7) : handleNext() }
       return
     }
 
     if (e.key !== 'Enter') return
 
-    if (state.step === 7) {
+    if (state.step === 8) {
       if (!isPending && state.description.trim()) { e.preventDefault(); handleSave() }
       return
     }
@@ -291,13 +342,14 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   // ── Step content ────────────────────────────────────────────
 
   const stepContent: Record<Step, React.ReactNode> = {
+    // Step 1 — Entrada ou Saída
     1: (
       <div className="flex flex-col gap-3">
         <p className="text-sm text-[var(--text-muted)] text-center mb-1">
-          {t('transactions_wizard_typeLabel')}
+          {t('transactions_wizard_step1Label')}
         </p>
         <div className="grid grid-cols-2 gap-3">
-          {([['income', TrendingUp], ['expense', TrendingDown]] as const).map(([v, Icon]) => (
+          {([['income', TrendingUp, 'transactions_wizard_entrada'], ['expense', TrendingDown, 'transactions_wizard_saida']] as const).map(([v, Icon, labelKey]) => (
             <button
               key={v}
               type="button"
@@ -320,7 +372,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
                   ? v === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
                   : 'text-[var(--text-secondary)]'
               }`}>
-                {v === 'income' ? t('transactions_income_badge') : t('transactions_expense_badge')}
+                {t(labelKey)}
               </span>
             </button>
           ))}
@@ -328,7 +380,59 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       </div>
     ),
 
+    // Step 2 — Natureza contábil
     2: (() => {
+      const natures = state.type === 'income' ? INCOME_NATURES : EXPENSE_NATURES
+      return (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-[var(--text-muted)] text-center mb-1">
+            {t('transactions_wizard_step2Label')}
+          </p>
+          <div className="flex flex-col gap-2">
+            {natures.map(({ value, labelKey, descKey, icon: Icon, common }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => state.selectNature(value)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 transition-all cursor-pointer text-left ${
+                  state.nature === value
+                    ? state.type === 'income'
+                      ? 'border-[var(--success)] bg-[var(--success)]/10'
+                      : 'border-[var(--danger)] bg-[var(--danger)]/10'
+                    : 'border-[var(--bg-border)] hover:bg-[var(--bg-elevated)]'
+                }`}
+              >
+                <Icon className={`h-5 w-5 shrink-0 ${
+                  state.nature === value
+                    ? state.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
+                    : 'text-[var(--text-muted)]'
+                }`} />
+                <div className="flex flex-col min-w-0">
+                  <span className="flex items-center gap-2">
+                    <span className={`text-sm font-medium leading-tight ${
+                      state.nature === value ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'
+                    }`}>
+                      {t(labelKey)}
+                    </span>
+                    {common && (
+                      <span className="shrink-0 rounded-full bg-[var(--bg-border)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-muted)] leading-none">
+                        {t('transactions_nature_common')}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)] leading-tight mt-0.5">
+                    {t(descKey)}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    })(),
+
+    // Step 3 — Data de competência
+    3: (() => {
       const parsed = state.date ? parse(state.date, 'yyyy-MM-dd', new Date()) : undefined
       const selected = parsed && isValid(parsed) ? parsed : undefined
       const locale = language === 'en' ? enUS : ptBR
@@ -348,7 +452,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       )
     })(),
 
-    3: (
+    // Step 4 — Valor
+    4: (
       <div className="flex flex-col gap-5">
         <p className="text-sm text-[var(--text-muted)] text-center">
           {t('transactions_wizard_amountLabel')}
@@ -378,7 +483,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       </div>
     ),
 
-    4: (
+    // Step 5 — Parcelamento
+    5: (
       <div className="flex flex-col gap-3">
         <p className="text-sm text-[var(--text-muted)] text-center mb-1">
           {t('transactions_wizard_installmentLabel')}
@@ -504,7 +610,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       </div>
     ),
 
-    5: (() => {
+    // Step 6 — Categoria
+    6: (() => {
       const filtered = categories.filter((c) => c.type === state.type)
       return (
         <div className="flex flex-col gap-3">
@@ -555,7 +662,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       )
     })(),
 
-    6: (
+    // Step 7 — Contato / Contraparte
+    7: (
       <div className="flex flex-col gap-5">
         <p className="text-sm text-[var(--text-muted)] text-center">
           {state.type === 'income'
@@ -581,7 +689,8 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
       </div>
     ),
 
-    7: (
+    // Step 8 — Detalhes
+    8: (
       <div className="flex flex-col gap-4">
         <p className="text-sm text-[var(--text-muted)] text-center mb-1">
           {t('transactions_wizard_detailsLabel')}
@@ -603,18 +712,21 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   // ── Render ──────────────────────────────────────────────────
 
-  const showNext = state.step < 7 && (
+  const showNext = state.step < 8 && (
     state.step === 2 ||
     state.step === 3 ||
     state.step === 4 ||
     state.step === 5 ||
-    (state.step === 6 && state.counterpart.trim().length > 0) ||
+    state.step === 6 ||
+    (state.step === 7 && state.counterpart.trim().length > 0) ||
     !!editing
   )
-  const nextDisabled = state.step === 1 && !state.type
+  const nextDisabled =
+    (state.step === 1 && !state.type) ||
+    (state.step === 2 && !state.nature)
 
   const modalTitle = state.phase === 'payment-form'
-    ? t('transactions_payment_formTitle')
+    ? (state.type === 'income' ? t('transactions_payment_formTitleIncome') : t('transactions_payment_formTitle'))
     : editing
     ? t('transactions_editTitle')
     : t('transactions_newTitle')
@@ -622,9 +734,10 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const keyboardHint = (() => {
     if (state.phase === 'payment-prompt') return t('transactions_wizard_keyHintPaymentPrompt')
     if (state.phase === 'payment-form') return t('transactions_wizard_keyHintPaymentForm')
-    if (state.step === 1 || state.step === 4 || state.step === 5) return t('transactions_wizard_keyHintCards')
-    if (state.step === 6) return t('transactions_wizard_keyHintContact')
-    if (state.step === 7) return t('transactions_wizard_keyHintSave')
+    if (state.step === 1 || state.step === 5 || state.step === 6) return t('transactions_wizard_keyHintCards')
+    if (state.step === 2) return t('transactions_wizard_keyHintNature')
+    if (state.step === 7) return t('transactions_wizard_keyHintContact')
+    if (state.step === 8) return t('transactions_wizard_keyHintSave')
     return t('transactions_wizard_keyHintEnter')
   })()
 
@@ -643,7 +756,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         {state.phase === 'wizard' && (
           <>
             <div className="flex justify-center gap-2 mb-6">
-              {([1, 2, 3, 4, 5, 6, 7] as const).map((s) => (
+              {([1, 2, 3, 4, 5, 6, 7, 8] as const).map((s) => (
                 <div
                   key={s}
                   className={`h-1.5 rounded-full transition-all duration-200 ${
@@ -673,7 +786,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
                 )}
               </div>
               <div className="flex gap-2">
-                {editing && state.step === 7 && (
+                {editing && state.step === 8 && (
                   <Button variant="danger" size="sm" onClick={handleDelete} loading={deleteT.isPending}>
                     {t('transactions_delete')}
                   </Button>
@@ -683,7 +796,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
                     {t('transactions_wizard_next')}
                   </Button>
                 )}
-                {state.step === 7 && (
+                {state.step === 8 && (
                   <Button onClick={handleSave} loading={isPending} disabled={!state.description.trim()}>
                     {t('transactions_save')}
                   </Button>
@@ -696,6 +809,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         {/* ── Payment prompt phase ── */}
         {state.phase === 'payment-prompt' && (
           <PaymentPromptStep
+            type={state.type ?? 'expense'}
             onRegisterPayment={() => state.setPhase('payment-form')}
             onSkip={onClose}
             skipCountdown={state.skipCountdown}
@@ -705,6 +819,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         {/* ── Payment form phase ── */}
         {state.phase === 'payment-form' && (
           <PaymentFormStep
+            type={state.type ?? 'expense'}
             paidAt={state.paidAt}
             setPaidAt={state.setPaidAt}
             paymentMethod={state.paymentMethod}

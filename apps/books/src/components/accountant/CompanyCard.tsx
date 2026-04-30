@@ -2,15 +2,15 @@ import { Link } from 'react-router-dom'
 import { Building2, ArrowRight } from 'lucide-react'
 import { Card, Badge } from '@syncero/ui'
 import { CompanyTypeBadge } from './CompanyTypeBadge'
-import type { TaxRegime } from '@/types'
+import type { TaxRegime, CompanySegment } from '@/types'
 
 interface CompanyCardProps {
   id: string
   name: string
   cnpj: string | null
   taxRegime: TaxRegime | null
+  segment: string | null
   isExternal: boolean
-  integration?: string
 }
 
 const taxRegimeLabel: Record<TaxRegime, string> = {
@@ -19,7 +19,14 @@ const taxRegimeLabel: Record<TaxRegime, string> = {
   lucro_real: 'Lucro Real',
 }
 
-export function CompanyCard({ id, name, cnpj, taxRegime, isExternal, integration }: CompanyCardProps) {
+const segmentLabel: Record<CompanySegment, string> = {
+  retail: 'Comércio', services: 'Serviços', manufacturing: 'Indústria',
+  construction: 'Construção Civil', agribusiness: 'Agronegócio',
+  healthcare: 'Saúde', education: 'Educação', technology: 'Tecnologia',
+  financial: 'Financeiro', other: 'Outros',
+}
+
+export function CompanyCard({ id, name, cnpj, taxRegime, segment, isExternal }: CompanyCardProps) {
   const href = isExternal ? `/accountant/external/${id}` : `/accountant/company/${id}`
 
   const formattedCnpj = cnpj
@@ -40,7 +47,12 @@ export function CompanyCard({ id, name, cnpj, taxRegime, isExternal, integration
           <p className="text-xs text-[var(--text-muted)] mb-2 font-mono">{formattedCnpj}</p>
         )}
         <div className="flex flex-wrap gap-1.5 mt-auto pt-1">
-          <CompanyTypeBadge isExternal={isExternal} integration={integration} />
+          <CompanyTypeBadge isExternal={isExternal} />
+          {segment && (
+            <Badge variant="default" className="text-xs">
+              {segmentLabel[segment as CompanySegment] ?? segment}
+            </Badge>
+          )}
           {taxRegime && (
             <Badge variant="info" className="text-xs">
               {taxRegimeLabel[taxRegime]}

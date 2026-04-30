@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n'
 import { Button } from '@syncero/ui'
 import { CompanyCard } from '@/components/accountant/CompanyCard'
+import { CreateExternalCompanyModal } from '@/components/accountant/CreateExternalCompanyModal'
 import type { AccountantCompany, ExternalCompany, TaxRegime } from '@/types'
 
 type Filter = 'all' | 'syncero' | 'external'
@@ -15,6 +15,7 @@ export function Component() {
   const { user } = useAuth()
   const t = useT()
   const [filter, setFilter] = useState<Filter>('all')
+  const [createOpen, setCreateOpen] = useState(false)
 
   const { data: synceroCompanies = [], isLoading: loadingSyncero } = useQuery({
     queryKey: ['accountant-companies', user?.id],
@@ -46,12 +47,10 @@ export function Component() {
             {total} {total !== 1 ? t('dashboard_managedPlural') : t('dashboard_managed')}
           </p>
         </div>
-        <Link to="/accountant/external/new">
-          <Button size="sm">
-            <Plus className="h-4 w-4" />
-            {t('dashboard_addCompany')}
-          </Button>
-        </Link>
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
+          <Plus className="h-4 w-4" />
+          {t('dashboard_addCompany')}
+        </Button>
       </div>
 
       <div className="flex gap-1 border-b border-[var(--bg-border)]">
@@ -90,6 +89,7 @@ export function Component() {
                   name={c.name}
                   cnpj={c.cnpj}
                   taxRegime={c.tax_regime as TaxRegime | null}
+                  segment={(c as any).segment ?? null}
                   isExternal={false}
                 />
               )
@@ -102,12 +102,17 @@ export function Component() {
                 name={ec.name}
                 cnpj={ec.cnpj}
                 taxRegime={ec.tax_regime}
+                segment={ec.segment ?? null}
                 isExternal={true}
-                integration={ec.integration}
               />
             ))}
         </div>
       )}
+
+      <CreateExternalCompanyModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+      />
     </div>
   )
 }

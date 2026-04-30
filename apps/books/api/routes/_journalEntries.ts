@@ -42,6 +42,7 @@ router.post('/', async (c) => {
   const db = createServiceClient()
   const body = await c.req.json<{
     entry_date: string; description: string; external_ref?: string
+    flow_transaction_id?: string
     lines: Array<{ account_plan_id: string; side: 'debit' | 'credit'; amount: number; memo?: string }>
     companyId?: string; extCompanyId?: string
   }>()
@@ -65,7 +66,8 @@ router.post('/', async (c) => {
     entry_date: body.entry_date,
     description: body.description,
     external_ref: body.external_ref || null,
-    source: 'manual',
+    flow_transaction_id: body.flow_transaction_id || null,
+    source: body.flow_transaction_id ? 'syncero_import' : 'manual',
   }).select('id').single()
   if (error) return c.json({ error: 'Failed to create journal entry' }, 500)
 
@@ -82,66 +84,5 @@ router.post('/', async (c) => {
   return c.json({ id: entry.id }, 201)
 })
 
-// ── POST /api/journal-entries/import ─────────────────────────
-router.post('/import', async (c) => {
-  const userId = c.get('userId')
-  const db = createServiceClient()
-  const body = await c.req.json<{
-    entries: Array<{
-      entry_date: string; description: string; external_ref?: string
-      lines: Array<{ account_code: string; side: 'debit' | 'credit'; amount: number; memo?: string }>
-    }>
-    companyId?: string; extCompanyId?: string
-  }>()
-
-  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
-
-  // Verify authorization
-  if (body.companyId) {
-    const { data: acct } = await db.from('accountant_companies')
-      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
-    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
-  } else {
-    const { data: ec } = await db.from('external_companies')
-      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
-    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
-  }
-
-  const accountsQ = db.from('account_plans').select('id, code').eq('is_active', true)
-  const { data: accountsData } = body.extCompanyId
-    ? await accountsQ.eq('ext_company_id', body.extCompanyId)
-    : await accountsQ.eq('company_id', body.companyId!)
-  const codeToId = new Map((accountsData ?? []).map(a => [a.code, a.id]))
-
-  const inserted: string[] = []
-  for (const pe of body.entries) {
-    const { data: entry, error } = await db.from('journal_entries').insert({
-      ...(body.extCompanyId ? { ext_company_id: body.extCompanyId } : { company_id: body.companyId }),
-      accountant_id: userId,
-      entry_date: pe.entry_date,
-      description: pe.description,
-      external_ref: pe.external_ref || null,
-      source: 'dominio_import',
-    }).select('id').single()
-    if (error) return c.json({ error: 'Failed to create journal entry' }, 500)
-
-    const lines = pe.lines
-      .filter(l => codeToId.has(l.account_code))
-      .map(l => ({
-        entry_id: entry.id,
-        account_plan_id: codeToId.get(l.account_code)!,
-        side: l.side,
-        amount: l.amount,
-        memo: l.memo || null,
-      }))
-    if (lines.length) {
-      const { error: linesErr } = await db.from('journal_entry_lines').insert(lines)
-      if (linesErr) return c.json({ error: 'Failed to create journal entry lines' }, 500)
-    }
-    inserted.push(entry.id)
-  }
-
-  return c.json({ inserted: inserted.length }, 201)
-})
 
 export default router

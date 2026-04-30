@@ -14,6 +14,7 @@ export interface ActiveCompany {
   id: string
   name: string
   role: string
+  segment?: string | null
 }
 
 interface AuthState {

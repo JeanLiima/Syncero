@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { createServiceClient, type HonoVariables } from '../_shared'
-import { DEFAULT_ACCOUNT_PLAN } from '../defaultAccountPlan'
+import { DEFAULT_ACCOUNT_PLAN } from '../_defaultAccountPlan'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
@@ -76,6 +76,27 @@ router.get('/:id', async (c) => {
     .select('*').eq('id', id).eq('accountant_id', userId).maybeSingle()
   if (error) return c.json({ error: error.message }, 400)
   if (!data) return c.json({ error: 'forbidden' }, 403)
+  return c.json(data)
+})
+
+// ── PATCH /api/external-companies/:id ─────────────────────────
+router.patch('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+
+  const { data: existing } = await db.from('external_companies')
+    .select('accountant_id').eq('id', id).maybeSingle()
+  if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
+
+  const body = await c.req.json<{
+    name?: string; cnpj?: string | null; trade_name?: string | null
+    tax_regime?: string | null; segment?: string | null
+  }>()
+
+  const { data, error } = await db.from('external_companies')
+    .update(body).eq('id', id).select('*').single()
+  if (error) return c.json({ error: error.message }, 400)
   return c.json(data)
 })
 

@@ -104,16 +104,24 @@ router.get('/events', async (c) => {
   if (!acct) return c.json({ error: 'forbidden' }, 403)
 
   return streamSSE(c, async (stream) => {
+    const notify = async () => stream.writeSSE({ data: 'update', event: 'transaction' })
+
     const channel = db
       .channel(`tx-watch:${companyId}`)
+      // payment registered / transaction created or updated
       .on('postgres_changes', {
         event:  '*',
         schema: 'public',
         table:  'transactions',
         filter: `company_id=eq.${companyId}`,
-      }, async () => {
-        await stream.writeSSE({ data: 'update', event: 'transaction' })
-      })
+      }, notify)
+      // transaction classified (new journal entry) → is_classified changes
+      .on('postgres_changes', {
+        event:  'INSERT',
+        schema: 'public',
+        table:  'journal_entries',
+        filter: `company_id=eq.${companyId}`,
+      }, notify)
       .subscribe()
 
     // Heartbeat every 20s to prevent proxy/edge timeout from closing the stream

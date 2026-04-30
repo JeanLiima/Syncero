@@ -15,19 +15,19 @@ interface AccountingSuggestion {
 }
 
 const NATURE_SUGGESTIONS: Record<string, AccountingSuggestion> = {
-  sale_service:         { debitType: 'ativo',              creditType: 'receita',            natureKey: 'nature_sale_service' },
-  loan_received:        { debitType: 'ativo',              creditType: 'passivo',            natureKey: 'nature_loan_received' },
-  capital_contribution: { debitType: 'ativo',              creditType: 'patrimonio_liquido', natureKey: 'nature_capital_contribution' },
-  operational_expense:  { debitType: 'despesa',            creditType: 'ativo',              natureKey: 'nature_operational_expense' },
-  product_cost:         { debitType: 'custo',              creditType: 'ativo',              natureKey: 'nature_product_cost' },
-  asset_purchase:       { debitType: 'ativo',              creditType: 'ativo',              natureKey: 'nature_asset_purchase' },
-  debt_payment:         { debitType: 'passivo',            creditType: 'ativo',              natureKey: 'nature_debt_payment' },
-  owner_withdrawal:     { debitType: 'patrimonio_liquido', creditType: 'ativo',              natureKey: 'nature_owner_withdrawal' },
+  sale_service:         { debitType: 'asset',   creditType: 'revenue', natureKey: 'nature_sale_service' },
+  loan_received:        { debitType: 'asset',   creditType: 'liability', natureKey: 'nature_loan_received' },
+  capital_contribution: { debitType: 'asset',   creditType: 'equity',  natureKey: 'nature_capital_contribution' },
+  operational_expense:  { debitType: 'expense', creditType: 'asset',   natureKey: 'nature_operational_expense' },
+  product_cost:         { debitType: 'cost',    creditType: 'asset',   natureKey: 'nature_product_cost' },
+  asset_purchase:       { debitType: 'asset',   creditType: 'asset',   natureKey: 'nature_asset_purchase' },
+  debt_payment:         { debitType: 'liability',creditType: 'asset',  natureKey: 'nature_debt_payment' },
+  owner_withdrawal:     { debitType: 'equity',  creditType: 'asset',   natureKey: 'nature_owner_withdrawal' },
 }
 
 const TYPE_FALLBACK: Record<string, AccountingSuggestion> = {
-  income:  { debitType: 'ativo',   creditType: 'receita', natureKey: 'nature_income' },
-  expense: { debitType: 'despesa', creditType: 'ativo',   natureKey: 'nature_expense' },
+  income:  { debitType: 'asset',   creditType: 'revenue', natureKey: 'nature_income' },
+  expense: { debitType: 'expense', creditType: 'asset',   natureKey: 'nature_expense' },
 }
 
 function getSuggestion(nature: TransactionNature | null, type: string): AccountingSuggestion {
@@ -35,13 +35,13 @@ function getSuggestion(nature: TransactionNature | null, type: string): Accounti
   return TYPE_FALLBACK[type] ?? TYPE_FALLBACK['expense']
 }
 
-const NATURE_FROM_TYPE: Record<AccountType, 'devedora' | 'credora'> = {
-  ativo:              'devedora',
-  passivo:            'credora',
-  patrimonio_liquido: 'credora',
-  receita:            'credora',
-  despesa:            'devedora',
-  custo:              'devedora',
+const NATURE_FROM_TYPE: Record<AccountType, 'debit' | 'credit'> = {
+  asset:    'debit',
+  liability:'credit',
+  equity:   'credit',
+  revenue:  'credit',
+  expense:  'debit',
+  cost:     'debit',
 }
 
 // ── Smart hints ───────────────────────────────────────────────
@@ -75,7 +75,7 @@ function buildHints(
   if (tx.payment_method === 'bank' && tx.banks?.name) {
     const bankName = tx.banks.name
     const match = analytic.find(a =>
-      a.account_type === 'ativo' && normName(a.name).includes(normName(bankName))
+      a.account_type === 'asset' && normName(a.name).includes(normName(bankName))
     )
     if (match) {
       hints.push({
@@ -95,7 +95,7 @@ function buildHints(
         sub: `Banco "${bankName}" ainda não tem conta no plano`,
         side: bankSide,
         action: 'create',
-        createPreset: { account_type: 'ativo', name: bankName },
+        createPreset: { account_type: 'asset', name: bankName },
       })
     }
   }
@@ -124,8 +124,8 @@ function buildHints(
   // 3 — Contact
   if (tx.contacts?.name) {
     const contactName = tx.contacts.name
-    // income → Clientes a receber (ativo);  expense → Fornecedores a pagar (passivo)
-    const targetType: AccountType = isIncome ? 'ativo' : 'passivo'
+    // income → Clientes a receber (asset);  expense → Fornecedores a pagar (liability)
+    const targetType: AccountType = isIncome ? 'asset' : 'liability'
     const contactSide: HintSide   = isIncome ? 'debit' : 'credit'
     const keywords = isIncome ? ['cliente', 'receber'] : ['fornecedor', 'pagar']
     const match = analytic.find(a =>

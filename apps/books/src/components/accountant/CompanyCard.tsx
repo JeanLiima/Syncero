@@ -20,10 +20,10 @@ const taxRegimeLabel: Record<TaxRegime, string> = {
 }
 
 const segmentLabel: Record<CompanySegment, string> = {
-  comercio: 'Comércio', servicos: 'Serviços', industria: 'Indústria',
-  construcao_civil: 'Construção Civil', agronegocio: 'Agronegócio',
-  saude: 'Saúde', educacao: 'Educação', tecnologia: 'Tecnologia',
-  financeiro: 'Financeiro', outros: 'Outros',
+  retail: 'Comércio', services: 'Serviços', manufacturing: 'Indústria',
+  construction: 'Construção Civil', agribusiness: 'Agronegócio',
+  healthcare: 'Saúde', education: 'Educação', technology: 'Tecnologia',
+  financial: 'Financeiro', other: 'Outros',
 }
 
 export function CompanyCard({ id, name, cnpj, taxRegime, segment, isExternal }: CompanyCardProps) {

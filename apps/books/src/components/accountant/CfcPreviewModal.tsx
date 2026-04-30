@@ -9,23 +9,23 @@ import type { AccountType } from '@/types'
 // ── Section metadata ──────────────────────────────────────────
 
 const SECTION_COLORS: Record<AccountType, { color: string; subtleColor: string }> = {
-  ativo:             { color: 'text-blue-400',   subtleColor: 'bg-blue-500/10'   },
-  passivo:           { color: 'text-orange-400', subtleColor: 'bg-orange-500/10' },
-  patrimonio_liquido:{ color: 'text-violet-400', subtleColor: 'bg-violet-500/10' },
-  receita:           { color: 'text-green-400',  subtleColor: 'bg-green-500/10'  },
-  despesa:           { color: 'text-red-400',    subtleColor: 'bg-red-500/10'    },
-  custo:             { color: 'text-yellow-400', subtleColor: 'bg-yellow-500/10' },
+  asset:    { color: 'text-blue-400',   subtleColor: 'bg-blue-500/10'   },
+  liability:{ color: 'text-orange-400', subtleColor: 'bg-orange-500/10' },
+  equity:   { color: 'text-violet-400', subtleColor: 'bg-violet-500/10' },
+  revenue:  { color: 'text-green-400',  subtleColor: 'bg-green-500/10'  },
+  expense:  { color: 'text-red-400',    subtleColor: 'bg-red-500/10'    },
+  cost:     { color: 'text-yellow-400', subtleColor: 'bg-yellow-500/10' },
 }
 
 // Segments that recommend each account type beyond the always-required core.
-// Core types (ativo/passivo/pl/receita/despesa) are always recommended — null means all.
+// Core types (asset/liability/equity/revenue/expense) are always recommended — null means all.
 const SEGMENT_RECOMMENDATIONS: Partial<Record<AccountType, string[] | null>> = {
-  ativo:             null, // always
-  passivo:           null, // always
-  patrimonio_liquido:null, // always
-  receita:           null, // always
-  despesa:           null, // always
-  custo:             ['comercio', 'industria', 'agronegocio', 'construcao_civil'],
+  asset:    null, // always
+  liability:null, // always
+  equity:   null, // always
+  revenue:  null, // always
+  expense:  null, // always
+  cost:     ['retail', 'manufacturing', 'agribusiness', 'construction'],
 }
 
 function isRecommended(type: AccountType, segment: string | null | undefined): boolean {
@@ -201,18 +201,18 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
   const t = useT()
 
   const SECTIONS = [
-    { type: 'ativo'             as AccountType, label: t('plano_ativo'),             description: t('plano_sectionDesc_ativo'),              ...SECTION_COLORS.ativo              },
-    { type: 'passivo'           as AccountType, label: t('plano_passivo'),            description: t('plano_sectionDesc_passivo'),             ...SECTION_COLORS.passivo            },
-    { type: 'patrimonio_liquido'as AccountType, label: t('plano_patrimonioLiquido'), description: t('plano_sectionDesc_patrimonioLiquido'),  ...SECTION_COLORS.patrimonio_liquido },
-    { type: 'receita'           as AccountType, label: t('plano_receita'),            description: t('plano_sectionDesc_receita'),             ...SECTION_COLORS.receita            },
-    { type: 'despesa'           as AccountType, label: t('plano_despesa'),            description: t('plano_sectionDesc_despesa'),             ...SECTION_COLORS.despesa            },
-    { type: 'custo'             as AccountType, label: t('plano_custo'),              description: t('plano_sectionDesc_custo'),               ...SECTION_COLORS.custo              },
+    { type: 'asset'    as AccountType, label: t('plano_asset'),    description: t('plano_sectionDesc_asset'),    ...SECTION_COLORS.asset    },
+    { type: 'liability'as AccountType, label: t('plano_liability'), description: t('plano_sectionDesc_liability'),...SECTION_COLORS.liability },
+    { type: 'equity'   as AccountType, label: t('plano_equity'),   description: t('plano_sectionDesc_equity'),   ...SECTION_COLORS.equity   },
+    { type: 'revenue'  as AccountType, label: t('plano_revenue'),  description: t('plano_sectionDesc_revenue'),  ...SECTION_COLORS.revenue  },
+    { type: 'expense'  as AccountType, label: t('plano_expense'),  description: t('plano_sectionDesc_expense'),  ...SECTION_COLORS.expense  },
+    { type: 'cost'     as AccountType, label: t('plano_cost'),     description: t('plano_sectionDesc_cost'),     ...SECTION_COLORS.cost     },
   ]
 
   // Build keyed entries (key = original index for stable identity)
   const [entries, setEntries] = useState<(PlanEntry & { _key: string })[]>(() =>
     DEFAULT_PLAN
-      .filter(e => e.account_type !== 'custo' || hasCostSegment !== false)
+      .filter(e => e.account_type !== 'cost' || hasCostSegment !== false)
       .map((e, i) => ({ ...e, _key: String(i) }))
   )
 
@@ -401,7 +401,7 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
   }
 
   const visibleSections = SECTIONS.filter(s =>
-    s.type !== 'custo' || hasCostSegment !== false
+    s.type !== 'cost' || hasCostSegment !== false
   )
 
   const footer = (

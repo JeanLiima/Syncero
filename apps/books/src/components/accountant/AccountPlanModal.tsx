@@ -14,12 +14,12 @@ type FormData = {
 // ── helpers ───────────────────────────────────────────────────
 
 const defaultNature: Record<AccountType, AccountNature> = {
-  ativo:             'devedora',
-  despesa:           'devedora',
-  custo:             'devedora',
-  passivo:           'credora',
-  patrimonio_liquido:'credora',
-  receita:           'credora',
+  asset:   'debit',
+  expense: 'debit',
+  cost:    'debit',
+  liability:'credit',
+  equity:  'credit',
+  revenue: 'credit',
 }
 
 function suggestNextCode(parentCode: string, allPlans: AccountPlan[]): string {
@@ -41,8 +41,8 @@ function suggestNextCode(parentCode: string, allPlans: AccountPlan[]): string {
 const schema = z.object({
   code:         z.string().min(1).regex(/^[\d.]+$/),
   name:         z.string().min(1),
-  account_type: z.enum(['ativo', 'passivo', 'patrimonio_liquido', 'receita', 'despesa', 'custo']),
-  nature:       z.enum(['devedora', 'credora']),
+  account_type: z.enum(['asset', 'liability', 'equity', 'revenue', 'expense', 'cost']),
+  nature:       z.enum(['debit', 'credit']),
   is_analytic:  z.boolean(),
   parent_id:    z.string().nullable(),
 })
@@ -61,12 +61,12 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
   const t = useT()
 
   const accountTypeOptions: { value: AccountType; label: string }[] = useMemo(() => [
-    { value: 'ativo',             label: t('plano_ativo') },
-    { value: 'passivo',           label: t('plano_passivo') },
-    { value: 'patrimonio_liquido',label: t('plano_patrimonioLiquido') },
-    { value: 'receita',           label: t('plano_receita') },
-    { value: 'despesa',           label: t('plano_despesa') },
-    { value: 'custo',             label: t('plano_custo') },
+    { value: 'asset',    label: t('plano_asset') },
+    { value: 'liability',label: t('plano_liability') },
+    { value: 'equity',   label: t('plano_equity') },
+    { value: 'revenue',  label: t('plano_revenue') },
+    { value: 'expense',  label: t('plano_expense') },
+    { value: 'cost',     label: t('plano_cost') },
   ], [t])
 
   const {
@@ -75,8 +75,8 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      code: '', name: '', account_type: 'ativo',
-      nature: 'devedora', is_analytic: true, parent_id: null,
+      code: '', name: '', account_type: 'asset',
+      nature: 'debit', is_analytic: true, parent_id: null,
     },
   })
 
@@ -103,7 +103,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
         parent_id:    preset.parent_id,
       })
     } else {
-      reset({ code: '', name: '', account_type: 'ativo', nature: 'devedora', is_analytic: true, parent_id: null })
+      reset({ code: '', name: '', account_type: 'asset', nature: 'debit', is_analytic: true, parent_id: null })
     }
   }, [open, editing, preset]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -149,7 +149,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
   }, [allPlans, accountType, t])
 
   const nature = watch('nature')
-  const natureLabel = nature === 'devedora' ? t('plano_debtor') : t('plano_creditor')
+  const natureLabel = nature === 'debit' ? t('plano_debtor') : t('plano_creditor')
 
   const [swapTarget,   setSwapTarget]   = useState<AccountPlan | null>(null)
   const [pendingData,  setPendingData]  = useState<FormData | null>(null)

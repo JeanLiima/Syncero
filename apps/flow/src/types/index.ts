@@ -14,6 +14,10 @@ export type TransactionNature =
 export type PaymentMethod = 'cash' | 'bank'
 export type BankAccountType = 'checking' | 'savings'
 export type TaxRegime = 'simples' | 'lucro_presumido' | 'lucro_real'
+export type CompanySegment =
+  | 'retail' | 'services' | 'manufacturing' | 'construction'
+  | 'agribusiness' | 'healthcare' | 'education' | 'technology'
+  | 'financial' | 'other'
 export type MemberRole = 'admin' | 'member' | 'viewer'
 export type MemberStatus = 'pending' | 'accepted' | 'revoked'
 export type AccountantStatus = 'pending' | 'accepted' | 'rejected'

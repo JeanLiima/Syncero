@@ -17,16 +17,16 @@ export function Component() {
   }
 
   const segmentLabel: Record<string, string> = {
-    comercio:        t('settings_segmentComercio'),
-    servicos:        t('settings_segmentServicos'),
-    industria:       t('settings_segmentIndustria'),
-    construcao_civil:t('settings_segmentConstrucao'),
-    agronegocio:     t('settings_segmentAgronegocio'),
-    saude:           t('settings_segmentSaude'),
-    educacao:        t('settings_segmentEducacao'),
-    tecnologia:      t('settings_segmentTecnologia'),
-    financeiro:      t('settings_segmentFinanceiro'),
-    outros:          t('settings_segmentOutros'),
+    retail:        t('settings_segmentComercio'),
+    services:      t('settings_segmentServicos'),
+    manufacturing: t('settings_segmentIndustria'),
+    construction:  t('settings_segmentConstrucao'),
+    agribusiness:  t('settings_segmentAgronegocio'),
+    healthcare:    t('settings_segmentSaude'),
+    education:     t('settings_segmentEducacao'),
+    technology:    t('settings_segmentTecnologia'),
+    financial:     t('settings_segmentFinanceiro'),
+    other:         t('settings_segmentOutros'),
   }
   const { extCompanyId } = useParams<{ extCompanyId: string }>()
 

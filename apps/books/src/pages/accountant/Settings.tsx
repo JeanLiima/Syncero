@@ -20,17 +20,17 @@ function useTaxRegimeOptions(t: ReturnType<typeof import('@/i18n').useT>) {
 
 function useSegmentOptions(t: ReturnType<typeof import('@/i18n').useT>) {
   return [
-    { value: '',                label: t('settings_segmentUndefined') },
-    { value: 'comercio',        label: t('settings_segmentComercio') },
-    { value: 'servicos',        label: t('settings_segmentServicos') },
-    { value: 'industria',       label: t('settings_segmentIndustria') },
-    { value: 'construcao_civil',label: t('settings_segmentConstrucao') },
-    { value: 'agronegocio',     label: t('settings_segmentAgronegocio') },
-    { value: 'saude',           label: t('settings_segmentSaude') },
-    { value: 'educacao',        label: t('settings_segmentEducacao') },
-    { value: 'tecnologia',      label: t('settings_segmentTecnologia') },
-    { value: 'financeiro',      label: t('settings_segmentFinanceiro') },
-    { value: 'outros',          label: t('settings_segmentOutros') },
+    { value: '',              label: t('settings_segmentUndefined') },
+    { value: 'retail',        label: t('settings_segmentComercio') },
+    { value: 'services',      label: t('settings_segmentServicos') },
+    { value: 'manufacturing', label: t('settings_segmentIndustria') },
+    { value: 'construction',  label: t('settings_segmentConstrucao') },
+    { value: 'agribusiness',  label: t('settings_segmentAgronegocio') },
+    { value: 'healthcare',    label: t('settings_segmentSaude') },
+    { value: 'education',     label: t('settings_segmentEducacao') },
+    { value: 'technology',    label: t('settings_segmentTecnologia') },
+    { value: 'financial',     label: t('settings_segmentFinanceiro') },
+    { value: 'other',         label: t('settings_segmentOutros') },
   ]
 }
 

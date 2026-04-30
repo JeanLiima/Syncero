@@ -12,15 +12,15 @@ import type { AccountPlan, AccountType } from '@/types'
 
 // ── constants ─────────────────────────────────────────────────
 
-const SEGMENTS_WITH_COST = new Set(['comercio', 'industria', 'agronegocio', 'construcao_civil'])
+const SEGMENTS_WITH_COST = new Set(['retail', 'manufacturing', 'agribusiness', 'construction'])
 
 const ACCOUNT_SECTIONS: { type: AccountType; labelKey: string; color: string; subtleColor: string }[] = [
-  { type: 'ativo',             labelKey: 'plano_ativo',             color: 'text-blue-400',   subtleColor: 'bg-blue-500/10'   },
-  { type: 'passivo',           labelKey: 'plano_passivo',           color: 'text-orange-400', subtleColor: 'bg-orange-500/10' },
-  { type: 'patrimonio_liquido',labelKey: 'plano_patrimonioLiquido', color: 'text-violet-400', subtleColor: 'bg-violet-500/10' },
-  { type: 'receita',           labelKey: 'plano_receita',           color: 'text-green-400',  subtleColor: 'bg-green-500/10'  },
-  { type: 'despesa',           labelKey: 'plano_despesa',           color: 'text-red-400',    subtleColor: 'bg-red-500/10'    },
-  { type: 'custo',             labelKey: 'plano_custo',             color: 'text-yellow-400', subtleColor: 'bg-yellow-500/10' },
+  { type: 'asset',    labelKey: 'plano_asset',    color: 'text-blue-400',   subtleColor: 'bg-blue-500/10'   },
+  { type: 'liability',labelKey: 'plano_liability', color: 'text-orange-400', subtleColor: 'bg-orange-500/10' },
+  { type: 'equity',   labelKey: 'plano_equity',   color: 'text-violet-400', subtleColor: 'bg-violet-500/10' },
+  { type: 'revenue',  labelKey: 'plano_revenue',  color: 'text-green-400',  subtleColor: 'bg-green-500/10'  },
+  { type: 'expense',  labelKey: 'plano_expense',  color: 'text-red-400',    subtleColor: 'bg-red-500/10'    },
+  { type: 'cost',     labelKey: 'plano_cost',     color: 'text-yellow-400', subtleColor: 'bg-yellow-500/10' },
 ]
 
 // ── helpers ───────────────────────────────────────────────────
@@ -349,10 +349,10 @@ export function Component() {
 
   // Hide Custo when segment doesn't need it AND no custo accounts exist
   const visibleSections = useMemo(() => {
-    const hasExistingCusto = plans.some(p => p.account_type === 'custo')
+    const hasExistingCusto = plans.some(p => p.account_type === 'cost')
     return ACCOUNT_SECTIONS.filter(s => {
-      // Hide Custo when segment doesn't apply and no accounts exist
-      if (s.type === 'custo') {
+      // Hide Cost when segment doesn't apply and no accounts exist
+      if (s.type === 'cost') {
         if (hasExistingCusto) return true
         if (hasCostSegment === null) return true
         if (!hasCostSegment) return false
@@ -419,13 +419,13 @@ export function Component() {
               onChange={setFilterType}
               className="w-44"
               options={[
-                { value: '',                   label: t('plano_filterAllTypes')      },
-                { value: 'ativo',              label: t('plano_ativo')               },
-                { value: 'passivo',            label: t('plano_passivo')             },
-                { value: 'patrimonio_liquido', label: t('plano_patrimonioLiquido')   },
-                { value: 'receita',            label: t('plano_receita')             },
-                { value: 'despesa',            label: t('plano_despesa')             },
-                { value: 'custo',              label: t('plano_custo')               },
+                { value: '',          label: t('plano_filterAllTypes') },
+                { value: 'asset',     label: t('plano_asset')          },
+                { value: 'liability', label: t('plano_liability')      },
+                { value: 'equity',    label: t('plano_equity')         },
+                { value: 'revenue',   label: t('plano_revenue')        },
+                { value: 'expense',   label: t('plano_expense')        },
+                { value: 'cost',      label: t('plano_cost')           },
               ]}
             />
             {hasFilter && (

@@ -199,14 +199,14 @@ export interface TaxCalculation {
 // ── External companies & accounting ──────────────────────────
 
 export type EntrySource = 'manual' | 'api' | 'syncero_import'
-export type AccountType = 'ativo' | 'passivo' | 'patrimonio_liquido' | 'receita' | 'despesa' | 'custo'
-export type AccountNature = 'devedora' | 'credora'
+export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense' | 'cost'
+export type AccountNature = 'debit' | 'credit'
 export type JournalSide = 'debit' | 'credit'
 
 export type CompanySegment =
-  | 'comercio' | 'servicos' | 'industria' | 'construcao_civil'
-  | 'agronegocio' | 'saude' | 'educacao' | 'tecnologia'
-  | 'financeiro' | 'outros'
+  | 'retail' | 'services' | 'manufacturing' | 'construction'
+  | 'agribusiness' | 'healthcare' | 'education' | 'technology'
+  | 'financial' | 'other'
 
 export interface ExternalCompany {
   id: string

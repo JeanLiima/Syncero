@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Search, BookOpen } from 'lucide-react'
 import { Badge, Button, Card, Input, Select, Table, DateRangePicker } from '@syncero/ui'
-import { getTransactions, subscribeTransactions } from '@/lib/backend'
+import { getTransactions } from '@/lib/backend'
 import { TransactionDetailModal } from '@/components/accountant/TransactionDetailModal'
 import { ClassifyModal } from '@/components/accountant/ClassifyModal'
 import { usePreferencesStore } from '@/store/preferences'
@@ -26,16 +26,6 @@ export function Component() {
   const t = useT()
   const { companyId } = useParams<{ companyId: string }>()
   const { language } = usePreferencesStore()
-  const qc = useQueryClient()
-
-  // SSE via backend — auto-reconnects, no direct Supabase calls in this component
-  useEffect(() => {
-    if (!companyId) return
-    return subscribeTransactions(companyId, () => {
-      qc.invalidateQueries({ queryKey: ['transactions-books', companyId] })
-    })
-  }, [companyId, qc])
-
   const [filters, setFilters] = useState<TransactionFilters>(() => {
     const now = new Date()
     const y = now.getFullYear()
@@ -61,6 +51,7 @@ export function Component() {
         pageSize: '20',
       }),
     enabled: !!companyId,
+    refetchInterval: 5 * 60_000,
     refetchOnWindowFocus: true,
   })
 

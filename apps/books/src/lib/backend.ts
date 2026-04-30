@@ -1,5 +1,4 @@
 import { apiFetch } from './api'
-import { supabase } from './supabase'
 import type { AccountPlan, Category, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
 
 function buildQuery(params: Record<string, string | undefined>) {
@@ -89,26 +88,3 @@ export async function createJournalEntry(body: {
   return apiFetch<{ id: string }>('/api/journal-entries', { method: 'POST', body: JSON.stringify(body) })
 }
 
-// Returns a cleanup function.
-// Uses Supabase Realtime with the user's session (RLS allows accountants
-// to read transactions via is_accountant_of — see migration 021).
-// Kept here, not in components, so they stay free of Supabase calls.
-export function subscribeTransactions(companyId: string, onUpdate: () => void): () => void {
-  const channel = supabase
-    .channel(`tx:${companyId}`)
-    .on('postgres_changes', {
-      event:  '*',
-      schema: 'public',
-      table:  'transactions',
-      filter: `company_id=eq.${companyId}`,
-    }, onUpdate)
-    .on('postgres_changes', {
-      event:  'INSERT',
-      schema: 'public',
-      table:  'journal_entries',
-      filter: `company_id=eq.${companyId}`,
-    }, onUpdate)
-    .subscribe()
-
-  return () => { supabase.removeChannel(channel) }
-}

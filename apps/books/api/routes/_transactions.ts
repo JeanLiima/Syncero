@@ -1,5 +1,4 @@
 import { Hono } from 'hono'
-import { streamSSE } from 'hono/streaming'
 import { createServiceClient, type HonoVariables } from '../_shared'
 
 const router = new Hono<{ Variables: HonoVariables }>()
@@ -86,58 +85,6 @@ router.get('/:id', async (c) => {
     ...tx,
     creator_name:           (tx.creator as { full_name: string } | null)?.full_name ?? null,
     payment_registrar_name: (tx.registrar as { full_name: string } | null)?.full_name ?? null,
-  })
-})
-
-// ── GET /api/transactions/events (SSE) ───────────────────────
-// Pushes a 'transaction' SSE event whenever rows change for this company.
-// The frontend invalidates its React Query cache on each event.
-router.get('/events', async (c) => {
-  const userId    = c.get('userId')
-  const db        = createServiceClient()
-  const companyId = c.req.query('companyId')
-  if (!companyId) return c.json({ error: 'companyId required' }, 400)
-
-  const { data: acct } = await db.from('accountant_companies')
-    .select('id').eq('accountant_id', userId).eq('company_id', companyId)
-    .eq('status', 'accepted').maybeSingle()
-  if (!acct) return c.json({ error: 'forbidden' }, 403)
-
-  return streamSSE(c, async (stream) => {
-    const notify = async () => stream.writeSSE({ data: 'update', event: 'transaction' })
-
-    const channel = db
-      .channel(`tx-watch:${companyId}`)
-      // payment registered / transaction created or updated
-      .on('postgres_changes', {
-        event:  '*',
-        schema: 'public',
-        table:  'transactions',
-        filter: `company_id=eq.${companyId}`,
-      }, notify)
-      // transaction classified (new journal entry) → is_classified changes
-      .on('postgres_changes', {
-        event:  'INSERT',
-        schema: 'public',
-        table:  'journal_entries',
-        filter: `company_id=eq.${companyId}`,
-      }, notify)
-      .subscribe()
-
-    // Heartbeat every 20s to prevent proxy/edge timeout from closing the stream
-    let heartbeat: ReturnType<typeof setInterval>
-
-    await new Promise<void>((resolve) => {
-      heartbeat = setInterval(async () => {
-        try { await stream.writeSSE({ data: '', event: 'ping' }) }
-        catch { resolve() }
-      }, 20_000)
-
-      c.req.raw.signal.addEventListener('abort', () => resolve())
-    })
-
-    clearInterval(heartbeat!)
-    await db.removeChannel(channel)
   })
 })
 

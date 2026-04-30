@@ -9,4 +9,4 @@ export { useAuth } from './hooks'
 export { usePWAInstall } from './hooks'
 
 // Utils
-export { supabase, apiFetch, apiFetchRaw } from './utils'
+export { supabase, apiFetch } from './utils'

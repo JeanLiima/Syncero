@@ -68,6 +68,7 @@ export const pt = {
   pwa_subtitle: 'Acesso rápido, notificações e uso offline',
   pwa_install: 'Instalar',
   pwa_ios: 'Toque em Compartilhar → Tela de Início',
+  pwa_close: 'Fechar',
 
   // Preferences
   preferences_title: 'Preferências',
@@ -276,6 +277,14 @@ export const pt = {
   plano_swapConfirm: 'Trocar',
   plano_swapDesc: 'O código {code} já está em uso por {name}.',
   plano_swapNote: 'Todos os subitens de ambos os grupos serão renumerados automaticamente. Os lançamentos contábeis existentes não serão afetados, pois referenciam as contas pelo identificador interno, não pelo código.',
+  plano_clickToEdit: 'Clique para editar',
+  plano_addChildTooltip: 'Adicionar subconta',
+  plano_sectionDesc_ativo: 'Recursos controlados pela empresa (caixa, banco, imobilizado).',
+  plano_sectionDesc_passivo: 'Obrigações com terceiros (fornecedores, empréstimos, tributos).',
+  plano_sectionDesc_patrimonioLiquido: 'Capital próprio dos sócios (capital social, lucros acumulados).',
+  plano_sectionDesc_receita: 'Entradas de recursos pela atividade principal da empresa.',
+  plano_sectionDesc_despesa: 'Gastos necessários para manter a operação.',
+  plano_sectionDesc_custo: 'Custo direto dos produtos/serviços vendidos (CMV/CSP).',
 
   // Transaction classification
   classify_title: 'Classificar Lançamento',

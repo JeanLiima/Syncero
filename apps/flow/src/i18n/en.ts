@@ -13,6 +13,7 @@ export const en: Record<TranslationKey, string> = {
 
   // Layout
   layout_activeCompany: 'Active company',
+  layout_userFallback: 'User',
 
   // Router
   router_books: 'Access Syncero Books',
@@ -423,6 +424,7 @@ export const en: Record<TranslationKey, string> = {
   pwa_subtitle: 'Quick access, notifications and offline use',
   pwa_install: 'Install',
   pwa_ios: 'Tap Share → Add to Home Screen',
+  pwa_close: 'Close',
 
   // Common
   common_select: 'Select',

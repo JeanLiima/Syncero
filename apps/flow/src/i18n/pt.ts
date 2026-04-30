@@ -11,6 +11,7 @@ export const pt = {
 
   // Layout
   layout_activeCompany: 'Empresa ativa',
+  layout_userFallback: 'Usuário',
 
   // Router
   router_books: 'Acessar Syncero Books',
@@ -421,6 +422,7 @@ export const pt = {
   pwa_subtitle: 'Acesso rápido, notificações e uso offline',
   pwa_install: 'Instalar',
   pwa_ios: 'Toque em Compartilhar → Tela de Início',
+  pwa_close: 'Fechar',
 
   // Common
   common_select: 'Selecionar',

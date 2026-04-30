@@ -8,14 +8,14 @@ import type { AccountType } from '@/types'
 
 // ── Section metadata ──────────────────────────────────────────
 
-const SECTIONS: { type: AccountType; label: string; color: string; subtleColor: string; description: string }[] = [
-  { type: 'ativo',             label: 'Ativo',             color: 'text-blue-400',   subtleColor: 'bg-blue-500/10',   description: 'Recursos controlados pela empresa (caixa, banco, imobilizado).' },
-  { type: 'passivo',           label: 'Passivo',           color: 'text-orange-400', subtleColor: 'bg-orange-500/10', description: 'Obrigações com terceiros (fornecedores, empréstimos, tributos).' },
-  { type: 'patrimonio_liquido',label: 'Patrimônio Líquido',color: 'text-violet-400', subtleColor: 'bg-violet-500/10', description: 'Capital próprio dos sócios (capital social, lucros acumulados).' },
-  { type: 'receita',           label: 'Receita',           color: 'text-green-400',  subtleColor: 'bg-green-500/10',  description: 'Entradas de recursos pela atividade principal da empresa.' },
-  { type: 'despesa',           label: 'Despesa',           color: 'text-red-400',    subtleColor: 'bg-red-500/10',    description: 'Gastos necessários para manter a operação.' },
-  { type: 'custo',             label: 'Custo',             color: 'text-yellow-400', subtleColor: 'bg-yellow-500/10', description: 'Custo direto dos produtos/serviços vendidos (CMV/CSP).' },
-]
+const SECTION_COLORS: Record<AccountType, { color: string; subtleColor: string }> = {
+  ativo:             { color: 'text-blue-400',   subtleColor: 'bg-blue-500/10'   },
+  passivo:           { color: 'text-orange-400', subtleColor: 'bg-orange-500/10' },
+  patrimonio_liquido:{ color: 'text-violet-400', subtleColor: 'bg-violet-500/10' },
+  receita:           { color: 'text-green-400',  subtleColor: 'bg-green-500/10'  },
+  despesa:           { color: 'text-red-400',    subtleColor: 'bg-red-500/10'    },
+  custo:             { color: 'text-yellow-400', subtleColor: 'bg-yellow-500/10' },
+}
 
 // Segments that recommend each account type beyond the always-required core.
 // Core types (ativo/passivo/pl/receita/despesa) are always recommended — null means all.
@@ -50,6 +50,7 @@ function PlanRow({
   onSwapRequest: (keyA: string, keyB: string) => void
   allEntries: (PlanEntry & { _key: string })[]
 }) {
+  const t = useT()
   const [editingField, setEditingField] = useState<'code' | 'name' | null>(null)
   const [editValue, setEditValue]       = useState('')
   const [codeError, setCodeError]       = useState<string | null>(null)
@@ -123,7 +124,7 @@ function PlanRow({
           ) : (
             <button
               onClick={() => startEdit('code')}
-              title="Clique para editar"
+              title={t('plano_clickToEdit')}
               className="flex items-center gap-1.5 group/code cursor-pointer"
             >
               <span className="font-mono text-xs text-[var(--text-secondary)]">{entry.code}</span>
@@ -147,7 +148,7 @@ function PlanRow({
         ) : (
           <button
             onClick={() => startEdit('name')}
-            title="Clique para editar"
+            title={t('plano_clickToEdit')}
             className="flex items-center gap-1.5 group/name cursor-pointer text-left w-full"
           >
             <span className={`text-sm leading-snug ${entry.is_analytic ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] font-medium'}`}>
@@ -166,7 +167,7 @@ function PlanRow({
               ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
               : 'bg-[var(--bg-border)] text-[var(--text-muted)]'
           }`}>
-            {entry.is_analytic ? 'Analítica' : 'Sintética'}
+            {entry.is_analytic ? t('plano_analytic') : t('plano_synthetic')}
           </span>
           <div className="relative group/add">
             <button
@@ -176,7 +177,7 @@ function PlanRow({
               <Plus className="h-3 w-3" />
             </button>
             <span className="pointer-events-none absolute -top-7 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/add:opacity-100 transition-opacity z-50">
-              Adicionar subconta
+              {t('plano_addChildTooltip')}
             </span>
           </div>
         </div>
@@ -198,6 +199,15 @@ interface Props {
 
 export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegment, segment }: Props) {
   const t = useT()
+
+  const SECTIONS = [
+    { type: 'ativo'             as AccountType, label: t('plano_ativo'),             description: t('plano_sectionDesc_ativo'),              ...SECTION_COLORS.ativo              },
+    { type: 'passivo'           as AccountType, label: t('plano_passivo'),            description: t('plano_sectionDesc_passivo'),             ...SECTION_COLORS.passivo            },
+    { type: 'patrimonio_liquido'as AccountType, label: t('plano_patrimonioLiquido'), description: t('plano_sectionDesc_patrimonioLiquido'),  ...SECTION_COLORS.patrimonio_liquido },
+    { type: 'receita'           as AccountType, label: t('plano_receita'),            description: t('plano_sectionDesc_receita'),             ...SECTION_COLORS.receita            },
+    { type: 'despesa'           as AccountType, label: t('plano_despesa'),            description: t('plano_sectionDesc_despesa'),             ...SECTION_COLORS.despesa            },
+    { type: 'custo'             as AccountType, label: t('plano_custo'),              description: t('plano_sectionDesc_custo'),               ...SECTION_COLORS.custo              },
+  ]
 
   // Build keyed entries (key = original index for stable identity)
   const [entries, setEntries] = useState<(PlanEntry & { _key: string })[]>(() =>
@@ -508,22 +518,21 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
         <Modal
           open
           onClose={() => setSwapPending(null)}
-          title="Trocar códigos?"
+          title={t('plano_swapTitle')}
           size="sm"
           footer={
             <div className="flex items-center justify-between">
               <Button variant="ghost" size="sm" onClick={() => setSwapPending(null)}>
-                Cancelar
+                {t('plano_cancel')}
               </Button>
               <Button size="sm" onClick={confirmSwap}>
-                Trocar
+                {t('plano_swapConfirm')}
               </Button>
             </div>
           }
         >
           <p className="text-sm text-[var(--text-secondary)] mb-4">
-            O código <span className="font-mono font-semibold text-[var(--text-primary)]">{swapEntryB.code}</span> já
-            está em uso por <span className="font-semibold text-[var(--text-primary)]">{swapEntryB.name}</span>.
+            {t('plano_swapDesc').replace('{code}', swapEntryB.code).replace('{name}', swapEntryB.name)}
           </p>
           <div className="flex items-center gap-3 rounded-lg border border-[var(--bg-border)] bg-[var(--bg-elevated)] p-3 text-sm">
             <div className="flex flex-col gap-1 flex-1 text-center">
@@ -538,9 +547,7 @@ export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegm
               <span className="text-[10px] text-[var(--text-muted)]">→ {swapEntryA.code}</span>
             </div>
           </div>
-          <p className="text-xs text-[var(--text-muted)] mt-3">
-            Todos os subitens de ambos os grupos serão renumerados automaticamente.
-          </p>
+          <p className="text-xs text-[var(--text-muted)] mt-3">{t('plano_swapNote')}</p>
         </Modal>
       )}
     </Modal>

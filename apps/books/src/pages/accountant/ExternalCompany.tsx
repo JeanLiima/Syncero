@@ -7,27 +7,27 @@ import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
 import type { ExternalCompany } from '@/types'
 
-const taxRegimeLabel: Record<string, string> = {
-  simples: 'Simples Nacional',
-  lucro_presumido: 'Lucro Presumido',
-  lucro_real: 'Lucro Real',
-}
-
-const segmentLabel: Record<string, string> = {
-  comercio: 'Comércio',
-  servicos: 'Serviços',
-  industria: 'Indústria',
-  construcao_civil: 'Construção Civil',
-  agronegocio: 'Agronegócio',
-  saude: 'Saúde',
-  educacao: 'Educação',
-  tecnologia: 'Tecnologia',
-  financeiro: 'Financeiro',
-  outros: 'Outros',
-}
-
 export function Component() {
   const t = useT()
+
+  const taxRegimeLabel: Record<string, string> = {
+    simples:          t('settings_simplesNacional'),
+    lucro_presumido:  t('settings_lucroPresumido'),
+    lucro_real:       t('settings_lucroReal'),
+  }
+
+  const segmentLabel: Record<string, string> = {
+    comercio:        t('settings_segmentComercio'),
+    servicos:        t('settings_segmentServicos'),
+    industria:       t('settings_segmentIndustria'),
+    construcao_civil:t('settings_segmentConstrucao'),
+    agronegocio:     t('settings_segmentAgronegocio'),
+    saude:           t('settings_segmentSaude'),
+    educacao:        t('settings_segmentEducacao'),
+    tecnologia:      t('settings_segmentTecnologia'),
+    financeiro:      t('settings_segmentFinanceiro'),
+    outros:          t('settings_segmentOutros'),
+  }
   const { extCompanyId } = useParams<{ extCompanyId: string }>()
 
   const { data: company } = useQuery({

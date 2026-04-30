@@ -44,7 +44,7 @@ export function NoCompanyShell() {
     user?.user_metadata?.full_name ??
     user?.user_metadata?.name ??
     user?.email?.split('@')[0] ??
-    'Usuário'
+    t('layout_userFallback')
 
   const avatarUrl: string | null =
     profile?.avatar_url ?? user?.user_metadata?.avatar_url ?? null

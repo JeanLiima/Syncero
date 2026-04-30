@@ -70,6 +70,7 @@ export const en: Record<TranslationKey, string> = {
   pwa_subtitle: 'Quick access, notifications and offline use',
   pwa_install: 'Install',
   pwa_ios: 'Tap Share → Add to Home Screen',
+  pwa_close: 'Close',
 
   // Preferences
   preferences_title: 'Preferences',
@@ -278,6 +279,14 @@ export const en: Record<TranslationKey, string> = {
   plano_swapConfirm: 'Swap',
   plano_swapDesc: 'Code {code} is already used by {name}.',
   plano_swapNote: 'All sub-items of both groups will be renumbered automatically. Existing journal entries are not affected since they reference accounts by internal ID, not code.',
+  plano_clickToEdit: 'Click to edit',
+  plano_addChildTooltip: 'Add sub-account',
+  plano_sectionDesc_ativo: 'Resources controlled by the company (cash, bank, fixed assets).',
+  plano_sectionDesc_passivo: 'Obligations to third parties (suppliers, loans, taxes).',
+  plano_sectionDesc_patrimonioLiquido: 'Partners\' equity (share capital, retained earnings).',
+  plano_sectionDesc_receita: 'Inflows from the company\'s main activity.',
+  plano_sectionDesc_despesa: 'Costs required to maintain operations.',
+  plano_sectionDesc_custo: 'Direct cost of products/services sold (COGS/CSP).',
 
   // Transaction classification
   classify_title: 'Classify Transaction',

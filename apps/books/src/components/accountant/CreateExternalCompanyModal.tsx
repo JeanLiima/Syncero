@@ -7,26 +7,6 @@ import { Button, Input, Select, Modal, Checkbox } from '@syncero/ui'
 import { useT } from '@/i18n'
 import type { TaxRegime, CompanySegment } from '@/types'
 
-const segmentOptions = [
-  { value: '', label: '— Não definido —' },
-  { value: 'comercio', label: 'Comércio' },
-  { value: 'servicos', label: 'Serviços' },
-  { value: 'industria', label: 'Indústria' },
-  { value: 'construcao_civil', label: 'Construção Civil' },
-  { value: 'agronegocio', label: 'Agronegócio' },
-  { value: 'saude', label: 'Saúde' },
-  { value: 'educacao', label: 'Educação' },
-  { value: 'tecnologia', label: 'Tecnologia' },
-  { value: 'financeiro', label: 'Financeiro' },
-  { value: 'outros', label: 'Outros' },
-]
-
-const taxRegimeOptions = [
-  { value: '', label: '— Não definido —' },
-  { value: 'simples', label: 'Simples Nacional' },
-  { value: 'lucro_presumido', label: 'Lucro Presumido' },
-  { value: 'lucro_real', label: 'Lucro Real' },
-]
 
 interface Props {
   open: boolean
@@ -35,6 +15,25 @@ interface Props {
 
 export function CreateExternalCompanyModal({ open, onClose }: Props) {
   const t = useT()
+  const segmentOptions = [
+    { value: '',                label: t('settings_segmentUndefined') },
+    { value: 'comercio',        label: t('settings_segmentComercio') },
+    { value: 'servicos',        label: t('settings_segmentServicos') },
+    { value: 'industria',       label: t('settings_segmentIndustria') },
+    { value: 'construcao_civil',label: t('settings_segmentConstrucao') },
+    { value: 'agronegocio',     label: t('settings_segmentAgronegocio') },
+    { value: 'saude',           label: t('settings_segmentSaude') },
+    { value: 'educacao',        label: t('settings_segmentEducacao') },
+    { value: 'tecnologia',      label: t('settings_segmentTecnologia') },
+    { value: 'financeiro',      label: t('settings_segmentFinanceiro') },
+    { value: 'outros',          label: t('settings_segmentOutros') },
+  ]
+  const taxRegimeOptions = [
+    { value: '',                label: t('settings_taxRegimeUndefined') },
+    { value: 'simples',         label: t('settings_simplesNacional') },
+    { value: 'lucro_presumido', label: t('settings_lucroPresumido') },
+    { value: 'lucro_real',      label: t('settings_lucroReal') },
+  ]
   const { user } = useAuth()
   const navigate = useNavigate()
   const qc = useQueryClient()

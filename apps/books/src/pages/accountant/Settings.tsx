@@ -9,29 +9,30 @@ import type { ExternalCompany, TaxRegime, CompanySegment } from '@/types'
 
 // ── helpers ───────────────────────────────────────────────────
 
-const taxRegimeOptions = [
-  { value: 'simples',         label: 'Simples Nacional' },
-  { value: 'lucro_presumido', label: 'Lucro Presumido' },
-  { value: 'lucro_real',      label: 'Lucro Real' },
-]
 
-const segmentOptions = [
-  { value: '', label: '— Não definido —' },
-  { value: 'comercio',        label: 'Comércio' },
-  { value: 'servicos',        label: 'Serviços' },
-  { value: 'industria',       label: 'Indústria' },
-  { value: 'construcao_civil',label: 'Construção Civil' },
-  { value: 'agronegocio',     label: 'Agronegócio' },
-  { value: 'saude',           label: 'Saúde' },
-  { value: 'educacao',        label: 'Educação' },
-  { value: 'tecnologia',      label: 'Tecnologia' },
-  { value: 'financeiro',      label: 'Financeiro' },
-  { value: 'outros',          label: 'Outros' },
-]
+function useTaxRegimeOptions(t: ReturnType<typeof import('@/i18n').useT>) {
+  return [
+    { value: 'simples',         label: t('settings_simplesNacional') },
+    { value: 'lucro_presumido', label: t('settings_lucroPresumido') },
+    { value: 'lucro_real',      label: t('settings_lucroReal') },
+  ]
+}
 
-const segmentLabel: Record<string, string> = Object.fromEntries(
-  segmentOptions.filter(o => o.value).map(o => [o.value, o.label])
-)
+function useSegmentOptions(t: ReturnType<typeof import('@/i18n').useT>) {
+  return [
+    { value: '',                label: t('settings_segmentUndefined') },
+    { value: 'comercio',        label: t('settings_segmentComercio') },
+    { value: 'servicos',        label: t('settings_segmentServicos') },
+    { value: 'industria',       label: t('settings_segmentIndustria') },
+    { value: 'construcao_civil',label: t('settings_segmentConstrucao') },
+    { value: 'agronegocio',     label: t('settings_segmentAgronegocio') },
+    { value: 'saude',           label: t('settings_segmentSaude') },
+    { value: 'educacao',        label: t('settings_segmentEducacao') },
+    { value: 'tecnologia',      label: t('settings_segmentTecnologia') },
+    { value: 'financeiro',      label: t('settings_segmentFinanceiro') },
+    { value: 'outros',          label: t('settings_segmentOutros') },
+  ]
+}
 
 function taxLabel(regime: string | null | undefined, t: (k: any) => string) {
   if (regime === 'simples')         return t('settings_simplesNacional')
@@ -57,6 +58,9 @@ function InfoRow({ label, value }: { label: string; value?: string | null }) {
 
 function ExternalCompanySettings({ id }: { id: string }) {
   const t = useT()
+  const taxRegimeOptions = useTaxRegimeOptions(t)
+  const segmentOptions = useSegmentOptions(t)
+  const segmentLabel = Object.fromEntries(segmentOptions.filter(o => o.value).map(o => [o.value, o.label]))
   const qc = useQueryClient()
   const { success, error: toastError } = useToast()
   const [editOpen, setEditOpen] = useState(false)
@@ -149,7 +153,7 @@ function ExternalCompanySettings({ id }: { id: string }) {
           />
           <Select
             label={t('settings_taxRegime')}
-            options={[{ value: '', label: '— Não definido —' }, ...taxRegimeOptions]}
+            options={[{ value: '', label: t('settings_taxRegimeUndefined') }, ...taxRegimeOptions]}
             value={taxRegime}
             onChange={v => setTaxRegime(v as TaxRegime | '')}
           />

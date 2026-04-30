@@ -3,23 +3,6 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-const segmentOptions = [
-  { value: '',              label: '— Não definido —' },
-  { value: 'comercio',         label: 'Comércio' },
-  { value: 'servicos',         label: 'Serviços' },
-  { value: 'industria',        label: 'Indústria' },
-  { value: 'construcao_civil', label: 'Construção Civil' },
-  { value: 'agronegocio',      label: 'Agronegócio' },
-  { value: 'saude',            label: 'Saúde' },
-  { value: 'educacao',         label: 'Educação' },
-  { value: 'tecnologia',       label: 'Tecnologia' },
-  { value: 'financeiro',       label: 'Financeiro' },
-  { value: 'outros',           label: 'Outros' },
-]
-
-const segmentLabel: Record<string, string> = Object.fromEntries(
-  segmentOptions.filter(o => o.value).map(o => [o.value, o.label])
-)
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog } from '@syncero/ui'
 import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown, Info } from 'lucide-react'
@@ -53,6 +36,20 @@ function taxRegimeLabel(regime: string | null | undefined, t: (k: any) => string
 
 function CompanyTab() {
   const t = useT()
+  const segmentOptions = [
+    { value: '',                label: t('settings_segmentUndefined') },
+    { value: 'comercio',        label: t('settings_segmentComercio') },
+    { value: 'servicos',        label: t('settings_segmentServicos') },
+    { value: 'industria',       label: t('settings_segmentIndustria') },
+    { value: 'construcao_civil',label: t('settings_segmentConstrucao') },
+    { value: 'agronegocio',     label: t('settings_segmentAgronegocio') },
+    { value: 'saude',           label: t('settings_segmentSaude') },
+    { value: 'educacao',        label: t('settings_segmentEducacao') },
+    { value: 'tecnologia',      label: t('settings_segmentTecnologia') },
+    { value: 'financeiro',      label: t('settings_segmentFinanceiro') },
+    { value: 'outros',          label: t('settings_segmentOutros') },
+  ]
+  const segmentLabel = Object.fromEntries(segmentOptions.filter(o => o.value).map(o => [o.value, o.label]))
   const { success, error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)

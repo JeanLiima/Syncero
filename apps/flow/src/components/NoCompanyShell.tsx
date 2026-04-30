@@ -9,18 +9,6 @@ import { useToast, Button, Card, Input, Select, Avatar } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { SEGMENTS_WITH_COST } from '@/lib/segments'
 
-const segmentOptions = [
-  { value: 'comercio',         label: 'Comércio' },
-  { value: 'servicos',         label: 'Serviços' },
-  { value: 'industria',        label: 'Indústria' },
-  { value: 'construcao_civil', label: 'Construção Civil' },
-  { value: 'agronegocio',      label: 'Agronegócio' },
-  { value: 'saude',            label: 'Saúde' },
-  { value: 'educacao',         label: 'Educação' },
-  { value: 'tecnologia',       label: 'Tecnologia' },
-  { value: 'financeiro',       label: 'Financeiro' },
-  { value: 'outros',           label: 'Outros' },
-]
 
 const schema = z.object({
   name:       z.string().min(2),
@@ -33,6 +21,18 @@ type FormData = z.infer<typeof schema>
 
 export function NoCompanyShell() {
   const t = useT()
+  const segmentOptions = [
+    { value: 'comercio',        label: t('settings_segmentComercio') },
+    { value: 'servicos',        label: t('settings_segmentServicos') },
+    { value: 'industria',       label: t('settings_segmentIndustria') },
+    { value: 'construcao_civil',label: t('settings_segmentConstrucao') },
+    { value: 'agronegocio',     label: t('settings_segmentAgronegocio') },
+    { value: 'saude',           label: t('settings_segmentSaude') },
+    { value: 'educacao',        label: t('settings_segmentEducacao') },
+    { value: 'tecnologia',      label: t('settings_segmentTecnologia') },
+    { value: 'financeiro',      label: t('settings_segmentFinanceiro') },
+    { value: 'outros',          label: t('settings_segmentOutros') },
+  ]
   const { user, profile, signOut } = useAuth()
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
   const { success, error: toastError } = useToast()

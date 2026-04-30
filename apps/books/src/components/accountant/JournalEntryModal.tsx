@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Modal, Button, Input, Select, DatePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
+import { useT } from '@/i18n'
 import type { AccountPlan, JournalSide } from '@/types'
 
 interface EntryLine {
@@ -32,6 +33,7 @@ function parseBrAmount(raw: string): number {
 }
 
 export function JournalEntryModal({ open, onClose, onSubmit, accounts }: JournalEntryModalProps) {
+  const t = useT()
   const language = usePreferencesStore(s => s.language)
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [description, setDescription] = useState('')
@@ -52,13 +54,13 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
 
   const handleSubmit = async () => {
     setError(null)
-    if (!date) { setError('Informe a data.'); return }
-    if (!description.trim()) { setError('Informe o histórico.'); return }
+    if (!date) { setError(t('lancamentos_errDate')); return }
+    if (!description.trim()) { setError(t('lancamentos_errHistory')); return }
     if (lines.some(l => !l.account_plan_id || parseBrAmount(l.amount) <= 0)) {
-      setError('Todas as linhas precisam ter conta e valor.')
+      setError(t('lancamentos_errLines'))
       return
     }
-    if (!isBalanced) { setError('Débitos e créditos devem ser iguais.'); return }
+    if (!isBalanced) { setError(t('lancamentos_errBalance')); return }
 
     setSubmitting(true)
     try {
@@ -74,7 +76,7 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
       setLines([emptyLine(), emptyLine()])
       onClose()
     } catch {
-      setError('Erro ao salvar lançamento.')
+      setError(t('lancamentos_errSave'))
     } finally {
       setSubmitting(false)
     }
@@ -83,23 +85,23 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
   const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
   return (
-    <Modal open={open} onClose={onClose} title="Novo lançamento" size="lg">
+    <Modal open={open} onClose={onClose} title={t('lancamentos_new')} size="lg">
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-4">
-          <DatePicker label="Data" value={date} onChange={setDate} language={language} />
-          <Input label="Histórico" placeholder="Descrição do lançamento" className="col-span-2" value={description} onChange={e => setDescription(e.target.value)} />
+          <DatePicker label={t('lancamentos_fieldDate')} value={date} onChange={setDate} language={language} />
+          <Input label={t('lancamentos_fieldHistory')} placeholder={t('lancamentos_historyPlaceholder')} className="col-span-2" value={description} onChange={e => setDescription(e.target.value)} />
         </div>
-        <Input label="Documento / Referência" placeholder="NF001, boleto, etc." value={externalRef} onChange={e => setExternalRef(e.target.value)} />
+        <Input label={t('lancamentos_fieldRef')} placeholder={t('lancamentos_refPlaceholder')} value={externalRef} onChange={e => setExternalRef(e.target.value)} />
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-medium text-[var(--text-secondary)]">Partidas</p>
+            <p className="text-xs font-medium text-[var(--text-secondary)]">{t('lancamentos_fieldLines')}</p>
             <button
               type="button"
               onClick={() => setLines(prev => [...prev, emptyLine()])}
               className="cursor-pointer flex items-center gap-1 text-xs text-[var(--accent)] hover:underline"
             >
-              <Plus className="h-3 w-3" /> Adicionar linha
+              <Plus className="h-3 w-3" /> {t('lancamentos_addLine')}
             </button>
           </div>
 
@@ -107,7 +109,7 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
             {lines.map((line, i) => (
               <div key={i} className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-2 items-end">
                 <Select
-                  placeholder="Conta contábil"
+                  placeholder={t('lancamentos_accountPlaceholder')}
                   options={accountOptions}
                   value={line.account_plan_id}
                   onChange={(v) => updateLine(i, { account_plan_id: v })}
@@ -125,7 +127,7 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
                   onChange={e => updateLine(i, { amount: e.target.value })}
                 />
                 <Input
-                  placeholder="Complemento"
+                  placeholder={t('lancamentos_memoPlaceholder')}
                   className="w-36"
                   value={line.memo}
                   onChange={e => updateLine(i, { memo: e.target.value })}
@@ -144,13 +146,13 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
 
           <div className="flex items-center justify-end gap-6 mt-3 pt-3 border-t border-[var(--bg-border)]">
             <span className="text-xs text-[var(--text-muted)]">
-              Débitos: <span className="font-mono text-[var(--text-primary)]">{fmt(debitTotal)}</span>
+              {t('lancamentos_debits')} <span className="font-mono text-[var(--text-primary)]">{fmt(debitTotal)}</span>
             </span>
             <span className="text-xs text-[var(--text-muted)]">
-              Créditos: <span className="font-mono text-[var(--text-primary)]">{fmt(creditTotal)}</span>
+              {t('lancamentos_credits')} <span className="font-mono text-[var(--text-primary)]">{fmt(creditTotal)}</span>
             </span>
             <span className={`text-xs font-medium ${isBalanced ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
-              {isBalanced ? '✓ Balanceado' : `Diferença: ${fmt(Math.abs(debitTotal - creditTotal))}`}
+              {isBalanced ? t('lancamentos_balanced') : `${t('lancamentos_difference')} ${fmt(Math.abs(debitTotal - creditTotal))}`}
             </span>
           </div>
         </div>
@@ -158,8 +160,8 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
         {error && <p className="text-xs text-[var(--danger)]">{error}</p>}
 
         <div className="flex justify-end gap-2 pt-2 border-t border-[var(--bg-border)]">
-          <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleSubmit} loading={submitting} disabled={!isBalanced}>Registrar</Button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('lancamentos_cancel')}</Button>
+          <Button onClick={handleSubmit} loading={submitting} disabled={!isBalanced}>{t('lancamentos_register')}</Button>
         </div>
       </div>
     </Modal>

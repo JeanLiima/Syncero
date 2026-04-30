@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Modal, Button, Input, Select } from '@syncero/ui'
+import { useT } from '@/i18n'
 import type { AccountPlan, AccountType, AccountNature } from '@/types'
 
 type FormData = {
@@ -38,22 +39,13 @@ function suggestNextCode(parentCode: string, allPlans: AccountPlan[]): string {
 // ── types ─────────────────────────────────────────────────────
 
 const schema = z.object({
-  code:         z.string().min(1, 'Obrigatório').regex(/^[\d.]+$/, 'Apenas dígitos e pontos'),
-  name:         z.string().min(1, 'Obrigatório'),
+  code:         z.string().min(1).regex(/^[\d.]+$/),
+  name:         z.string().min(1),
   account_type: z.enum(['ativo', 'passivo', 'patrimonio_liquido', 'receita', 'despesa', 'custo']),
   nature:       z.enum(['devedora', 'credora']),
   is_analytic:  z.boolean(),
   parent_id:    z.string().nullable(),
 })
-
-const accountTypeOptions: { value: AccountType; label: string }[] = [
-  { value: 'ativo',             label: 'Ativo' },
-  { value: 'passivo',           label: 'Passivo' },
-  { value: 'patrimonio_liquido',label: 'Patrimônio Líquido' },
-  { value: 'receita',           label: 'Receita' },
-  { value: 'despesa',           label: 'Despesa' },
-  { value: 'custo',             label: 'Custo' },
-]
 
 export interface AccountPlanModalProps {
   open:             boolean
@@ -66,6 +58,17 @@ export interface AccountPlanModalProps {
 }
 
 export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPlans, editing, preset }: AccountPlanModalProps) {
+  const t = useT()
+
+  const accountTypeOptions: { value: AccountType; label: string }[] = useMemo(() => [
+    { value: 'ativo',             label: t('plano_ativo') },
+    { value: 'passivo',           label: t('plano_passivo') },
+    { value: 'patrimonio_liquido',label: t('plano_patrimonioLiquido') },
+    { value: 'receita',           label: t('plano_receita') },
+    { value: 'despesa',           label: t('plano_despesa') },
+    { value: 'custo',             label: t('plano_custo') },
+  ], [t])
+
   const {
     register, handleSubmit, watch, setValue, reset,
     formState: { errors, isSubmitting },
@@ -140,13 +143,13 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
   const parentOptions = useMemo(() => {
     const synthetics = allPlans.filter(p => !p.is_analytic && p.account_type === accountType)
     return [
-      { value: '', label: '— Raiz (sem pai) —' },
+      { value: '', label: t('plano_noParent') },
       ...synthetics.map(p => ({ value: p.id, label: `${p.code} — ${p.name}` })),
     ]
-  }, [allPlans, accountType])
+  }, [allPlans, accountType, t])
 
   const nature = watch('nature')
-  const natureLabel = nature === 'devedora' ? 'Devedora' : 'Credora'
+  const natureLabel = nature === 'devedora' ? t('plano_debtor') : t('plano_creditor')
 
   const [swapTarget,   setSwapTarget]   = useState<AccountPlan | null>(null)
   const [pendingData,  setPendingData]  = useState<FormData | null>(null)
@@ -171,26 +174,25 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
       <Modal
         open
         onClose={() => { setSwapTarget(null); setPendingData(null) }}
-        title="Trocar códigos?"
+        title={t('plano_swapTitle')}
         size="sm"
         footer={
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="sm" onClick={() => { setSwapTarget(null); setPendingData(null) }}>
-              Cancelar
+              {t('plano_cancel')}
             </Button>
             <Button size="sm" onClick={async () => {
               await onSwapConfirm!(pendingData, swapTarget.id)
               setSwapTarget(null); setPendingData(null)
               onClose()
             }}>
-              Trocar
+              {t('plano_swapConfirm')}
             </Button>
           </div>
         }
       >
         <p className="text-sm text-[var(--text-secondary)] mb-4">
-          O código <span className="font-mono font-semibold text-[var(--text-primary)]">{codeB}</span> já
-          está em uso por <span className="font-semibold text-[var(--text-primary)]">{swapTarget.name}</span>.
+          {t('plano_swapDesc').replace('{code}', codeB).replace('{name}', swapTarget.name)}
         </p>
         <div className="flex items-center gap-3 rounded-lg border border-[var(--bg-border)] bg-[var(--bg-elevated)] p-3 text-sm">
           <div className="flex flex-col gap-1 flex-1 text-center">
@@ -205,9 +207,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
             <span className="text-[10px] text-[var(--text-muted)]">→ {codeA}</span>
           </div>
         </div>
-        <p className="text-xs text-[var(--text-muted)] mt-3">
-          Todos os subitens de ambos os grupos serão renumerados automaticamente.
-        </p>
+        <p className="text-xs text-[var(--text-muted)] mt-3">{t('plano_swapNote')}</p>
       </Modal>
     )
   }
@@ -216,7 +216,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
     <Modal
       open={open}
       onClose={onClose}
-      title={editing ? 'Editar conta' : 'Nova conta'}
+      title={editing ? t('plano_edit') : t('plano_new')}
       size="md"
     >
       <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
@@ -224,13 +224,13 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
         {/* 1 — Tipo (filters parent options) + Natureza */}
         <div className="grid grid-cols-2 gap-4">
           <Select
-            label="Tipo"
+            label={t('plano_fieldType')}
             options={accountTypeOptions}
             value={watch('account_type')}
             onChange={(v) => setValue('account_type', v as AccountType)}
           />
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Natureza</span>
+            <span className="text-xs font-medium text-[var(--text-secondary)]">{t('plano_fieldNature')}</span>
             <div className="h-10 flex items-center px-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-sm text-[var(--text-muted)]">
               {natureLabel}
             </div>
@@ -239,7 +239,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
 
         {/* 2 — Conta pai (filtered by type, locks code prefix) */}
         <Select
-          label="Conta pai"
+          label={t('plano_fieldParent')}
           options={parentOptions}
           value={watch('parent_id') ?? ''}
           onChange={(v) => setValue('parent_id', v || null)}
@@ -249,7 +249,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
         {/* 3 — Código (prefix locked when parent selected) + Nome */}
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Código</span>
+            <span className="text-xs font-medium text-[var(--text-secondary)]">{t('plano_colCode')}</span>
             {codePrefix ? (
               <div className={`flex items-center h-10 rounded-[var(--radius-md)] border bg-[var(--bg-elevated)] font-mono text-sm transition-colors ${errors.code ? 'border-[var(--danger)]' : 'border-[var(--bg-border)] focus-within:border-[var(--accent)]'}`}>
                 <span className="pl-3 text-[var(--text-muted)] select-none shrink-0">{codePrefix}</span>
@@ -284,7 +284,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
 
         {/* 4 — Analítica / Sintética */}
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-[var(--text-secondary)]">Tipo de conta</span>
+          <span className="text-xs font-medium text-[var(--text-secondary)]">{t('plano_fieldClass')}</span>
           <div className="flex gap-2">
             {([true, false] as const).map(analytic => (
               <button
@@ -297,16 +297,16 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
                     : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                 }`}
               >
-                {analytic ? 'Analítica' : 'Sintética'}
+                {analytic ? t('plano_analytic') : t('plano_synthetic')}
               </button>
             ))}
           </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t border-[var(--bg-border)]">
-          <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+          <Button type="button" variant="ghost" onClick={onClose}>{t('plano_cancel')}</Button>
           <Button type="submit" loading={isSubmitting}>
-            {editing ? 'Salvar' : 'Criar conta'}
+            {editing ? t('plano_save') : t('plano_createAccount')}
           </Button>
         </div>
       </form>

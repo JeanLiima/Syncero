@@ -1,4 +1,5 @@
-import { apiFetch, apiFetchRaw } from './api'
+import { apiFetch } from './api'
+import { supabase } from './supabase'
 import type { AccountPlan, Category, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
 
 function buildQuery(params: Record<string, string | undefined>) {
@@ -88,39 +89,26 @@ export async function createJournalEntry(body: {
   return apiFetch<{ id: string }>('/api/journal-entries', { method: 'POST', body: JSON.stringify(body) })
 }
 
-// Returns a cleanup function. Reconnects automatically when the SSE stream ends.
+// Returns a cleanup function.
+// Uses Supabase Realtime with the user's session (RLS allows accountants
+// to read transactions via is_accountant_of — see migration 021).
+// Kept here, not in components, so they stay free of Supabase calls.
 export function subscribeTransactions(companyId: string, onUpdate: () => void): () => void {
-  let mounted = true
-  let controller: AbortController | null = null
-  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  const channel = supabase
+    .channel(`tx:${companyId}`)
+    .on('postgres_changes', {
+      event:  '*',
+      schema: 'public',
+      table:  'transactions',
+      filter: `company_id=eq.${companyId}`,
+    }, onUpdate)
+    .on('postgres_changes', {
+      event:  'INSERT',
+      schema: 'public',
+      table:  'journal_entries',
+      filter: `company_id=eq.${companyId}`,
+    }, onUpdate)
+    .subscribe()
 
-  const connect = async () => {
-    if (!mounted) return
-    controller = new AbortController()
-    try {
-      const res = await apiFetchRaw(
-        `/api/transactions/events?companyId=${companyId}`,
-        {},
-        controller.signal,
-      )
-      if (!res.ok || !res.body) return
-
-      const reader  = res.body.getReader()
-      const decoder = new TextDecoder()
-      while (mounted) {
-        const { done, value } = await reader.read()
-        if (done) break
-        if (decoder.decode(value, { stream: true }).includes('event: transaction')) onUpdate()
-      }
-    } catch { /* aborted or connection dropped */ }
-
-    if (mounted) reconnectTimer = setTimeout(connect, 2_000)
-  }
-
-  connect()
-  return () => {
-    mounted = false
-    controller?.abort()
-    if (reconnectTimer) clearTimeout(reconnectTimer)
-  }
+  return () => { supabase.removeChannel(channel) }
 }

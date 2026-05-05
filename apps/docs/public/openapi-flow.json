@@ -3,7 +3,7 @@
   "info": {
     "title": "Syncero Flow API",
     "version": "1.0.0",
-    "description": "API privada do **Syncero Flow** — app de gestão financeira para empresas.\n\n### Autenticação\nTodas as rotas protegidas exigem um **Bearer JWT** emitido pelo Supabase, passado no header `Authorization`.\n\n### Autorização\n- A maioria das rotas requer que o usuário seja **membro ativo** da empresa (`company_members.status = 'accepted'`).\n- Rotas de administração exigem `role = 'admin'`.\n"
+    "description": "API **exclusivamente interna** do Syncero Flow.\n\n### Restrição de Origem (Origin Guard)\nEm produção, todas as rotas verificam o header . Apenas origens listadas em  são aceitas. Requisições sem  ou de domínios não autorizados recebem **403 Forbidden**.\n\nNão existe suporte a API Keys no Flow — apenas **Bearer JWT** emitido pelo Supabase.\n\n### Autorização\n- Maioria das rotas exige membro ativo: .\n- Rotas administrativas exigem ."
   },
   "servers": [
     {
@@ -23,39 +23,48 @@
   "tags": [
     {
       "name": "auth",
-      "description": "Perfil do usuário autenticado"
+      "description": "Perfil do usuário autenticado",
+      "x-access": "internal"
     },
     {
       "name": "companies",
-      "description": "Empresas e membros"
+      "description": "Empresas e membros",
+      "x-access": "internal"
     },
     {
       "name": "transactions",
-      "description": "Lançamentos financeiros"
+      "description": "Lançamentos financeiros",
+      "x-access": "internal"
     },
     {
       "name": "categories",
-      "description": "Categorias de lançamentos"
+      "description": "Categorias de lançamentos",
+      "x-access": "internal"
     },
     {
       "name": "banks",
-      "description": "Contas bancárias"
+      "description": "Contas bancárias",
+      "x-access": "internal"
     },
     {
       "name": "contacts",
-      "description": "Contatos (clientes e fornecedores)"
+      "description": "Contatos (clientes e fornecedores)",
+      "x-access": "internal"
     },
     {
       "name": "payables",
-      "description": "Contas a pagar e a receber"
+      "description": "Contas a pagar e a receber",
+      "x-access": "internal"
     },
     {
       "name": "reports",
-      "description": "Relatórios agregados (fluxo de caixa, DRE)"
+      "description": "Relatórios agregados (fluxo de caixa, DRE)",
+      "x-access": "internal"
     },
     {
       "name": "invites",
-      "description": "Convites de membros e contadores"
+      "description": "Convites de membros e contadores",
+      "x-access": "internal"
     }
   ],
   "components": {
@@ -64,6 +73,12 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "originGuard": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Origin",
+        "description": "Header de origem verificado pelo middleware de restrição de domínio. Em produção, apenas origens Syncero são aceitas."
       }
     },
     "schemas": {
@@ -603,6 +618,34 @@
           }
         }
       }
+    },
+    "responses": {
+      "OriginForbidden": {
+        "description": "Origem não autorizada. O header Origin não é um domínio Syncero válido.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Forbidden: origin not allowed"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso não encontrado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Not found"
+            }
+          }
+        }
+      }
     }
   },
   "paths": {
@@ -648,8 +691,19 @@
           },
           "401": {
             "description": "Não autenticado"
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "post": {
         "tags": [
@@ -675,7 +729,8 @@
                     "enum": [
                       "company_user",
                       "accountant"
-                    ]
+                    ],
+                    "description": "Tipo de usuário. Apenas esses dois valores são aceitos."
                   }
                 }
               }
@@ -685,8 +740,32 @@
         "responses": {
           "200": {
             "description": "Perfil criado ou atualizado"
+          },
+          "400": {
+            "description": "user_type inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "user_type must be company_user or accountant"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/companies": {
@@ -738,8 +817,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/companies/{id}": {
@@ -773,7 +863,8 @@
           "403": {
             "description": "Sem acesso"
           }
-        }
+        },
+        "x-internal": true
       },
       "patch": {
         "tags": [
@@ -817,8 +908,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/company-members": {
@@ -851,8 +953,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "post": {
         "tags": [
@@ -891,10 +1004,21 @@
           "201": {
             "description": "Convite enviado"
           },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Membro já existe"
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/company-members/{id}/role": {
@@ -935,8 +1059,19 @@
         "responses": {
           "200": {
             "description": "Papel atualizado"
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/company-members/{id}/resend": {
@@ -959,8 +1094,19 @@
         "responses": {
           "200": {
             "description": "E-mail reenviado"
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/company-members/{id}": {
@@ -983,8 +1129,19 @@
         "responses": {
           "200": {
             "description": "Membro removido"
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/accountant-companies": {
@@ -1051,8 +1208,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "post": {
         "tags": [
@@ -1093,10 +1261,21 @@
           "201": {
             "description": "Convite criado e e-mail enviado"
           },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Vínculo já existe"
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/accountant-companies/{id}/resend": {
@@ -1119,8 +1298,19 @@
         "responses": {
           "200": {
             "description": "E-mail reenviado"
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/accountant-companies/{id}": {
@@ -1143,8 +1333,19 @@
         "responses": {
           "200": {
             "description": "Acesso revogado"
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/invites/{token}": {
@@ -1191,10 +1392,21 @@
               }
             }
           },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Token inválido"
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/invites/{token}/accept": {
@@ -1218,10 +1430,25 @@
           "200": {
             "description": "Convite aceito"
           },
+          "403": {
+            "description": "O convite foi enviado para um e-mail diferente do usuário autenticado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "This invite was sent to a different email address"
+                }
+              }
+            }
+          },
           "409": {
             "description": "Convite já usado ou expirado"
           }
-        }
+        },
+        "x-internal": true,
+        "description": "\n\nO e-mail do usuário autenticado deve coincidir com o e-mail registrado no convite. Caso contrário, retorna 403."
       }
     },
     "/api/transactions": {
@@ -1314,8 +1541,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "post": {
         "tags": [
@@ -1342,8 +1580,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/transactions/{id}": {
@@ -1391,10 +1640,21 @@
               }
             }
           },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Não encontrado"
           }
-        }
+        },
+        "x-internal": true
       },
       "patch": {
         "tags": [
@@ -1406,6 +1666,14 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "description": "Campos editáveis. **Campos ignorados mesmo se enviados:** company_id, created_by, created_at, updated_at, installment_group_id.",
+                "x-non-writable": [
+                  "company_id",
+                  "created_by",
+                  "created_at",
+                  "updated_at",
+                  "installment_group_id"
+                ],
                 "properties": {
                   "description": {
                     "type": "string"
@@ -1414,7 +1682,11 @@
                     "type": "number"
                   },
                   "type": {
-                    "$ref": "#/components/schemas/TransactionType"
+                    "type": "string",
+                    "enum": [
+                      "income",
+                      "expense"
+                    ]
                   },
                   "date": {
                     "type": "string",
@@ -1428,12 +1700,12 @@
                     "format": "date",
                     "nullable": true
                   },
-                  "payment_method": {
-                    "$ref": "#/components/schemas/PaymentMethod"
-                  },
-                  "bank_id": {
+                  "nature": {
                     "type": "string",
-                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "notes": {
+                    "type": "string",
                     "nullable": true
                   },
                   "category_id": {
@@ -1446,11 +1718,38 @@
                     "format": "uuid",
                     "nullable": true
                   },
-                  "nature": {
-                    "$ref": "#/components/schemas/TransactionNature"
-                  },
-                  "notes": {
+                  "bank_id": {
                     "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "payment_method": {
+                    "type": "string",
+                    "enum": [
+                      "cash",
+                      "bank"
+                    ],
+                    "nullable": true
+                  },
+                  "is_installment": {
+                    "type": "boolean"
+                  },
+                  "installment_count": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "installment_number": {
+                    "type": "integer",
+                    "nullable": true
+                  },
+                  "payment_registered_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "payment_registered_by": {
+                    "type": "string",
+                    "format": "uuid",
                     "nullable": true
                   }
                 }
@@ -1468,8 +1767,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "delete": {
         "tags": [
@@ -1491,8 +1801,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/categories": {
@@ -1525,8 +1846,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "post": {
         "tags": [
@@ -1574,8 +1906,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/categories/{id}/usage": {
@@ -1609,8 +1952,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/categories/{id}": {
@@ -1658,8 +2012,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "delete": {
         "tags": [
@@ -1697,8 +2062,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/banks": {
@@ -1730,8 +2106,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "post": {
         "tags": [
@@ -1774,8 +2161,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/banks/{id}": {
@@ -1800,6 +2198,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "description": "Apenas name e account_type são editáveis. company_id é ignorado.",
                 "properties": {
                   "name": {
                     "type": "string"
@@ -1821,8 +2220,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "delete": {
         "tags": [
@@ -1843,8 +2253,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/contacts": {
@@ -1883,8 +2304,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "post": {
         "tags": [
@@ -1931,8 +2363,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/contacts/{id}": {
@@ -1983,8 +2426,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "delete": {
         "tags": [
@@ -2005,8 +2459,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/payables": {
@@ -2049,8 +2514,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "post": {
         "tags": [
@@ -2114,8 +2590,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/payables/{id}": {
@@ -2187,8 +2674,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       },
       "delete": {
         "tags": [
@@ -2209,8 +2707,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/cash-flow": {
@@ -2274,8 +2783,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     },
     "/api/income-statement": {
@@ -2345,8 +2865,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado (sem permissão ou origem não autorizada).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-internal": true
       }
     }
   }

@@ -175,7 +175,7 @@ export function Component() {
   const t = useT()
   const { id, isExternal } = useCompanyContext()
   const qc = useQueryClient()
-  const { error: toastError } = useToast()
+  const { success: toastSuccess, error: toastError } = useToast()
 
   // Accountants always manage their own chart — write enabled for both types
   const canWrite = true
@@ -248,6 +248,7 @@ export function Component() {
       await apiFetch('/api/account-plans', { method: 'POST', body: JSON.stringify(payload) })
     }
     qc.invalidateQueries({ queryKey })
+    toastSuccess(t(editing ? 'plano_savedSuccess' : 'plano_createdSuccess'))
     setEditing(null); setPreset(null)
   }
 
@@ -294,6 +295,7 @@ export function Component() {
     }
 
     qc.invalidateQueries({ queryKey })
+    toastSuccess(t('plano_swapSuccess'))
     setEditing(null); setPreset(null)
   }
 

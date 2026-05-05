@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TrendingUp, TrendingDown, AlertCircle, Landmark, Tag, Users, Sparkles } from 'lucide-react'
-import { Badge, Button, Input, Modal, Select } from '@syncero/ui'
+import { Badge, Button, Input, Modal, Select, useToast } from '@syncero/ui'
 import { getAccountPlans, createAccountPlan, createJournalEntry } from '@/lib/backend'
 import { useT } from '@/i18n'
 import type { AccountPlan, AccountType, Transaction, TransactionNature } from '@/types'
@@ -283,6 +283,7 @@ interface Props {
 export function ClassifyModal({ transaction, open, onClose, companyId }: Props) {
   const t = useT()
   const qc = useQueryClient()
+  const { success: toastSuccess } = useToast()
 
   const [debitId,  setDebitId]  = useState('')
   const [creditId, setCreditId] = useState('')
@@ -375,6 +376,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
         ],
       })
       qc.invalidateQueries({ queryKey: ['transactions-books', companyId] })
+      toastSuccess(t('classify_success'))
       handleClose()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : ''

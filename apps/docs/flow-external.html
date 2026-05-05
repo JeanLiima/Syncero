@@ -24,7 +24,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M19 12H5M12 19l-7-7 7-7"/>
     </svg>
-    Voltar
+    <span id="back-label">Voltar</span>
   </a>
 
   <script
@@ -33,5 +33,14 @@
     data-configuration='{"darkMode":true,"layout":"sidebar","defaultHttpClient":{"targetKey":"js","clientKey":"fetch"}}'
   ></script>
   <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1"></script>
+  <script>
+    const back = { pt: 'Voltar', en: 'Back' }
+    try {
+      const lang = JSON.parse(localStorage.getItem('syncero-prefs') || '{}').language
+        || (navigator.language?.startsWith('en') ? 'en' : 'pt')
+      document.getElementById('back-label').textContent = back[lang] || back.pt
+      document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR'
+    } catch {}
+  </script>
 </body>
 </html>

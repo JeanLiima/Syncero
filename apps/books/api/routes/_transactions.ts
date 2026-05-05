@@ -3,53 +3,74 @@ import { createServiceClient, type HonoVariables } from '../_shared'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
+// ── helpers ───────────────────────────────────────────────────
+
+async function authorizeExt(db: ReturnType<typeof createServiceClient>, userId: string, extCompanyId: string) {
+  const { data } = await db.from('external_companies')
+    .select('id').eq('id', extCompanyId).eq('accountant_id', userId).maybeSingle()
+  return !!data
+}
+
+async function authorizeFlow(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string) {
+  const { data } = await db.from('accountant_companies')
+    .select('id').eq('accountant_id', userId).eq('company_id', companyId).eq('status', 'accepted').maybeSingle()
+  return !!data
+}
+
 // ── GET /api/transactions ──────────────────────────────────────
-// Returns Flow transactions for a linked company, with classification status.
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { companyId, type, is_paid, date_from, date_to, search, page = '1', pageSize = '20' } = c.req.query()
+  const { companyId, extCompanyId, type, is_paid, date_from, date_to, search, page = '1', pageSize = '20' } = c.req.query()
 
-  if (!companyId) return c.json({ error: 'companyId required' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
 
-  const { data: acct } = await db.from('accountant_companies')
-    .select('id').eq('accountant_id', userId).eq('company_id', companyId).eq('status', 'accepted').maybeSingle()
-  if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
+  if (companyId) {
+    if (!(await authorizeFlow(db, userId, companyId))) return c.json({ error: 'Forbidden' }, 403)
+  } else {
+    if (!(await authorizeExt(db, userId, extCompanyId!))) return c.json({ error: 'Forbidden' }, 403)
+  }
 
-  const pageNum  = Math.max(1, parseInt(page))
-  const size     = Math.min(100, Math.max(1, parseInt(pageSize)))
-  const from     = (pageNum - 1) * size
-  const to       = from + size - 1
+  const pageNum = Math.max(1, parseInt(page))
+  const size    = Math.min(1000, Math.max(1, parseInt(pageSize)))
+  const from    = (pageNum - 1) * size
+  const to      = from + size - 1
 
-  let q = db.from('transactions')
-    .select('id, company_id, description, amount, type, date, is_paid, notes, category_id, contact_id, nature, is_installment, installment_number, installment_count, paid_at, payment_method, bank_id, created_by, created_at, updated_at, categories(id, name, color)', { count: 'exact' })
-    .eq('company_id', companyId)
+  // Build query — use `as any` to avoid Supabase's strict column inference on dynamic strings
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let q = (db.from('transactions') as any)
+    .select('id, company_id, ext_company_id, description, amount, type, date, is_paid, paid_at, nature, notes, category_id, contact_id, is_installment, installment_number, installment_count, payment_method, bank_id, created_by, created_at, updated_at, categories(id, name, color)', { count: 'exact' })
     .order('date', { ascending: false })
     .range(from, to)
 
-  if (type)      q = q.eq('type', type)
-  if (is_paid)   q = q.eq('is_paid', is_paid === 'true')
-  if (date_from) q = q.gte('date', date_from)
-  if (date_to)   q = q.lte('date', date_to)
-  if (search)    q = q.ilike('description', `%${search}%`)
+  if (companyId)    q = q.eq('company_id', companyId)
+  else              q = q.eq('ext_company_id', extCompanyId!)
+  if (type)         q = q.eq('type', type)
+  if (is_paid)      q = q.eq('is_paid', is_paid === 'true')
+  if (date_from)    q = q.gte('date', date_from)
+  if (date_to)      q = q.lte('date', date_to)
+  if (search)       q = q.ilike('description', `%${search}%`)
 
   const { data: txs, count, error } = await q
   if (error) return c.json({ error: 'Failed to fetch transactions' }, 500)
   if (!txs?.length) return c.json({ data: [], count: 0 })
 
-  // Fetch which transactions are already classified
-  const txIds = txs.map(t => t.id)
-  const { data: entries } = await db.from('journal_entries')
+  // Fetch classification status
+  const txIds = (txs as { id: string }[]).map(t => t.id)
+  const entryQ = db.from('journal_entries')
     .select('flow_transaction_id, id')
-    .eq('company_id', companyId)
     .in('flow_transaction_id', txIds)
+
+  const { data: entries } = companyId
+    ? await entryQ.eq('company_id', companyId)
+    : await entryQ.eq('ext_company_id', extCompanyId!)
 
   const classifiedMap = new Map((entries ?? []).map(e => [e.flow_transaction_id as string, e.id as string]))
 
   return c.json({
-    data: txs.map(t => ({
+    data: (txs as { id: string }[]).map(t => ({
       ...t,
-      is_classified: classifiedMap.has(t.id),
+      is_classified:    classifiedMap.has(t.id),
       journal_entry_id: classifiedMap.get(t.id) ?? null,
     })),
     count: count ?? 0,
@@ -76,16 +97,112 @@ router.get('/:id', async (c) => {
 
   if (error || !tx) return c.json({ error: 'Not found' }, 404)
 
-  // Verify accountant is linked to the company
-  const { data: acct } = await db.from('accountant_companies')
-    .select('id').eq('accountant_id', userId).eq('company_id', tx.company_id).eq('status', 'accepted').maybeSingle()
-  if (!acct) return c.json({ error: 'Forbidden' }, 403)
+  if (tx.company_id) {
+    if (!(await authorizeFlow(db, userId, tx.company_id))) return c.json({ error: 'Forbidden' }, 403)
+  } else if (tx.ext_company_id) {
+    if (!(await authorizeExt(db, userId, tx.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
+  } else {
+    return c.json({ error: 'Forbidden' }, 403)
+  }
 
   return c.json({
     ...tx,
     creator_name:           (tx.creator as { full_name: string } | null)?.full_name ?? null,
     payment_registrar_name: (tx.registrar as { full_name: string } | null)?.full_name ?? null,
   })
+})
+
+// ── POST /api/transactions ────────────────────────────────────
+// Creates a transaction for an external (non-Flow) company.
+router.post('/', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const body = await c.req.json<{
+    extCompanyId: string
+    description: string
+    amount: number
+    type: 'income' | 'expense'
+    date: string
+    is_paid: boolean
+    paid_at?: string | null
+    nature?: string | null
+    notes?: string | null
+  }>()
+
+  if (!body.extCompanyId) return c.json({ error: 'extCompanyId required' }, 400)
+  if (!body.description?.trim()) return c.json({ error: 'description required' }, 400)
+  if (!body.amount || body.amount <= 0) return c.json({ error: 'amount must be positive' }, 400)
+  if (!body.date) return c.json({ error: 'date required' }, 400)
+  if (!body.type) return c.json({ error: 'type required' }, 400)
+
+  if (!(await authorizeExt(db, userId, body.extCompanyId))) return c.json({ error: 'Forbidden' }, 403)
+
+  const { data, error } = await db.from('transactions').insert({
+    ext_company_id: body.extCompanyId,
+    created_by:     userId,
+    description:    body.description.trim(),
+    amount:         body.amount,
+    type:           body.type,
+    date:           body.date,
+    is_paid:        body.is_paid ?? false,
+    paid_at:        body.is_paid ? (body.paid_at || null) : null,
+    nature:         body.nature || null,
+    notes:          body.notes || null,
+  }).select('*').single()
+
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json(data, 201)
+})
+
+// ── PATCH /api/transactions/:id ───────────────────────────────
+router.patch('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+
+  const { data: existing } = await db.from('transactions')
+    .select('ext_company_id').eq('id', id).maybeSingle()
+
+  if (!existing?.ext_company_id) return c.json({ error: 'Not found or not editable' }, 404)
+  if (!(await authorizeExt(db, userId, existing.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
+
+  const body = await c.req.json<{
+    description?: string
+    amount?: number
+    type?: 'income' | 'expense'
+    date?: string
+    is_paid?: boolean
+    paid_at?: string | null
+    nature?: string | null
+    notes?: string | null
+  }>()
+
+  // Clear paid_at if marking as unpaid
+  const patch: Record<string, unknown> = { ...body }
+  if (body.is_paid === false) patch.paid_at = null
+
+  const { data, error } = await db.from('transactions')
+    .update(patch).eq('id', id).select('*').single()
+
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json(data)
+})
+
+// ── DELETE /api/transactions/:id ──────────────────────────────
+router.delete('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+
+  const { data: existing } = await db.from('transactions')
+    .select('ext_company_id').eq('id', id).maybeSingle()
+
+  if (!existing?.ext_company_id) return c.json({ error: 'Not found or not deletable' }, 404)
+  if (!(await authorizeExt(db, userId, existing.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
+
+  const { error } = await db.from('transactions').delete().eq('id', id)
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
 })
 
 export default router

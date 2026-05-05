@@ -100,7 +100,8 @@ export interface Category {
 
 export interface Transaction {
   id: string
-  company_id: string
+  company_id: string | null
+  ext_company_id?: string | null
   category_id: string | null
   contact_id: string | null
   description: string

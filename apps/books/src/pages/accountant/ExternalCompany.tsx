@@ -1,7 +1,8 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { LayoutList, BookMarked, ArrowRight } from 'lucide-react'
+import { LayoutList, BookMarked, ArrowRight, Receipt } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
+import { getTransactions } from '@/lib/backend'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
@@ -28,6 +29,7 @@ export function Component() {
     financial:     t('settings_segmentFinanceiro'),
     other:         t('settings_segmentOutros'),
   }
+
   const { extCompanyId } = useParams<{ extCompanyId: string }>()
 
   const { data: company } = useQuery({
@@ -41,6 +43,13 @@ export function Component() {
     queryFn: () => apiFetch<unknown[]>(`/api/account-plans?extCompanyId=${extCompanyId}`).then(d => d.length),
     enabled: !!extCompanyId,
   })
+
+  const { data: txData } = useQuery({
+    queryKey: ['ext-transactions-count', extCompanyId],
+    queryFn: () => getTransactions({ extCompanyId: extCompanyId!, pageSize: '1' }),
+    enabled: !!extCompanyId,
+  })
+  const txCount = txData?.count ?? 0
 
   const { data: entryCount = 0 } = useQuery({
     queryKey: ['journal-entry-count', extCompanyId],
@@ -57,13 +66,19 @@ export function Component() {
       label: t('overview_chartOfAccounts'),
       value: `${planCount} ${planCount !== 1 ? t('overview_accountCountPlural') : t('overview_accountCount')}`,
       icon: <BookMarked className="h-6 w-6 text-[var(--accent)]" />,
-      to: 'plano',
+      to: 'chart-of-accounts',
+    },
+    {
+      label: t('overview_transactions'),
+      value: `${txCount} ${txCount !== 1 ? t('overview_txCountPlural') : t('overview_txCount')}`,
+      icon: <Receipt className="h-6 w-6 text-[var(--success)]" />,
+      to: 'transactions',
     },
     {
       label: t('overview_journal'),
       value: `${entryCount} ${entryCount !== 1 ? t('overview_entryCountPlural') : t('overview_entryCount')}`,
       icon: <LayoutList className="h-6 w-6 text-[var(--warning)]" />,
-      to: 'lancamentos',
+      to: 'journal-entries',
     },
   ]
 
@@ -72,9 +87,7 @@ export function Component() {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <p className="text-xs text-[var(--text-muted)]">{t('overview_externalCompany')}</p>
-          {company && (
-            <CompanyTypeBadge isExternal />
-          )}
+          {company && <CompanyTypeBadge isExternal />}
         </div>
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{company?.name ?? '…'}</h1>
         {formattedCnpj && <p className="text-sm text-[var(--text-muted)] font-mono">{formattedCnpj}</p>}

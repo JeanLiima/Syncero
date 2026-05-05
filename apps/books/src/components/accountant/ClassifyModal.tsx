@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { TrendingUp, TrendingDown, AlertCircle, Landmark, Tag, Users, Sparkles } from 'lucide-react'
-import { Badge, Button, Input, Modal, Select } from '@syncero/ui'
+import { Badge, Button, Input, Modal, Select, useToast } from '@syncero/ui'
 import { getAccountPlans, createAccountPlan, createJournalEntry } from '@/lib/backend'
 import { useT } from '@/i18n'
 import type { AccountPlan, AccountType, Transaction, TransactionNature } from '@/types'
@@ -277,12 +277,15 @@ interface Props {
   transaction: (Transaction & { is_classified?: boolean }) | null
   open: boolean
   onClose: () => void
-  companyId: string
+  companyId?: string
+  extCompanyId?: string
 }
 
-export function ClassifyModal({ transaction, open, onClose, companyId }: Props) {
+export function ClassifyModal({ transaction, open, onClose, companyId, extCompanyId }: Props) {
   const t = useT()
   const qc = useQueryClient()
+  const { success: toastSuccess } = useToast()
+  const resolvedCompanyId = companyId ?? extCompanyId
 
   const [debitId,  setDebitId]  = useState('')
   const [creditId, setCreditId] = useState('')
@@ -294,9 +297,9 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
   const [creditCreatePreset, setCreditCreatePreset] = useState<string | undefined>()
 
   const { data: rawAccounts = [], refetch: refetchAccounts } = useQuery({
-    queryKey: ['account-plans', companyId],
-    queryFn: () => getAccountPlans(companyId),
-    enabled: open && !!companyId,
+    queryKey: ['account-plans', resolvedCompanyId],
+    queryFn: () => getAccountPlans(companyId ? { companyId } : { extCompanyId }),
+    enabled: open && !!resolvedCompanyId,
     staleTime: 60_000,
   })
 
@@ -365,7 +368,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
     setSaving(true); setError(null)
     try {
       await createJournalEntry({
-        companyId,
+        ...(extCompanyId ? { extCompanyId } : { companyId }),
         entry_date: transaction.date,
         description: transaction.description,
         flow_transaction_id: transaction.id,
@@ -374,7 +377,11 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
           { account_plan_id: creditId, side: 'credit', amount, memo: transaction.description },
         ],
       })
-      qc.invalidateQueries({ queryKey: ['transactions-books', companyId] })
+      qc.invalidateQueries({ queryKey: extCompanyId
+        ? ['ext-transactions', extCompanyId]
+        : ['transactions-books', companyId],
+      })
+      toastSuccess(t('classify_success'))
       handleClose()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : ''
@@ -480,7 +487,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
             accounts={accounts}
             value={debitId}
             onChange={setDebitId}
-            companyId={companyId}
+            companyId={resolvedCompanyId ?? ''}
             onAccountCreated={handleAccountCreated}
             createPreset={debitCreatePreset}
           />
@@ -491,7 +498,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId }: Props) 
             accounts={accounts}
             value={creditId}
             onChange={setCreditId}
-            companyId={companyId}
+            companyId={resolvedCompanyId ?? ''}
             onAccountCreated={handleAccountCreated}
             createPreset={creditCreatePreset}
           />

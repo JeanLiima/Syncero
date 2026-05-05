@@ -62,6 +62,7 @@ export const en: Record<TranslationKey, string> = {
 
   // Footer
   footer_rights: 'All rights reserved.',
+  footer_docs: 'API Docs',
 
   // Persona Modal
   persona_title: 'How will you use the platform?',

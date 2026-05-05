@@ -23,12 +23,14 @@ export async function getTaxCalculations(companyId: string) {
 }
 
 export type TransactionQueryParams = {
-  companyId: string
+  companyId?: string
+  extCompanyId?: string
   type?: string
   category_id?: string
   is_paid?: string
   date_from?: string
   date_to?: string
+  search?: string
   page?: string
   pageSize?: string
 } & Record<string, string | undefined>
@@ -45,8 +47,8 @@ export async function getCategories(companyId: string) {
   return apiFetch<Category[]>(`/api/categories${buildQuery({ companyId })}`)
 }
 
-export async function getAccountPlans(companyId: string) {
-  return apiFetch<AccountPlan[]>(`/api/account-plans${buildQuery({ companyId })}`)
+export async function getAccountPlans(params: { companyId?: string; extCompanyId?: string }) {
+  return apiFetch<AccountPlan[]>(`/api/account-plans${buildQuery(params)}`)
 }
 
 export async function createAccountPlan(body: {
@@ -79,12 +81,37 @@ export async function seedAccountPlan(body: {
 }
 
 export async function createJournalEntry(body: {
-  companyId: string
+  companyId?: string
+  extCompanyId?: string
   entry_date: string
   description: string
   flow_transaction_id: string
   lines: Array<{ account_plan_id: string; side: 'debit' | 'credit'; amount: number; memo?: string }>
 }) {
   return apiFetch<{ id: string }>('/api/journal-entries', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export type ExtTransactionBody = {
+  extCompanyId: string
+  description: string
+  amount: number
+  type: 'income' | 'expense'
+  date: string
+  is_paid: boolean
+  paid_at?: string | null
+  nature?: string | null
+  notes?: string | null
+}
+
+export async function createExtTransaction(body: ExtTransactionBody) {
+  return apiFetch<Transaction>('/api/transactions', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export async function updateExtTransaction(id: string, body: Partial<Omit<ExtTransactionBody, 'extCompanyId'>>) {
+  return apiFetch<Transaction>(`/api/transactions/${id}`, { method: 'PATCH', body: JSON.stringify(body) })
+}
+
+export async function deleteExtTransaction(id: string) {
+  return apiFetch<{ ok: true }>(`/api/transactions/${id}`, { method: 'DELETE' })
 }
 

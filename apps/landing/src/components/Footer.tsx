@@ -1,5 +1,7 @@
 import { useT } from '../i18n'
 
+const DOCS_URL = (import.meta.env.VITE_DOCS_URL as string | undefined) ?? 'http://localhost:5176'
+
 export function Footer() {
   const t = useT()
 
@@ -12,9 +14,20 @@ export function Footer() {
           </div>
           <span className="text-sm text-[var(--text-muted)]">Syncero</span>
         </div>
-        <p className="text-xs text-[var(--text-muted)]">
-          © {new Date().getFullYear()} Syncero. {t('footer_rights')}
-        </p>
+
+        <div className="flex items-center gap-6">
+          <a
+            href={DOCS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+          >
+            {t('footer_docs')}
+          </a>
+          <p className="text-xs text-[var(--text-muted)]">
+            © {new Date().getFullYear()} Syncero. {t('footer_rights')}
+          </p>
+        </div>
       </div>
     </footer>
   )

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -24,23 +24,37 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <path d="M19 12H5M12 19l-7-7 7-7"/>
     </svg>
-    <span id="back-label">Voltar</span>
+    <span id="back-label"></span>
   </a>
 
-  <script
-    id="api-reference"
-    data-url="/openapi-flow-external.json"
-    data-configuration='{"darkMode":true,"layout":"sidebar","defaultHttpClient":{"targetKey":"js","clientKey":"fetch"}}'
-  ></script>
+  <script id="api-reference"></script>
   <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1"></script>
+
   <script>
-    const back = { pt: 'Voltar', en: 'Back' }
-    try {
-      const lang = JSON.parse(localStorage.getItem('syncero-prefs') || '{}').language
-        || (navigator.language?.startsWith('en') ? 'en' : 'pt')
-      document.getElementById('back-label').textContent = back[lang] || back.pt
+    (function () {
+      const labels = { pt: 'Voltar', en: 'Back' }
+      const specs  = {
+        pt: '/openapi-flow-external.json',
+        en: '/openapi-flow-external-en.json',
+      }
+
+      let lang = 'pt'
+      try {
+        const prefs = JSON.parse(localStorage.getItem('syncero-prefs') || '{}')
+        lang = prefs.language || (navigator.language?.startsWith('en') ? 'en' : 'pt')
+      } catch {}
+
       document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR'
-    } catch {}
+      document.getElementById('back-label').textContent = labels[lang] || labels.pt
+
+      const ref = document.getElementById('api-reference')
+      ref.setAttribute('data-url', specs[lang] || specs.pt)
+      ref.setAttribute('data-configuration', JSON.stringify({
+        darkMode: true,
+        layout: 'sidebar',
+        defaultHttpClient: { targetKey: 'js', clientKey: 'fetch' },
+      }))
+    })()
   </script>
 </body>
 </html>

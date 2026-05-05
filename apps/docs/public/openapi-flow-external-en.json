@@ -1,0 +1,54 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Syncero Flow — Integration API",
+    "version": "1.0.0",
+    "description": "External integration API for **Syncero Flow**.\n\n> 🚧 **Coming soon** — no external routes are available at this time.\n> This spec is reserved for future integrations of the financial management app.\n\n### What will be here\nEndpoints that will allow external systems (ERPs, payment gateways, banks) to send data directly to companies in Flow — such as bank statement imports, automatic reconciliation and payment webhooks.\n\n### Authentication (future)\nFlow's external routes will use `x-api-key` generated in the company settings panel."
+  },
+  "servers": [
+    {
+      "url": "https://syncero-flow.vercel.app",
+      "description": "Produção"
+    },
+    {
+      "url": "http://localhost:5174",
+      "description": "Desenvolvimento local"
+    }
+  ],
+  "security": [
+    {
+      "apiKey": []
+    },
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API Key da empresa (geração disponível em breve no painel Flow)."
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT emitido pelo Supabase Auth."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "paths": {}
+}

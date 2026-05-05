@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, CheckCircle, Search } from 'lucide-react'
+import { Plus, CheckCircle, Search, Download } from 'lucide-react'
 import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useAuthStore } from '@/store/auth'
@@ -10,6 +10,7 @@ import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 import { TransactionEditModal } from '@/modules/transactions/TransactionEditModal'
 import { TransactionDetailModal } from '@/modules/transactions/TransactionDetailModal'
 import { PaymentModal } from '@/modules/transactions/PaymentModal'
+import { ExportModal } from '@/modules/transactions/ExportModal'
 import { useT } from '@/i18n'
 import type { Transaction, TransactionType } from '@/types'
 import type { TransactionFilters } from '@/modules/transactions/types'
@@ -32,6 +33,7 @@ export function Component() {
   const [paymentTarget, setPaymentTarget] = useState<{ id: string; type: TransactionType } | null>(null)
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
 
   const { data, isLoading } = useTransactions(filters, page)
   const { data: categories = [] } = useCategories()
@@ -62,11 +64,16 @@ export function Component() {
             {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('transactions_countPlural') : t('transactions_countSingular')}
           </p>
         </div>
-        {canWrite && (
-          <Button size="sm" onClick={openCreate}>
-            <Plus className="h-4 w-4" /> {t('transactions_new')}
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>
+            <Download className="h-4 w-4" /> {t('export_button')}
           </Button>
-        )}
+          {canWrite && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="h-4 w-4" /> {t('transactions_new')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -239,6 +246,13 @@ export function Component() {
         open={!!editing}
         onClose={() => setEditing(null)}
         language={language}
+      />
+
+      <ExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        filters={filters}
+        companyId={activeCompany?.id ?? ''}
       />
     </div>
   )

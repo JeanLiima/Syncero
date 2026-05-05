@@ -98,11 +98,11 @@ router.get('/:id', async (c) => {
   if (error || !tx) return c.json({ error: 'Not found' }, 404)
 
   if (tx.company_id) {
-    if (!(await authorizeFlow(db, userId, tx.company_id))) return c.json({ error: 'Forbidden' }, 403)
+    if (!(await authorizeFlow(db, userId, tx.company_id))) return c.json({ error: 'Not found' }, 404)
   } else if (tx.ext_company_id) {
-    if (!(await authorizeExt(db, userId, tx.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
+    if (!(await authorizeExt(db, userId, tx.ext_company_id))) return c.json({ error: 'Not found' }, 404)
   } else {
-    return c.json({ error: 'Forbidden' }, 403)
+    return c.json({ error: 'Not found' }, 404)
   }
 
   return c.json({
@@ -177,9 +177,19 @@ router.patch('/:id', async (c) => {
     notes?: string | null
   }>()
 
-  // Clear paid_at if marking as unpaid
-  const patch: Record<string, unknown> = { ...body }
+  // Whitelist — nunca permite sobrescrever ext_company_id, company_id, created_by, etc.
+  const patch: Record<string, unknown> = {}
+  if (body.description !== undefined) patch.description = body.description
+  if (body.amount      !== undefined) patch.amount      = body.amount
+  if (body.type        !== undefined) patch.type        = body.type
+  if (body.date        !== undefined) patch.date        = body.date
+  if (body.nature      !== undefined) patch.nature      = body.nature
+  if (body.notes       !== undefined) patch.notes       = body.notes
+  if (body.is_paid     !== undefined) patch.is_paid     = body.is_paid
   if (body.is_paid === false) patch.paid_at = null
+  else if (body.paid_at !== undefined) patch.paid_at = body.paid_at
+
+  if (Object.keys(patch).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
 
   const { data, error } = await db.from('transactions')
     .update(patch).eq('id', id).select('*').single()

@@ -94,8 +94,17 @@ router.patch('/:id', async (c) => {
     tax_regime?: string | null; segment?: string | null
   }>()
 
+  const updates: Record<string, unknown> = {}
+  if (body.name        !== undefined) updates.name        = body.name
+  if (body.cnpj        !== undefined) updates.cnpj        = body.cnpj
+  if (body.trade_name  !== undefined) updates.trade_name  = body.trade_name
+  if (body.tax_regime  !== undefined) updates.tax_regime  = body.tax_regime
+  if (body.segment     !== undefined) updates.segment     = body.segment
+
+  if (Object.keys(updates).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+
   const { data, error } = await db.from('external_companies')
-    .update(body).eq('id', id).select('*').single()
+    .update(updates).eq('id', id).select('*').single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data)
 })

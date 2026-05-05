@@ -51,7 +51,7 @@ router.get('/:id', async (c) => {
     if (company?.owner_id !== userId) return c.json({ error: 'Forbidden: not a company member' }, 403)
   }
 
-  const { data } = await db.from('companies').select('id, name, cnpj, tax_regime, owner_id').eq('id', id).single()
+  const { data } = await db.from('companies').select('id, name, cnpj, tax_regime, trade_name, segment').eq('id', id).single()
   return c.json(data)
 })
 

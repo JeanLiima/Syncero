@@ -30,7 +30,9 @@ router.get('/', async (c) => {
     .order('name')
 
   if (search) {
-    query = query.or(`name.ilike.%${search}%,cpf.ilike.%${search}%,cnpj.ilike.%${search}%`)
+    // Remover caracteres com significado na sintaxe de filtro PostgREST (.or string)
+    const safe = search.replace(/[%_,()]/g, '')
+    if (safe) query = query.or(`name.ilike.%${safe}%,cpf.ilike.%${safe}%,cnpj.ilike.%${safe}%`)
   }
 
   const { data, error } = await query

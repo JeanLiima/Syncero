@@ -1,14 +1,7 @@
 import { Hono } from 'hono'
-import { createServiceClient, type HonoVariables } from '../_shared'
+import { createServiceClient, sha256hex, type HonoVariables } from '../_shared'
 
 const router = new Hono<{ Variables: HonoVariables }>()
-
-// ── Helpers ────────────────────────────────────────────────────
-async function sha256hex(text: string): Promise<string> {
-  const encoded = new TextEncoder().encode(text)
-  const hash = await crypto.subtle.digest('SHA-256', encoded)
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
-}
 
 function generateRawKey(): string {
   const bytes = new Uint8Array(32)
@@ -43,6 +36,19 @@ router.post('/', async (c) => {
     name: string; expiresAt?: string | null
     companyId?: string; extCompanyId?: string
   }>()
+
+  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+
+  // Verificar que o contador tem acesso à empresa informada
+  if (body.companyId) {
+    const { data: acct } = await db.from('accountant_companies')
+      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
+    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
+  } else {
+    const { data: ec } = await db.from('external_companies')
+      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
+    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
+  }
 
   const rawKey = generateRawKey()
   const hash = await sha256hex(rawKey)

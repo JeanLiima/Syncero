@@ -36,6 +36,11 @@ router.post('/', async (c) => {
   const db = createServiceClient()
   const { user_type } = await c.req.json<{ user_type: string }>()
 
+  const VALID_USER_TYPES = ['company_user', 'accountant'] as const
+  if (!VALID_USER_TYPES.includes(user_type as typeof VALID_USER_TYPES[number])) {
+    return c.json({ error: 'user_type must be company_user or accountant' }, 400)
+  }
+
   const { data: { user } } = await db.auth.admin.getUserById(userId)
   const fullName = user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email?.split('@')[0] ?? 'Usuário'
   const avatarUrl = (user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null) as string | null

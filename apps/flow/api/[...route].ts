@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { handle } from 'hono/vercel'
-import { authMiddleware, type HonoVariables } from './_shared'
+import { authMiddleware, originGuard, type HonoVariables } from './_shared'
 import authRouter from './routes/_auth'
 import companiesRouter from './routes/_companies'
 import invitesRouter from './routes/_invites'
@@ -22,6 +22,9 @@ app.onError((err, c) => {
   console.error(err)
   return c.json({ error: 'Internal server error' }, 500)
 })
+
+// ── Origin Guard — Flow é 100% interno, sem APIs públicas ─────
+app.use('/*', originGuard)
 
 // ── Auth middleware ───────────────────────────────────────────
 app.use('/me', authMiddleware)
@@ -46,7 +49,7 @@ app.use('/contacts/*', authMiddleware)
 app.use('/invites/:token/accept', authMiddleware)
 
 // ── Route registrations ────────────────────────────────────────
-// GET /invites/:token doesn't require auth (middleware skipped above)
+// GET /invites/:token é público (sem auth) mas ainda passa pelo originGuard
 app.route('/me', authRouter)
 app.route('/companies', companiesRouter)
 app.route('/invites', invitesRouter)

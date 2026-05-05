@@ -3,11 +3,12 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Search, BookOpen } from 'lucide-react'
+import { Search, BookOpen, Download } from 'lucide-react'
 import { Badge, Button, Card, Input, Select, Table, DateRangePicker } from '@syncero/ui'
 import { getTransactions } from '@/lib/backend'
 import { TransactionDetailModal } from '@/components/accountant/TransactionDetailModal'
 import { ClassifyModal } from '@/components/accountant/ClassifyModal'
+import { ExportModal } from '@/components/accountant/ExportModal'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import type { Transaction, TransactionType } from '@/types'
@@ -36,6 +37,7 @@ export function Component() {
   const [page, setPage]             = useState(1)
   const [detailRow, setDetailRow]   = useState<TxRow | null>(null)
   const [classifyTx, setClassifyTx] = useState<TxRow | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['transactions-books', companyId, filters, page],
@@ -60,11 +62,16 @@ export function Component() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('transactions_title')}</h1>
-        <p className="text-sm text-[var(--text-muted)]">
-          {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('transactions_countPlural') : t('transactions_countSingular')}
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('transactions_title')}</h1>
+          <p className="text-sm text-[var(--text-muted)]">
+            {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('transactions_countPlural') : t('transactions_countSingular')}
+          </p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>
+          <Download className="h-4 w-4" /> {t('export_button')}
+        </Button>
       </div>
 
       {/* Filters */}
@@ -221,6 +228,13 @@ export function Component() {
         transaction={classifyTx}
         open={!!classifyTx}
         onClose={() => setClassifyTx(null)}
+        companyId={companyId!}
+      />
+
+      <ExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        filters={filters}
         companyId={companyId!}
       />
     </div>

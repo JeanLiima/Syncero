@@ -60,6 +60,7 @@ export const pt = {
 
   // Footer
   footer_rights: 'Todos os direitos reservados.',
+  footer_docs: 'API Docs',
 
   // Persona Modal
   persona_title: 'Como você vai usar a plataforma?',

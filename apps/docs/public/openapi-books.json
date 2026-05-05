@@ -1,0 +1,2251 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Syncero Books API",
+    "version": "1.0.0",
+    "description": "API privada do **Syncero Books** — app para contadores.\n\n### Autenticação\nTodas as rotas protegidas exigem um **Bearer JWT** emitido pelo Supabase.\nAlgumas rotas também aceitam uma **API Key** (`x-api-key`) para integrações externas.\n\n### Autorização\n- Rotas de empresas Flow: exigem vínculo `accountant_companies.status = 'accepted'`.\n- Rotas de empresas externas: exigem que `external_companies.accountant_id = userId`.\n"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5175",
+      "description": "Desenvolvimento local"
+    },
+    {
+      "url": "https://syncero-books.vercel.app",
+      "description": "Produção"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    },
+    {
+      "apiKey": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Perfil do contador autenticado"
+    },
+    {
+      "name": "companies",
+      "description": "Empresas Flow vinculadas ao contador"
+    },
+    {
+      "name": "external-companies",
+      "description": "Empresas externas gerenciadas pelo contador"
+    },
+    {
+      "name": "transactions",
+      "description": "Lançamentos — leitura (empresas Flow) e CRUD (empresas externas)"
+    },
+    {
+      "name": "journal-entries",
+      "description": "Lançamentos contábeis em partidas dobradas"
+    },
+    {
+      "name": "account-plans",
+      "description": "Plano de contas"
+    },
+    {
+      "name": "fiscal",
+      "description": "Livros fiscais, documentos fiscais e cálculos tributários"
+    },
+    {
+      "name": "api-keys",
+      "description": "Chaves de API para integração externa"
+    },
+    {
+      "name": "invites",
+      "description": "Convites de contador (flow enviado pelo Flow, aceito aqui)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "TransactionType": {
+        "type": "string",
+        "enum": [
+          "income",
+          "expense"
+        ]
+      },
+      "TransactionNature": {
+        "type": "string",
+        "enum": [
+          "sale_service",
+          "loan_received",
+          "capital_contribution",
+          "operational_expense",
+          "product_cost",
+          "asset_purchase",
+          "debt_payment",
+          "owner_withdrawal"
+        ]
+      },
+      "AccountType": {
+        "type": "string",
+        "enum": [
+          "asset",
+          "liability",
+          "equity",
+          "revenue",
+          "expense",
+          "cost"
+        ]
+      },
+      "AccountNature": {
+        "type": "string",
+        "enum": [
+          "debit",
+          "credit"
+        ]
+      },
+      "JournalSide": {
+        "type": "string",
+        "enum": [
+          "debit",
+          "credit"
+        ]
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "ext_company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "is_paid": {
+            "type": "boolean"
+          },
+          "paid_at": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "nature": {
+            "$ref": "#/components/schemas/TransactionNature"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_classified": {
+            "type": "boolean",
+            "description": "Adicionado pelo servidor — indica se há lançamento contábil vinculado"
+          },
+          "journal_entry_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PaginatedTransactions": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Transaction"
+            }
+          },
+          "count": {
+            "type": "integer"
+          }
+        }
+      },
+      "AccountPlan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "ext_company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "accountant_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parent_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "code": {
+            "type": "string",
+            "example": "1.01.001"
+          },
+          "name": {
+            "type": "string"
+          },
+          "account_type": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "nature": {
+            "$ref": "#/components/schemas/AccountNature"
+          },
+          "is_analytic": {
+            "type": "boolean"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "JournalEntryLine": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entry_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "account_plan_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "side": {
+            "$ref": "#/components/schemas/JournalSide"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true
+          },
+          "account_plan": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "JournalEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "ext_company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "accountant_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "entry_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "description": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "api",
+              "syncero_import"
+            ]
+          },
+          "flow_transaction_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "external_ref": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_reversed": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JournalEntryLine"
+            }
+          }
+        }
+      },
+      "ExternalCompany": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountant_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "cnpj": {
+            "type": "string",
+            "nullable": true
+          },
+          "trade_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "tax_regime": {
+            "type": "string",
+            "enum": [
+              "simples",
+              "lucro_presumido",
+              "lucro_real"
+            ],
+            "nullable": true
+          },
+          "segment": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "retail",
+              "services",
+              "manufacturing",
+              "construction",
+              "agribusiness",
+              "healthcare",
+              "education",
+              "technology",
+              "financial",
+              "other"
+            ]
+          },
+          "integration": {
+            "type": "string"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "key_prefix": {
+            "type": "string",
+            "example": "sk_live_abc12"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "ext_company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "last_used_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FiscalDocument": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "doc_type": {
+            "type": "string",
+            "enum": [
+              "nfe",
+              "nfse",
+              "cfe",
+              "nfce"
+            ]
+          },
+          "number": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string",
+            "nullable": true
+          },
+          "issue_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "value": {
+            "type": "number"
+          },
+          "issuer_cnpj": {
+            "type": "string",
+            "nullable": true
+          },
+          "issuer_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "recipient_cnpj": {
+            "type": "string",
+            "nullable": true
+          },
+          "recipient_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "authorized",
+              "cancelled",
+              "denied",
+              "pending"
+            ]
+          },
+          "access_key": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FiscalBook": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "book_type": {
+            "type": "string",
+            "enum": [
+              "sped_fiscal",
+              "sped_contribuicoes",
+              "ecf",
+              "ecd"
+            ]
+          },
+          "reference_period": {
+            "type": "string",
+            "example": "2024-01"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "validated",
+              "transmitted"
+            ]
+          },
+          "file_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "transmitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TaxCalculation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference_period": {
+            "type": "string",
+            "example": "2024-01"
+          },
+          "tax_type": {
+            "type": "string"
+          },
+          "base_value": {
+            "type": "number"
+          },
+          "rate": {
+            "type": "number"
+          },
+          "tax_value": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "calculated",
+              "paid"
+            ]
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "paid_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Obter perfil do contador autenticado",
+        "responses": {
+          "200": {
+            "description": "Perfil do usuário",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "full_name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "user_type": {
+                      "type": "string"
+                    },
+                    "avatar_url": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Criar ou atualizar perfil (onboarding)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "full_name",
+                  "user_type"
+                ],
+                "properties": {
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "user_type": {
+                    "type": "string",
+                    "enum": [
+                      "accountant"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil salvo"
+          }
+        }
+      }
+    },
+    "/api/companies": {
+      "get": {
+        "tags": [
+          "companies"
+        ],
+        "summary": "Listar empresas Flow vinculadas",
+        "description": "Retorna empresas onde o contador foi aceito (`accountant_companies.status = 'accepted'`).",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "cnpj": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "tax_regime": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "segment": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{id}": {
+      "get": {
+        "tags": [
+          "companies"
+        ],
+        "summary": "Obter detalhes de empresa Flow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "cnpj": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "tax_regime": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "segment": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem acesso"
+          }
+        }
+      }
+    },
+    "/api/companies/{id}/fiscal-summary": {
+      "get": {
+        "tags": [
+          "companies"
+        ],
+        "summary": "Resumo fiscal da empresa (mês atual)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nfeCount": {
+                      "type": "integer"
+                    },
+                    "booksCount": {
+                      "type": "integer"
+                    },
+                    "taxTotal": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external-companies": {
+      "get": {
+        "tags": [
+          "external-companies"
+        ],
+        "summary": "Listar empresas externas do contador",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExternalCompany"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "external-companies"
+        ],
+        "summary": "Criar empresa externa",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "cnpj": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "trade_name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "tax_regime": {
+                    "type": "string",
+                    "enum": [
+                      "simples",
+                      "lucro_presumido",
+                      "lucro_real"
+                    ],
+                    "nullable": true
+                  },
+                  "segment": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "retail",
+                      "services",
+                      "manufacturing",
+                      "construction",
+                      "agribusiness",
+                      "healthcare",
+                      "education",
+                      "technology",
+                      "financial",
+                      "other"
+                    ]
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "seedPlan": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Se true, cria o Plano de Contas padrão CFC automaticamente"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Empresa criada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalCompany"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/external-companies/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "external-companies"
+        ],
+        "summary": "Obter empresa externa",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalCompany"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Sem acesso"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "external-companies"
+        ],
+        "summary": "Atualizar empresa externa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "cnpj": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "trade_name": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "tax_regime": {
+                    "type": "string",
+                    "enum": [
+                      "simples",
+                      "lucro_presumido",
+                      "lucro_real"
+                    ],
+                    "nullable": true
+                  },
+                  "segment": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalCompany"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions": {
+      "get": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Listar lançamentos com status de classificação",
+        "description": "Aceita `companyId` (empresa Flow, somente leitura) ou `extCompanyId` (empresa externa, CRUD completo).\nRetorna `is_classified` e `journal_entry_id` adicionados pelo servidor.\n",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Empresa Flow (exclusivo com extCompanyId)"
+          },
+          {
+            "name": "extCompanyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Empresa externa (exclusivo com companyId)"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TransactionType"
+            }
+          },
+          {
+            "name": "is_paid",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 1000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Página de lançamentos com status de classificação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTransactions"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Criar lançamento para empresa externa",
+        "description": "Exclusivo para empresas externas (`extCompanyId`). Empresas Flow são somente leitura no Books.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "extCompanyId",
+                  "description",
+                  "amount",
+                  "type",
+                  "date",
+                  "is_paid"
+                ],
+                "properties": {
+                  "extCompanyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Aluguel de escritório"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0.01
+                  },
+                  "type": {
+                    "$ref": "#/components/schemas/TransactionType"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "is_paid": {
+                    "type": "boolean"
+                  },
+                  "paid_at": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "nature": {
+                    "$ref": "#/components/schemas/TransactionNature",
+                    "nullable": true,
+                    "description": "Importante para sugestões inteligentes na classificação contábil"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lançamento criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Obter lançamento com detalhes expandidos",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Transaction"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "creator_name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "payment_registrar_name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "categories": {
+                          "type": "object",
+                          "nullable": true
+                        },
+                        "banks": {
+                          "type": "object",
+                          "nullable": true
+                        },
+                        "contacts": {
+                          "type": "object",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Atualizar lançamento de empresa externa",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "type": {
+                    "$ref": "#/components/schemas/TransactionType"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "is_paid": {
+                    "type": "boolean"
+                  },
+                  "paid_at": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "nature": {
+                    "$ref": "#/components/schemas/TransactionNature"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Excluir lançamento de empresa externa",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journal-entries": {
+      "get": {
+        "tags": [
+          "journal-entries"
+        ],
+        "summary": "Listar lançamentos contábeis",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "extCompanyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "2024-01"
+            },
+            "description": "Filtra pelo mês no formato YYYY-MM"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "journal-entries"
+        ],
+        "summary": "Criar lançamento contábil (classificar)",
+        "description": "Cria um lançamento em partidas dobradas. Ao informar `flow_transaction_id`,\no lançamento fica vinculado ao lançamento financeiro correspondente,\nmarcando-o como **Classificado**.\n\nDeve sempre ter exatamente 2 linhas (débito e crédito) com o mesmo valor.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "entry_date",
+                  "description",
+                  "lines"
+                ],
+                "properties": {
+                  "companyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Empresa Flow (exclusivo com extCompanyId)"
+                  },
+                  "extCompanyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Empresa externa (exclusivo com companyId)"
+                  },
+                  "entry_date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "flow_transaction_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true,
+                    "description": "Vincula ao lançamento financeiro (Flow ou empresa externa)"
+                  },
+                  "external_ref": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "lines": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "account_plan_id",
+                        "side",
+                        "amount"
+                      ],
+                      "properties": {
+                        "account_plan_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "side": {
+                          "$ref": "#/components/schemas/JournalSide"
+                        },
+                        "amount": {
+                          "type": "number"
+                        },
+                        "memo": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account-plans": {
+      "get": {
+        "tags": [
+          "account-plans"
+        ],
+        "summary": "Listar plano de contas",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "extCompanyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountPlan"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "account-plans"
+        ],
+        "summary": "Criar conta no plano",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name",
+                  "account_type",
+                  "nature",
+                  "is_analytic"
+                ],
+                "properties": {
+                  "companyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "extCompanyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "1.01.001"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "account_type": {
+                    "$ref": "#/components/schemas/AccountType"
+                  },
+                  "nature": {
+                    "$ref": "#/components/schemas/AccountNature"
+                  },
+                  "is_analytic": {
+                    "type": "boolean"
+                  },
+                  "parent_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountPlan"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account-plans/seed": {
+      "post": {
+        "tags": [
+          "account-plans"
+        ],
+        "summary": "Importar plano de contas em lote",
+        "description": "Insere múltiplas contas de uma vez, resolvendo referências de `parent_code` automaticamente.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "companyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "extCompanyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "accounts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "code",
+                        "name",
+                        "account_type",
+                        "nature",
+                        "is_analytic"
+                      ],
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "account_type": {
+                          "$ref": "#/components/schemas/AccountType"
+                        },
+                        "nature": {
+                          "$ref": "#/components/schemas/AccountNature"
+                        },
+                        "is_analytic": {
+                          "type": "boolean"
+                        },
+                        "parent_code": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "seeded": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account-plans/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "patch": {
+        "tags": [
+          "account-plans"
+        ],
+        "summary": "Atualizar conta",
+        "description": "Ao alterar o `code` para um código já existente, a resposta é 400. Use a lógica de swap no cliente.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "account_type": {
+                    "$ref": "#/components/schemas/AccountType"
+                  },
+                  "nature": {
+                    "$ref": "#/components/schemas/AccountNature"
+                  },
+                  "is_analytic": {
+                    "type": "boolean"
+                  },
+                  "parent_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountPlan"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Código duplicado ou dados inválidos"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "account-plans"
+        ],
+        "summary": "Desativar conta (soft delete)",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account-plans/{id}/usage": {
+      "get": {
+        "tags": [
+          "account-plans"
+        ],
+        "summary": "Contar lançamentos contábeis vinculados à conta",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "usageCount": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account-plans/{id}/transfer": {
+      "post": {
+        "tags": [
+          "account-plans"
+        ],
+        "summary": "Transferir lançamentos e desativar conta",
+        "description": "Move todos os `journal_entry_lines` para a conta destino, depois desativa a conta origem.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "targetId"
+                ],
+                "properties": {
+                  "targetId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Conta destino (deve ser analítica e do mesmo contador)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Conta destino inválida"
+          }
+        }
+      }
+    },
+    "/api/fiscal-documents": {
+      "get": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Listar documentos fiscais (NF-e, NFS-e, CF-e, NFC-e)",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "doc_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nfe",
+                "nfse",
+                "cfe",
+                "nfce"
+              ]
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FiscalDocument"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/fiscal-books": {
+      "get": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Listar livros fiscais (SPED, ECF, ECD)",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FiscalBook"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tax-calculations": {
+      "get": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Listar cálculos tributários",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxCalculation"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/categories": {
+      "get": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Listar categorias de uma empresa Flow (leitura)",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "income",
+                          "expense"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/api-keys": {
+      "get": {
+        "tags": [
+          "api-keys"
+        ],
+        "summary": "Listar chaves de API",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "extCompanyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKey"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "api-keys"
+        ],
+        "summary": "Criar chave de API",
+        "description": "O token completo é retornado **uma única vez** no campo `key`. Armazene-o imediatamente — não é possível recuperá-lo depois.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "companyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "extCompanyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiKey"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string",
+                          "description": "Token completo — exibido somente nesta resposta",
+                          "example": "sk_live_abc123xyz..."
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/api-keys/{id}/revoke": {
+      "patch": {
+        "tags": [
+          "api-keys"
+        ],
+        "summary": "Revogar chave de API",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/invites/{token}": {
+      "get": {
+        "tags": [
+          "invites"
+        ],
+        "summary": "Verificar token de convite de contador (público)",
+        "security": [],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do convite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "accountant"
+                      ]
+                    },
+                    "companyName": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "accepted"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Token inválido ou expirado"
+          }
+        }
+      }
+    },
+    "/api/invites/{token}/accept": {
+      "post": {
+        "tags": [
+          "invites"
+        ],
+        "summary": "Aceitar convite de contador",
+        "description": "Requer `user_type = 'accountant'`. Vincula o contador à empresa e libera acesso aos dados.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Convite aceito com sucesso"
+          },
+          "403": {
+            "description": "Usuário não é contador"
+          },
+          "409": {
+            "description": "Convite já foi aceito"
+          }
+        }
+      }
+    }
+  }
+}

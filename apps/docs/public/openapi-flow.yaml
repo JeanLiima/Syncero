@@ -449,7 +449,7 @@ paths:
                   properties:
                     id:           { type: string, format: uuid }
                     company_id:   { type: string, format: uuid }
-                    accountant_id:{ type: string, format: uuid, nullable: true }
+                    accountant_id: { type: string, format: uuid, nullable: true }
                     email:        { type: string }
                     status:       { type: string, enum: [pending, accepted, rejected] }
                     invited_at:   { type: string, format: date-time }

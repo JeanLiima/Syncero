@@ -1,4 +1,4 @@
-openapi: '3.1.0'
+openapi: '3.0.3'
 
 info:
   title: Syncero Flow API
@@ -91,9 +91,9 @@ components:
         notes:                 { type: string, nullable: true }
         counterpart:           { type: string, nullable: true }
         paid_at:               { type: string, format: date, nullable: true }
-        payment_method:        { $ref: '#/components/schemas/PaymentMethod', nullable: true }
+        payment_method:        { $ref: '#/components/schemas/PaymentMethod' }
         bank_id:               { type: string, format: uuid, nullable: true }
-        nature:                { $ref: '#/components/schemas/TransactionNature', nullable: true }
+        nature:                { $ref: '#/components/schemas/TransactionNature' }
         is_installment:        { type: boolean }
         installment_count:     { type: integer, nullable: true }
         installment_number:    { type: integer, nullable: true }
@@ -136,11 +136,11 @@ components:
         date:               { type: string, format: date }
         is_paid:            { type: boolean, default: false }
         paid_at:            { type: string, format: date, nullable: true }
-        payment_method:     { $ref: '#/components/schemas/PaymentMethod', nullable: true }
+        payment_method:     { $ref: '#/components/schemas/PaymentMethod' }
         bank_id:            { type: string, format: uuid, nullable: true }
         category_id:        { type: string, format: uuid, nullable: true }
         contact_id:         { type: string, format: uuid, nullable: true }
-        nature:             { $ref: '#/components/schemas/TransactionNature', nullable: true }
+        nature:             { $ref: '#/components/schemas/TransactionNature' }
         notes:              { type: string, nullable: true }
         counterpart:        { type: string, nullable: true }
         is_installment:     { type: boolean, default: false }
@@ -632,11 +632,11 @@ paths:
                 date:           { type: string, format: date }
                 is_paid:        { type: boolean }
                 paid_at:        { type: string, format: date, nullable: true }
-                payment_method: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
+                payment_method: { $ref: '#/components/schemas/PaymentMethod' }
                 bank_id:        { type: string, format: uuid, nullable: true }
                 category_id:    { type: string, format: uuid, nullable: true }
                 contact_id:     { type: string, format: uuid, nullable: true }
-                nature:         { $ref: '#/components/schemas/TransactionNature', nullable: true }
+                nature:         { $ref: '#/components/schemas/TransactionNature' }
                 notes:          { type: string, nullable: true }
       responses:
         '200':

@@ -88,4 +88,21 @@ router.patch('/:id/revoke', async (c) => {
   return c.json({ ok: true })
 })
 
+// ── DELETE /api/api-keys/:id ──────────────────────────────────
+// Só permite excluir chaves já revogadas (is_active = false)
+router.delete('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+
+  const { data: existing } = await db.from('api_keys')
+    .select('accountant_id, is_active').eq('id', id).maybeSingle()
+  if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
+  if (existing.is_active) return c.json({ error: 'Revoke the key before deleting it' }, 400)
+
+  const { error } = await db.from('api_keys').delete().eq('id', id)
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
+})
+
 export default router

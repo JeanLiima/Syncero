@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, ShieldOff, Trash2 } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, SkeletonRows } from '@syncero/ui'
+import { Button, Card, ConfirmDialog, SkeletonRows, useToast } from '@syncero/ui'
 import { ApiKeyCreateModal } from '@/components/accountant/ApiKeyCreateModal'
 import { useT } from '@/i18n'
 import type { ApiKey } from '@/types'
@@ -13,6 +13,11 @@ export function Component() {
   const { id, isExternal } = useCompanyContext()
   const qc = useQueryClient()
   const [createOpen, setCreateOpen] = useState(false)
+
+  const { success: toastSuccess, error: toastError } = useToast()
+  const [revokeTarget, setRevokeTarget] = useState<ApiKey | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ApiKey | null>(null)
+  const [acting, setActing] = useState(false)
 
   const queryKey = ['api-keys', id]
   const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
@@ -36,9 +41,34 @@ export function Component() {
     return result.key
   }
 
-  const handleRevoke = async (keyId: string) => {
-    await apiFetch(`/api/api-keys/${keyId}/revoke`, { method: 'PATCH', body: '{}' })
-    qc.invalidateQueries({ queryKey })
+  const handleRevoke = async () => {
+    if (!revokeTarget) return
+    setActing(true)
+    try {
+      await apiFetch(`/api/api-keys/${revokeTarget.id}/revoke`, { method: 'PATCH', body: '{}' })
+      qc.invalidateQueries({ queryKey })
+      toastSuccess(t('apiKeys_revokeSuccess'))
+      setRevokeTarget(null)
+    } catch {
+      toastError(t('apiKeys_revokeError'))
+    } finally {
+      setActing(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setActing(true)
+    try {
+      await apiFetch(`/api/api-keys/${deleteTarget.id}`, { method: 'DELETE' })
+      qc.invalidateQueries({ queryKey })
+      toastSuccess(t('apiKeys_deleteSuccess'))
+      setDeleteTarget(null)
+    } catch {
+      toastError(t('apiKeys_deleteError'))
+    } finally {
+      setActing(false)
+    }
   }
 
   return (
@@ -78,12 +108,12 @@ export function Component() {
                 <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('apiKeys_lastUsed')}</th>
                 <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('apiKeys_expiresAt')}</th>
                 <th className="px-4 py-3 text-xs font-medium text-[var(--text-muted)]">{t('apiKeys_status')}</th>
-                <th className="px-4 py-3 w-10" />
+                <th className="px-4 py-3 w-16" />
               </tr>
             </thead>
             <tbody>
               {keys.map((key) => (
-                <tr key={key.id} className="border-b border-[var(--bg-border)]/50 hover:bg-[var(--bg-elevated)] transition-colors">
+                <tr key={key.id} className="border-b border-[var(--bg-border)]/50 hover:bg-[var(--bg-elevated)] transition-colors group">
                   <td className="px-4 py-3 text-[var(--text-primary)] font-medium">{key.name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-[var(--text-secondary)]">{key.key_prefix}…</td>
                   <td className="px-4 py-3 text-xs text-[var(--text-muted)]">
@@ -94,21 +124,43 @@ export function Component() {
                   </td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      key.is_active ? 'bg-[var(--success)]/15 text-[var(--success)]' : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
+                      key.is_active
+                        ? 'bg-[var(--success)]/15 text-[var(--success)]'
+                        : 'bg-[var(--bg-elevated)] text-[var(--text-muted)]'
                     }`}>
                       {key.is_active ? t('apiKeys_active') : t('apiKeys_revoked')}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {key.is_active && (
-                      <button
-                        onClick={() => handleRevoke(key.id)}
-                        className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-                        title={t('apiKeys_revoke')}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
+                    <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {key.is_active ? (
+                        /* Revogar — ShieldOff (desativar) */
+                        <div className="relative group/tip">
+                          <button
+                            onClick={() => setRevokeTarget(key)}
+                            className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--warning)] transition-colors"
+                          >
+                            <ShieldOff className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/tip:opacity-100 transition-opacity z-10">
+                            {t('apiKeys_revokeHint')}
+                          </span>
+                        </div>
+                      ) : (
+                        /* Excluir — Trash2 (remoção permanente) */
+                        <div className="relative group/tip">
+                          <button
+                            onClick={() => setDeleteTarget(key)}
+                            className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/tip:opacity-100 transition-opacity z-10">
+                            {t('apiKeys_deleteHint')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -116,6 +168,28 @@ export function Component() {
           </table>
         </Card>
       )}
+
+      {/* Confirmação — Revogar */}
+      <ConfirmDialog
+        open={!!revokeTarget}
+        onClose={() => setRevokeTarget(null)}
+        onConfirm={handleRevoke}
+        title={t('apiKeys_revokeConfirmTitle')}
+        message={`"${revokeTarget?.name}" — ${t('apiKeys_revokeConfirmMsg')}`}
+        confirmLabel={t('apiKeys_revokeConfirmYes')}
+        loading={acting}
+      />
+
+      {/* Confirmação — Excluir */}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title={t('apiKeys_deleteConfirmTitle')}
+        message={`"${deleteTarget?.name}" — ${t('apiKeys_deleteConfirmMsg')}`}
+        confirmLabel={t('apiKeys_deleteConfirmYes')}
+        loading={acting}
+      />
 
       <ApiKeyCreateModal
         open={createOpen}

@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { createServiceClient, type HonoVariables } from '../_shared'
 
-import { randomUUID } from 'crypto'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
@@ -85,7 +84,7 @@ router.post('/seed', async (c) => {
 
   // Pre-generate UUIDs so parent_id references can be resolved without sequential inserts
   const codeToId = new Map<string, string>()
-  for (const account of accounts) codeToId.set(account.code, randomUUID())
+  for (const account of accounts) codeToId.set(account.code, crypto.randomUUID())
 
   const rows = accounts.map(account => ({
     id:           codeToId.get(account.code)!,

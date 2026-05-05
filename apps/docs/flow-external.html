@@ -28,16 +28,14 @@
   </a>
 
   <script id="api-reference"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1"></script>
 
   <script>
-    (function () {
+    ;(function () {
       const labels = { pt: 'Voltar', en: 'Back' }
       const specs  = {
         pt: '/openapi-flow-external.json',
         en: '/openapi-flow-external-en.json',
       }
-
       let lang = 'pt'
       try {
         const prefs = JSON.parse(localStorage.getItem('syncero-prefs') || '{}')
@@ -56,5 +54,7 @@
       }))
     })()
   </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1"></script>
 </body>
 </html>

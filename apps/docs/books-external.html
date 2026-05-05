@@ -27,18 +27,17 @@
     <span id="back-label"></span>
   </a>
 
-  <!-- spec url set dynamically before Scalar loads -->
+  <!-- 1. Elemento vazio que o Scalar vai ler -->
   <script id="api-reference"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1"></script>
 
+  <!-- 2. Definir data-url ANTES do Scalar CDN carregar -->
   <script>
-    (function () {
+    ;(function () {
       const labels = { pt: 'Voltar', en: 'Back' }
       const specs  = {
         pt: '/openapi-books-external.json',
         en: '/openapi-books-external-en.json',
       }
-
       let lang = 'pt'
       try {
         const prefs = JSON.parse(localStorage.getItem('syncero-prefs') || '{}')
@@ -57,5 +56,8 @@
       }))
     })()
   </script>
+
+  <!-- 3. Scalar lê o data-url já definido -->
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1"></script>
 </body>
 </html>

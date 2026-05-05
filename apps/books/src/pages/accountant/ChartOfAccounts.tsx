@@ -260,16 +260,39 @@ export function Component() {
     if (!planB) return
     const codeA = planA.code
     const codeB = planB.code
-    // Swap the two root codes
-    await Promise.all([
-      patchPlan(planA.id, { ...data, code: codeB }),
-      patchPlan(planB.id, { code: codeA }),
-    ])
-    // Cascade children of each
-    await Promise.all([
-      cascadeCodeRename(codeA, codeB),
-      cascadeCodeRename(codeB, codeA),
-    ])
+
+    // Capture children before any changes (plans snapshot from React Query)
+    const aChildren = plans.filter(p => p.code.startsWith(codeA + '.'))
+    const bChildren = plans.filter(p => p.code.startsWith(codeB + '.'))
+
+    // A unique constraint on (company_id, code) means we can't swap in parallel.
+    // Three-step dance via a temp code so no step ever collides with an existing code.
+    const tmp = `__tmp_${Date.now()}`
+
+    // Step 1 — move B (+ its children) out of the way
+    await patchPlan(planB.id, { code: tmp })
+    if (bChildren.length > 0) {
+      await Promise.all(bChildren.map(c =>
+        patchPlan(c.id, { code: tmp + c.code.slice(codeB.length), parent_id: c.parent_id })
+      ))
+    }
+
+    // Step 2 — move A (+ its children) into B's old slot
+    await patchPlan(planA.id, { ...data, code: codeB })
+    if (aChildren.length > 0) {
+      await Promise.all(aChildren.map(c =>
+        patchPlan(c.id, { code: codeB + c.code.slice(codeA.length), parent_id: c.parent_id })
+      ))
+    }
+
+    // Step 3 — move B from tmp into A's old slot
+    await patchPlan(planB.id, { code: codeA })
+    if (bChildren.length > 0) {
+      await Promise.all(bChildren.map(c =>
+        patchPlan(c.id, { code: codeA + c.code.slice(codeB.length), parent_id: c.parent_id })
+      ))
+    }
+
     qc.invalidateQueries({ queryKey })
     setEditing(null); setPreset(null)
   }

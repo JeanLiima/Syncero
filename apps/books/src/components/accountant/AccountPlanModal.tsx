@@ -153,6 +153,8 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
 
   const [swapTarget,   setSwapTarget]   = useState<AccountPlan | null>(null)
   const [pendingData,  setPendingData]  = useState<FormData | null>(null)
+  const [swapping,     setSwapping]     = useState(false)
+  const [swapError,    setSwapError]    = useState<string | null>(null)
 
   const handleFormSubmit = handleSubmit(async (data) => {
     const finalData = { ...data, parent_id: data.parent_id || null } as FormData
@@ -173,18 +175,24 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
     return (
       <Modal
         open
-        onClose={() => { setSwapTarget(null); setPendingData(null) }}
+        onClose={() => { setSwapTarget(null); setPendingData(null); setSwapError(null) }}
         title={t('plano_swapTitle')}
         size="sm"
         footer={
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => { setSwapTarget(null); setPendingData(null) }}>
+            <Button variant="ghost" size="sm" disabled={swapping} onClick={() => { setSwapTarget(null); setPendingData(null); setSwapError(null) }}>
               {t('plano_cancel')}
             </Button>
-            <Button size="sm" onClick={async () => {
-              await onSwapConfirm!(pendingData, swapTarget.id)
-              setSwapTarget(null); setPendingData(null)
-              onClose()
+            <Button size="sm" loading={swapping} onClick={async () => {
+              setSwapping(true); setSwapError(null)
+              try {
+                await onSwapConfirm!(pendingData, swapTarget.id)
+                setSwapTarget(null); setPendingData(null); setSwapping(false)
+                onClose()
+              } catch {
+                setSwapError(t('plano_swapError'))
+                setSwapping(false)
+              }
             }}>
               {t('plano_swapConfirm')}
             </Button>
@@ -208,6 +216,7 @@ export function AccountPlanModal({ open, onClose, onSubmit, onSwapConfirm, allPl
           </div>
         </div>
         <p className="text-xs text-[var(--text-muted)] mt-3">{t('plano_swapNote')}</p>
+        {swapError && <p className="text-xs text-[var(--danger)] mt-2">{swapError}</p>}
       </Modal>
     )
   }

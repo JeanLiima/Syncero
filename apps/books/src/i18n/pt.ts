@@ -277,6 +277,7 @@ export const pt = {
   plano_swapConfirm: 'Trocar',
   plano_swapDesc: 'O código {code} já está em uso por {name}.',
   plano_swapNote: 'Todos os subitens de ambos os grupos serão renumerados automaticamente. Os lançamentos contábeis existentes não serão afetados, pois referenciam as contas pelo identificador interno, não pelo código.',
+  plano_swapError: 'Erro ao trocar os códigos. Tente novamente.',
   plano_clickToEdit: 'Clique para editar',
   plano_addChildTooltip: 'Adicionar subconta',
   plano_sectionDesc_asset: 'Recursos controlados pela empresa (caixa, banco, imobilizado).',

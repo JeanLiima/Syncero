@@ -279,6 +279,7 @@ export const en: Record<TranslationKey, string> = {
   plano_swapConfirm: 'Swap',
   plano_swapDesc: 'Code {code} is already used by {name}.',
   plano_swapNote: 'All sub-items of both groups will be renumbered automatically. Existing journal entries are not affected since they reference accounts by internal ID, not code.',
+  plano_swapError: 'Error swapping codes. Please try again.',
   plano_clickToEdit: 'Click to edit',
   plano_addChildTooltip: 'Add sub-account',
   plano_sectionDesc_asset: 'Resources controlled by the company (cash, bank, fixed assets).',

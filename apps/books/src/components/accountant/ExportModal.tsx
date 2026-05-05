@@ -20,10 +20,11 @@ interface Props {
   open: boolean
   onClose: () => void
   filters: TransactionFilters
-  companyId: string
+  companyId?: string
+  extCompanyId?: string
 }
 
-export function ExportModal({ open, onClose, filters, companyId }: Props) {
+export function ExportModal({ open, onClose, filters, companyId, extCompanyId }: Props) {
   const t = useT()
   const { language } = usePreferencesStore()
 
@@ -55,7 +56,7 @@ export function ExportModal({ open, onClose, filters, companyId }: Props) {
     setError(null)
     try {
       const result = await getTransactions({
-        companyId,
+        ...(extCompanyId ? { extCompanyId } : { companyId }),
         pageSize: '1000',
         page: '1',
         ...(filters.type        ? { type:      filters.type }                 : {}),

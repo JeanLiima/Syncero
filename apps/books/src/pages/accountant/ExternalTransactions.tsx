@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, Pencil, Trash2, BookOpen, Search } from 'lucide-react'
-import { Badge, Button, Card, ConfirmDialog, Input, Modal, Select, Table, useToast } from '@syncero/ui'
+import { Plus, Pencil, Trash2, BookOpen, Search, Download } from 'lucide-react'
+import { Badge, Button, Card, ConfirmDialog, DateRangePicker, Input, Modal, Select, Table, useToast } from '@syncero/ui'
 import {
   getTransactions,
   createExtTransaction,
@@ -12,6 +12,7 @@ import {
   deleteExtTransaction,
 } from '@/lib/backend'
 import { ClassifyModal } from '@/components/accountant/ClassifyModal'
+import { ExportModal } from '@/components/accountant/ExportModal'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import type { Transaction, TransactionNature, TransactionType } from '@/types'
@@ -73,6 +74,7 @@ export function Component() {
   const [deleteTarget, setDeleteTarget] = useState<TxRow | null>(null)
   const [deleting,     setDeleting]     = useState(false)
   const [classifyTx,   setClassifyTx]   = useState<TxRow | null>(null)
+  const [exportOpen,   setExportOpen]   = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: [...QUERY_KEY, filters, page],
@@ -190,9 +192,14 @@ export function Component() {
             {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('extTx_countPlural') : t('extTx_countSingular')}
           </p>
         </div>
-        <Button size="sm" onClick={openCreate}>
-          <Plus className="h-4 w-4" /> {t('extTx_new')}
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>
+            <Download className="h-4 w-4" /> {t('export_button')}
+          </Button>
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4" /> {t('extTx_new')}
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -229,6 +236,13 @@ export function Component() {
             value={filters.is_paid === undefined ? '' : String(filters.is_paid)}
             onChange={v => { setPage(1); setFilters(f => ({ ...f, is_paid: v === '' ? undefined : v === 'true' })) }}
             className="w-44"
+          />
+          <DateRangePicker
+            size="sm"
+            from={filters.date_from ?? ''}
+            to={filters.date_to ?? ''}
+            onChange={(from, to) => { setPage(1); setFilters(f => ({ ...f, date_from: from || undefined, date_to: to || undefined })) }}
+            language={language}
           />
         </div>
       </Card>
@@ -493,6 +507,14 @@ export function Component() {
         transaction={classifyTx}
         open={!!classifyTx}
         onClose={() => setClassifyTx(null)}
+        extCompanyId={extCompanyId!}
+      />
+
+      {/* Export */}
+      <ExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        filters={filters}
         extCompanyId={extCompanyId!}
       />
     </div>

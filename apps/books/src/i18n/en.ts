@@ -70,7 +70,6 @@ export const en: Record<TranslationKey, string> = {
   pwa_subtitle: 'Quick access, notifications and offline use',
   pwa_install: 'Install',
   pwa_ios: 'Tap Share → Add to Home Screen',
-  pwa_close: 'Close',
 
   // Preferences
   preferences_title: 'Preferences',
@@ -98,7 +97,6 @@ export const en: Record<TranslationKey, string> = {
   overview_transactions: 'Transactions',
   overview_chartOfAccounts: 'Chart of Accounts',
   overview_journal: 'Journal',
-  overview_apiKeys: 'API Keys',
   overview_viewTransactions: 'View transactions',
   overview_viewAccounts: 'View accounts',
   overview_viewEntries: 'View entries',

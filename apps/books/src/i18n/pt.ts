@@ -68,7 +68,6 @@ export const pt = {
   pwa_subtitle: 'Acesso rápido, notificações e uso offline',
   pwa_install: 'Instalar',
   pwa_ios: 'Toque em Compartilhar → Tela de Início',
-  pwa_close: 'Fechar',
 
   // Preferences
   preferences_title: 'Preferências',
@@ -96,7 +95,6 @@ export const pt = {
   overview_transactions: 'Lançamentos',
   overview_chartOfAccounts: 'Plano de Contas',
   overview_journal: 'Lançamentos Cont.',
-  overview_apiKeys: 'API Keys',
   overview_viewTransactions: 'Ver lançamentos',
   overview_viewAccounts: 'Ver contas',
   overview_viewEntries: 'Ver entradas',

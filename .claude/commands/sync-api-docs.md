@@ -17,6 +17,7 @@ Analisa os arquivos de rota do backend e mantém os specs OpenAPI em sincronia.
    - Campos do body com required/optional e nullable
    - Query params (required/optional)
    - Status codes retornados
+   - Constraints visíveis no código (`.min()`, `Math.min()`, checks de tipo, enums via `check()`)
 
 3. **Lê os specs atuais** — Carrega `openapi-flow.json` e/ou `openapi-books.json` de `apps/docs/public/`
 
@@ -26,12 +27,123 @@ Analisa os arquivos de rota do backend e mantém os specs OpenAPI em sincronia.
    - Tem todos os query params
    - Documenta os status codes corretos
    - Tem nullable correto nos campos
+   - Tem os campos de schema completos (ver seção abaixo)
 
 5. **Atualiza os specs** — Aplica as correções necessárias diretamente nos arquivos JSON. Não inventa endpoints que não existem no código.
 
 6. **Valida** — Roda `node -e "JSON.parse(...)"` para confirmar que o JSON resultante é válido.
 
 7. **Reporta** — Lista o que foi alterado em cada spec.
+
+---
+
+## Schema completo por tipo de campo
+
+**Regra geral:** use os campos estruturados do OpenAPI — nunca coloque default, exemplo ou constraint dentro de `description`. O Scalar renderiza cada campo no lugar correto da UI.
+
+```jsonc
+// ✓ Schema completo
+"page_size": {
+  "type": "integer",
+  "default": 20,
+  "minimum": 1,
+  "maximum": 1000,
+  "example": 50,
+  "description": "Número de registros por página"
+}
+
+// ✗ Errado — constraint embutido na description
+"page_size": {
+  "type": "integer",
+  "description": "Número de registros por página. Default: 20. Máximo: 1000."
+}
+```
+
+### Campos a preencher por situação
+
+| Campo | Quando usar |
+|-------|-------------|
+| `type` | sempre — `string`, `integer`, `number`, `boolean`, `array`, `object` |
+| `format` | UUIDs → `uuid`; datas → `date`; timestamps → `date-time`; emails → `email` |
+| `default` | quando o backend aplica um valor padrão (ex: `?? '20'`, `?? false`) |
+| `example` | sempre que o valor esperado não for óbvio pelo tipo |
+| `minimum` | inteiros/números com limite inferior (`amount > 0` → `minimum: 0.01`) |
+| `maximum` | inteiros/números com limite superior (`Math.min(N, 1000)` → `maximum: 1000`) |
+| `minItems` | arrays com quantidade mínima de elementos |
+| `enum` | quando o código valida contra lista fixa (ex: `check(type in ('income','expense'))`) |
+| `nullable` | quando o campo aceita `null` explicitamente |
+| `description` | **apenas** para semântica de negócio — o "por quê", não o "o quê" |
+
+### Exemplos por tipo de param
+
+**Query param com default e máximo:**
+```json
+{
+  "name": "page_size",
+  "in": "query",
+  "schema": {
+    "type": "integer",
+    "default": 20,
+    "minimum": 1,
+    "maximum": 1000
+  }
+}
+```
+
+**Query param enum:**
+```json
+{
+  "name": "type",
+  "in": "query",
+  "schema": {
+    "type": "string",
+    "enum": ["income", "expense"]
+  }
+}
+```
+
+**Body field com formato e exemplo:**
+```json
+{
+  "date": {
+    "type": "string",
+    "format": "date",
+    "example": "2026-05-01",
+    "description": "Data de competência"
+  }
+}
+```
+
+**Body field numérico com constraint:**
+```json
+{
+  "amount": {
+    "type": "number",
+    "minimum": 0.01,
+    "example": 1500
+  }
+}
+```
+
+**UUID com exemplo:**
+```json
+{
+  "company_id": {
+    "type": "string",
+    "format": "uuid",
+    "example": "550e8400-e29b-41d4-a716-446655440000"
+  }
+}
+```
+
+---
+
+## Regras de nomenclatura
+
+- **Tudo snake_case** — query params, body fields e path params. Nunca camelCase no wire.
+- `buildQuery()` no frontend auto-converte camelCase → snake_case — mas o spec deve documentar snake_case diretamente.
+
+---
 
 ## Regras importantes
 
@@ -41,6 +153,8 @@ Analisa os arquivos de rota do backend e mantém os specs OpenAPI em sincronia.
 - **Nunca reescrever o spec inteiro** — usar edits cirúrgicos para preservar detalhes já documentados (descrições, exemplos, x-access tags)
 - **JSON válido é obrigatório** — validar com `node -e "JSON.parse(...)"` após qualquer edição
 
+---
+
 ## Checklist de campos por tipo de mudança
 
 ### Novo endpoint
@@ -48,13 +162,23 @@ Analisa os arquivos de rota do backend e mantém os specs OpenAPI em sincronia.
 - [ ] Adicionar em paths: { "method": { tags, summary, parameters/requestBody, responses } }
 - [ ] Verificar se precisa de x-internal ou x-access tag
 - [ ] Verificar se vai para spec externo também
+- [ ] Preencher schema completo de cada param/field (type, format, default, example, enum, minimum, maximum)
 ```
 
-### Campo obrigatório adicionado ao body
+### Novo query param
 ```
-- [ ] Adicionar ao array required[]
-- [ ] Adicionar a properties com type correto
-- [ ] Verificar nullable (se o código aceita null → nullable: true)
+- [ ] Adicionar em parameters[] com in: "query"
+- [ ] required: true se o backend retorna 400 quando ausente
+- [ ] schema: type + format + default + enum + minimum + maximum conforme aplicável
+- [ ] description apenas se a semântica não for óbvia
+```
+
+### Novo campo no body
+```
+- [ ] Adicionar ao array required[] se obrigatório
+- [ ] Adicionar a properties com schema completo
+- [ ] nullable: true se o código aceita null
+- [ ] example se o valor esperado não for óbvio
 ```
 
 ### Campo removido
@@ -68,6 +192,8 @@ Analisa os arquivos de rota do backend e mantém os specs OpenAPI em sincronia.
 - [ ] Adicionar responses["NNN"] com description
 - [ ] Incluir schema $ref: Error se for erro
 ```
+
+---
 
 ## Arquivos relevantes
 

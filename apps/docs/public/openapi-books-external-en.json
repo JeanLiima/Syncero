@@ -3,7 +3,7 @@
   "info": {
     "title": "Syncero Books — Integration API",
     "version": "1.0.0",
-    "description": "Public API of **Syncero Books** for external integrations.\n\nEnables third-party systems (ERPs, management tools, spreadsheets) to submit financial transactions and create accounting entries for companies managed by accountants.\n\n### Authentication\nAll routes require an `x-api-key` header with a key generated in the Syncero Books dashboard, or a Bearer JWT.\n\n### Get an API Key\n1. Go to Syncero Books → External Company → Settings → API Keys\n2. Create a new key with a descriptive name\n3. Copy the token — it is shown **only once**\n\n### The `nature` field matters\nProviding the accounting nature of a transaction powers the automatic classification suggestions in Books. Highly recommended.\n\n### Limits\n- Up to 1,000 transactions per listing\n- API Keys can have a configurable expiration date"
+    "description": "Public API of **Syncero Books** for external integrations.\n\nEnables third-party systems (ERPs, management tools, spreadsheets) to submit financial transactions and create accounting entries for companies managed by accountants.\n\n### Authentication\nAll routes require an `x-api-key` header with a key generated in the Syncero Books dashboard, or a Bearer JWT.\n\n### Get an API Key\n1. Go to Syncero Books → External Company → Settings → API Keys\n2. Create a new key with a descriptive name\n3. Copy the token — it is shown **only once**\n\n### Required fields\n`nature` (accounting nature) and `counterpart` (who sent/received the amount) are required on all transactions. Providing `nature` correctly powers the automatic classification suggestions in Books.\n\n### Limits\n- Up to 1,000 transactions per listing\n- API Keys can have a configurable expiration date"
   },
   "servers": [
     {
@@ -270,7 +270,7 @@
           "transactions"
         ],
         "summary": "Create transaction",
-        "description": "Records a financial transaction for the external company. The `nature` field is highly recommended — it powers the automatic classification suggestions in Books.",
+        "description": "Records a financial transaction for the external company. The `nature` and `counterpart` fields are required.",
         "requestBody": {
           "required": true,
           "content": {
@@ -283,7 +283,9 @@
                   "amount",
                   "type",
                   "date",
-                  "is_paid"
+                  "is_paid",
+                  "nature",
+                  "counterpart"
                 ],
                 "properties": {
                   "extCompanyId": {
@@ -320,8 +322,12 @@
                     "description": "Actual payment date"
                   },
                   "nature": {
-                    "$ref": "#/components/schemas/TransactionNature",
-                    "nullable": true
+                    "$ref": "#/components/schemas/TransactionNature"
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Who sent (income) or received (expense) the amount",
+                    "example": "Client XYZ Ltd"
                   },
                   "notes": {
                     "type": "string",
@@ -341,7 +347,8 @@
                     "date": "2026-05-01",
                     "is_paid": true,
                     "paid_at": "2026-05-03",
-                    "nature": "sale_service"
+                    "nature": "sale_service",
+                    "counterpart": "Client XYZ Ltd"
                   }
                 },
                 "despesa": {
@@ -353,7 +360,8 @@
                     "type": "expense",
                     "date": "2026-05-01",
                     "is_paid": false,
-                    "nature": "operational_expense"
+                    "nature": "operational_expense",
+                    "counterpart": "Central Real Estate"
                   }
                 }
               }
@@ -452,8 +460,11 @@
                     "nullable": true
                   },
                   "nature": {
-                    "$ref": "#/components/schemas/TransactionNature",
-                    "nullable": true
+                    "$ref": "#/components/schemas/TransactionNature"
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Who sent (income) or received (expense) the amount — cannot be cleared"
                   },
                   "notes": {
                     "type": "string",

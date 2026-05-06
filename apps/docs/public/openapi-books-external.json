@@ -3,7 +3,7 @@
   "info": {
     "title": "Syncero Books — Integration API",
     "version": "1.0.0",
-    "description": "API pública do **Syncero Books** para integrações externas.\n\nPermite que sistemas de terceiros (ERPs, sistemas de gestão, planilhas) enviem lançamentos financeiros e classifiquem registros contábeis para empresas gerenciadas por contadores.\n\n### Autenticação\nTodas as rotas exigem um header `x-api-key` com uma chave gerada no painel do Syncero Books, ou um Bearer JWT.\n\n### Obter uma API Key\n1. Acesse Syncero Books → Empresa Externa → Configurações → API Keys\n2. Crie uma nova chave com nome descritivo\n3. Copie o token — ele é exibido **apenas uma vez**\n\n### O campo `nature` importa\nInformar a natureza contábil do lançamento alimenta as sugestões automáticas de classificação no Books. Altamente recomendado.\n\n### Limites\n- Máximo de 1.000 lançamentos por listagem\n- API Keys podem ter data de expiração configurável"
+    "description": "API pública do **Syncero Books** para integrações externas.\n\nPermite que sistemas de terceiros (ERPs, sistemas de gestão, planilhas) enviem lançamentos financeiros e classifiquem registros contábeis para empresas gerenciadas por contadores.\n\n### Autenticação\nTodas as rotas exigem um header `x-api-key` com uma chave gerada no painel do Syncero Books, ou um Bearer JWT.\n\n### Obter uma API Key\n1. Acesse Syncero Books → Empresa Externa → Configurações → API Keys\n2. Crie uma nova chave com nome descritivo\n3. Copie o token — ele é exibido **apenas uma vez**\n\n### Campos obrigatórios\n`nature` (natureza contábil) e `counterpart` (quem enviou/recebeu) são obrigatórios em todos os lançamentos. Informar `nature` corretamente alimenta as sugestões automáticas de classificação no Books.\n\n### Limites\n- Máximo de 1.000 lançamentos por listagem\n- API Keys podem ter data de expiração configurável"
   },
   "servers": [
     {
@@ -270,7 +270,7 @@
           "transactions"
         ],
         "summary": "Criar lançamento",
-        "description": "Registra um lançamento financeiro para a empresa externa. O campo `nature` é altamente recomendado — alimenta as sugestões automáticas de classificação contábil.",
+        "description": "Registra um lançamento financeiro para a empresa externa. Os campos `nature` e `counterpart` são obrigatórios.",
         "requestBody": {
           "required": true,
           "content": {
@@ -283,7 +283,9 @@
                   "amount",
                   "type",
                   "date",
-                  "is_paid"
+                  "is_paid",
+                  "nature",
+                  "counterpart"
                 ],
                 "properties": {
                   "extCompanyId": {
@@ -320,8 +322,12 @@
                     "description": "Data do pagamento efetivo"
                   },
                   "nature": {
-                    "$ref": "#/components/schemas/TransactionNature",
-                    "nullable": true
+                    "$ref": "#/components/schemas/TransactionNature"
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Quem enviou (receita) ou recebeu (despesa) o valor",
+                    "example": "Cliente XYZ Ltda"
                   },
                   "notes": {
                     "type": "string",
@@ -341,7 +347,8 @@
                     "date": "2026-05-01",
                     "is_paid": true,
                     "paid_at": "2026-05-03",
-                    "nature": "sale_service"
+                    "nature": "sale_service",
+                    "counterpart": "Cliente XYZ Ltda"
                   }
                 },
                 "despesa": {
@@ -353,7 +360,8 @@
                     "type": "expense",
                     "date": "2026-05-01",
                     "is_paid": false,
-                    "nature": "operational_expense"
+                    "nature": "operational_expense",
+                    "counterpart": "Imobiliária Central"
                   }
                 }
               }
@@ -452,8 +460,11 @@
                     "nullable": true
                   },
                   "nature": {
-                    "$ref": "#/components/schemas/TransactionNature",
-                    "nullable": true
+                    "$ref": "#/components/schemas/TransactionNature"
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Quem enviou (receita) ou recebeu (despesa) o valor — não pode ser removido"
                   },
                   "notes": {
                     "type": "string",

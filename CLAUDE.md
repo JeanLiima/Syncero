@@ -4,6 +4,38 @@
 
 ---
 
+## API ↔ Docs Sync Rule (OBRIGATÓRIO)
+
+**Toda alteração em rota de backend deve ser acompanhada de atualização nos specs OpenAPI.**
+
+### Arquivos de rota
+| App | Diretório |
+|-----|-----------|
+| Flow | `apps/flow/api/routes/*.ts` |
+| Books | `apps/books/api/routes/*.ts` |
+
+### Specs a manter atualizados
+| Spec | Caminho |
+|------|---------|
+| Flow interno | `apps/docs/public/openapi-flow.json` |
+| Books interno | `apps/docs/public/openapi-books.json` |
+| Flow externo | `apps/docs/public/openapi-flow-external.json` (+ `-en.json`) |
+| Books externo | `apps/docs/public/openapi-books-external.json` (+ `-en.json`) |
+
+### O que deve ser atualizado quando uma rota muda
+- **Novo endpoint** → adicionar path + operation no spec correto
+- **Novo campo obrigatório no body** → adicionar em `required[]` e em `properties`
+- **Novo campo opcional no body** → adicionar em `properties` com `nullable: true` se aplicável
+- **Novo query param** → adicionar em `parameters`
+- **Campo removido** → remover do spec
+- **Mudança de status code** → corrigir no spec
+- **Mudança de tipo/nullability** → corrigir no spec
+
+### Como executar
+Use `/sync-api-docs` para analisar automaticamente quais rotas mudaram e atualizar os specs.
+
+---
+
 ## What This Project Is
 
 **Syncero** — Financial management platform connecting businesses and accountants.

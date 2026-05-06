@@ -82,13 +82,29 @@ flow/books → lê hash manualmente → supabase.auth.setSession()
 
 ---
 
+## i18n (OBRIGATÓRIO)
+
+**Todo texto visível ao usuário deve ter tradução em PT e EN.** Nunca adicionar texto em só um idioma.
+
+### Apps — Flow e Books
+- Hook: `useT()` de `@/i18n`
+- Fonte de verdade das chaves: `pt.ts` — adicione a chave lá primeiro, depois em `en.ts`
+- Ao remover texto da UI: remover a chave de ambos `pt.ts` e `en.ts`
+
+### Docs — `apps/docs/*.html`
+- Cada HTML tem um objeto `T = { pt: {...}, en: {...} }` inline
+- Ao adicionar texto: criar a chave em `T.pt` e `T.en`
+- Ao remover texto: remover a chave de ambos os idiomas e o `data-i18n` do HTML
+- Ao atualizar texto: atualizar nas duas línguas
+
+---
+
 ## Padrões de código
 
 - **Path alias:** `@` → `src/` — sempre usar `@/` imports
 - **Backend:** Hono em Vercel Edge Functions — sem Node.js APIs (usar `crypto.subtle`, `globalThis.crypto`)
 - **Auth middleware:** `authMiddleware` (Bearer JWT) · `apiKeyOrJwtMiddleware` (API Key ou JWT, rotas externas Books)
 - **Origin Guard:** `originGuard` middleware em todas as rotas internas — em produção bloqueia origens não listadas em `ALLOWED_ORIGINS`
-- **i18n:** usar `useT()` hook — `pt.ts` é a fonte de verdade das chaves
 
 ---
 

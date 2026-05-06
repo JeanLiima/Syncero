@@ -433,7 +433,7 @@ export const en: Record<TranslationKey, string> = {
   extTx_title: 'Transactions',
   extTx_new: 'New transaction',
   extTx_edit: 'Edit',
-  extTx_editTitle: 'Edit',
+  extTx_editTitle: 'Edit transaction',
   extTx_empty: 'No transactions yet. Add the first one to start classifying.',
   extTx_countSingular: 'transaction',
   extTx_countPlural: 'transactions',

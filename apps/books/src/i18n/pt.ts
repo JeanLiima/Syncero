@@ -431,7 +431,7 @@ export const pt = {
   extTx_title: 'Lançamentos',
   extTx_new: 'Novo lançamento',
   extTx_edit: 'Editar',
-  extTx_editTitle: 'Editar',
+  extTx_editTitle: 'Editar lançamento',
   extTx_empty: 'Nenhum lançamento cadastrado. Adicione o primeiro para começar a classificar.',
   extTx_countSingular: 'lançamento',
   extTx_countPlural: 'lançamentos',

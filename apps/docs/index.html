@@ -215,7 +215,7 @@
         </div>
         <div class="card-footer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          <span data-i18n="localOnly"></span>
+          <span data-i18n="openSpec"></span>
         </div>
       </a>
 
@@ -235,7 +235,7 @@
         </div>
         <div class="card-footer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          <span data-i18n="localOnly"></span>
+          <span data-i18n="openSpec"></span>
         </div>
       </a>
     </div>
@@ -250,49 +250,49 @@
     const T = {
       pt: {
         title:            'Referência das APIs',
-        subtitle:         'Documentação das APIs de integração do Syncero',
-        sectionPublic:    'Pública — integração externa',
-        sectionInternal:  'Interna — somente desenvolvimento local',
+        subtitle:         'Documentação técnica das integrações disponíveis no Syncero',
+        sectionPublic:    'Integrações externas',
+        sectionInternal:  'Desenvolvimento — uso interno',
         badgeSoon:        'Em breve',
         flowExtTitle:     'Flow Integration API',
-        flowExtDesc:      'API externa do app de gestão financeira. Reservada para futuras integrações com bancos, ERPs e gateways de pagamento.',
+        flowExtDesc:      'Endpoints para integrações com sistemas externos — extratos bancários, webhooks de pagamento e importação em lote. Em desenvolvimento.',
         flowTag1:         'extratos bancários',
         flowTag2:         'webhooks de pagamento',
         flowTag3:         'importação em lote',
         booksExtTitle:    'Books Integration API',
-        booksExtDesc:     'Envie lançamentos financeiros e classifique registros contábeis para empresas gerenciadas por contadores.',
+        booksExtDesc:     'Envie lançamentos e classifique operações contábeis das empresas gerenciadas pelo contador. Autenticação via API Key para integrações server-to-server.',
         viewSpec:         'Ver spec',
         openDocs:         'Abrir documentação',
-        badgeFlowInternal:  'Flow — interno',
-        badgeBooksInternal: 'Books — interno',
-        flowInternalTitle:  'Flow API (completo)',
-        flowInternalDesc:   'Spec completo do Flow. Disponível apenas em localhost:5176.',
-        booksInternalTitle: 'Books API (completo)',
-        booksInternalDesc:  'Spec completo do Books. Disponível apenas em localhost:5176.',
-        localOnly:          'Somente local',
+        badgeFlowInternal:  'Flow — Interno',
+        badgeBooksInternal: 'Books — Interno',
+        flowInternalTitle:  'Flow API',
+        flowInternalDesc:   'Todas as rotas internas do Flow — empresas, membros, lançamentos, categorias, bancos, contatos, relatórios e convites.',
+        booksInternalTitle: 'Books API',
+        booksInternalDesc:  'Todas as rotas internas do Books — plano de contas, lançamentos contábeis, empresas externas, documentos fiscais, API Keys e convites.',
+        openSpec:           'Ver documentação',
       },
       en: {
         title:            'API Reference',
-        subtitle:         'Syncero integration API documentation',
-        sectionPublic:    'Public — external integration',
-        sectionInternal:  'Internal — local development only',
+        subtitle:         'Technical documentation for available Syncero integrations',
+        sectionPublic:    'External integrations',
+        sectionInternal:  'Development — internal use',
         badgeSoon:        'Coming soon',
         flowExtTitle:     'Flow Integration API',
-        flowExtDesc:      'External API for the financial management app. Reserved for future integrations with banks, ERPs and payment gateways.',
+        flowExtDesc:      'Endpoints for external system integrations — bank statements, payment webhooks and bulk import. Under development.',
         flowTag1:         'bank statements',
         flowTag2:         'payment webhooks',
         flowTag3:         'bulk import',
         booksExtTitle:    'Books Integration API',
-        booksExtDesc:     'Submit financial transactions and create accounting entries for companies managed by accountants.',
+        booksExtDesc:     'Submit transactions and classify accounting operations for companies managed by your accountant. API Key authentication for server-to-server integrations.',
         viewSpec:         'View spec',
         openDocs:         'Open documentation',
-        badgeFlowInternal:  'Flow — internal',
-        badgeBooksInternal: 'Books — internal',
-        flowInternalTitle:  'Flow API (full)',
-        flowInternalDesc:   'Complete Flow API spec. Available only at localhost:5176.',
-        booksInternalTitle: 'Books API (full)',
-        booksInternalDesc:  'Complete Books API spec. Available only at localhost:5176.',
-        localOnly:          'Local only',
+        badgeFlowInternal:  'Flow — Internal',
+        badgeBooksInternal: 'Books — Internal',
+        flowInternalTitle:  'Flow API',
+        flowInternalDesc:   'All internal Flow routes — companies, members, transactions, categories, banks, contacts, reports and invites.',
+        booksInternalTitle: 'Books API',
+        booksInternalDesc:  'All internal Books routes — account plans, journal entries, external companies, fiscal documents, API Keys and invites.',
+        openSpec:           'View documentation',
       },
     }
 

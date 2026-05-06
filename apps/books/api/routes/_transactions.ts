@@ -157,6 +157,7 @@ router.post('/', async (c) => {
   if (!body.counterpart?.trim()) return c.json({ error: 'counterpart required' }, 400)
   if (!body.nature?.trim()) return c.json({ error: 'nature required' }, 400)
   if (!body.type) return c.json({ error: 'type required' }, 400)
+  if (body.is_paid && !body.paid_at) return c.json({ error: 'paid_at required when is_paid is true' }, 400)
 
   if (!(await authorizeExt(db, userId, body.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
 
@@ -221,6 +222,9 @@ router.patch('/:id', async (c) => {
   }
   if ('nature' in patch && !patch.nature?.toString().trim()) {
     return c.json({ error: 'nature required' }, 400)
+  }
+  if (patch.is_paid === true && !patch.paid_at) {
+    return c.json({ error: 'paid_at required when is_paid is true' }, 400)
   }
 
   const { data, error } = await db.from('transactions')

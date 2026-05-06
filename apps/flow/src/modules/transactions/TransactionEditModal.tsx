@@ -266,6 +266,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
   const [amountError, setAmountError] = useState('')
   const [natureError, setNatureError] = useState('')
   const [counterpartError, setCounterpartError] = useState('')
+  const [paidAtError, setPaidAtError] = useState('')
 
   const [applyToGroup, setApplyToGroup] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -292,6 +293,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     setAmountError('')
     setNatureError('')
     setCounterpartError('')
+    setPaidAtError('')
     setConfirmDelete(false)
     setApplyToGroup(false)
   }, [open])
@@ -323,6 +325,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     if (amountCents <= 0) { setAmountError(t('transactions_errorAmount')); amountRef.current?.focus(); return }
     if (!nature) { setNatureError(t('transactions_errorNature')); return }
     if (!counterpart.trim()) { setCounterpartError(t('transactions_errorCounterpart')); return }
+    if (isPaid && !paidAt) { setPaidAtError(t('transactions_errorPaidAt')); return }
 
     try {
       await update.mutateAsync({
@@ -525,7 +528,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
                 <button
                   key={String(paid)}
                   type="button"
-                  onClick={() => { setIsPaid(paid); if (!paid) setPaidAt('') }}
+                  onClick={() => { setIsPaid(paid); if (!paid) { setPaidAt(''); setPaidAtError('') } }}
                   className={`flex-1 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${
                     isPaid === paid
                       ? 'bg-[var(--accent)] text-white'
@@ -545,8 +548,9 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
             <DatePicker
               label={type === 'income' ? t('transactions_receivedAt') : t('transactions_paidAt')}
               value={paidAt}
-              onChange={setPaidAt}
+              onChange={(v) => { setPaidAt(v); setPaidAtError('') }}
               language={language}
+              error={paidAtError}
             />
           )}
 

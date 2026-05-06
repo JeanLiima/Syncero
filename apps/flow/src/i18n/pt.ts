@@ -94,6 +94,7 @@ export const pt = {
   transactions_nature: 'Natureza contábil',
   transactions_errorNature: 'Selecione a natureza contábil.',
   transactions_errorCounterpart: 'Informe quem enviou ou recebeu.',
+  transactions_errorPaidAt: 'Informe a data de pagamento.',
   transactions_applyNatureToGroup: 'Aplicar natureza para todas as parcelas',
   transactions_income_badge: 'Receita',
   transactions_expense_badge: 'Despesa',

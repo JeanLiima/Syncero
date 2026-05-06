@@ -111,7 +111,8 @@
           "paid_at": {
             "type": "string",
             "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Effective payment/receipt date (YYYY-MM-DD)."
           },
           "nature": {
             "$ref": "#/components/schemas/TransactionNature",
@@ -330,7 +331,7 @@
                     "type": "string",
                     "format": "date",
                     "nullable": true,
-                    "description": "Actual payment date"
+                    "description": "Effective payment/receipt date (YYYY-MM-DD). Required if is_paid = true."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"
@@ -474,7 +475,7 @@
                     "type": "string",
                     "format": "date",
                     "nullable": true,
-                    "description": "Actual payment/receipt date. Send null when is_paid returns to false."
+                    "description": "Effective payment/receipt date (YYYY-MM-DD). Required if is_paid = true. Send null when is_paid returns to false."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"

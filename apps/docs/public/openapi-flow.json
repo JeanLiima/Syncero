@@ -167,7 +167,8 @@
           "paid_at": {
             "type": "string",
             "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD)."
           },
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
@@ -313,7 +314,8 @@
           "paid_at": {
             "type": "string",
             "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD). Obrigatório se is_paid = true."
           },
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
@@ -1889,7 +1891,7 @@
                     "type": "string",
                     "format": "date",
                     "nullable": true,
-                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD)."
+                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD). Obrigatório se is_paid = true."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature",

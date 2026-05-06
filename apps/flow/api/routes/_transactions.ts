@@ -99,6 +99,7 @@ router.post('/', async (c) => {
   const b = body as Record<string, unknown>
   if (!b.counterpart?.toString().trim()) return c.json({ error: 'counterpart required' }, 400)
   if (!b.nature?.toString().trim()) return c.json({ error: 'nature required' }, 400)
+  if (b.is_paid && !b.paid_at) return c.json({ error: 'paid_at required when is_paid is true' }, 400)
   const { data, error } = await db.from('transactions').insert({
     company_id:           companyId,
     created_by:           userId,
@@ -178,6 +179,9 @@ router.patch('/:id', async (c) => {
   }
   if ('nature' in allowed && !allowed.nature?.toString().trim()) {
     return c.json({ error: 'nature required' }, 400)
+  }
+  if (allowed.is_paid === true && !allowed.paid_at) {
+    return c.json({ error: 'paid_at required when is_paid is true' }, 400)
   }
 
   const { data, error } = await db.from('transactions').update(allowed).eq('id', transactionId).select().single()

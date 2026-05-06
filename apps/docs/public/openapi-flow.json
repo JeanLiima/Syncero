@@ -161,7 +161,7 @@
           },
           "counterpart": {
             "type": "string",
-            "nullable": true
+            "description": "Quem enviou (receita) ou recebeu (despesa)"
           },
           "paid_at": {
             "type": "string",
@@ -277,7 +277,9 @@
           "description",
           "amount",
           "type",
-          "date"
+          "date",
+          "nature",
+          "counterpart"
         ],
         "properties": {
           "companyId": {
@@ -334,7 +336,7 @@
           },
           "counterpart": {
             "type": "string",
-            "nullable": true
+            "description": "Quem enviou (receita) ou recebeu (despesa) o valor"
           },
           "is_installment": {
             "type": "boolean",
@@ -1701,8 +1703,12 @@
                     "nullable": true
                   },
                   "nature": {
+                    "$ref": "#/components/schemas/TransactionNature",
+                    "description": "Não pode ser removido após definido"
+                  },
+                  "counterpart": {
                     "type": "string",
-                    "nullable": true
+                    "description": "Quem enviou (receita) ou recebeu (despesa) — não pode ser removido"
                   },
                   "notes": {
                     "type": "string",

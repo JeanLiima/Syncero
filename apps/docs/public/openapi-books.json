@@ -1303,7 +1303,9 @@
                   "amount",
                   "type",
                   "date",
-                  "is_paid"
+                  "is_paid",
+                  "nature",
+                  "counterpart"
                 ],
                 "properties": {
                   "extCompanyId": {
@@ -1335,8 +1337,12 @@
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature",
-                    "nullable": true,
-                    "description": "Importante para sugestões inteligentes na classificação contábil"
+                    "description": "Natureza contábil. Alimenta sugestões automáticas de classificação."
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Quem enviou (receita) ou recebeu (despesa) o valor",
+                    "example": "Cliente XYZ Ltda"
                   },
                   "notes": {
                     "type": "string",
@@ -1489,8 +1495,12 @@
                     "nullable": true
                   },
                   "nature": {
+                    "$ref": "#/components/schemas/TransactionNature",
+                    "description": "Não pode ser removido após definido"
+                  },
+                  "counterpart": {
                     "type": "string",
-                    "nullable": true
+                    "description": "Quem enviou (receita) ou recebeu (despesa) — não pode ser removido"
                   },
                   "notes": {
                     "type": "string",

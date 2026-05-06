@@ -85,9 +85,10 @@
       transition: border-color .15s, transform .15s;
     }
     a.card:hover { transform: translateY(-2px); }
-    a.card.flow-ext:hover   { border-color: var(--accent); }
-    a.card.books-ext:hover  { border-color: var(--success); }
-    a.card.internal:hover   { border-color: var(--bg-border); }
+    a.card.flow-ext:hover  { border-color: var(--accent); }
+    a.card.books-ext:hover { border-color: var(--success); }
+    a.card.flow-int:hover  { border-color: var(--accent); }
+    a.card.books-int:hover { border-color: var(--success); }
 
     .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .875rem; }
 
@@ -98,13 +99,11 @@
     }
     .badge-flow-ext  { background: rgba(59,130,246,.15);  color: #60a5fa; }
     .badge-books-ext { background: rgba(16,185,129,.15);  color: #34d399; }
-    .badge-internal  { background: rgba(71,85,105,.15);   color: #64748b; }
     .badge-soon      { background: rgba(245,158,11,.12);  color: #fbbf24; }
 
     .card-dot { width: .625rem; height: .625rem; border-radius: 9999px; }
     .dot-flow-ext  { background: var(--accent); }
     .dot-books-ext { background: var(--success); }
-    .dot-internal  { background: #334155; }
 
     .card h2 { font-size: .9375rem; font-weight: 600; margin-bottom: .25rem; color: var(--text-primary); }
     .card p  { font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; }
@@ -124,24 +123,10 @@
       font-size: .75rem; color: var(--text-muted);
     }
     .card-footer svg { width: .8125rem; height: .8125rem; }
-    a.card.flow-ext:hover  .card-footer { color: var(--accent); }
-    a.card.books-ext:hover .card-footer { color: var(--success); }
-
-    .lock-note {
-      display: flex; align-items: flex-start; gap: .625rem;
-      background: rgba(245,158,11,.06);
-      border: 1px solid rgba(245,158,11,.2);
-      border-radius: .5rem;
-      padding: .875rem 1rem;
-      max-width: 720px; width: 100%;
-      margin-bottom: 1.75rem;
-    }
-    .lock-note svg { width: 1rem; height: 1rem; color: var(--warning); flex-shrink: 0; margin-top: .1rem; }
-    .lock-note p { font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; }
-    .lock-note strong { color: var(--text-primary); }
-    .lock-note code { font-size: .75rem; background: var(--bg-elevated); padding: .1rem .3rem; border-radius: .25rem; }
-
-    .dimmed { opacity: .5; }
+    a.card.flow-ext:hover  .card-footer,
+    a.card.flow-int:hover  .card-footer { color: var(--accent); }
+    a.card.books-ext:hover .card-footer,
+    a.card.books-int:hover .card-footer { color: var(--success); }
 
     footer { font-size: .6875rem; color: var(--text-muted); margin-top: .5rem; }
     footer a { color: inherit; text-decoration: none; }
@@ -210,56 +195,50 @@
     </a>
   </div>
 
-  <div class="lock-note">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-    </svg>
-    <p data-i18n="lockNote"></p>
-  </div>
+  <!-- Internal — only rendered on localhost -->
+  <div id="internal-section" style="display:none; width:100%; max-width:720px;">
+    <div class="section-label" data-i18n="sectionInternal"></div>
+    <div class="grid">
+      <a class="card flow-int" href="./flow.html">
+        <div class="card-header">
+          <span class="badge badge-flow-ext" data-i18n="badgeFlowInternal"></span>
+          <div class="card-dot dot-flow-ext"></div>
+        </div>
+        <h2 data-i18n="flowInternalTitle"></h2>
+        <p data-i18n="flowInternalDesc"></p>
+        <div class="endpoints">
+          <span class="tag">transactions</span>
+          <span class="tag">categories</span>
+          <span class="tag">banks</span>
+          <span class="tag">companies</span>
+          <span class="tag">reports</span>
+        </div>
+        <div class="card-footer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span data-i18n="localOnly"></span>
+        </div>
+      </a>
 
-  <!-- Internal -->
-  <div class="section-label" data-i18n="sectionInternal"></div>
-
-  <div class="grid dimmed">
-    <a class="card internal" href="./flow.html">
-      <div class="card-header">
-        <span class="badge badge-internal" data-i18n="badgeFlowInternal"></span>
-        <div class="card-dot dot-internal"></div>
-      </div>
-      <h2 data-i18n="flowInternalTitle"></h2>
-      <p data-i18n="flowInternalDesc"></p>
-      <div class="endpoints">
-        <span class="tag">transactions</span>
-        <span class="tag">categories</span>
-        <span class="tag">banks</span>
-        <span class="tag">companies</span>
-        <span class="tag">reports</span>
-      </div>
-      <div class="card-footer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        <span data-i18n="localOnly"></span>
-      </div>
-    </a>
-
-    <a class="card internal" href="./books.html">
-      <div class="card-header">
-        <span class="badge badge-internal" data-i18n="badgeBooksInternal"></span>
-        <div class="card-dot dot-internal"></div>
-      </div>
-      <h2 data-i18n="booksInternalTitle"></h2>
-      <p data-i18n="booksInternalDesc"></p>
-      <div class="endpoints">
-        <span class="tag">account-plans</span>
-        <span class="tag">external-companies</span>
-        <span class="tag">fiscal</span>
-        <span class="tag">api-keys</span>
-        <span class="tag">invites</span>
-      </div>
-      <div class="card-footer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        <span data-i18n="localOnly"></span>
-      </div>
-    </a>
+      <a class="card books-int" href="./books.html">
+        <div class="card-header">
+          <span class="badge badge-books-ext" data-i18n="badgeBooksInternal"></span>
+          <div class="card-dot dot-books-ext"></div>
+        </div>
+        <h2 data-i18n="booksInternalTitle"></h2>
+        <p data-i18n="booksInternalDesc"></p>
+        <div class="endpoints">
+          <span class="tag">account-plans</span>
+          <span class="tag">external-companies</span>
+          <span class="tag">fiscal</span>
+          <span class="tag">api-keys</span>
+          <span class="tag">invites</span>
+        </div>
+        <div class="card-footer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span data-i18n="localOnly"></span>
+        </div>
+      </a>
+    </div>
   </div>
 
   <footer>
@@ -284,13 +263,12 @@
         booksExtDesc:     'Envie lançamentos financeiros e classifique registros contábeis para empresas gerenciadas por contadores.',
         viewSpec:         'Ver spec',
         openDocs:         'Abrir documentação',
-        lockNote:         '<strong>APIs internas</strong> (rotas do Flow e Books não listadas acima) são restritas por <code>Origin</code> e não estão documentadas publicamente. Acesse a referência interna localmente em <code>localhost:5176</code>.',
         badgeFlowInternal:  'Flow — interno',
         badgeBooksInternal: 'Books — interno',
         flowInternalTitle:  'Flow API (completo)',
-        flowInternalDesc:   'Spec completo do Flow com todas as rotas. Restrito por Origin em produção.',
+        flowInternalDesc:   'Spec completo do Flow. Disponível apenas em localhost:5176.',
         booksInternalTitle: 'Books API (completo)',
-        booksInternalDesc:  'Spec completo do Books incluindo rotas internas. Restrito por Origin em produção.',
+        booksInternalDesc:  'Spec completo do Books. Disponível apenas em localhost:5176.',
         localOnly:          'Somente local',
       },
       en: {
@@ -308,13 +286,12 @@
         booksExtDesc:     'Submit financial transactions and create accounting entries for companies managed by accountants.',
         viewSpec:         'View spec',
         openDocs:         'Open documentation',
-        lockNote:         '<strong>Internal APIs</strong> (Flow and Books routes not listed above) are restricted by <code>Origin</code> header and are not publicly documented. Access the internal reference locally at <code>localhost:5176</code>.',
         badgeFlowInternal:  'Flow — internal',
         badgeBooksInternal: 'Books — internal',
         flowInternalTitle:  'Flow API (full)',
-        flowInternalDesc:   'Complete Flow API spec with all routes. Restricted by Origin in production.',
+        flowInternalDesc:   'Complete Flow API spec. Available only at localhost:5176.',
         booksInternalTitle: 'Books API (full)',
-        booksInternalDesc:  'Complete Books API spec including internal routes. Restricted by Origin in production.',
+        booksInternalDesc:  'Complete Books API spec. Available only at localhost:5176.',
         localOnly:          'Local only',
       },
     }
@@ -346,6 +323,12 @@
       })
       document.getElementById('btn-pt').classList.toggle('active', lang === 'pt')
       document.getElementById('btn-en').classList.toggle('active', lang === 'en')
+    }
+
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+
+    if (isLocal) {
+      document.getElementById('internal-section').style.display = 'block'
     }
 
     apply(getLang())

@@ -1230,7 +1230,7 @@
             }
           },
           "400": {
-            "description": "extCompanyId obrigatório"
+            "description": "ext_company_id obrigatório"
           },
           "403": {
             "description": "Sem acesso à empresa"
@@ -1244,7 +1244,7 @@
           "transactions-external"
         ],
         "summary": "Listar lançamentos com status de classificação",
-        "description": "Aceita `companyId` (empresa Flow, somente leitura) ou `extCompanyId` (empresa externa, CRUD completo).\nRetorna `is_classified` e `journal_entry_id` adicionados pelo servidor.\n\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
+        "description": "Aceita `company_id` (empresa Flow, somente leitura) ou `ext_company_id` (empresa externa, CRUD completo).\nRetorna `is_classified` e `journal_entry_id` adicionados pelo servidor.\n\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
         "parameters": [
           {
             "name": "company_id",
@@ -1253,7 +1253,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Empresa Flow (exclusivo com extCompanyId)"
+            "description": "Empresa Flow (exclusivo com ext_company_id)"
           },
           {
             "name": "ext_company_id",
@@ -1262,7 +1262,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Empresa externa (exclusivo com companyId)"
+            "description": "Empresa externa (exclusivo com company_id)"
           },
           {
             "name": "type",
@@ -1346,7 +1346,7 @@
           "transactions-external"
         ],
         "summary": "Criar lançamento para empresa externa",
-        "description": "Exclusivo para empresas externas (`extCompanyId`). Empresas Flow são somente leitura no Books.\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
+        "description": "Exclusivo para empresas externas (`ext_company_id`). Empresas Flow são somente leitura no Books.\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1685,7 +1685,7 @@
           "journal-entries-external"
         ],
         "summary": "Criar lançamento contábil (classificar)",
-        "description": "Cria um lançamento em partidas dobradas. Ao informar `flow_transaction_id`,\no lançamento fica vinculado ao lançamento financeiro correspondente,\nmarcando-o como **Classificado**.\n\nDeve sempre ter exatamente 2 linhas (débito e crédito) com o mesmo valor.\n\n\n**Rota externa** — aceita `x-api-key`.\n\n**Validação de `flow_transaction_id`:** Se informado, a transação deve pertencer à mesma empresa (`companyId` ou `extCompanyId`) da requisição. Caso contrário, retorna 403.",
+        "description": "Cria um lançamento em partidas dobradas. Ao informar `flow_transaction_id`,\no lançamento fica vinculado ao lançamento financeiro correspondente,\nmarcando-o como **Classificado**.\n\nDeve sempre ter exatamente 2 linhas (débito e crédito) com o mesmo valor.\n\n\n**Rota externa** — aceita `x-api-key`.\n\n**Validação de `flow_transaction_id`:** Se informado, a transação deve pertencer à mesma empresa (`company_id` ou `ext_company_id`) da requisição. Caso contrário, retorna 403.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1701,12 +1701,12 @@
                   "company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Empresa Flow (exclusivo com extCompanyId)"
+                    "description": "Empresa Flow (exclusivo com ext_company_id)"
                   },
                   "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Empresa externa (exclusivo com companyId)"
+                    "description": "Empresa externa (exclusivo com company_id)"
                   },
                   "entry_date": {
                     "type": "string",
@@ -1911,7 +1911,7 @@
             }
           }
         },
-        "description": "\n\nRequer que o contador seja autorizado para `companyId` (via `accountant_companies`) ou `extCompanyId` (via `external_companies`).",
+        "description": "\n\nRequer que o contador seja autorizado para `company_id` (via `accountant_companies`) ou `ext_company_id` (via `external_companies`).",
         "x-access": "internal"
       }
     },

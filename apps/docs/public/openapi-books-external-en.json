@@ -8,11 +8,11 @@
   "servers": [
     {
       "url": "https://syncero-books.vercel.app",
-      "description": "Produção"
+      "description": "Production"
     },
     {
       "url": "http://localhost:5175",
-      "description": "Desenvolvimento local"
+      "description": "Local development"
     }
   ],
   "security": [
@@ -151,7 +151,7 @@
         "description": "Returns the external company's transactions with accounting classification status.",
         "parameters": [
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -211,7 +211,7 @@
             }
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -278,7 +278,7 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "extCompanyId",
+                  "ext_company_id",
                   "description",
                   "amount",
                   "type",
@@ -288,7 +288,7 @@
                   "counterpart"
                 ],
                 "properties": {
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
                     "description": "External company ID"
@@ -340,7 +340,7 @@
                 "receita": {
                   "summary": "Paid service revenue",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "description": "Prestação de serviços — Cliente XYZ",
                     "amount": 5000,
                     "type": "income",
@@ -354,7 +354,7 @@
                 "despesa": {
                   "summary": "Pending operational expense",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "description": "Aluguel do escritório — maio/2026",
                     "amount": 3200,
                     "type": "expense",
@@ -422,7 +422,7 @@
             "type": "string",
             "format": "uuid"
           },
-          "description": "ID do lançamento"
+          "description": "Transaction ID"
         }
       ],
       "patch": {
@@ -577,13 +577,13 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "extCompanyId",
+                  "ext_company_id",
                   "entry_date",
                   "description",
                   "lines"
                 ],
                 "properties": {
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
                     "description": "External company ID"
@@ -650,7 +650,7 @@
                 "classificar_venda": {
                   "summary": "Classify a service sale",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "entry_date": "2026-05-01",
                     "description": "Prestação de serviços — Cliente XYZ",
                     "flow_transaction_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
@@ -673,7 +673,7 @@
                 "manual": {
                   "summary": "Manual entry without linked transaction",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "entry_date": "2026-05-31",
                     "description": "Depreciação de equipamentos — maio/2026",
                     "external_ref": "DEP-2026-05",

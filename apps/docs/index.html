@@ -116,9 +116,9 @@
       background: var(--bg-elevated); color: var(--text-muted);
       border: 1px solid var(--bg-border);
     }
-    .tag.flow  { border-color: rgba(59,130,246,.3);  color: #93c5fd; }
-    .tag.books { border-color: rgba(16,185,129,.3);  color: #6ee7b7; }
-    .tag.soon  { border-color: rgba(245,158,11,.25); color: #fcd34d; font-style: italic; }
+    .tag.flow  { background: rgba(59,130,246,.07);  border-color: rgba(59,130,246,.25);  color: #93c5fd; }
+    .tag.books { background: rgba(16,185,129,.07);  border-color: rgba(16,185,129,.25);  color: #6ee7b7; }
+    .tag.soon  { background: rgba(245,158,11,.06);  border-color: rgba(245,158,11,.2);   color: #f59e0b; font-style: italic; }
 
     .card-footer {
       margin-top: 1rem; display: flex; align-items: center; gap: .375rem;
@@ -208,11 +208,11 @@
         <h2 data-i18n="flowInternalTitle"></h2>
         <p data-i18n="flowInternalDesc"></p>
         <div class="endpoints">
-          <span class="tag">transactions</span>
-          <span class="tag">categories</span>
-          <span class="tag">banks</span>
-          <span class="tag">companies</span>
-          <span class="tag">reports</span>
+          <span class="tag flow">transactions</span>
+          <span class="tag flow">categories</span>
+          <span class="tag flow">banks</span>
+          <span class="tag flow">companies</span>
+          <span class="tag flow">reports</span>
         </div>
         <div class="card-footer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -228,11 +228,11 @@
         <h2 data-i18n="booksInternalTitle"></h2>
         <p data-i18n="booksInternalDesc"></p>
         <div class="endpoints">
-          <span class="tag">account-plans</span>
-          <span class="tag">external-companies</span>
-          <span class="tag">fiscal</span>
-          <span class="tag">api-keys</span>
-          <span class="tag">invites</span>
+          <span class="tag books">account-plans</span>
+          <span class="tag books">external-companies</span>
+          <span class="tag books">fiscal</span>
+          <span class="tag books">api-keys</span>
+          <span class="tag books">invites</span>
         </div>
         <div class="card-footer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>

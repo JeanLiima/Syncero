@@ -642,22 +642,29 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "full_name": {
-                      "type": "string"
-                    },
-                    "email": {
-                      "type": "string"
-                    },
-                    "user_type": {
-                      "type": "string"
-                    },
-                    "avatar_url": {
-                      "type": "string",
-                      "nullable": true
+                    "profile": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "user_type": {
+                          "type": "string",
+                          "enum": ["company_user", "accountant"]
+                        },
+                        "avatar_url": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
                     }
                   }
                 }
@@ -671,6 +678,7 @@
           "auth"
         ],
         "summary": "Criar ou atualizar perfil (onboarding)",
+        "description": "O `full_name` e `avatar_url` são extraídos automaticamente dos metadados do Google OAuth — não devem ser enviados no body.",
         "requestBody": {
           "required": true,
           "content": {
@@ -678,13 +686,9 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "full_name",
                   "user_type"
                 ],
                 "properties": {
-                  "full_name": {
-                    "type": "string"
-                  },
                   "user_type": {
                     "type": "string",
                     "enum": [
@@ -698,7 +702,26 @@
         },
         "responses": {
           "200": {
-            "description": "Perfil salvo"
+            "description": "Perfil salvo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid" },
+                        "full_name": { "type": "string" },
+                        "email": { "type": "string" },
+                        "user_type": { "type": "string" },
+                        "avatar_url": { "type": "string", "nullable": true }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1976,55 +1999,6 @@
         }
       }
     },
-    "/api/categories": {
-      "get": {
-        "tags": [
-          "fiscal"
-        ],
-        "summary": "Listar categorias de uma empresa Flow (leitura)",
-        "parameters": [
-          {
-            "name": "companyId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "type": {
-                        "type": "string",
-                        "enum": [
-                          "income",
-                          "expense"
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/api-keys": {
       "get": {
         "tags": [
@@ -2238,11 +2212,11 @@
           "200": {
             "description": "Convite aceito com sucesso"
           },
-          "403": {
-            "description": "Usuário não é contador"
+          "400": {
+            "description": "Convite já usado ou expirado"
           },
-          "409": {
-            "description": "Convite já foi aceito"
+          "403": {
+            "description": "Usuário não é contador ou perfil não encontrado"
           }
         }
       }

@@ -258,14 +258,14 @@
       "TransactionInput": {
         "type": "object",
         "required": [
-          "companyId",
+          "company_id",
           "description",
           "amount",
           "type",
           "date"
         ],
         "properties": {
-          "companyId": {
+          "company_id": {
             "type": "string",
             "format": "uuid"
           },
@@ -479,6 +479,10 @@
             "type": "string",
             "nullable": true
           },
+          "trade_name": {
+            "type": "string",
+            "nullable": true
+          },
           "tax_regime": {
             "type": "string",
             "enum": [
@@ -487,6 +491,22 @@
               "lucro_real"
             ],
             "nullable": true
+          },
+          "segment": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "retail",
+              "services",
+              "manufacturing",
+              "construction",
+              "agribusiness",
+              "healthcare",
+              "education",
+              "technology",
+              "financial",
+              "other"
+            ]
           },
           "owner_id": {
             "type": "string",
@@ -513,9 +533,9 @@
       "MemberStatus": {
         "type": "string",
         "enum": [
-          "active",
-          "invited",
-          "inactive"
+          "accepted",
+          "pending",
+          "revoked"
         ]
       },
       "CompanyMember": {
@@ -598,6 +618,9 @@
           "category_name": {
             "type": "string"
           },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
           "total": {
             "type": "number"
           }
@@ -620,26 +643,53 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
+                    "profile": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "user_type": {
+                          "type": "string",
+                          "enum": [
+                            "company_user",
+                            "accountant"
+                          ]
+                        },
+                        "avatar_url": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
                     },
-                    "full_name": {
-                      "type": "string"
-                    },
-                    "email": {
-                      "type": "string"
-                    },
-                    "user_type": {
-                      "type": "string",
-                      "enum": [
-                        "company_user",
-                        "accountant"
-                      ]
-                    },
-                    "avatar_url": {
-                      "type": "string",
-                      "nullable": true
+                    "activeCompany": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Primeira empresa aceita do usuário, ou null se não houver nenhuma",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "$ref": "#/components/schemas/MemberRole"
+                        },
+                        "segment": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
                     }
                   }
                 }
@@ -656,6 +706,7 @@
           "auth"
         ],
         "summary": "Criar ou atualizar perfil (onboarding)",
+        "description": "O `full_name` e `avatar_url` são extraídos automaticamente dos metadados do Google OAuth — não devem ser enviados no body.",
         "requestBody": {
           "required": true,
           "content": {
@@ -663,13 +714,9 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "full_name",
                   "user_type"
                 ],
                 "properties": {
-                  "full_name": {
-                    "type": "string"
-                  },
                   "user_type": {
                     "type": "string",
                     "enum": [
@@ -684,7 +731,26 @@
         },
         "responses": {
           "200": {
-            "description": "Perfil criado ou atualizado"
+            "description": "Perfil criado ou atualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string", "format": "uuid" },
+                        "full_name": { "type": "string" },
+                        "email": { "type": "string" },
+                        "user_type": { "type": "string" },
+                        "avatar_url": { "type": "string", "nullable": true }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -714,6 +780,10 @@
                     "nullable": true,
                     "example": "00000000000000"
                   },
+                  "trade_name": {
+                    "type": "string",
+                    "nullable": true
+                  },
                   "tax_regime": {
                     "type": "string",
                     "enum": [
@@ -722,6 +792,22 @@
                       "lucro_real"
                     ],
                     "nullable": true
+                  },
+                  "segment": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "retail",
+                      "services",
+                      "manufacturing",
+                      "construction",
+                      "agribusiness",
+                      "healthcare",
+                      "education",
+                      "technology",
+                      "financial",
+                      "other"
+                    ]
                   }
                 }
               }
@@ -793,6 +879,10 @@
                     "type": "string",
                     "nullable": true
                   },
+                  "trade_name": {
+                    "type": "string",
+                    "nullable": true
+                  },
                   "tax_regime": {
                     "type": "string",
                     "enum": [
@@ -801,6 +891,22 @@
                       "lucro_real"
                     ],
                     "nullable": true
+                  },
+                  "segment": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "retail",
+                      "services",
+                      "manufacturing",
+                      "construction",
+                      "agribusiness",
+                      "healthcare",
+                      "education",
+                      "technology",
+                      "financial",
+                      "other"
+                    ]
                   }
                 }
               }
@@ -868,7 +974,8 @@
                 "required": [
                   "companyId",
                   "email",
-                  "role"
+                  "role",
+                  "invite_token"
                 ],
                 "properties": {
                   "companyId": {
@@ -881,6 +988,16 @@
                   },
                   "role": {
                     "$ref": "#/components/schemas/MemberRole"
+                  },
+                  "invite_token": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "UUID gerado pelo cliente — usado para montar o link de convite no e-mail"
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": ["pt", "en"],
+                    "description": "Idioma do e-mail de convite (padrão: pt)"
                   }
                 }
               }
@@ -892,7 +1009,7 @@
             "description": "Convite enviado"
           },
           "409": {
-            "description": "Membro já existe"
+            "description": "Membro já existe ou convite pendente"
           }
         }
       }
@@ -1218,7 +1335,7 @@
           "200": {
             "description": "Convite aceito"
           },
-          "409": {
+          "400": {
             "description": "Convite já usado ou expirado"
           }
         }
@@ -1302,6 +1419,15 @@
               "default": 20,
               "maximum": 1000
             }
+          },
+          {
+            "name": "installment_group_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filtra todas as parcelas de um grupo de parcelamento"
           }
         ],
         "responses": {
@@ -1602,7 +1728,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "usageCount": {
+                    "count": {
                       "type": "integer"
                     }
                   }
@@ -1672,11 +1798,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "transferToId": {
+                  "transferTo": {
                     "type": "string",
                     "format": "uuid",
                     "nullable": true,
-                    "description": "Se informado, move os lançamentos para esta categoria antes de excluir"
+                    "description": "UUID da categoria destino — move os lançamentos antes de excluir. null = zera category_id nas transações. Ausente = retorna 409 se a categoria tiver transações vinculadas."
                   }
                 }
               }
@@ -1745,12 +1871,12 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "name",
                   "account_type"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -1758,7 +1884,21 @@
                     "type": "string"
                   },
                   "account_type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": ["checking", "savings"],
+                    "default": "checking"
+                  },
+                  "agency": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "account_number": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "pix_key": {
+                    "type": "string",
+                    "nullable": true
                   }
                 }
               }
@@ -1898,11 +2038,11 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "name"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -2064,14 +2204,14 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "description",
                   "amount",
                   "type",
                   "due_date"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -2250,26 +2390,13 @@
         ],
         "responses": {
           "200": {
+            "description": "Array de dias com income, expense e saldo acumulado (ordenado por data)",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "days": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/CashFlowDay"
-                      }
-                    },
-                    "totalIncome": {
-                      "type": "number"
-                    },
-                    "totalExpense": {
-                      "type": "number"
-                    },
-                    "netBalance": {
-                      "type": "number"
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CashFlowDay"
                   }
                 }
               }
@@ -2315,32 +2442,13 @@
         ],
         "responses": {
           "200": {
+            "description": "Array flat ordenado: income primeiro, depois expense. Cada linha tem category_id, category_name, type e total.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "income": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IncomeStatementLine"
-                      }
-                    },
-                    "expense": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IncomeStatementLine"
-                      }
-                    },
-                    "totalIncome": {
-                      "type": "number"
-                    },
-                    "totalExpense": {
-                      "type": "number"
-                    },
-                    "netResult": {
-                      "type": "number"
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IncomeStatementLine"
                   }
                 }
               }

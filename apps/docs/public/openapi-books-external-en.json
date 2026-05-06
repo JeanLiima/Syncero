@@ -291,6 +291,7 @@
                   "amount",
                   "type",
                   "date",
+                  "nature",
                   "counterpart"
                 ],
                 "properties": {

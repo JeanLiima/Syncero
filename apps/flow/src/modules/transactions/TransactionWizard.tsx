@@ -117,6 +117,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   const handleSave = async () => {
     if (!state.type) return
+    if (!state.nature) { state.goTo(2); return }
     state.setDescError('')
     if (!state.description.trim()) { state.setDescError(t('transactions_errorDescription')); return }
     if (state.amountCents <= 0) { state.setAmountError(t('transactions_errorAmount')); state.goTo(4); return }

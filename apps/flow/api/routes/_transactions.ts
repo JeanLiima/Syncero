@@ -98,6 +98,7 @@ router.post('/', async (c) => {
 
   const b = body as Record<string, unknown>
   if (!b.counterpart?.toString().trim()) return c.json({ error: 'counterpart required' }, 400)
+  if (!b.nature?.toString().trim()) return c.json({ error: 'nature required' }, 400)
   const { data, error } = await db.from('transactions').insert({
     company_id:           companyId,
     created_by:           userId,
@@ -174,6 +175,9 @@ router.patch('/:id', async (c) => {
   if (Object.keys(allowed).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
   if ('counterpart' in allowed && !allowed.counterpart?.toString().trim()) {
     return c.json({ error: 'counterpart required' }, 400)
+  }
+  if ('nature' in allowed && !allowed.nature?.toString().trim()) {
+    return c.json({ error: 'nature required' }, 400)
   }
 
   const { data, error } = await db.from('transactions').update(allowed).eq('id', transactionId).select().single()

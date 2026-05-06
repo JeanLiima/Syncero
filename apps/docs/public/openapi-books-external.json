@@ -105,7 +105,8 @@
             "description": "Data de competência"
           },
           "is_paid": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "paid_at": {
             "type": "string",
@@ -151,12 +152,13 @@
         "description": "Retorna os lançamentos da empresa externa com status de classificação contábil.",
         "parameters": [
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             },
             "description": "ID da empresa externa"
           },
@@ -169,14 +171,16 @@
                 "income",
                 "expense"
               ]
-            }
+            },
+            "description": "Filtro por tipo: income (receitas) ou expense (despesas)."
           },
           {
             "name": "is_paid",
             "in": "query",
             "schema": {
               "type": "boolean"
-            }
+            },
+            "description": "Filtro por situação de pagamento."
           },
           {
             "name": "date_from",
@@ -184,7 +188,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Data de competência inicial (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -192,7 +197,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Data de competência final (YYYY-MM-DD)."
           },
           {
             "name": "search",
@@ -200,7 +206,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Busca por descrição (case-insensitive)"
+            "description": "Busca por texto na descrição (sem distinção de maiúsculas/minúsculas)"
           },
           {
             "name": "page",
@@ -208,16 +214,18 @@
             "schema": {
               "type": "integer",
               "default": 1
-            }
+            },
+            "description": "Número da página (começa em 1)."
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "schema": {
               "type": "integer",
               "default": 20,
               "maximum": 1000
-            }
+            },
+            "description": "Quantidade de registros por página. Máximo: 1.000."
           }
         ],
         "responses": {
@@ -278,29 +286,30 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "extCompanyId",
+                  "ext_company_id",
                   "description",
                   "amount",
                   "type",
                   "date",
-                  "is_paid",
-                  "nature",
                   "counterpart"
                 ],
                 "properties": {
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "ID da empresa externa"
+                    "description": "ID da empresa externa",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "description": {
                     "type": "string",
-                    "example": "Nota fiscal serviços #1042"
+                    "example": "Nota fiscal serviços #1042",
+                    "description": "Texto descritivo do lançamento financeiro."
                   },
                   "amount": {
                     "type": "number",
                     "minimum": 0.01,
-                    "example": 1500
+                    "example": 1500,
+                    "description": "Valor em reais (maior que zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
@@ -313,7 +322,8 @@
                   },
                   "is_paid": {
                     "type": "boolean",
-                    "description": "true = pago/recebido. Lançamentos devem estar pagos para serem classificados contabilmente."
+                    "description": "true = pago/recebido. Lançamentos devem estar pagos para serem classificados contabilmente.",
+                    "default": false
                   },
                   "paid_at": {
                     "type": "string",
@@ -332,7 +342,8 @@
                   "notes": {
                     "type": "string",
                     "nullable": true,
-                    "example": "Referente ao contrato #2024/001"
+                    "example": "Referente ao contrato #2024/001",
+                    "description": "Observações livres sobre o lançamento."
                   }
                 }
               },
@@ -340,7 +351,7 @@
                 "receita": {
                   "summary": "Receita de serviço paga",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "description": "Prestação de serviços — Cliente XYZ",
                     "amount": 5000,
                     "type": "income",
@@ -354,7 +365,7 @@
                 "despesa": {
                   "summary": "Despesa operacional pendente",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "description": "Aluguel do escritório — maio/2026",
                     "amount": 3200,
                     "type": "expense",
@@ -420,7 +431,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "description": "ID do lançamento"
         }
@@ -438,18 +450,21 @@
                 "type": "object",
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Texto descritivo do lançamento financeiro."
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "description": "Valor em reais (maior que zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Data de competência (YYYY-MM-DD)."
                   },
                   "is_paid": {
                     "type": "boolean"
@@ -457,7 +472,8 @@
                   "paid_at": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data efetiva do pagamento/recebimento. Enviado null quando is_paid volta a false."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"
@@ -468,7 +484,8 @@
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres sobre o lançamento."
                   }
                 }
               }
@@ -577,25 +594,28 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "extCompanyId",
+                  "ext_company_id",
                   "entry_date",
                   "description",
                   "lines"
                 ],
                 "properties": {
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "ID da empresa externa"
+                    "description": "ID da empresa externa",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "entry_date": {
                     "type": "string",
                     "format": "date",
-                    "description": "Data do lançamento contábil"
+                    "description": "Data do lançamento contábil",
+                    "example": "2026-05-01"
                   },
                   "description": {
                     "type": "string",
-                    "example": "Prestação de serviços — Cliente XYZ"
+                    "example": "Prestação de serviços — Cliente XYZ",
+                    "description": "Histórico descritivo do lançamento contábil."
                   },
                   "flow_transaction_id": {
                     "type": "string",
@@ -623,18 +643,23 @@
                         "account_plan_id": {
                           "type": "string",
                           "format": "uuid",
-                          "description": "ID da conta analítica no plano de contas"
+                          "description": "ID da conta analítica no plano de contas",
+                          "example": "550e8400-e29b-41d4-a716-446655440000"
                         },
                         "side": {
                           "type": "string",
                           "enum": [
                             "debit",
                             "credit"
-                          ]
+                          ],
+                          "example": "debit",
+                          "description": "Lado da partida dobrada: debit (débito) ou credit (crédito)."
                         },
                         "amount": {
                           "type": "number",
-                          "minimum": 0.01
+                          "minimum": 0.01,
+                          "example": 1500,
+                          "description": "Valor da partida em reais (maior que zero)."
                         },
                         "memo": {
                           "type": "string",
@@ -650,7 +675,7 @@
                 "classificar_venda": {
                   "summary": "Classificar uma venda de serviço",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "entry_date": "2026-05-01",
                     "description": "Prestação de serviços — Cliente XYZ",
                     "flow_transaction_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
@@ -673,7 +698,7 @@
                 "manual": {
                   "summary": "Lançamento manual sem transação vinculada",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "entry_date": "2026-05-31",
                     "description": "Depreciação de equipamentos — maio/2026",
                     "external_ref": "DEP-2026-05",

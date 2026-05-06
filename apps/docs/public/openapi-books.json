@@ -185,7 +185,8 @@
             "format": "date"
           },
           "is_paid": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "paid_at": {
             "type": "string",
@@ -272,10 +273,12 @@
             "$ref": "#/components/schemas/AccountNature"
           },
           "is_analytic": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
           },
           "is_active": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
           },
           "created_at": {
             "type": "string",
@@ -368,7 +371,8 @@
             "nullable": true
           },
           "is_reversed": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "created_at": {
             "type": "string",
@@ -433,7 +437,8 @@
             "type": "string"
           },
           "is_active": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
           },
           "notes": {
             "type": "string",
@@ -480,7 +485,8 @@
             "nullable": true
           },
           "is_active": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": true
           },
           "created_at": {
             "type": "string",
@@ -696,22 +702,32 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "full_name": {
-                      "type": "string"
-                    },
-                    "email": {
-                      "type": "string"
-                    },
-                    "user_type": {
-                      "type": "string"
-                    },
-                    "avatar_url": {
-                      "type": "string",
-                      "nullable": true
+                    "profile": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "user_type": {
+                          "type": "string",
+                          "enum": [
+                            "company_user",
+                            "accountant"
+                          ]
+                        },
+                        "avatar_url": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
                     }
                   }
                 }
@@ -736,6 +752,7 @@
           "auth"
         ],
         "summary": "Criar ou atualizar perfil (onboarding)",
+        "description": "O `full_name` e `avatar_url` são extraídos automaticamente dos metadados do Google OAuth — não devem ser enviados no body.",
         "requestBody": {
           "required": true,
           "content": {
@@ -743,20 +760,17 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "full_name",
                   "user_type"
                 ],
                 "properties": {
-                  "full_name": {
-                    "type": "string"
-                  },
                   "user_type": {
                     "type": "string",
                     "enum": [
                       "company_user",
                       "accountant"
                     ],
-                    "description": "Apenas esses dois valores são aceitos."
+                    "description": "Apenas esses dois valores são aceitos.",
+                    "example": "accountant"
                   }
                 }
               }
@@ -765,7 +779,38 @@
         },
         "responses": {
           "200": {
-            "description": "Perfil salvo"
+            "description": "Perfil salvo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "user_type": {
+                          "type": "string"
+                        },
+                        "avatar_url": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "user_type inválido.",
@@ -862,7 +907,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -917,7 +963,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1004,15 +1051,19 @@
                 ],
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Empresa XYZ Ltda",
+                    "description": "Razão social da empresa externa."
                   },
                   "cnpj": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CNPJ sem formatação (14 dígitos numéricos)."
                   },
                   "trade_name": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Nome fantasia."
                   },
                   "tax_regime": {
                     "type": "string",
@@ -1021,7 +1072,8 @@
                       "lucro_presumido",
                       "lucro_real"
                     ],
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Regime tributário adotado pela empresa."
                   },
                   "segment": {
                     "type": "string",
@@ -1037,13 +1089,15 @@
                       "technology",
                       "financial",
                       "other"
-                    ]
+                    ],
+                    "description": "Segmento de atuação da empresa."
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações internas do contador."
                   },
-                  "seedPlan": {
+                  "seed_plan": {
                     "type": "boolean",
                     "default": false,
                     "description": "Se true, cria o Plano de Contas padrão CFC automaticamente"
@@ -1086,7 +1140,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -1130,15 +1185,18 @@
                 ],
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Razão social da empresa externa."
                   },
                   "cnpj": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CNPJ sem formatação (14 dígitos numéricos)."
                   },
                   "trade_name": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Nome fantasia."
                   },
                   "tax_regime": {
                     "type": "string",
@@ -1147,11 +1205,13 @@
                       "lucro_presumido",
                       "lucro_real"
                     ],
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Regime tributário adotado pela empresa."
                   },
                   "segment": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Segmento de atuação da empresa."
                   }
                 }
               }
@@ -1182,31 +1242,74 @@
         "x-access": "internal"
       }
     },
+    "/api/transactions/counterparts": {
+      "get": {
+        "tags": [
+          "transactions-external"
+        ],
+        "summary": "Listar counterparts distintos de empresa externa",
+        "description": "Retorna lista ordenada de valores únicos de `counterpart` para autocomplete.\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT.",
+        "parameters": [
+          {
+            "name": "ext_company_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa externa cujos counterparts serão listados."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array de strings únicas, ordenado alfabeticamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "ext_company_id obrigatório"
+          },
+          "403": {
+            "description": "Sem acesso à empresa"
+          }
+        }
+      }
+    },
     "/api/transactions": {
       "get": {
         "tags": [
           "transactions-external"
         ],
         "summary": "Listar lançamentos com status de classificação",
-        "description": "Aceita `companyId` (empresa Flow, somente leitura) ou `extCompanyId` (empresa externa, CRUD completo).\nRetorna `is_classified` e `journal_entry_id` adicionados pelo servidor.\n\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
+        "description": "Aceita `company_id` (empresa Flow, somente leitura) ou `ext_company_id` (empresa externa, CRUD completo).\nRetorna `is_classified` e `journal_entry_id` adicionados pelo servidor.\n\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
             },
-            "description": "Empresa Flow (exclusivo com extCompanyId)"
+            "description": "Empresa Flow (exclusivo com ext_company_id)"
           },
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
             },
-            "description": "Empresa externa (exclusivo com companyId)"
+            "description": "Empresa externa (exclusivo com company_id)"
           },
           {
             "name": "type",
@@ -1254,7 +1357,7 @@
             }
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -1290,7 +1393,7 @@
           "transactions-external"
         ],
         "summary": "Criar lançamento para empresa externa",
-        "description": "Exclusivo para empresas externas (`extCompanyId`). Empresas Flow são somente leitura no Books.\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
+        "description": "Exclusivo para empresas externas (`ext_company_id`). Empresas Flow são somente leitura no Books.\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1298,7 +1401,7 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "extCompanyId",
+                  "ext_company_id",
                   "description",
                   "amount",
                   "type",
@@ -1308,32 +1411,42 @@
                   "counterpart"
                 ],
                 "properties": {
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa externa para qual o lançamento pertence."
                   },
                   "description": {
                     "type": "string",
-                    "example": "Aluguel de escritório"
+                    "example": "Aluguel de escritório",
+                    "description": "Descrição do lançamento financeiro."
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "example": 1500,
+                    "description": "Valor em reais (maior que zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "example": "2026-05-01",
+                    "description": "Data de competência (YYYY-MM-DD)."
                   },
                   "is_paid": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": false,
+                    "description": "true = pago/recebido; false = pendente. Padrão: false."
                   },
                   "paid_at": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD). Obrigatório se is_paid = true."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature",
@@ -1346,7 +1459,8 @@
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres sobre o lançamento."
                   }
                 }
               }
@@ -1384,7 +1498,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -1469,11 +1584,13 @@
                 ],
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Descrição do lançamento financeiro."
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "description": "Valor em reais (maior que zero)."
                   },
                   "type": {
                     "type": "string",
@@ -1484,7 +1601,8 @@
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Data de competência (YYYY-MM-DD)."
                   },
                   "is_paid": {
                     "type": "boolean"
@@ -1492,7 +1610,8 @@
                   "paid_at": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data efetiva do pagamento/recebimento. Enviado null quando is_paid = false."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature",
@@ -1504,7 +1623,8 @@
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres. Enviar null para remover."
                   }
                 }
               }
@@ -1573,20 +1693,22 @@
         "summary": "Listar lançamentos contábeis",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Empresa Flow (exclusivo com ext_company_id)."
           },
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Empresa externa (exclusivo com company_id)."
           },
           {
             "name": "period",
@@ -1629,7 +1751,7 @@
           "journal-entries-external"
         ],
         "summary": "Criar lançamento contábil (classificar)",
-        "description": "Cria um lançamento em partidas dobradas. Ao informar `flow_transaction_id`,\no lançamento fica vinculado ao lançamento financeiro correspondente,\nmarcando-o como **Classificado**.\n\nDeve sempre ter exatamente 2 linhas (débito e crédito) com o mesmo valor.\n\n\n**Rota externa** — aceita `x-api-key`.\n\n**Validação de `flow_transaction_id`:** Se informado, a transação deve pertencer à mesma empresa (`companyId` ou `extCompanyId`) da requisição. Caso contrário, retorna 403.",
+        "description": "Cria um lançamento em partidas dobradas. Ao informar `flow_transaction_id`,\no lançamento fica vinculado ao lançamento financeiro correspondente,\nmarcando-o como **Classificado**.\n\nDeve sempre ter exatamente 2 linhas (débito e crédito) com o mesmo valor.\n\n\n**Rota externa** — aceita `x-api-key`.\n\n**Validação de `flow_transaction_id`:** Se informado, a transação deve pertencer à mesma empresa (`company_id` ou `ext_company_id`) da requisição. Caso contrário, retorna 403.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1642,22 +1764,26 @@
                   "lines"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Empresa Flow (exclusivo com extCompanyId)"
+                    "description": "Empresa Flow (exclusivo com ext_company_id)"
                   },
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Empresa externa (exclusivo com companyId)"
+                    "description": "Empresa externa (exclusivo com company_id)"
                   },
                   "entry_date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "example": "2026-05-01",
+                    "description": "Data de competência do lançamento contábil (YYYY-MM-DD)."
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Prestação de serviços — Cliente XYZ",
+                    "description": "Histórico descritivo do lançamento contábil."
                   },
                   "flow_transaction_id": {
                     "type": "string",
@@ -1667,7 +1793,8 @@
                   },
                   "external_ref": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Referência externa para rastreio (número de documento, protocolo, etc.)."
                   },
                   "lines": {
                     "type": "array",
@@ -1683,17 +1810,25 @@
                       "properties": {
                         "account_plan_id": {
                           "type": "string",
-                          "format": "uuid"
+                          "format": "uuid",
+                          "example": "550e8400-e29b-41d4-a716-446655440000",
+                          "description": "ID da conta analítica no plano de contas da empresa."
                         },
                         "side": {
-                          "$ref": "#/components/schemas/JournalSide"
+                          "$ref": "#/components/schemas/JournalSide",
+                          "example": "debit",
+                          "description": "Lado da partida dobrada: debit (débito) ou credit (crédito)."
                         },
                         "amount": {
-                          "type": "number"
+                          "type": "number",
+                          "minimum": 0.01,
+                          "example": 1500,
+                          "description": "Valor da partida em reais (maior que zero)."
                         },
                         "memo": {
                           "type": "string",
-                          "nullable": true
+                          "nullable": true,
+                          "description": "Histórico individual da partida (linha do lançamento)."
                         }
                       }
                     }
@@ -1739,20 +1874,22 @@
         "summary": "Listar plano de contas",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Empresa Flow (exclusivo com ext_company_id)."
           },
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Empresa externa (exclusivo com company_id)."
           }
         ],
         "responses": {
@@ -1800,20 +1937,25 @@
                   "is_analytic"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "description": "Empresa Flow (exclusivo com ext_company_id)."
                   },
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "description": "Empresa externa (exclusivo com company_id)."
                   },
                   "code": {
                     "type": "string",
-                    "example": "1.01.001"
+                    "example": "1.01.001",
+                    "description": "Código hierárquico da conta no plano (ex: 1.01.001). Único por empresa."
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Caixa e Equivalentes de Caixa",
+                    "description": "Nome descritivo da conta contábil."
                   },
                   "account_type": {
                     "$ref": "#/components/schemas/AccountType"
@@ -1822,12 +1964,16 @@
                     "$ref": "#/components/schemas/AccountNature"
                   },
                   "is_analytic": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "default": true,
+                    "example": true,
+                    "description": "true = conta analítica que recebe lançamentos; false = sintética (agrupadora). Padrão: true."
                   },
                   "parent_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "UUID da conta pai no plano hierárquico. null = conta raiz."
                   }
                 }
               }
@@ -1855,7 +2001,7 @@
             }
           }
         },
-        "description": "\n\nRequer que o contador seja autorizado para `companyId` (via `accountant_companies`) ou `extCompanyId` (via `external_companies`).",
+        "description": "\n\nRequer que o contador seja autorizado para `company_id` (via `accountant_companies`) ou `ext_company_id` (via `external_companies`).",
         "x-access": "internal"
       }
     },
@@ -1873,13 +2019,15 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "description": "Empresa Flow (exclusivo com ext_company_id)."
                   },
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "description": "Empresa externa (exclusivo com company_id)."
                   },
                   "accounts": {
                     "type": "array",
@@ -1894,10 +2042,14 @@
                       ],
                       "properties": {
                         "code": {
-                          "type": "string"
+                          "type": "string",
+                          "example": "1.01.001",
+                          "description": "Código hierárquico da conta (ex: 1.01.001)."
                         },
                         "name": {
-                          "type": "string"
+                          "type": "string",
+                          "example": "Caixa e Equivalentes de Caixa",
+                          "description": "Nome descritivo da conta."
                         },
                         "account_type": {
                           "$ref": "#/components/schemas/AccountType"
@@ -1906,11 +2058,15 @@
                           "$ref": "#/components/schemas/AccountNature"
                         },
                         "is_analytic": {
-                          "type": "boolean"
+                          "type": "boolean",
+                          "default": true,
+                          "example": true,
+                          "description": "true = analítica (recebe lançamentos); false = sintética (agrupadora)."
                         },
                         "parent_code": {
                           "type": "string",
-                          "nullable": true
+                          "nullable": true,
+                          "description": "Código da conta pai no mesmo lote. null = conta raiz."
                         }
                       }
                     }
@@ -1957,7 +2113,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -1974,10 +2131,12 @@
                 "type": "object",
                 "properties": {
                   "code": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Novo código hierárquico. Deve ser único na empresa."
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Nome descritivo da conta."
                   },
                   "account_type": {
                     "$ref": "#/components/schemas/AccountType"
@@ -1991,7 +2150,8 @@
                   "parent_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "UUID da conta pai. null = promover para conta raiz."
                   }
                 }
               }
@@ -2071,7 +2231,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2118,7 +2279,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2129,13 +2291,14 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "targetId"
+                  "target_id"
                 ],
                 "properties": {
-                  "targetId": {
+                  "target_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Conta destino (deve ser analítica e do mesmo contador)"
+                    "description": "Conta destino (deve ser analítica e do mesmo contador)",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                   }
                 }
               }
@@ -2182,13 +2345,15 @@
         "summary": "Listar documentos fiscais (NF-e, NFS-e, CF-e, NFC-e)",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa Flow cujos documentos serão listados."
           },
           {
             "name": "doc_type",
@@ -2201,7 +2366,8 @@
                 "cfe",
                 "nfce"
               ]
-            }
+            },
+            "description": "Filtro por tipo de documento fiscal."
           },
           {
             "name": "date_from",
@@ -2209,7 +2375,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Data de emissão inicial (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -2217,7 +2384,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Data de emissão final (YYYY-MM-DD)."
           }
         ],
         "responses": {
@@ -2255,13 +2423,15 @@
         "summary": "Listar livros fiscais (SPED, ECF, ECD)",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa Flow cujos documentos serão listados."
           }
         ],
         "responses": {
@@ -2299,13 +2469,15 @@
         "summary": "Listar cálculos tributários",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa Flow cujos documentos serão listados."
           }
         ],
         "responses": {
@@ -2335,66 +2507,6 @@
         "x-access": "internal"
       }
     },
-    "/api/categories": {
-      "get": {
-        "tags": [
-          "fiscal"
-        ],
-        "summary": "Listar categorias de uma empresa Flow (leitura)",
-        "parameters": [
-          {
-            "name": "companyId",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "id": {
-                        "type": "string",
-                        "format": "uuid"
-                      },
-                      "name": {
-                        "type": "string"
-                      },
-                      "type": {
-                        "type": "string",
-                        "enum": [
-                          "income",
-                          "expense"
-                        ]
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Acesso negado ou origem não autorizada.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "x-access": "internal"
-      }
-    },
     "/api/api-keys": {
       "get": {
         "tags": [
@@ -2403,20 +2515,22 @@
         "summary": "Listar chaves de API",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Empresa Flow (exclusivo com ext_company_id)."
           },
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Empresa externa (exclusivo com company_id)."
           }
         ],
         "responses": {
@@ -2462,20 +2576,25 @@
                 ],
                 "properties": {
                   "name": {
-                    "type": "string"
-                  },
-                  "companyId": {
                     "type": "string",
-                    "format": "uuid"
+                    "example": "Integração ERP",
+                    "description": "Nome para identificar a API Key (ex: Integração ERP)."
                   },
-                  "extCompanyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "description": "Empresa Flow (exclusivo com ext_company_id)."
                   },
-                  "expiresAt": {
+                  "ext_company_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Empresa externa (exclusivo com company_id)."
+                  },
+                  "expires_at": {
                     "type": "string",
                     "format": "date-time",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data de expiração da chave (ISO 8601). null = sem expiração."
                   }
                 }
               }
@@ -2533,7 +2652,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2580,8 +2700,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "Token único do convite (UUID gerado na criação)."
           }
         ],
         "responses": {
@@ -2644,26 +2766,21 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "Token único do convite (UUID gerado na criação)."
           }
         ],
         "responses": {
           "200": {
             "description": "Convite aceito com sucesso"
           },
-          "403": {
-            "description": "Usuário não é contador, ou o convite foi enviado para outro e-mail.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+          "400": {
+            "description": "Convite já usado ou expirado"
           },
-          "409": {
-            "description": "Convite já foi aceito"
+          "403": {
+            "description": "Usuário não é contador ou perfil não encontrado"
           }
         },
         "x-access": "internal"

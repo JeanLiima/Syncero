@@ -47,7 +47,7 @@ export function ExportModal({ open, onClose, filters, companyId }: Props) {
     setLoading(true)
     setError(null)
     try {
-      const params = new URLSearchParams({ companyId, pageSize: '1000', page: '1' })
+      const params = new URLSearchParams({ company_id: companyId, page_size: '1000', page: '1' })
       if (filters.type)        params.set('type',        filters.type)
       if (filters.is_paid !== undefined) params.set('is_paid', String(filters.is_paid))
       if (filters.date_from)   params.set('date_from',   filters.date_from)

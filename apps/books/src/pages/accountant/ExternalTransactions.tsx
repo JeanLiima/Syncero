@@ -243,7 +243,7 @@ export function Component() {
       if (editing) {
         await updateExtTransaction(editing.id, payload)
       } else {
-        await createExtTransaction({ extCompanyId: extCompanyId!, ...payload })
+        await createExtTransaction({ ext_company_id: extCompanyId!, ...payload })
       }
 
       qc.invalidateQueries({ queryKey: QUERY_KEY })

@@ -153,7 +153,8 @@
             "format": "date"
           },
           "is_paid": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "notes": {
             "type": "string",
@@ -180,7 +181,8 @@
             "$ref": "#/components/schemas/TransactionNature"
           },
           "is_installment": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "installment_count": {
             "type": "integer",
@@ -273,32 +275,35 @@
       "TransactionInput": {
         "type": "object",
         "required": [
-          "companyId",
+          "company_id",
           "description",
           "amount",
           "type",
           "date",
-          "nature",
           "counterpart"
         ],
         "properties": {
-          "companyId": {
+          "company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "example": "Prestação de serviços — Cliente XYZ"
           },
           "amount": {
             "type": "number",
-            "minimum": 0.01
+            "minimum": 0.01,
+            "example": 1500
           },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
           },
           "date": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "example": "2026-05-01"
           },
           "is_paid": {
             "type": "boolean",
@@ -336,7 +341,8 @@
           },
           "counterpart": {
             "type": "string",
-            "description": "Quem enviou (receita) ou recebeu (despesa) o valor"
+            "description": "Quem enviou (receita) ou recebeu (despesa) o valor",
+            "example": "Cliente XYZ Ltda"
           },
           "is_installment": {
             "type": "boolean",
@@ -345,6 +351,17 @@
           "installment_count": {
             "type": "integer",
             "nullable": true
+          },
+          "installment_number": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Número desta parcela (ex: 1 de 3)"
+          },
+          "installment_group_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "UUID que agrupa todas as parcelas de um mesmo parcelamento"
           }
         }
       },
@@ -496,6 +513,10 @@
             "type": "string",
             "nullable": true
           },
+          "trade_name": {
+            "type": "string",
+            "nullable": true
+          },
           "tax_regime": {
             "type": "string",
             "enum": [
@@ -504,6 +525,22 @@
               "lucro_real"
             ],
             "nullable": true
+          },
+          "segment": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "retail",
+              "services",
+              "manufacturing",
+              "construction",
+              "agribusiness",
+              "healthcare",
+              "education",
+              "technology",
+              "financial",
+              "other"
+            ]
           },
           "owner_id": {
             "type": "string",
@@ -530,9 +567,9 @@
       "MemberStatus": {
         "type": "string",
         "enum": [
-          "active",
-          "invited",
-          "inactive"
+          "accepted",
+          "pending",
+          "revoked"
         ]
       },
       "CompanyMember": {
@@ -615,6 +652,9 @@
           "category_name": {
             "type": "string"
           },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
           "total": {
             "type": "number"
           }
@@ -665,26 +705,53 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
+                    "profile": {
+                      "type": "object",
+                      "nullable": true,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "user_type": {
+                          "type": "string",
+                          "enum": [
+                            "company_user",
+                            "accountant"
+                          ]
+                        },
+                        "avatar_url": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
                     },
-                    "full_name": {
-                      "type": "string"
-                    },
-                    "email": {
-                      "type": "string"
-                    },
-                    "user_type": {
-                      "type": "string",
-                      "enum": [
-                        "company_user",
-                        "accountant"
-                      ]
-                    },
-                    "avatar_url": {
-                      "type": "string",
-                      "nullable": true
+                    "activeCompany": {
+                      "type": "object",
+                      "nullable": true,
+                      "description": "Primeira empresa aceita do usuário, ou null se não houver nenhuma",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "$ref": "#/components/schemas/MemberRole"
+                        },
+                        "segment": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
                     }
                   }
                 }
@@ -712,6 +779,7 @@
           "auth"
         ],
         "summary": "Criar ou atualizar perfil (onboarding)",
+        "description": "O `full_name` e `avatar_url` são extraídos automaticamente dos metadados do Google OAuth — não devem ser enviados no body.",
         "requestBody": {
           "required": true,
           "content": {
@@ -719,20 +787,17 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "full_name",
                   "user_type"
                 ],
                 "properties": {
-                  "full_name": {
-                    "type": "string"
-                  },
                   "user_type": {
                     "type": "string",
                     "enum": [
                       "company_user",
                       "accountant"
                     ],
-                    "description": "Tipo de usuário. Apenas esses dois valores são aceitos."
+                    "description": "Tipo de usuário. Apenas esses dois valores são aceitos.",
+                    "example": "company_user"
                   }
                 }
               }
@@ -741,7 +806,38 @@
         },
         "responses": {
           "200": {
-            "description": "Perfil criado ou atualizado"
+            "description": "Perfil criado ou atualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "user_type": {
+                          "type": "string"
+                        },
+                        "avatar_url": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "user_type inválido.",
@@ -761,7 +857,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "": "#/components/schemas/Error"
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -788,12 +884,20 @@
                 ],
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Empresa ABC Ltda",
+                    "description": "Razão social da empresa."
                   },
                   "cnpj": {
                     "type": "string",
                     "nullable": true,
-                    "example": "00000000000000"
+                    "example": "00000000000000",
+                    "description": "CNPJ sem formatação (14 dígitos numéricos)."
+                  },
+                  "trade_name": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Nome fantasia."
                   },
                   "tax_regime": {
                     "type": "string",
@@ -802,7 +906,25 @@
                       "lucro_presumido",
                       "lucro_real"
                     ],
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Regime tributário adotado pela empresa."
+                  },
+                  "segment": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "retail",
+                      "services",
+                      "manufacturing",
+                      "construction",
+                      "agribusiness",
+                      "healthcare",
+                      "education",
+                      "technology",
+                      "financial",
+                      "other"
+                    ],
+                    "description": "Segmento de atuação da empresa."
                   }
                 }
               }
@@ -842,7 +964,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -880,11 +1003,18 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Razão social da empresa."
                   },
                   "cnpj": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CNPJ sem formatação (14 dígitos numéricos)."
+                  },
+                  "trade_name": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Nome fantasia."
                   },
                   "tax_regime": {
                     "type": "string",
@@ -893,7 +1023,25 @@
                       "lucro_presumido",
                       "lucro_real"
                     ],
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Regime tributário adotado pela empresa."
+                  },
+                  "segment": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "retail",
+                      "services",
+                      "manufacturing",
+                      "construction",
+                      "agribusiness",
+                      "healthcare",
+                      "education",
+                      "technology",
+                      "financial",
+                      "other"
+                    ],
+                    "description": "Segmento de atuação da empresa."
                   }
                 }
               }
@@ -933,13 +1081,15 @@
         "summary": "Listar membros da empresa",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa cujos dados serão listados."
           }
         ],
         "responses": {
@@ -981,21 +1131,40 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "email",
-                  "role"
+                  "role",
+                  "invite_token"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa que está enviando o convite."
                   },
                   "email": {
                     "type": "string",
-                    "format": "email"
+                    "format": "email",
+                    "example": "colaborador@empresa.com.br",
+                    "description": "E-mail do colaborador convidado."
                   },
                   "role": {
                     "$ref": "#/components/schemas/MemberRole"
+                  },
+                  "invite_token": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "UUID gerado pelo cliente — usado para montar o link de convite no e-mail",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "pt",
+                      "en"
+                    ],
+                    "description": "Idioma do e-mail de convite (padrão: pt)"
                   }
                 }
               }
@@ -1017,7 +1186,7 @@
             }
           },
           "409": {
-            "description": "Membro já existe"
+            "description": "Membro já existe ou convite pendente"
           }
         },
         "x-internal": true
@@ -1036,7 +1205,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1089,7 +1259,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1124,7 +1295,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1154,7 +1326,7 @@
         "summary": "Listar vínculos com contadores",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1237,22 +1409,28 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "email",
                   "invite_token"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa que está convidando o contador."
                   },
                   "email": {
                     "type": "string",
-                    "format": "email"
+                    "format": "email",
+                    "example": "contador@escritorio.com.br",
+                    "description": "E-mail do contador convidado."
                   },
                   "invite_token": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                    "description": "Token UUID gerado pelo cliente — usado para construir o link de convite no e-mail."
                   }
                 }
               }
@@ -1293,7 +1471,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1328,7 +1507,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1364,8 +1544,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "Token único do convite (UUID gerado na criação)."
           }
         ],
         "responses": {
@@ -1424,28 +1606,17 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "Token único do convite (UUID gerado na criação)."
           }
         ],
         "responses": {
           "200": {
             "description": "Convite aceito"
           },
-          "403": {
-            "description": "O convite foi enviado para um e-mail diferente do usuário autenticado.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                },
-                "example": {
-                  "error": "This invite was sent to a different email address"
-                }
-              }
-            }
-          },
-          "409": {
+          "400": {
             "description": "Convite já usado ou expirado"
           }
         },
@@ -1461,13 +1632,15 @@
         "summary": "Listar lançamentos com paginação",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "type",
@@ -1513,7 +1686,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Busca por descrição (case-insensitive)"
+            "description": "Busca por texto na descrição (sem distinção de maiúsculas/minúsculas)"
           },
           {
             "name": "page",
@@ -1524,13 +1697,22 @@
             }
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "schema": {
               "type": "integer",
               "default": 20,
               "maximum": 1000
             }
+          },
+          {
+            "name": "installment_group_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filtra todas as parcelas de um grupo de parcelamento"
           }
         ],
         "responses": {
@@ -1605,7 +1787,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -1678,10 +1861,13 @@
                 ],
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Descrição do lançamento."
                   },
                   "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0.01,
+                    "description": "Valor em reais."
                   },
                   "type": {
                     "type": "string",
@@ -1692,7 +1878,8 @@
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Data de competência (YYYY-MM-DD)."
                   },
                   "is_paid": {
                     "type": "boolean"
@@ -1700,7 +1887,8 @@
                   "paid_at": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD)."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature",
@@ -1712,22 +1900,26 @@
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres."
                   },
                   "category_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Categoria do lançamento. Enviar null para remover."
                   },
                   "contact_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Contato vinculado. Enviar null para remover."
                   },
                   "bank_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Conta bancária usada. Enviar null para remover."
                   },
                   "payment_method": {
                     "type": "string",
@@ -1735,28 +1927,33 @@
                       "cash",
                       "bank"
                     ],
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Forma de pagamento: cash (dinheiro/pix) ou bank (débito bancário)."
                   },
                   "is_installment": {
                     "type": "boolean"
                   },
                   "installment_count": {
                     "type": "integer",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Total de parcelas do parcelamento."
                   },
                   "installment_number": {
                     "type": "integer",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Número desta parcela (1, 2, 3…)."
                   },
                   "payment_registered_at": {
                     "type": "string",
                     "format": "date-time",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data/hora em que o pagamento foi registrado."
                   },
                   "payment_registered_by": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "ID do usuário que registrou o pagamento."
                   }
                 }
               }
@@ -1822,6 +2019,67 @@
         "x-internal": true
       }
     },
+    "/api/transactions/group/{groupId}": {
+      "parameters": [
+        {
+          "name": "groupId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "description": "installment_group_id que identifica o grupo de parcelas"
+        }
+      ],
+      "patch": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Atualizar todas as parcelas de um grupo",
+        "description": "Atualiza em lote todos os lançamentos com o mesmo `installment_group_id`. Aceita apenas `nature` por enquanto.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nature": {
+                    "$ref": "#/components/schemas/TransactionNature",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nenhum campo válido para atualizar"
+          },
+          "404": {
+            "description": "Grupo não encontrado"
+          }
+        },
+        "x-internal": true
+      }
+    },
     "/api/categories": {
       "get": {
         "tags": [
@@ -1830,13 +2088,15 @@
         "summary": "Listar categorias",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa cujos dados serão listados."
           }
         ],
         "responses": {
@@ -1878,24 +2138,29 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "name",
                   "type"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa dona da categoria."
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Vendas de Produtos",
+                    "description": "Nome da categoria exibido na interface."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
                   },
                   "color": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Cor hexadecimal da categoria (ex: #3b82f6). Opcional."
                   }
                 }
               }
@@ -1940,7 +2205,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1951,7 +2217,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "usageCount": {
+                    "count": {
                       "type": "integer"
                     }
                   }
@@ -1981,7 +2247,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2043,11 +2310,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "transferToId": {
+                  "transfer_to": {
                     "type": "string",
                     "format": "uuid",
                     "nullable": true,
-                    "description": "Se informado, move os lançamentos para esta categoria antes de excluir"
+                    "description": "UUID da categoria destino — move os lançamentos antes de excluir. null = zera category_id nas transações. Ausente = retorna 409 se a categoria tiver transações vinculadas."
                   }
                 }
               }
@@ -2091,13 +2358,15 @@
         "summary": "Listar contas bancárias",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa cujos dados serão listados."
           }
         ],
         "responses": {
@@ -2138,20 +2407,46 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "name",
                   "account_type"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa dona da conta bancária."
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Banco do Brasil — Conta Corrente",
+                    "description": "Nome identificador da conta (ex: Banco do Brasil — PJ)."
                   },
                   "account_type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                      "checking",
+                      "savings"
+                    ],
+                    "default": "checking",
+                    "example": "checking",
+                    "description": "Tipo de conta: corrente (checking) ou poupança (savings)."
+                  },
+                  "agency": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Agência bancária."
+                  },
+                  "account_number": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Número da conta."
+                  },
+                  "pix_key": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Chave PIX associada à conta."
                   }
                 }
               }
@@ -2190,7 +2485,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2207,10 +2503,12 @@
                 "description": "Apenas name e account_type são editáveis. company_id é ignorado.",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Nome identificador da conta."
                   },
                   "account_type": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Tipo de conta: corrente (checking) ou poupança (savings)."
                   }
                 }
               }
@@ -2282,13 +2580,15 @@
         "summary": "Listar contatos",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "search",
@@ -2336,24 +2636,30 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "name"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa dona do contato."
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "João Silva",
+                    "description": "Nome do cliente ou fornecedor."
                   },
                   "cpf": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CPF sem formatação (11 dígitos numéricos)."
                   },
                   "cnpj": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CNPJ sem formatação (14 dígitos numéricos)."
                   }
                 }
               }
@@ -2392,7 +2698,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2408,15 +2715,18 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Nome do cliente ou fornecedor."
                   },
                   "cpf": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CPF sem formatação (11 dígitos numéricos). Enviar null para remover."
                   },
                   "cnpj": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CNPJ sem formatação (14 dígitos numéricos). Enviar null para remover."
                   }
                 }
               }
@@ -2488,13 +2798,15 @@
         "summary": "Listar contas a pagar/receber",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "type",
@@ -2546,41 +2858,54 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "description",
                   "amount",
                   "type",
                   "due_date"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa dona do compromisso."
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Aluguel do escritório — maio/2026",
+                    "description": "Descrição do compromisso financeiro."
                   },
                   "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0.01,
+                    "example": 3200,
+                    "description": "Valor em reais."
                   },
                   "type": {
                     "type": "string",
                     "enum": [
                       "payable",
                       "receivable"
-                    ]
+                    ],
+                    "example": "payable",
+                    "description": "Tipo: payable = a pagar; receivable = a receber."
                   },
                   "due_date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "example": "2026-05-31",
+                    "description": "Data de vencimento."
                   },
                   "contact_name": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Nome do fornecedor ou cliente."
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres."
                   }
                 }
               }
@@ -2619,7 +2944,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2635,19 +2961,24 @@
                 "type": "object",
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Descrição do compromisso financeiro."
                   },
                   "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0.01,
+                    "description": "Valor em reais."
                   },
                   "due_date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Data de vencimento."
                   },
                   "paid_date": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data efetiva do pagamento/recebimento."
                   },
                   "status": {
                     "type": "string",
@@ -2656,15 +2987,18 @@
                       "paid",
                       "overdue",
                       "cancelled"
-                    ]
+                    ],
+                    "description": "Status atual do compromisso."
                   },
                   "contact_name": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Nome do fornecedor ou cliente."
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres."
                   }
                 }
               }
@@ -2736,13 +3070,15 @@
         "summary": "Fluxo de caixa por dia",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "date_from",
@@ -2750,8 +3086,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "date"
-            }
+              "format": "date",
+              "example": "2026-05-01"
+            },
+            "description": "Data de início do período (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -2759,32 +3097,21 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "date"
-            }
+              "format": "date",
+              "example": "2026-05-31"
+            },
+            "description": "Data de fim do período (YYYY-MM-DD)."
           }
         ],
         "responses": {
           "200": {
+            "description": "Array de dias com income, expense e saldo acumulado (ordenado por data)",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "days": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/CashFlowDay"
-                      }
-                    },
-                    "totalIncome": {
-                      "type": "number"
-                    },
-                    "totalExpense": {
-                      "type": "number"
-                    },
-                    "netBalance": {
-                      "type": "number"
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CashFlowDay"
                   }
                 }
               }
@@ -2812,13 +3139,15 @@
         "summary": "DRE — Demonstração do Resultado do Exercício",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
-            }
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "date_from",
@@ -2826,8 +3155,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "date"
-            }
+              "format": "date",
+              "example": "2026-05-01"
+            },
+            "description": "Data de início do período (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -2835,38 +3166,21 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "date"
-            }
+              "format": "date",
+              "example": "2026-05-31"
+            },
+            "description": "Data de fim do período (YYYY-MM-DD)."
           }
         ],
         "responses": {
           "200": {
+            "description": "Array flat ordenado: income primeiro, depois expense. Cada linha tem category_id, category_name, type e total.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "income": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IncomeStatementLine"
-                      }
-                    },
-                    "expense": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/IncomeStatementLine"
-                      }
-                    },
-                    "totalIncome": {
-                      "type": "number"
-                    },
-                    "totalExpense": {
-                      "type": "number"
-                    },
-                    "netResult": {
-                      "type": "number"
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IncomeStatementLine"
                   }
                 }
               }

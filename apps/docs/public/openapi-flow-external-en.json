@@ -8,11 +8,11 @@
   "servers": [
     {
       "url": "https://syncero-flow.vercel.app",
-      "description": "Produção"
+      "description": "Production"
     },
     {
       "url": "http://localhost:5174",
-      "description": "Desenvolvimento local"
+      "description": "Local development"
     }
   ],
   "security": [
@@ -30,13 +30,13 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
-        "description": "API Key da empresa (geração disponível em breve no painel Flow)."
+        "description": "Company API Key (generation coming soon in the Flow settings panel)."
       },
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT",
-        "description": "JWT emitido pelo Supabase Auth."
+        "description": "JWT issued by Supabase Auth."
       }
     },
     "schemas": {

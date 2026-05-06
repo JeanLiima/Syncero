@@ -198,7 +198,7 @@ export function Component() {
   const hasFilter = !!(search || filterType)
 
   const queryKey     = ['account-plans', id]
-  const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
+  const companyParam = isExternal ? `ext_company_id=${id}` : `company_id=${id}`
 
   // Fetch segment to conditionally show Custo section
   const { data: companyData } = useQuery({
@@ -238,7 +238,7 @@ export function Component() {
   const handleSubmit = async (data: {
     code: string; name: string; account_type: string; nature: string; is_analytic: boolean; parent_id: string | null
   }) => {
-    const payload = { ...data, ...(isExternal ? { extCompanyId: id } : { companyId: id }) }
+    const payload = { ...data, ...(isExternal ? { ext_company_id: id } : { company_id: id }) }
     if (editing) {
       await patchPlan(editing.id, payload)
       if (editing.code !== data.code) {
@@ -360,7 +360,7 @@ export function Component() {
     setSeeding(true)
     try {
       await seedAccountPlan({
-        ...(isExternal ? { extCompanyId: id } : { companyId: id }),
+        ...(isExternal ? { ext_company_id: id } : { company_id: id }),
         accounts,
       })
       await qc.refetchQueries({ queryKey })

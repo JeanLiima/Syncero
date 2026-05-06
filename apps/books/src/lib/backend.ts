@@ -1,10 +1,14 @@
 import { apiFetch } from './api'
 import type { AccountPlan, Category, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
 
+function toSnake(key: string): string {
+  return key.replace(/([A-Z])/g, '_$1').toLowerCase()
+}
+
 function buildQuery(params: Record<string, string | undefined>) {
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== '') query.set(key, value)
+    if (value !== undefined && value !== '') query.set(toSnake(key), value)
   })
   const queryString = query.toString()
   return queryString ? `?${queryString}` : ''
@@ -52,7 +56,8 @@ export async function getAccountPlans(params: { companyId?: string; extCompanyId
 }
 
 export async function createAccountPlan(body: {
-  companyId: string
+  company_id?: string
+  ext_company_id?: string
   code: string
   name: string
   account_type: string
@@ -73,16 +78,16 @@ export interface PlanEntry {
 }
 
 export async function seedAccountPlan(body: {
-  companyId?: string
-  extCompanyId?: string
+  company_id?: string
+  ext_company_id?: string
   accounts?: PlanEntry[]
 }) {
   return apiFetch<{ seeded: number }>('/api/account-plans/seed', { method: 'POST', body: JSON.stringify(body) })
 }
 
 export async function createJournalEntry(body: {
-  companyId?: string
-  extCompanyId?: string
+  company_id?: string
+  ext_company_id?: string
   entry_date: string
   description: string
   flow_transaction_id: string
@@ -92,7 +97,7 @@ export async function createJournalEntry(body: {
 }
 
 export type ExtTransactionBody = {
-  extCompanyId: string
+  ext_company_id: string
   description: string
   amount: number
   type: 'income' | 'expense'
@@ -117,6 +122,6 @@ export async function deleteExtTransaction(id: string) {
 }
 
 export async function getExtCounterparts(extCompanyId: string): Promise<string[]> {
-  return apiFetch<string[]>(`/api/transactions/counterparts?extCompanyId=${extCompanyId}`)
+  return apiFetch<string[]>(`/api/transactions/counterparts${buildQuery({ extCompanyId })}`)
 }
 

@@ -8,11 +8,11 @@
   "servers": [
     {
       "url": "https://syncero-books.vercel.app",
-      "description": "Produção"
+      "description": "Production"
     },
     {
       "url": "http://localhost:5175",
-      "description": "Desenvolvimento local"
+      "description": "Local development"
     }
   ],
   "security": [
@@ -105,7 +105,8 @@
             "description": "Accrual date (competency)"
           },
           "is_paid": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "paid_at": {
             "type": "string",
@@ -151,12 +152,13 @@
         "description": "Returns the external company's transactions with accounting classification status.",
         "parameters": [
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             },
             "description": "External company ID"
           },
@@ -169,14 +171,16 @@
                 "income",
                 "expense"
               ]
-            }
+            },
+            "description": "Filter by type: income or expense."
           },
           {
             "name": "is_paid",
             "in": "query",
             "schema": {
               "type": "boolean"
-            }
+            },
+            "description": "Filter by payment status."
           },
           {
             "name": "date_from",
@@ -184,7 +188,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Start accrual date (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -192,7 +197,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "End accrual date (YYYY-MM-DD)."
           },
           {
             "name": "search",
@@ -208,16 +214,18 @@
             "schema": {
               "type": "integer",
               "default": 1
-            }
+            },
+            "description": "Page number (starts at 1)."
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "schema": {
               "type": "integer",
               "default": 20,
               "maximum": 1000
-            }
+            },
+            "description": "Number of records per page. Maximum: 1,000."
           }
         ],
         "responses": {
@@ -278,29 +286,30 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "extCompanyId",
+                  "ext_company_id",
                   "description",
                   "amount",
                   "type",
                   "date",
-                  "is_paid",
-                  "nature",
                   "counterpart"
                 ],
                 "properties": {
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "External company ID"
+                    "description": "External company ID",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "description": {
                     "type": "string",
-                    "example": "Nota fiscal serviços #1042"
+                    "example": "Nota fiscal serviços #1042",
+                    "description": "Descriptive text for the financial transaction."
                   },
                   "amount": {
                     "type": "number",
                     "minimum": 0.01,
-                    "example": 1500
+                    "example": 1500,
+                    "description": "Amount in currency (greater than zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
@@ -313,7 +322,8 @@
                   },
                   "is_paid": {
                     "type": "boolean",
-                    "description": "true = paid/received. Transactions must be paid to be classified accountingly."
+                    "description": "true = paid/received. Transactions must be marked as paid before they can be classified in Books.",
+                    "default": false
                   },
                   "paid_at": {
                     "type": "string",
@@ -332,7 +342,8 @@
                   "notes": {
                     "type": "string",
                     "nullable": true,
-                    "example": "Related to contract #2024/001"
+                    "example": "Related to contract #2024/001",
+                    "description": "Free-form notes about the transaction."
                   }
                 }
               },
@@ -340,8 +351,8 @@
                 "receita": {
                   "summary": "Paid service revenue",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
-                    "description": "Prestação de serviços — Cliente XYZ",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "Service delivery — Client XYZ Ltd",
                     "amount": 5000,
                     "type": "income",
                     "date": "2026-05-01",
@@ -354,8 +365,8 @@
                 "despesa": {
                   "summary": "Pending operational expense",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
-                    "description": "Aluguel do escritório — maio/2026",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "Office rent — May/2026",
                     "amount": 3200,
                     "type": "expense",
                     "date": "2026-05-01",
@@ -420,9 +431,10 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
-          "description": "ID do lançamento"
+          "description": "Transaction ID"
         }
       ],
       "patch": {
@@ -438,18 +450,21 @@
                 "type": "object",
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Descriptive text for the financial transaction."
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "description": "Amount in currency (greater than zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Accrual date (YYYY-MM-DD)."
                   },
                   "is_paid": {
                     "type": "boolean"
@@ -457,7 +472,8 @@
                   "paid_at": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Actual payment/receipt date. Send null when is_paid returns to false."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"
@@ -468,7 +484,8 @@
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Free-form notes about the transaction."
                   }
                 }
               }
@@ -523,7 +540,7 @@
           "transactions"
         ],
         "summary": "Delete transaction",
-        "description": "Permanently removes a transaction. Transactions already classified accountingly cannot be deleted.",
+        "description": "Permanently removes a transaction. Transactions that have already been classified in Books cannot be deleted.",
         "responses": {
           "200": {
             "description": "Deleted successfully",
@@ -577,25 +594,28 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "extCompanyId",
+                  "ext_company_id",
                   "entry_date",
                   "description",
                   "lines"
                 ],
                 "properties": {
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "External company ID"
+                    "description": "External company ID",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "entry_date": {
                     "type": "string",
                     "format": "date",
-                    "description": "Accounting entry date"
+                    "description": "Accounting entry date",
+                    "example": "2026-05-01"
                   },
                   "description": {
                     "type": "string",
-                    "example": "Prestação de serviços — Cliente XYZ"
+                    "example": "Service delivery — Client XYZ Ltd",
+                    "description": "Descriptive history of the accounting entry."
                   },
                   "flow_transaction_id": {
                     "type": "string",
@@ -623,18 +643,23 @@
                         "account_plan_id": {
                           "type": "string",
                           "format": "uuid",
-                          "description": "ID of the analytic account in the chart of accounts"
+                          "description": "ID of the analytic account in the chart of accounts",
+                          "example": "550e8400-e29b-41d4-a716-446655440000"
                         },
                         "side": {
                           "type": "string",
                           "enum": [
                             "debit",
                             "credit"
-                          ]
+                          ],
+                          "example": "debit",
+                          "description": "Side of the double entry: debit or credit."
                         },
                         "amount": {
                           "type": "number",
-                          "minimum": 0.01
+                          "minimum": 0.01,
+                          "example": 1500,
+                          "description": "Line amount in currency (greater than zero)."
                         },
                         "memo": {
                           "type": "string",
@@ -650,22 +675,22 @@
                 "classificar_venda": {
                   "summary": "Classify a service sale",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "entry_date": "2026-05-01",
-                    "description": "Prestação de serviços — Cliente XYZ",
+                    "description": "Service delivery — Client XYZ Ltd",
                     "flow_transaction_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
                     "lines": [
                       {
                         "account_plan_id": "uuid-conta-banco",
                         "side": "debit",
                         "amount": 5000,
-                        "memo": "Recebimento via PIX"
+                        "memo": "Received via PIX"
                       },
                       {
                         "account_plan_id": "uuid-receita-srv",
                         "side": "credit",
                         "amount": 5000,
-                        "memo": "Receita de serviços prestados"
+                        "memo": "Revenue from services rendered"
                       }
                     ]
                   }
@@ -673,9 +698,9 @@
                 "manual": {
                   "summary": "Manual entry without linked transaction",
                   "value": {
-                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "entry_date": "2026-05-31",
-                    "description": "Depreciação de equipamentos — maio/2026",
+                    "description": "Equipment depreciation — May/2026",
                     "external_ref": "DEP-2026-05",
                     "lines": [
                       {

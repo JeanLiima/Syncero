@@ -85,9 +85,10 @@
       transition: border-color .15s, transform .15s;
     }
     a.card:hover { transform: translateY(-2px); }
-    a.card.flow-ext:hover   { border-color: var(--accent); }
-    a.card.books-ext:hover  { border-color: var(--success); }
-    a.card.internal:hover   { border-color: var(--bg-border); }
+    a.card.flow-ext:hover  { border-color: var(--accent); }
+    a.card.books-ext:hover { border-color: var(--success); }
+    a.card.flow-int:hover  { border-color: var(--accent); }
+    a.card.books-int:hover { border-color: var(--success); }
 
     .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .875rem; }
 
@@ -96,17 +97,17 @@
       letter-spacing: .05em; text-transform: uppercase;
       padding: .2rem .6rem; border-radius: 9999px;
     }
-    .badge-flow-ext  { background: rgba(59,130,246,.15);  color: #60a5fa; }
-    .badge-books-ext { background: rgba(16,185,129,.15);  color: #34d399; }
-    .badge-internal  { background: rgba(71,85,105,.15);   color: #64748b; }
-    .badge-soon      { background: rgba(245,158,11,.12);  color: #fbbf24; }
+    .badge-flow-ext  { background: rgba(59,130,246,.12);  color: #93c5fd; }
+    .badge-books-ext { background: rgba(16,185,129,.12);  color: #6ee7b7; }
+    .badge-flow-int  { background: rgba(59,130,246,.25);  color: #3b82f6; }
+    .badge-books-int { background: rgba(16,185,129,.25);  color: #10b981; }
+    .badge-soon      { background: rgba(245,158,11,.12);  color: #f59e0b; }
 
     .card-dot { width: .625rem; height: .625rem; border-radius: 9999px; }
     .dot-flow-ext  { background: var(--accent); }
     .dot-books-ext { background: var(--success); }
-    .dot-internal  { background: #334155; }
 
-    .card h2 { font-size: .9375rem; font-weight: 600; margin-bottom: .25rem; }
+    .card h2 { font-size: .9375rem; font-weight: 600; margin-bottom: .25rem; color: var(--text-primary); }
     .card p  { font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; }
 
     .endpoints { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .75rem; }
@@ -115,33 +116,19 @@
       background: var(--bg-elevated); color: var(--text-muted);
       border: 1px solid var(--bg-border);
     }
-    .tag.flow  { border-color: rgba(59,130,246,.3);  color: #93c5fd; }
-    .tag.books { border-color: rgba(16,185,129,.3);  color: #6ee7b7; }
-    .tag.soon  { border-color: rgba(245,158,11,.25); color: #fcd34d; font-style: italic; }
+    .tag.flow  { background: rgba(59,130,246,.07);  border-color: rgba(59,130,246,.25);  color: #93c5fd; }
+    .tag.books { background: rgba(16,185,129,.07);  border-color: rgba(16,185,129,.25);  color: #6ee7b7; }
+    .tag.soon  { background: rgba(245,158,11,.06);  border-color: rgba(245,158,11,.2);   color: #f59e0b; font-style: italic; }
 
     .card-footer {
       margin-top: 1rem; display: flex; align-items: center; gap: .375rem;
       font-size: .75rem; color: var(--text-muted);
     }
     .card-footer svg { width: .8125rem; height: .8125rem; }
-    a.card.flow-ext:hover  .card-footer { color: var(--accent); }
-    a.card.books-ext:hover .card-footer { color: var(--success); }
-
-    .lock-note {
-      display: flex; align-items: flex-start; gap: .625rem;
-      background: rgba(245,158,11,.06);
-      border: 1px solid rgba(245,158,11,.2);
-      border-radius: .5rem;
-      padding: .875rem 1rem;
-      max-width: 720px; width: 100%;
-      margin-bottom: 1.75rem;
-    }
-    .lock-note svg { width: 1rem; height: 1rem; color: var(--warning); flex-shrink: 0; margin-top: .1rem; }
-    .lock-note p { font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; }
-    .lock-note strong { color: var(--text-primary); }
-    .lock-note code { font-size: .75rem; background: var(--bg-elevated); padding: .1rem .3rem; border-radius: .25rem; }
-
-    .dimmed { opacity: .5; }
+    a.card.flow-ext:hover  .card-footer,
+    a.card.flow-int:hover  .card-footer { color: var(--accent); }
+    a.card.books-ext:hover .card-footer,
+    a.card.books-int:hover .card-footer { color: var(--success); }
 
     footer { font-size: .6875rem; color: var(--text-muted); margin-top: .5rem; }
     footer a { color: inherit; text-decoration: none; }
@@ -187,7 +174,7 @@
       </div>
       <div class="card-footer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        <span data-i18n="viewSpec"></span>
+        <span data-i18n="openDocs"></span>
       </div>
     </a>
 
@@ -199,9 +186,8 @@
       <h2 data-i18n="booksExtTitle"></h2>
       <p data-i18n="booksExtDesc"></p>
       <div class="endpoints">
-        <span class="tag books">GET /transactions</span>
-        <span class="tag books">POST /transactions</span>
-        <span class="tag books">POST /journal-entries</span>
+        <span class="tag books">transactions</span>
+        <span class="tag books">journal-entries</span>
       </div>
       <div class="card-footer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -210,56 +196,50 @@
     </a>
   </div>
 
-  <div class="lock-note">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-    </svg>
-    <p data-i18n="lockNote"></p>
-  </div>
+  <!-- Internal — only rendered on localhost -->
+  <div id="internal-section" style="display:none; width:100%; max-width:720px;">
+    <div class="section-label" data-i18n="sectionInternal"></div>
+    <div class="grid">
+      <a class="card flow-int" href="./flow.html">
+        <div class="card-header">
+          <span class="badge badge-flow-int" data-i18n="badgeFlowInternal"></span>
+          <div class="card-dot dot-flow-ext"></div>
+        </div>
+        <h2 data-i18n="flowInternalTitle"></h2>
+        <p data-i18n="flowInternalDesc"></p>
+        <div class="endpoints">
+          <span class="tag flow">transactions</span>
+          <span class="tag flow">categories</span>
+          <span class="tag flow">banks</span>
+          <span class="tag flow">companies</span>
+          <span class="tag flow">reports</span>
+        </div>
+        <div class="card-footer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span data-i18n="openDocs"></span>
+        </div>
+      </a>
 
-  <!-- Internal -->
-  <div class="section-label" data-i18n="sectionInternal"></div>
-
-  <div class="grid dimmed">
-    <a class="card internal" href="./flow.html">
-      <div class="card-header">
-        <span class="badge badge-internal" data-i18n="badgeFlowInternal"></span>
-        <div class="card-dot dot-internal"></div>
-      </div>
-      <h2 data-i18n="flowInternalTitle"></h2>
-      <p data-i18n="flowInternalDesc"></p>
-      <div class="endpoints">
-        <span class="tag">transactions</span>
-        <span class="tag">categories</span>
-        <span class="tag">banks</span>
-        <span class="tag">companies</span>
-        <span class="tag">reports</span>
-      </div>
-      <div class="card-footer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        <span data-i18n="localOnly"></span>
-      </div>
-    </a>
-
-    <a class="card internal" href="./books.html">
-      <div class="card-header">
-        <span class="badge badge-internal" data-i18n="badgeBooksInternal"></span>
-        <div class="card-dot dot-internal"></div>
-      </div>
-      <h2 data-i18n="booksInternalTitle"></h2>
-      <p data-i18n="booksInternalDesc"></p>
-      <div class="endpoints">
-        <span class="tag">account-plans</span>
-        <span class="tag">external-companies</span>
-        <span class="tag">fiscal</span>
-        <span class="tag">api-keys</span>
-        <span class="tag">invites</span>
-      </div>
-      <div class="card-footer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        <span data-i18n="localOnly"></span>
-      </div>
-    </a>
+      <a class="card books-int" href="./books.html">
+        <div class="card-header">
+          <span class="badge badge-books-int" data-i18n="badgeBooksInternal"></span>
+          <div class="card-dot dot-books-ext"></div>
+        </div>
+        <h2 data-i18n="booksInternalTitle"></h2>
+        <p data-i18n="booksInternalDesc"></p>
+        <div class="endpoints">
+          <span class="tag books">account-plans</span>
+          <span class="tag books">external-companies</span>
+          <span class="tag books">fiscal</span>
+          <span class="tag books">api-keys</span>
+          <span class="tag books">invites</span>
+        </div>
+        <div class="card-footer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          <span data-i18n="openDocs"></span>
+        </div>
+      </a>
+    </div>
   </div>
 
   <footer>
@@ -271,51 +251,45 @@
     const T = {
       pt: {
         title:            'Referência das APIs',
-        subtitle:         'Documentação das APIs de integração do Syncero',
-        sectionPublic:    'Pública — integração externa',
-        sectionInternal:  'Interna — somente desenvolvimento local',
+        subtitle:         'Documentação técnica das integrações disponíveis no Syncero',
+        sectionPublic:    'Integrações externas',
+        sectionInternal:  'Desenvolvimento — uso interno',
         badgeSoon:        'Em breve',
         flowExtTitle:     'Flow Integration API',
-        flowExtDesc:      'API externa do app de gestão financeira. Reservada para futuras integrações com bancos, ERPs e gateways de pagamento.',
+        flowExtDesc:      'Endpoints para integrações com sistemas externos — extratos bancários, webhooks de pagamento e importação em lote. Em desenvolvimento.',
         flowTag1:         'extratos bancários',
         flowTag2:         'webhooks de pagamento',
         flowTag3:         'importação em lote',
         booksExtTitle:    'Books Integration API',
-        booksExtDesc:     'Envie lançamentos financeiros e classifique registros contábeis para empresas gerenciadas por contadores.',
-        viewSpec:         'Ver spec',
+        booksExtDesc:     'Envie lançamentos e classifique operações contábeis das empresas gerenciadas pelo contador. Autenticação via API Key para integrações server-to-server.',
         openDocs:         'Abrir documentação',
-        lockNote:         '<strong>APIs internas</strong> (rotas do Flow e Books não listadas acima) são restritas por <code>Origin</code> e não estão documentadas publicamente. Acesse a referência interna localmente em <code>localhost:5176</code>.',
-        badgeFlowInternal:  'Flow — interno',
-        badgeBooksInternal: 'Books — interno',
-        flowInternalTitle:  'Flow API (completo)',
-        flowInternalDesc:   'Spec completo do Flow com todas as rotas. Restrito por Origin em produção.',
-        booksInternalTitle: 'Books API (completo)',
-        booksInternalDesc:  'Spec completo do Books incluindo rotas internas. Restrito por Origin em produção.',
-        localOnly:          'Somente local',
+        badgeFlowInternal:  'Flow — Interno',
+        badgeBooksInternal: 'Books — Interno',
+        flowInternalTitle:  'Flow API',
+        flowInternalDesc:   'Todas as rotas internas do Flow — empresas, membros, lançamentos, categorias, bancos, contatos, relatórios e convites.',
+        booksInternalTitle: 'Books API',
+        booksInternalDesc:  'Todas as rotas internas do Books — plano de contas, lançamentos contábeis, empresas externas, documentos fiscais, API Keys e convites.',
       },
       en: {
         title:            'API Reference',
-        subtitle:         'Syncero integration API documentation',
-        sectionPublic:    'Public — external integration',
-        sectionInternal:  'Internal — local development only',
+        subtitle:         'Technical documentation for available Syncero integrations',
+        sectionPublic:    'External integrations',
+        sectionInternal:  'Development — internal use',
         badgeSoon:        'Coming soon',
         flowExtTitle:     'Flow Integration API',
-        flowExtDesc:      'External API for the financial management app. Reserved for future integrations with banks, ERPs and payment gateways.',
+        flowExtDesc:      'Endpoints for external system integrations — bank statements, payment webhooks and bulk import. Under development.',
         flowTag1:         'bank statements',
         flowTag2:         'payment webhooks',
         flowTag3:         'bulk import',
         booksExtTitle:    'Books Integration API',
-        booksExtDesc:     'Submit financial transactions and create accounting entries for companies managed by accountants.',
-        viewSpec:         'View spec',
+        booksExtDesc:     'Submit transactions and classify accounting operations for companies managed by your accountant. API Key authentication for server-to-server integrations.',
         openDocs:         'Open documentation',
-        lockNote:         '<strong>Internal APIs</strong> (Flow and Books routes not listed above) are restricted by <code>Origin</code> header and are not publicly documented. Access the internal reference locally at <code>localhost:5176</code>.',
-        badgeFlowInternal:  'Flow — internal',
-        badgeBooksInternal: 'Books — internal',
-        flowInternalTitle:  'Flow API (full)',
-        flowInternalDesc:   'Complete Flow API spec with all routes. Restricted by Origin in production.',
-        booksInternalTitle: 'Books API (full)',
-        booksInternalDesc:  'Complete Books API spec including internal routes. Restricted by Origin in production.',
-        localOnly:          'Local only',
+        badgeFlowInternal:  'Flow — Internal',
+        badgeBooksInternal: 'Books — Internal',
+        flowInternalTitle:  'Flow API',
+        flowInternalDesc:   'All internal Flow routes — companies, members, transactions, categories, banks, contacts, reports and invites.',
+        booksInternalTitle: 'Books API',
+        booksInternalDesc:  'All internal Books routes — account plans, journal entries, external companies, fiscal documents, API Keys and invites.',
       },
     }
 
@@ -346,6 +320,12 @@
       })
       document.getElementById('btn-pt').classList.toggle('active', lang === 'pt')
       document.getElementById('btn-en').classList.toggle('active', lang === 'en')
+    }
+
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+
+    if (isLocal) {
+      document.getElementById('internal-section').style.display = 'block'
     }
 
     apply(getLang())

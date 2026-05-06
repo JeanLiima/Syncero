@@ -38,7 +38,7 @@ export function Component() {
   })()
 
   const queryKey = ['journal-entries', id, period]
-  const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
+  const companyParam = isExternal ? `ext_company_id=${id}` : `company_id=${id}`
 
   const { data: entries = [], isLoading } = useQuery({
     queryKey,
@@ -62,7 +62,7 @@ export function Component() {
       method: 'POST',
       body: JSON.stringify({
         ...data,
-        ...(isExternal ? { extCompanyId: id } : { companyId: id }),
+        ...(isExternal ? { ext_company_id: id } : { company_id: id }),
       }),
     })
     qc.invalidateQueries({ queryKey })

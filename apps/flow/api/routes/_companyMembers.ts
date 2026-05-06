@@ -29,8 +29,8 @@ async function ensureCompanyAdmin(db: ReturnType<typeof createServiceClient>, us
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const companyId = c.req.query('companyId')
-  if (!companyId) return c.json({ error: 'companyId é obrigatório' }, 400)
+  const companyId = c.req.query('company_id')
+  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -46,11 +46,11 @@ router.get('/', async (c) => {
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const body = await c.req.json<{ companyId: string; email: string; role: string; invite_token: string; language?: 'pt' | 'en' }>()
-  const { companyId, email, role, invite_token, language } = body
+  const body = await c.req.json<{ company_id: string; email: string; role: string; invite_token: string; language?: 'pt' | 'en' }>()
+  const { company_id: companyId, email, role, invite_token, language } = body
 
   if (!companyId || !email || !invite_token) {
-    return c.json({ error: 'companyId, email e invite_token são obrigatórios' }, 400)
+    return c.json({ error: 'company_id, email e invite_token são obrigatórios' }, 400)
   }
 
   const admin = await ensureCompanyAdmin(db, userId, companyId)

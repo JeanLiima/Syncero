@@ -68,7 +68,7 @@ async function getCompanyAndInviter(db: ReturnType<typeof createServiceClient>, 
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const companyId = c.req.query('companyId')
+  const companyId = c.req.query('company_id')
 
   if (companyId) {
     const member = await checkCompanyAccess(db, userId, companyId, false)
@@ -96,11 +96,11 @@ router.get('/', async (c) => {
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const body = await c.req.json<{ companyId: string; email: string; invite_token: string; language?: 'pt' | 'en' }>()
-  const { companyId, email, invite_token, language } = body
+  const body = await c.req.json<{ company_id: string; email: string; invite_token: string; language?: 'pt' | 'en' }>()
+  const { company_id: companyId, email, invite_token, language } = body
 
   if (!companyId || !email || !invite_token) {
-    return c.json({ error: 'companyId, email and invite_token are required' }, 400)
+    return c.json({ error: 'company_id, email and invite_token are required' }, 400)
   }
 
   const admin = await checkCompanyAccess(db, userId, companyId, true)

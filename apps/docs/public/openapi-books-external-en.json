@@ -171,14 +171,16 @@
                 "income",
                 "expense"
               ]
-            }
+            },
+            "description": "Filter by type: income or expense."
           },
           {
             "name": "is_paid",
             "in": "query",
             "schema": {
               "type": "boolean"
-            }
+            },
+            "description": "Filter by payment status."
           },
           {
             "name": "date_from",
@@ -186,7 +188,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Start accrual date (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -194,7 +197,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "End accrual date (YYYY-MM-DD)."
           },
           {
             "name": "search",
@@ -210,7 +214,8 @@
             "schema": {
               "type": "integer",
               "default": 1
-            }
+            },
+            "description": "Page number (starts at 1)."
           },
           {
             "name": "page_size",
@@ -219,7 +224,8 @@
               "type": "integer",
               "default": 20,
               "maximum": 1000
-            }
+            },
+            "description": "Number of records per page. Maximum: 1,000."
           }
         ],
         "responses": {
@@ -296,12 +302,14 @@
                   },
                   "description": {
                     "type": "string",
-                    "example": "Nota fiscal serviços #1042"
+                    "example": "Nota fiscal serviços #1042",
+                    "description": "Descriptive text for the financial transaction."
                   },
                   "amount": {
                     "type": "number",
                     "minimum": 0.01,
-                    "example": 1500
+                    "example": 1500,
+                    "description": "Amount in currency (greater than zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
@@ -334,7 +342,8 @@
                   "notes": {
                     "type": "string",
                     "nullable": true,
-                    "example": "Related to contract #2024/001"
+                    "example": "Related to contract #2024/001",
+                    "description": "Free-form notes about the transaction."
                   }
                 }
               },
@@ -441,18 +450,21 @@
                 "type": "object",
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Descriptive text for the financial transaction."
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "description": "Amount in currency (greater than zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Accrual date (YYYY-MM-DD)."
                   },
                   "is_paid": {
                     "type": "boolean"
@@ -460,7 +472,8 @@
                   "paid_at": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Actual payment/receipt date. Send null when is_paid returns to false."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"
@@ -471,7 +484,8 @@
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Free-form notes about the transaction."
                   }
                 }
               }
@@ -600,7 +614,8 @@
                   },
                   "description": {
                     "type": "string",
-                    "example": "Service delivery — Client XYZ Ltd"
+                    "example": "Service delivery — Client XYZ Ltd",
+                    "description": "Descriptive history of the accounting entry."
                   },
                   "flow_transaction_id": {
                     "type": "string",
@@ -637,12 +652,14 @@
                             "debit",
                             "credit"
                           ],
-                          "example": "debit"
+                          "example": "debit",
+                          "description": "Side of the double entry: debit or credit."
                         },
                         "amount": {
                           "type": "number",
                           "minimum": 0.01,
-                          "example": 1500
+                          "example": 1500,
+                          "description": "Line amount in currency (greater than zero)."
                         },
                         "memo": {
                           "type": "string",

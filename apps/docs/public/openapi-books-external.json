@@ -171,14 +171,16 @@
                 "income",
                 "expense"
               ]
-            }
+            },
+            "description": "Filtro por tipo: income (receitas) ou expense (despesas)."
           },
           {
             "name": "is_paid",
             "in": "query",
             "schema": {
               "type": "boolean"
-            }
+            },
+            "description": "Filtro por situação de pagamento."
           },
           {
             "name": "date_from",
@@ -186,7 +188,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Data de competência inicial (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -194,7 +197,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Data de competência final (YYYY-MM-DD)."
           },
           {
             "name": "search",
@@ -210,7 +214,8 @@
             "schema": {
               "type": "integer",
               "default": 1
-            }
+            },
+            "description": "Número da página (começa em 1)."
           },
           {
             "name": "page_size",
@@ -219,7 +224,8 @@
               "type": "integer",
               "default": 20,
               "maximum": 1000
-            }
+            },
+            "description": "Quantidade de registros por página. Máximo: 1.000."
           }
         ],
         "responses": {
@@ -296,12 +302,14 @@
                   },
                   "description": {
                     "type": "string",
-                    "example": "Nota fiscal serviços #1042"
+                    "example": "Nota fiscal serviços #1042",
+                    "description": "Texto descritivo do lançamento financeiro."
                   },
                   "amount": {
                     "type": "number",
                     "minimum": 0.01,
-                    "example": 1500
+                    "example": 1500,
+                    "description": "Valor em reais (maior que zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
@@ -334,7 +342,8 @@
                   "notes": {
                     "type": "string",
                     "nullable": true,
-                    "example": "Referente ao contrato #2024/001"
+                    "example": "Referente ao contrato #2024/001",
+                    "description": "Observações livres sobre o lançamento."
                   }
                 }
               },
@@ -441,18 +450,21 @@
                 "type": "object",
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Texto descritivo do lançamento financeiro."
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "description": "Valor em reais (maior que zero)."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Data de competência (YYYY-MM-DD)."
                   },
                   "is_paid": {
                     "type": "boolean"
@@ -460,7 +472,8 @@
                   "paid_at": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data efetiva do pagamento/recebimento. Enviado null quando is_paid volta a false."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"
@@ -471,7 +484,8 @@
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres sobre o lançamento."
                   }
                 }
               }
@@ -600,7 +614,8 @@
                   },
                   "description": {
                     "type": "string",
-                    "example": "Prestação de serviços — Cliente XYZ"
+                    "example": "Prestação de serviços — Cliente XYZ",
+                    "description": "Histórico descritivo do lançamento contábil."
                   },
                   "flow_transaction_id": {
                     "type": "string",
@@ -637,12 +652,14 @@
                             "debit",
                             "credit"
                           ],
-                          "example": "debit"
+                          "example": "debit",
+                          "description": "Lado da partida dobrada: debit (débito) ou credit (crédito)."
                         },
                         "amount": {
                           "type": "number",
                           "minimum": 0.01,
-                          "example": 1500
+                          "example": 1500,
+                          "description": "Valor da partida em reais (maior que zero)."
                         },
                         "memo": {
                           "type": "string",

@@ -885,16 +885,19 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "example": "Empresa ABC Ltda"
+                    "example": "Empresa ABC Ltda",
+                    "description": "Razão social da empresa."
                   },
                   "cnpj": {
                     "type": "string",
                     "nullable": true,
-                    "example": "00000000000000"
+                    "example": "00000000000000",
+                    "description": "CNPJ sem formatação (14 dígitos numéricos)."
                   },
                   "trade_name": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Nome fantasia."
                   },
                   "tax_regime": {
                     "type": "string",
@@ -903,7 +906,8 @@
                       "lucro_presumido",
                       "lucro_real"
                     ],
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Regime tributário adotado pela empresa."
                   },
                   "segment": {
                     "type": "string",
@@ -919,7 +923,8 @@
                       "technology",
                       "financial",
                       "other"
-                    ]
+                    ],
+                    "description": "Segmento de atuação da empresa."
                   }
                 }
               }
@@ -998,15 +1003,18 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Razão social da empresa."
                   },
                   "cnpj": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CNPJ sem formatação (14 dígitos numéricos)."
                   },
                   "trade_name": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Nome fantasia."
                   },
                   "tax_regime": {
                     "type": "string",
@@ -1015,7 +1023,8 @@
                       "lucro_presumido",
                       "lucro_real"
                     ],
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Regime tributário adotado pela empresa."
                   },
                   "segment": {
                     "type": "string",
@@ -1031,7 +1040,8 @@
                       "technology",
                       "financial",
                       "other"
-                    ]
+                    ],
+                    "description": "Segmento de atuação da empresa."
                   }
                 }
               }
@@ -1078,7 +1088,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "ID da empresa cujos dados serão listados."
           }
         ],
         "responses": {
@@ -1129,12 +1140,14 @@
                   "company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa que está enviando o convite."
                   },
                   "email": {
                     "type": "string",
                     "format": "email",
-                    "example": "colaborador@empresa.com.br"
+                    "example": "colaborador@empresa.com.br",
+                    "description": "E-mail do colaborador convidado."
                   },
                   "role": {
                     "$ref": "#/components/schemas/MemberRole"
@@ -1404,17 +1417,20 @@
                   "company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa que está convidando o contador."
                   },
                   "email": {
                     "type": "string",
                     "format": "email",
-                    "example": "contador@escritorio.com.br"
+                    "example": "contador@escritorio.com.br",
+                    "description": "E-mail do contador convidado."
                   },
                   "invite_token": {
                     "type": "string",
                     "format": "uuid",
-                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                    "description": "Token UUID gerado pelo cliente — usado para construir o link de convite no e-mail."
                   }
                 }
               }
@@ -1530,7 +1546,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "Token único do convite (UUID gerado na criação)."
           }
         ],
         "responses": {
@@ -1591,7 +1608,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "Token único do convite (UUID gerado na criação)."
           }
         ],
         "responses": {
@@ -1621,7 +1639,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "type",
@@ -1842,11 +1861,13 @@
                 ],
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Descrição do lançamento."
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "description": "Valor em reais."
                   },
                   "type": {
                     "type": "string",
@@ -1857,7 +1878,8 @@
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Data de competência (YYYY-MM-DD)."
                   },
                   "is_paid": {
                     "type": "boolean"
@@ -1865,7 +1887,8 @@
                   "paid_at": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD)."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature",
@@ -1877,22 +1900,26 @@
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres."
                   },
                   "category_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Categoria do lançamento. Enviar null para remover."
                   },
                   "contact_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Contato vinculado. Enviar null para remover."
                   },
                   "bank_id": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Conta bancária usada. Enviar null para remover."
                   },
                   "payment_method": {
                     "type": "string",
@@ -1900,28 +1927,33 @@
                       "cash",
                       "bank"
                     ],
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Forma de pagamento: cash (dinheiro/pix) ou bank (débito bancário)."
                   },
                   "is_installment": {
                     "type": "boolean"
                   },
                   "installment_count": {
                     "type": "integer",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Total de parcelas do parcelamento."
                   },
                   "installment_number": {
                     "type": "integer",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Número desta parcela (1, 2, 3…)."
                   },
                   "payment_registered_at": {
                     "type": "string",
                     "format": "date-time",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data/hora em que o pagamento foi registrado."
                   },
                   "payment_registered_by": {
                     "type": "string",
                     "format": "uuid",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "ID do usuário que registrou o pagamento."
                   }
                 }
               }
@@ -2063,7 +2095,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "ID da empresa cujos dados serão listados."
           }
         ],
         "responses": {
@@ -2113,18 +2146,21 @@
                   "company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa dona da categoria."
                   },
                   "name": {
                     "type": "string",
-                    "example": "Vendas de Produtos"
+                    "example": "Vendas de Produtos",
+                    "description": "Nome da categoria exibido na interface."
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
                   },
                   "color": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Cor hexadecimal da categoria (ex: #3b82f6). Opcional."
                   }
                 }
               }
@@ -2329,7 +2365,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "ID da empresa cujos dados serão listados."
           }
         ],
         "responses": {
@@ -2378,11 +2415,13 @@
                   "company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa dona da conta bancária."
                   },
                   "name": {
                     "type": "string",
-                    "example": "Banco do Brasil — Conta Corrente"
+                    "example": "Banco do Brasil — Conta Corrente",
+                    "description": "Nome identificador da conta (ex: Banco do Brasil — PJ)."
                   },
                   "account_type": {
                     "type": "string",
@@ -2391,19 +2430,23 @@
                       "savings"
                     ],
                     "default": "checking",
-                    "example": "checking"
+                    "example": "checking",
+                    "description": "Tipo de conta: corrente (checking) ou poupança (savings)."
                   },
                   "agency": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Agência bancária."
                   },
                   "account_number": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Número da conta."
                   },
                   "pix_key": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Chave PIX associada à conta."
                   }
                 }
               }
@@ -2460,10 +2503,12 @@
                 "description": "Apenas name e account_type são editáveis. company_id é ignorado.",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Nome identificador da conta."
                   },
                   "account_type": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Tipo de conta: corrente (checking) ou poupança (savings)."
                   }
                 }
               }
@@ -2542,7 +2587,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "search",
@@ -2597,19 +2643,23 @@
                   "company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa dona do contato."
                   },
                   "name": {
                     "type": "string",
-                    "example": "João Silva"
+                    "example": "João Silva",
+                    "description": "Nome do cliente ou fornecedor."
                   },
                   "cpf": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CPF sem formatação (11 dígitos numéricos)."
                   },
                   "cnpj": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CNPJ sem formatação (14 dígitos numéricos)."
                   }
                 }
               }
@@ -2665,15 +2715,18 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Nome do cliente ou fornecedor."
                   },
                   "cpf": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CPF sem formatação (11 dígitos numéricos). Enviar null para remover."
                   },
                   "cnpj": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "CNPJ sem formatação (14 dígitos numéricos). Enviar null para remover."
                   }
                 }
               }
@@ -2752,7 +2805,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "type",
@@ -2814,16 +2868,19 @@
                   "company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "ID da empresa dona do compromisso."
                   },
                   "description": {
                     "type": "string",
-                    "example": "Aluguel do escritório — maio/2026"
+                    "example": "Aluguel do escritório — maio/2026",
+                    "description": "Descrição do compromisso financeiro."
                   },
                   "amount": {
                     "type": "number",
                     "minimum": 0.01,
-                    "example": 3200
+                    "example": 3200,
+                    "description": "Valor em reais."
                   },
                   "type": {
                     "type": "string",
@@ -2831,20 +2888,24 @@
                       "payable",
                       "receivable"
                     ],
-                    "example": "payable"
+                    "example": "payable",
+                    "description": "Tipo: payable = a pagar; receivable = a receber."
                   },
                   "due_date": {
                     "type": "string",
                     "format": "date",
-                    "example": "2026-05-31"
+                    "example": "2026-05-31",
+                    "description": "Data de vencimento."
                   },
                   "contact_name": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Nome do fornecedor ou cliente."
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres."
                   }
                 }
               }
@@ -2900,20 +2961,24 @@
                 "type": "object",
                 "properties": {
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Descrição do compromisso financeiro."
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "description": "Valor em reais."
                   },
                   "due_date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "description": "Data de vencimento."
                   },
                   "paid_date": {
                     "type": "string",
                     "format": "date",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Data efetiva do pagamento/recebimento."
                   },
                   "status": {
                     "type": "string",
@@ -2922,15 +2987,18 @@
                       "paid",
                       "overdue",
                       "cancelled"
-                    ]
+                    ],
+                    "description": "Status atual do compromisso."
                   },
                   "contact_name": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Nome do fornecedor ou cliente."
                   },
                   "notes": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Observações livres."
                   }
                 }
               }
@@ -3009,7 +3077,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "date_from",
@@ -3019,7 +3088,8 @@
               "type": "string",
               "format": "date",
               "example": "2026-05-01"
-            }
+            },
+            "description": "Data de início do período (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -3029,7 +3099,8 @@
               "type": "string",
               "format": "date",
               "example": "2026-05-31"
-            }
+            },
+            "description": "Data de fim do período (YYYY-MM-DD)."
           }
         ],
         "responses": {
@@ -3075,7 +3146,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "ID da empresa cujos dados serão listados."
           },
           {
             "name": "date_from",
@@ -3085,7 +3157,8 @@
               "type": "string",
               "format": "date",
               "example": "2026-05-01"
-            }
+            },
+            "description": "Data de início do período (YYYY-MM-DD)."
           },
           {
             "name": "date_to",
@@ -3095,7 +3168,8 @@
               "type": "string",
               "format": "date",
               "example": "2026-05-31"
-            }
+            },
+            "description": "Data de fim do período (YYYY-MM-DD)."
           }
         ],
         "responses": {

@@ -105,7 +105,8 @@
             "description": "Data de competência"
           },
           "is_paid": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "paid_at": {
             "type": "string",
@@ -313,7 +314,8 @@
                   },
                   "is_paid": {
                     "type": "boolean",
-                    "description": "true = pago/recebido. Lançamentos devem estar pagos para serem classificados contabilmente."
+                    "description": "true = pago/recebido. Lançamentos devem estar pagos para serem classificados contabilmente.",
+                    "default": false
                   },
                   "paid_at": {
                     "type": "string",

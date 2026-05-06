@@ -105,7 +105,8 @@
             "description": "Accrual date (competency)"
           },
           "is_paid": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "paid_at": {
             "type": "string",
@@ -313,7 +314,8 @@
                   },
                   "is_paid": {
                     "type": "boolean",
-                    "description": "true = paid/received. Transactions must be marked as paid before they can be classified in Books."
+                    "description": "true = paid/received. Transactions must be marked as paid before they can be classified in Books.",
+                    "default": false
                   },
                   "paid_at": {
                     "type": "string",

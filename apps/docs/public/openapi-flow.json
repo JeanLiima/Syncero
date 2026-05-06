@@ -153,7 +153,8 @@
             "format": "date"
           },
           "is_paid": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "notes": {
             "type": "string",
@@ -180,7 +181,8 @@
             "$ref": "#/components/schemas/TransactionNature"
           },
           "is_installment": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "installment_count": {
             "type": "integer",
@@ -808,11 +810,23 @@
                     "profile": {
                       "type": "object",
                       "properties": {
-                        "id": { "type": "string", "format": "uuid" },
-                        "full_name": { "type": "string" },
-                        "email": { "type": "string" },
-                        "user_type": { "type": "string" },
-                        "avatar_url": { "type": "string", "nullable": true }
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "full_name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "user_type": {
+                          "type": "string"
+                        },
+                        "avatar_url": {
+                          "type": "string",
+                          "nullable": true
+                        }
                       }
                     }
                   }
@@ -824,8 +838,12 @@
             "description": "user_type inválido.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
-                "example": { "error": "user_type must be company_user or accountant" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "user_type must be company_user or accountant"
+                }
               }
             }
           },
@@ -833,7 +851,9 @@
             "description": "Acesso negado (sem permissão ou origem não autorizada).",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
               }
             }
           }
@@ -1116,7 +1136,10 @@
                   },
                   "language": {
                     "type": "string",
-                    "enum": ["pt", "en"],
+                    "enum": [
+                      "pt",
+                      "en"
+                    ],
                     "description": "Idioma do e-mail de convite (padrão: pt)"
                   }
                 }
@@ -1799,7 +1822,8 @@
                     "type": "string"
                   },
                   "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0.01
                   },
                   "type": {
                     "type": "string",
@@ -1982,7 +2006,9 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "ok": { "type": "boolean" }
+                    "ok": {
+                      "type": "boolean"
+                    }
                   }
                 }
               }
@@ -2328,7 +2354,10 @@
                   },
                   "account_type": {
                     "type": "string",
-                    "enum": ["checking", "savings"],
+                    "enum": [
+                      "checking",
+                      "savings"
+                    ],
                     "default": "checking"
                   },
                   "agency": {
@@ -2751,7 +2780,8 @@
                     "type": "string"
                   },
                   "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0.01
                   },
                   "type": {
                     "type": "string",
@@ -2828,7 +2858,8 @@
                     "type": "string"
                   },
                   "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0.01
                   },
                   "due_date": {
                     "type": "string",

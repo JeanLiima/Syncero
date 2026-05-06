@@ -1,8 +1,8 @@
 {
   "framework": null,
   "installCommand": "npm install",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "npx turbo build --filter=@syncero/docs",
+  "outputDirectory": "apps/docs/dist",
   "headers": [
     {
       "source": "/(.*\\.yaml)",

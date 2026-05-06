@@ -101,6 +101,7 @@ export const en: Record<TranslationKey, string> = {
   transactions_errorDate: 'Date is required',
   transactions_nature: 'Accounting nature',
   transactions_errorNature: 'Please select the accounting nature.',
+  transactions_applyNatureToGroup: 'Apply nature to all installments',
   transactions_income_badge: 'Income',
   transactions_expense_badge: 'Expense',
   transactions_wizard_typeLabel: 'What type of transaction?',

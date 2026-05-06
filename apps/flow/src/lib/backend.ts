@@ -99,6 +99,13 @@ export async function updateTransaction(id: string, data: Partial<Transaction>) 
   })
 }
 
+export async function updateTransactionGroup(groupId: string, data: { nature?: string | null }) {
+  return apiFetch<{ ok: boolean }>(`/api/transactions/group/${groupId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
 export async function getContacts(companyId: string, search?: string) {
   return apiFetch<Contact[]>(`/api/contacts${buildQuery({ companyId, search })}`)
 }

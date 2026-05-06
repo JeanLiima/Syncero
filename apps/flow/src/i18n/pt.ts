@@ -99,6 +99,7 @@ export const pt = {
   transactions_errorDate: 'Data obrigatória',
   transactions_nature: 'Natureza contábil',
   transactions_errorNature: 'Selecione a natureza contábil.',
+  transactions_applyNatureToGroup: 'Aplicar natureza para todas as parcelas',
   transactions_income_badge: 'Receita',
   transactions_expense_badge: 'Despesa',
   transactions_wizard_typeLabel: 'Qual o tipo do lançamento?',

@@ -121,6 +121,36 @@ router.post('/', async (c) => {
   return c.json(data, 201)
 })
 
+router.patch('/group/:groupId', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { groupId } = c.req.param()
+
+  const { data: sample } = await db.from('transactions')
+    .select('company_id')
+    .eq('installment_group_id', groupId)
+    .limit(1)
+    .maybeSingle()
+
+  if (!sample?.company_id) return c.json({ error: 'not found' }, 404)
+
+  const member = await ensureCompanyMember(db, userId, sample.company_id)
+  if (!member) return c.json({ error: 'forbidden' }, 403)
+
+  const body = await c.req.json<{ nature?: string | null }>()
+  const patch: Record<string, unknown> = {}
+  if ('nature' in body) patch.nature = body.nature
+
+  if (Object.keys(patch).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+
+  const { error } = await db.from('transactions')
+    .update(patch)
+    .eq('installment_group_id', groupId)
+
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
+})
+
 router.patch('/:id', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { UserPlus, Repeat } from 'lucide-react'
-import { Button, DatePicker, Input, Modal, Select, useToast } from '@syncero/ui'
+import { Button, Checkbox, DatePicker, Input, Modal, Select, useToast } from '@syncero/ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/i18n'
 import { useCategories, useContacts } from './queries'
 import { useUpdateTransaction, useDeleteTransaction } from './mutations'
-import { createContact } from '@/lib/backend'
+import { createContact, updateTransactionGroup } from '@/lib/backend'
 import { useAuthStore } from '@/store/auth'
 import type { Transaction, TransactionNature, TransactionType, Contact } from '@/types'
 
@@ -230,7 +230,7 @@ function ContactCombobox({
 // ── Label wrapper ────────────────────────────────────────────
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <span className="text-sm font-medium text-[var(--text-secondary)]">{children}</span>
+  return <span className="text-xs font-medium text-[var(--text-secondary)]">{children}</span>
 }
 
 // ── Edit modal ───────────────────────────────────────────────
@@ -266,6 +266,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
   const [amountError, setAmountError] = useState('')
   const [natureError, setNatureError] = useState('')
 
+  const [applyToGroup, setApplyToGroup] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [contactModalOpen, setContactModalOpen] = useState(false)
   const [contactModalInitialName, setContactModalInitialName] = useState('')
@@ -290,6 +291,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     setAmountError('')
     setNatureError('')
     setConfirmDelete(false)
+    setApplyToGroup(false)
   }, [open])
 
   const formatCents = (cents: number) => {
@@ -320,28 +322,31 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     if (!nature) { setNatureError(t('transactions_errorNature')); return }
 
     try {
-    await update.mutateAsync({
-      id: transaction.id,
-      data: {
-        type,
-        date,
-        amount: amountCents / 100,
-        category_id: categoryId || null,
-        description: description.trim(),
-        nature: nature || null,
-        notes: notes.trim() || null,
-        counterpart: counterpart.trim() || null,
-        contact_id: contactId ?? null,
-        is_paid: isPaid,
-        paid_at: isPaid && paidAt ? paidAt : null,
-        is_installment: transaction.is_installment,
-        installment_count: transaction.installment_count ?? null,
-        installment_number: transaction.installment_number ?? null,
-        installment_group_id: transaction.installment_group_id ?? null,
-      },
-    })
-    success(t('common_savedSuccess'))
-    onClose()
+      await update.mutateAsync({
+        id: transaction.id,
+        data: {
+          type,
+          date,
+          amount: amountCents / 100,
+          category_id: categoryId || null,
+          description: description.trim(),
+          nature: nature || null,
+          notes: notes.trim() || null,
+          counterpart: counterpart.trim() || null,
+          contact_id: contactId ?? null,
+          is_paid: isPaid,
+          paid_at: isPaid && paidAt ? paidAt : null,
+          is_installment: transaction.is_installment,
+          installment_count: transaction.installment_count ?? null,
+          installment_number: transaction.installment_number ?? null,
+          installment_group_id: transaction.installment_group_id ?? null,
+        },
+      })
+      if (applyToGroup && transaction.installment_group_id && nature) {
+        await updateTransactionGroup(transaction.installment_group_id, { nature: nature || null })
+      }
+      success(t('common_savedSuccess'))
+      onClose()
     } catch {
       toastError(t('common_errorGeneric'))
     }
@@ -438,6 +443,13 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
               ]}
             />
             {natureError && <p className="text-xs text-[var(--danger)]">{natureError}</p>}
+            {transaction?.installment_group_id && nature && (
+              <Checkbox
+                label={t('transactions_applyNatureToGroup')}
+                checked={applyToGroup}
+                onChange={(e) => setApplyToGroup(e.target.checked)}
+              />
+            )}
           </div>
 
           {/* Date + Amount */}

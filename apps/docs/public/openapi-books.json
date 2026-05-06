@@ -769,7 +769,8 @@
                       "company_user",
                       "accountant"
                     ],
-                    "description": "Apenas esses dois valores são aceitos."
+                    "description": "Apenas esses dois valores são aceitos.",
+                    "example": "accountant"
                   }
                 }
               }
@@ -906,7 +907,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -961,7 +963,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1048,7 +1051,8 @@
                 ],
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Empresa XYZ Ltda"
                   },
                   "cnpj": {
                     "type": "string",
@@ -1130,7 +1134,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -1240,7 +1245,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1395,7 +1401,8 @@
                 "properties": {
                   "ext_company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "description": {
                     "type": "string",
@@ -1403,14 +1410,16 @@
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "example": 1500
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
                   },
                   "date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "example": "2026-05-01"
                   },
                   "is_paid": {
                     "type": "boolean",
@@ -1470,7 +1479,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -1740,10 +1750,12 @@
                   },
                   "entry_date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "example": "2026-05-01"
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Prestação de serviços — Cliente XYZ"
                   },
                   "flow_transaction_id": {
                     "type": "string",
@@ -1769,14 +1781,17 @@
                       "properties": {
                         "account_plan_id": {
                           "type": "string",
-                          "format": "uuid"
+                          "format": "uuid",
+                          "example": "550e8400-e29b-41d4-a716-446655440000"
                         },
                         "side": {
-                          "$ref": "#/components/schemas/JournalSide"
+                          "$ref": "#/components/schemas/JournalSide",
+                          "example": "debit"
                         },
                         "amount": {
                           "type": "number",
-                          "minimum": 0.01
+                          "minimum": 0.01,
+                          "example": 1500
                         },
                         "memo": {
                           "type": "string",
@@ -1900,7 +1915,8 @@
                     "example": "1.01.001"
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Caixa e Equivalentes de Caixa"
                   },
                   "account_type": {
                     "$ref": "#/components/schemas/AccountType"
@@ -1910,7 +1926,8 @@
                   },
                   "is_analytic": {
                     "type": "boolean",
-                    "default": true
+                    "default": true,
+                    "example": true
                   },
                   "parent_id": {
                     "type": "string",
@@ -1982,10 +1999,12 @@
                       ],
                       "properties": {
                         "code": {
-                          "type": "string"
+                          "type": "string",
+                          "example": "1.01.001"
                         },
                         "name": {
-                          "type": "string"
+                          "type": "string",
+                          "example": "Caixa e Equivalentes de Caixa"
                         },
                         "account_type": {
                           "$ref": "#/components/schemas/AccountType"
@@ -1995,7 +2014,8 @@
                         },
                         "is_analytic": {
                           "type": "boolean",
-                          "default": true
+                          "default": true,
+                          "example": true
                         },
                         "parent_code": {
                           "type": "string",
@@ -2046,7 +2066,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2160,7 +2181,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2207,7 +2229,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2224,7 +2247,8 @@
                   "target_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "Conta destino (deve ser analítica e do mesmo contador)"
+                    "description": "Conta destino (deve ser analítica e do mesmo contador)",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                   }
                 }
               }
@@ -2276,7 +2300,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           },
           {
@@ -2349,7 +2374,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2393,7 +2419,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2491,7 +2518,8 @@
                 ],
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Integração ERP"
                   },
                   "company_id": {
                     "type": "string",
@@ -2562,7 +2590,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2609,7 +2638,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2673,7 +2703,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],

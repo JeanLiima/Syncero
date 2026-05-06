@@ -157,7 +157,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             },
             "description": "ID da empresa externa"
           },
@@ -284,15 +285,14 @@
                   "amount",
                   "type",
                   "date",
-                  "is_paid",
-                  "nature",
                   "counterpart"
                 ],
                 "properties": {
                   "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "ID da empresa externa"
+                    "description": "ID da empresa externa",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "description": {
                     "type": "string",
@@ -422,7 +422,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "description": "ID do lançamento"
         }
@@ -588,12 +589,14 @@
                   "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "ID da empresa externa"
+                    "description": "ID da empresa externa",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "entry_date": {
                     "type": "string",
                     "format": "date",
-                    "description": "Data do lançamento contábil"
+                    "description": "Data do lançamento contábil",
+                    "example": "2026-05-01"
                   },
                   "description": {
                     "type": "string",
@@ -625,18 +628,21 @@
                         "account_plan_id": {
                           "type": "string",
                           "format": "uuid",
-                          "description": "ID da conta analítica no plano de contas"
+                          "description": "ID da conta analítica no plano de contas",
+                          "example": "550e8400-e29b-41d4-a716-446655440000"
                         },
                         "side": {
                           "type": "string",
                           "enum": [
                             "debit",
                             "credit"
-                          ]
+                          ],
+                          "example": "debit"
                         },
                         "amount": {
                           "type": "number",
-                          "minimum": 0.01
+                          "minimum": 0.01,
+                          "example": 1500
                         },
                         "memo": {
                           "type": "string",

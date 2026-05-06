@@ -280,27 +280,30 @@
           "amount",
           "type",
           "date",
-          "nature",
           "counterpart"
         ],
         "properties": {
           "company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "example": "Prestação de serviços — Cliente XYZ"
           },
           "amount": {
             "type": "number",
-            "minimum": 0.01
+            "minimum": 0.01,
+            "example": 1500
           },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
           },
           "date": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "example": "2026-05-01"
           },
           "is_paid": {
             "type": "boolean",
@@ -338,7 +341,8 @@
           },
           "counterpart": {
             "type": "string",
-            "description": "Quem enviou (receita) ou recebeu (despesa) o valor"
+            "description": "Quem enviou (receita) ou recebeu (despesa) o valor",
+            "example": "Cliente XYZ Ltda"
           },
           "is_installment": {
             "type": "boolean",
@@ -792,7 +796,8 @@
                       "company_user",
                       "accountant"
                     ],
-                    "description": "Tipo de usuário. Apenas esses dois valores são aceitos."
+                    "description": "Tipo de usuário. Apenas esses dois valores são aceitos.",
+                    "example": "company_user"
                   }
                 }
               }
@@ -879,7 +884,8 @@
                 ],
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Empresa ABC Ltda"
                   },
                   "cnpj": {
                     "type": "string",
@@ -953,7 +959,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -1069,7 +1076,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1120,11 +1128,13 @@
                 "properties": {
                   "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "email": {
                     "type": "string",
-                    "format": "email"
+                    "format": "email",
+                    "example": "colaborador@empresa.com.br"
                   },
                   "role": {
                     "$ref": "#/components/schemas/MemberRole"
@@ -1132,7 +1142,8 @@
                   "invite_token": {
                     "type": "string",
                     "format": "uuid",
-                    "description": "UUID gerado pelo cliente — usado para montar o link de convite no e-mail"
+                    "description": "UUID gerado pelo cliente — usado para montar o link de convite no e-mail",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                   },
                   "language": {
                     "type": "string",
@@ -1181,7 +1192,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1234,7 +1246,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1269,7 +1282,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1389,15 +1403,18 @@
                 "properties": {
                   "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "email": {
                     "type": "string",
-                    "format": "email"
+                    "format": "email",
+                    "example": "contador@escritorio.com.br"
                   },
                   "invite_token": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                   }
                 }
               }
@@ -1438,7 +1455,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1473,7 +1491,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1509,7 +1528,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1569,7 +1589,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -1598,7 +1619,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           },
           {
@@ -1746,7 +1768,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -1972,7 +1995,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
           "description": "installment_group_id que identifica o grupo de parcelas"
         }
@@ -2037,7 +2061,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2087,10 +2112,12 @@
                 "properties": {
                   "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Vendas de Produtos"
                   },
                   "type": {
                     "$ref": "#/components/schemas/TransactionType"
@@ -2142,7 +2169,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2183,7 +2211,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2298,7 +2327,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           }
         ],
@@ -2347,10 +2377,12 @@
                 "properties": {
                   "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Banco do Brasil — Conta Corrente"
                   },
                   "account_type": {
                     "type": "string",
@@ -2358,7 +2390,8 @@
                       "checking",
                       "savings"
                     ],
-                    "default": "checking"
+                    "default": "checking",
+                    "example": "checking"
                   },
                   "agency": {
                     "type": "string",
@@ -2409,7 +2442,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2506,7 +2540,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           },
           {
@@ -2561,10 +2596,12 @@
                 "properties": {
                   "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "João Silva"
                   },
                   "cpf": {
                     "type": "string",
@@ -2611,7 +2648,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2712,7 +2750,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           },
           {
@@ -2774,25 +2813,30 @@
                 "properties": {
                   "company_id": {
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                   },
                   "description": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Aluguel do escritório — maio/2026"
                   },
                   "amount": {
                     "type": "number",
-                    "minimum": 0.01
+                    "minimum": 0.01,
+                    "example": 3200
                   },
                   "type": {
                     "type": "string",
                     "enum": [
                       "payable",
                       "receivable"
-                    ]
+                    ],
+                    "example": "payable"
                   },
                   "due_date": {
                     "type": "string",
-                    "format": "date"
+                    "format": "date",
+                    "example": "2026-05-31"
                   },
                   "contact_name": {
                     "type": "string",
@@ -2839,7 +2883,8 @@
           "required": true,
           "schema": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           }
         }
       ],
@@ -2962,7 +3007,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           },
           {
@@ -2971,7 +3017,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "date"
+              "format": "date",
+              "example": "2026-05-01"
             }
           },
           {
@@ -2980,7 +3027,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "date"
+              "format": "date",
+              "example": "2026-05-31"
             }
           }
         ],
@@ -3025,7 +3073,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
             }
           },
           {
@@ -3034,7 +3083,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "date"
+              "format": "date",
+              "example": "2026-05-01"
             }
           },
           {
@@ -3043,7 +3093,8 @@
             "required": true,
             "schema": {
               "type": "string",
-              "format": "date"
+              "format": "date",
+              "example": "2026-05-31"
             }
           }
         ],

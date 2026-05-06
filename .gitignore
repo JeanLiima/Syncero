@@ -41,3 +41,4 @@ Thumbs.db
 # Supabase local
 .supabase/
 .vercel
+.claude/worktrees/

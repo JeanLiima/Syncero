@@ -112,6 +112,26 @@ router.get('/:id', async (c) => {
   })
 })
 
+// GET /api/transactions/counterparts — distinct counterpart values for an ext company
+router.get('/counterparts', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { extCompanyId } = c.req.query()
+
+  if (!extCompanyId) return c.json({ error: 'extCompanyId required' }, 400)
+  if (!(await authorizeExt(db, userId, extCompanyId))) return c.json({ error: 'Forbidden' }, 403)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (db.from('transactions') as any)
+    .select('counterpart')
+    .eq('ext_company_id', extCompanyId)
+    .not('counterpart', 'is', null)
+
+  if (error) return c.json({ error: error.message }, 500)
+  const unique = [...new Set((data ?? []).map((r: { counterpart: string }) => r.counterpart).filter(Boolean))] as string[]
+  return c.json(unique.sort())
+})
+
 // ── POST /api/transactions ────────────────────────────────────
 // Creates a transaction for an external (non-Flow) company.
 router.post('/', async (c) => {
@@ -134,6 +154,7 @@ router.post('/', async (c) => {
   if (!body.description?.trim()) return c.json({ error: 'description required' }, 400)
   if (!body.amount || body.amount <= 0) return c.json({ error: 'amount must be positive' }, 400)
   if (!body.date) return c.json({ error: 'date required' }, 400)
+  if (!body.counterpart?.trim()) return c.json({ error: 'counterpart required' }, 400)
   if (!body.type) return c.json({ error: 'type required' }, 400)
 
   if (!(await authorizeExt(db, userId, body.extCompanyId))) return c.json({ error: 'Forbidden' }, 403)
@@ -194,6 +215,9 @@ router.patch('/:id', async (c) => {
   else if (body.paid_at !== undefined) patch.paid_at = body.paid_at
 
   if (Object.keys(patch).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+  if ('counterpart' in patch && !patch.counterpart?.toString().trim()) {
+    return c.json({ error: 'counterpart required' }, 400)
+  }
 
   const { data, error } = await db.from('transactions')
     .update(patch).eq('id', id).select('*').single()

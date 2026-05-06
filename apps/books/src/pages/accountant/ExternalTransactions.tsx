@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -10,6 +10,7 @@ import {
   createExtTransaction,
   updateExtTransaction,
   deleteExtTransaction,
+  getExtCounterparts,
 } from '@/lib/backend'
 import { ClassifyModal } from '@/components/accountant/ClassifyModal'
 import { ExportModal } from '@/components/accountant/ExportModal'
@@ -46,6 +47,90 @@ const emptyForm = (): FormState => ({
   notes:       '',
 })
 
+// ── CounterpartCombobox ───────────────────────────────────────
+
+function CounterpartCombobox({
+  value,
+  onChange,
+  suggestions,
+  placeholder,
+  addLabel,
+  error,
+}: {
+  value: string
+  onChange: (v: string) => void
+  suggestions: string[]
+  placeholder: string
+  addLabel: string
+  error?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState(value)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setQuery(value) }, [value])
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
+  const filtered = query.trim()
+    ? suggestions.filter(s => s.toLowerCase().includes(query.toLowerCase()))
+    : suggestions
+
+  const showAdd = query.trim().length > 0 && !suggestions.some(s => s.toLowerCase() === query.trim().toLowerCase())
+  const showDropdown = open && (filtered.length > 0 || showAdd)
+
+  const commit = (name: string) => {
+    onChange(name)
+    setQuery(name)
+    setOpen(false)
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <input
+        type="text"
+        value={query}
+        placeholder={placeholder}
+        onChange={e => { setQuery(e.target.value); onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        className={`w-full h-10 px-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none transition-colors ${
+          error ? 'border-[var(--danger)]' : 'border-[var(--bg-border)] focus:border-[var(--accent)]'
+        }`}
+      />
+      {showDropdown && (
+        <div className="absolute z-50 mt-1 w-full rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+          {filtered.map(s => (
+            <button
+              key={s}
+              type="button"
+              onMouseDown={e => { e.preventDefault(); commit(s) }}
+              className="w-full px-3 py-2 text-sm text-left text-[var(--text-primary)] hover:bg-[var(--bg-base)] transition-colors"
+            >
+              {s}
+            </button>
+          ))}
+          {showAdd && (
+            <button
+              type="button"
+              onMouseDown={e => { e.preventDefault(); commit(query.trim()) }}
+              className="w-full px-3 py-2 text-sm text-left text-[var(--accent)] hover:bg-[var(--bg-base)] transition-colors"
+            >
+              {addLabel} "{query.trim()}"
+            </button>
+          )}
+        </div>
+      )}
+      {error && <p className="mt-1 text-xs text-[var(--danger)]">{error}</p>}
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────
 
 export function Component() {
@@ -80,6 +165,9 @@ export function Component() {
   const [classifyTx,   setClassifyTx]   = useState<TxRow | null>(null)
   const [exportOpen,   setExportOpen]   = useState(false)
 
+  const [counterpartSuggestions, setCounterpartSuggestions] = useState<string[]>([])
+  const [counterpartError, setCounterpartError] = useState('')
+
   const { data, isLoading } = useQuery({
     queryKey: [...QUERY_KEY, filters, page],
     queryFn: () => getTransactions({
@@ -98,10 +186,17 @@ export function Component() {
   const rows = (data?.data ?? []) as TxRow[]
   const totalPages = Math.ceil((data?.count ?? 0) / 20)
 
+  useEffect(() => {
+    if (modalOpen && extCompanyId) {
+      getExtCounterparts(extCompanyId).then(setCounterpartSuggestions).catch(() => {})
+    }
+  }, [modalOpen, extCompanyId])
+
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm())
     setFormError(null)
+    setCounterpartError('')
     setModalOpen(true)
   }
 
@@ -120,6 +215,7 @@ export function Component() {
       notes:       row.notes ?? '',
     })
     setFormError(null)
+    setCounterpartError('')
     setModalOpen(true)
   }
 
@@ -128,6 +224,7 @@ export function Component() {
     if (form.amountCents <= 0)    { setFormError(t('extTx_errorAmount')); return }
     if (!form.date)               { setFormError(t('extTx_errorDate')); return }
     if (!form.nature)             { setFormError(t('extTx_errorNature')); return }
+    if (!form.counterpart.trim()) { setCounterpartError(t('extTx_errorCounterpart')); return }
 
     setSaving(true); setFormError(null)
     try {
@@ -466,12 +563,19 @@ export function Component() {
           />
 
           {/* Counterpart */}
-          <Input
-            label={`${form.type === 'income' ? t('extTx_counterpartIncome') : t('extTx_counterpartExpense')} (${t('extTx_optional')})`}
-            placeholder={t('extTx_counterpartPlaceholder')}
-            value={form.counterpart}
-            onChange={e => setForm(f => ({ ...f, counterpart: e.target.value }))}
-          />
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-[var(--text-secondary)]">
+              {form.type === 'income' ? t('extTx_counterpartIncome') : t('extTx_counterpartExpense')}
+            </span>
+            <CounterpartCombobox
+              value={form.counterpart}
+              onChange={v => { setForm(f => ({ ...f, counterpart: v })); setCounterpartError('') }}
+              suggestions={counterpartSuggestions}
+              placeholder={t('extTx_counterpartPlaceholder')}
+              addLabel={t('extTx_counterpartAdd')}
+              error={counterpartError}
+            />
+          </div>
 
           {/* Paid toggle */}
           <div className="flex flex-col gap-1.5">

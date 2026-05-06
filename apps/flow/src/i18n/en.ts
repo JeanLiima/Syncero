@@ -95,6 +95,7 @@ export const en: Record<TranslationKey, string> = {
   transactions_errorAmount: 'Amount must be positive',
   transactions_nature: 'Accounting nature',
   transactions_errorNature: 'Please select the accounting nature.',
+  transactions_errorCounterpart: 'Please enter who sent or received this.',
   transactions_applyNatureToGroup: 'Apply nature to all installments',
   transactions_income_badge: 'Income',
   transactions_expense_badge: 'Expense',

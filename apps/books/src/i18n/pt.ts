@@ -454,6 +454,8 @@ export const pt = {
   extTx_counterpartIncome: 'De quem você recebeu?',
   extTx_counterpartExpense: 'Para quem foi?',
   extTx_counterpartPlaceholder: 'Nome da pessoa ou empresa…',
+  extTx_errorCounterpart: 'Informe quem enviou ou recebeu.',
+  extTx_counterpartAdd: 'Adicionar',
   extTx_save: 'Salvar',
   extTx_cancel: 'Cancelar',
   extTx_delete: 'Excluir',

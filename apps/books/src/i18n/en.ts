@@ -456,6 +456,8 @@ export const en: Record<TranslationKey, string> = {
   extTx_counterpartIncome: 'Who did you receive from?',
   extTx_counterpartExpense: 'Who did you pay?',
   extTx_counterpartPlaceholder: 'Person or company name…',
+  extTx_errorCounterpart: 'Please enter who sent or received this.',
+  extTx_counterpartAdd: 'Add',
   extTx_save: 'Save',
   extTx_cancel: 'Cancel',
   extTx_delete: 'Delete',

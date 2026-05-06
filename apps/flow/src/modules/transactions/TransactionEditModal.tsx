@@ -265,6 +265,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
   const [descError, setDescError] = useState('')
   const [amountError, setAmountError] = useState('')
   const [natureError, setNatureError] = useState('')
+  const [counterpartError, setCounterpartError] = useState('')
 
   const [applyToGroup, setApplyToGroup] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -290,6 +291,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     setDescError('')
     setAmountError('')
     setNatureError('')
+    setCounterpartError('')
     setConfirmDelete(false)
     setApplyToGroup(false)
   }, [open])
@@ -320,6 +322,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     if (!description.trim()) { setDescError(t('transactions_errorDescription')); return }
     if (amountCents <= 0) { setAmountError(t('transactions_errorAmount')); amountRef.current?.focus(); return }
     if (!nature) { setNatureError(t('transactions_errorNature')); return }
+    if (!counterpart.trim()) { setCounterpartError(t('transactions_errorCounterpart')); return }
 
     try {
       await update.mutateAsync({
@@ -486,7 +489,6 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
               {type === 'income'
                 ? t('transactions_wizard_counterpartIncomeLabel')
                 : t('transactions_wizard_counterpartExpenseLabel')}
-              <span className="ml-1.5 text-xs font-normal opacity-60">({t('transactions_wizard_optional')})</span>
             </FieldLabel>
             <ContactCombobox
               value={counterpart}
@@ -494,6 +496,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
                 setCounterpart(name)
                 setContactSearch(name)
                 setContactId(contact?.id)
+                setCounterpartError('')
               }}
               onAddNew={(name) => {
                 setContactModalInitialName(name)
@@ -503,6 +506,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
               placeholder={t('contact_searchPlaceholder')}
               addLabel={t('transactions_wizard_counterpartAdd')}
             />
+            {counterpartError && <p className="text-xs text-[var(--danger)]">{counterpartError}</p>}
           </div>
 
           {/* Description */}

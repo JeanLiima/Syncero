@@ -350,7 +350,7 @@ export function Component() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editing ? t('extTx_edit') : t('extTx_new')}
+        title={editing ? t('extTx_editTitle') : t('extTx_new')}
         size="md"
         footer={
           <div className="flex items-center justify-between">

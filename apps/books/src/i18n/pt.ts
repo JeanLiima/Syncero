@@ -430,7 +430,8 @@ export const pt = {
   // External company transactions
   extTx_title: 'Lançamentos',
   extTx_new: 'Novo lançamento',
-  extTx_edit: 'Editar lançamento',
+  extTx_edit: 'Editar',
+  extTx_editTitle: 'Editar',
   extTx_empty: 'Nenhum lançamento cadastrado. Adicione o primeiro para começar a classificar.',
   extTx_countSingular: 'lançamento',
   extTx_countPlural: 'lançamentos',

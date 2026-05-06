@@ -179,14 +179,19 @@ Um campo só vai para `required[]` se o backend retorna **400** quando ausente. 
 
 **Antes de marcar como `required: true`, confirme no código da rota que há um `return 400` explícito quando o campo está ausente.**
 
-## Script de exemplos
+## Scripts de validação (`.claude/scripts/`)
 
-Para repopular examples em todos os campos required após grandes mudanças:
+Os specs JSON são a fonte de verdade — nunca usar scripts para gerar descrições ou conteúdo que deveria ir diretamente no arquivo.
+
+| Script | Quando usar |
+|--------|-------------|
+| `audit-descriptions.js` | Detectar campos required sem description, language mixing |
+| `populate-spec-examples.js` | Repopular examples após adicionar muitos campos em lote |
+
 ```bash
-node .claude/scripts/populate-spec-examples.js
+node .claude/scripts/audit-descriptions.js       # auditoria de descrições
+node .claude/scripts/populate-spec-examples.js   # popular examples
 ```
-
-Atualizar o script quando novos campos required forem adicionados.
 
 ## Regras importantes
 

@@ -4,6 +4,30 @@
 
 ---
 
+## Campos nos specs OpenAPI (OBRIGATÓRIO)
+
+Use os campos nativos do OpenAPI — **não** coloque default ou exemplo dentro de `description`.
+
+```jsonc
+// ✓ correto
+"page_size": {
+  "type": "integer",
+  "default": 20,
+  "maximum": 1000,
+  "example": 50
+}
+
+// ✗ errado — poluí a description
+"page_size": {
+  "type": "integer",
+  "description": "Tamanho da página. Default: 20. Exemplo: 50."
+}
+```
+
+**Regra:** `description` é para semântica de negócio. `default`, `example`, `minimum`, `maximum`, `enum` e `format` são campos estruturados do schema — use-os diretamente. Scalar renderiza cada um no lugar correto da UI.
+
+---
+
 ## API ↔ Docs Sync (OBRIGATÓRIO)
 
 **Toda alteração em rota de backend deve atualizar os specs OpenAPI.**

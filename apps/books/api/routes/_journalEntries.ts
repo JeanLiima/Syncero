@@ -60,6 +60,16 @@ router.post('/', async (c) => {
     if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
   }
 
+  // Validar que flow_transaction_id pertence à empresa autorizada
+  if (body.flow_transaction_id) {
+    const { data: tx } = await db.from('transactions')
+      .select('company_id, ext_company_id').eq('id', body.flow_transaction_id).maybeSingle()
+    if (!tx) return c.json({ error: 'flow_transaction_id not found' }, 404)
+    const expectedId = body.companyId ?? body.extCompanyId
+    const txCompany  = body.companyId ? tx.company_id : tx.ext_company_id
+    if (txCompany !== expectedId) return c.json({ error: 'flow_transaction_id does not belong to the authorized company' }, 403)
+  }
+
   const { data: entry, error } = await db.from('journal_entries').insert({
     ...(body.extCompanyId ? { ext_company_id: body.extCompanyId } : { company_id: body.companyId }),
     accountant_id: userId,

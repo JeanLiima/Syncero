@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { TrendingUp, TrendingDown, UserPlus, Repeat } from 'lucide-react'
-import { Button, DatePicker, Input, Modal, Select, useToast } from '@syncero/ui'
+import { UserPlus, Repeat } from 'lucide-react'
+import { Button, Checkbox, DatePicker, Input, Modal, Select, useToast } from '@syncero/ui'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/i18n'
 import { useCategories, useContacts } from './queries'
 import { useUpdateTransaction, useDeleteTransaction } from './mutations'
-import { createContact } from '@/lib/backend'
+import { createContact, updateTransactionGroup } from '@/lib/backend'
 import { useAuthStore } from '@/store/auth'
-import type { Transaction, TransactionType, Contact } from '@/types'
+import type { Transaction, TransactionNature, TransactionType, Contact } from '@/types'
 
 // ── Quick-add contact modal ──────────────────────────────────
 
@@ -230,7 +230,7 @@ function ContactCombobox({
 // ── Label wrapper ────────────────────────────────────────────
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
-  return <span className="text-sm font-medium text-[var(--text-secondary)]">{children}</span>
+  return <span className="text-xs font-medium text-[var(--text-secondary)]">{children}</span>
 }
 
 // ── Edit modal ───────────────────────────────────────────────
@@ -259,9 +259,15 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
   const [notes, setNotes] = useState('')
   const [counterpart, setCounterpart] = useState('')
   const [contactId, setContactId] = useState<string | undefined>()
+  const [nature, setNature] = useState<TransactionNature | ''>('')
+  const [isPaid, setIsPaid] = useState(false)
+  const [paidAt, setPaidAt] = useState('')
   const [descError, setDescError] = useState('')
   const [amountError, setAmountError] = useState('')
+  const [natureError, setNatureError] = useState('')
+  const [counterpartError, setCounterpartError] = useState('')
 
+  const [applyToGroup, setApplyToGroup] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [contactModalOpen, setContactModalOpen] = useState(false)
   const [contactModalInitialName, setContactModalInitialName] = useState('')
@@ -276,12 +282,18 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     setCategoryId(transaction.category_id ?? '')
     setDescription(transaction.description ?? '')
     setNotes(transaction.notes ?? '')
+    setNature((transaction.nature as TransactionNature | null) ?? '')
+    setIsPaid(transaction.is_paid)
+    setPaidAt(transaction.paid_at ?? '')
     setCounterpart(transaction.contacts?.name ?? transaction.counterpart ?? '')
     setContactId(transaction.contact_id ?? undefined)
     setContactSearch('')
     setDescError('')
     setAmountError('')
+    setNatureError('')
+    setCounterpartError('')
     setConfirmDelete(false)
+    setApplyToGroup(false)
   }, [open])
 
   const formatCents = (cents: number) => {
@@ -309,28 +321,35 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
     setAmountError('')
     if (!description.trim()) { setDescError(t('transactions_errorDescription')); return }
     if (amountCents <= 0) { setAmountError(t('transactions_errorAmount')); amountRef.current?.focus(); return }
+    if (!nature) { setNatureError(t('transactions_errorNature')); return }
+    if (!counterpart.trim()) { setCounterpartError(t('transactions_errorCounterpart')); return }
 
     try {
-    await update.mutateAsync({
-      id: transaction.id,
-      data: {
-        type,
-        date,
-        amount: amountCents / 100,
-        category_id: categoryId || null,
-        description: description.trim(),
-        notes: notes.trim() || null,
-        counterpart: counterpart.trim() || null,
-        contact_id: contactId ?? null,
-        is_paid: transaction.is_paid,
-        is_installment: transaction.is_installment,
-        installment_count: transaction.installment_count ?? null,
-        installment_number: transaction.installment_number ?? null,
-        installment_group_id: transaction.installment_group_id ?? null,
-      },
-    })
-    success(t('common_savedSuccess'))
-    onClose()
+      await update.mutateAsync({
+        id: transaction.id,
+        data: {
+          type,
+          date,
+          amount: amountCents / 100,
+          category_id: categoryId || null,
+          description: description.trim(),
+          nature: nature || null,
+          notes: notes.trim() || null,
+          counterpart: counterpart.trim() || null,
+          contact_id: contactId ?? null,
+          is_paid: isPaid,
+          paid_at: isPaid && paidAt ? paidAt : null,
+          is_installment: transaction.is_installment,
+          installment_count: transaction.installment_count ?? null,
+          installment_number: transaction.installment_number ?? null,
+          installment_group_id: transaction.installment_group_id ?? null,
+        },
+      })
+      if (applyToGroup && transaction.installment_group_id && nature) {
+        await updateTransactionGroup(transaction.installment_group_id, { nature: nature || null })
+      }
+      success(t('common_savedSuccess'))
+      onClose()
     } catch {
       toastError(t('common_errorGeneric'))
     }
@@ -370,7 +389,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
         <Button variant="ghost" size="sm" onClick={onClose}>
           {t('transactions_cancel')}
         </Button>
-        <Button onClick={handleSave} loading={update.isPending} disabled={!description.trim() || amountCents <= 0}>
+        <Button size="sm" onClick={handleSave} loading={update.isPending} disabled={!description.trim() || amountCents <= 0}>
           {t('transactions_save')}
         </Button>
       </div>
@@ -383,27 +402,57 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
         <div className="flex flex-col gap-5">
 
           {/* Type */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             <FieldLabel>{t('transactions_type')}</FieldLabel>
-            <div className="grid grid-cols-2 gap-2">
-              {([['income', TrendingUp], ['expense', TrendingDown]] as const).map(([v, Icon]) => (
+            <div className="flex gap-2">
+              {(['income', 'expense'] as const).map((v) => (
                 <button
                   key={v}
                   type="button"
-                  onClick={() => { setType(v); setCategoryId('') }}
-                  className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border-2 text-sm font-medium transition-all cursor-pointer ${
+                  onClick={() => { setType(v); setCategoryId(''); setNature(''); setNatureError('') }}
+                  className={`flex-1 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${
                     type === v
                       ? v === 'income'
-                        ? 'border-[var(--success)] bg-[var(--success)]/10 text-[var(--success)]'
-                        : 'border-[var(--danger)] bg-[var(--danger)]/10 text-[var(--danger)]'
-                      : 'border-[var(--bg-border)] text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)]'
+                        ? 'bg-[var(--success)] text-white'
+                        : 'bg-[var(--danger)] text-white'
+                      : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {v === 'income' ? t('transactions_income_badge') : t('transactions_expense_badge')}
+                  {v === 'income' ? t('transactions_wizard_entrada') : t('transactions_wizard_saida')}
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Nature — logo abaixo do tipo, varia conforme o tipo */}
+          <div className="flex flex-col gap-1.5">
+            <Select
+              label={t('transactions_nature')}
+              value={nature}
+              onChange={(v) => { setNature(v as TransactionNature | ''); setNatureError('') }}
+              options={[
+                { value: '', label: t('common_select') },
+                ...(type === 'income' ? [
+                  { value: 'sale_service',         label: t('transactions_nature_sale_service') },
+                  { value: 'loan_received',        label: t('transactions_nature_loan_received') },
+                  { value: 'capital_contribution', label: t('transactions_nature_capital_contribution') },
+                ] : [
+                  { value: 'operational_expense',  label: t('transactions_nature_operational_expense') },
+                  { value: 'product_cost',         label: t('transactions_nature_product_cost') },
+                  { value: 'asset_purchase',       label: t('transactions_nature_asset_purchase') },
+                  { value: 'debt_payment',         label: t('transactions_nature_debt_payment') },
+                  { value: 'owner_withdrawal',     label: t('transactions_nature_owner_withdrawal') },
+                ]),
+              ]}
+            />
+            {natureError && <p className="text-xs text-[var(--danger)]">{natureError}</p>}
+            {transaction?.installment_group_id && nature && (
+              <Checkbox
+                label={t('transactions_applyNatureToGroup')}
+                checked={applyToGroup}
+                onChange={(e) => setApplyToGroup(e.target.checked)}
+              />
+            )}
           </div>
 
           {/* Date + Amount */}
@@ -434,22 +483,12 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
             </div>
           </div>
 
-          {/* Category */}
-          <Select
-            label={`${t('transactions_category')} (${t('transactions_wizard_optional')})`}
-            placeholder={t('transactions_noCategory')}
-            value={categoryId}
-            onChange={setCategoryId}
-            options={filteredCategories.map((c) => ({ value: c.id, label: c.name }))}
-          />
-
           {/* Counterpart / Contact */}
           <div className="flex flex-col gap-1.5">
             <FieldLabel>
               {type === 'income'
                 ? t('transactions_wizard_counterpartIncomeLabel')
                 : t('transactions_wizard_counterpartExpenseLabel')}
-              <span className="ml-1.5 text-xs font-normal opacity-60">({t('transactions_wizard_optional')})</span>
             </FieldLabel>
             <ContactCombobox
               value={counterpart}
@@ -457,6 +496,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
                 setCounterpart(name)
                 setContactSearch(name)
                 setContactId(contact?.id)
+                setCounterpartError('')
               }}
               onAddNew={(name) => {
                 setContactModalInitialName(name)
@@ -466,6 +506,7 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
               placeholder={t('contact_searchPlaceholder')}
               addLabel={t('transactions_wizard_counterpartAdd')}
             />
+            {counterpartError && <p className="text-xs text-[var(--danger)]">{counterpartError}</p>}
           </div>
 
           {/* Description */}
@@ -474,6 +515,48 @@ export function TransactionEditModal({ transaction, open, onClose, language }: P
             value={description}
             onChange={(e) => { setDescription(e.target.value); setDescError('') }}
             error={descError}
+          />
+
+          {/* Status */}
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel>{t('transactions_status')}</FieldLabel>
+            <div className="flex gap-2">
+              {([false, true] as const).map((paid) => (
+                <button
+                  key={String(paid)}
+                  type="button"
+                  onClick={() => { setIsPaid(paid); if (!paid) setPaidAt('') }}
+                  className={`flex-1 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${
+                    isPaid === paid
+                      ? 'bg-[var(--accent)] text-white'
+                      : 'bg-[var(--bg-elevated)] text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                  }`}
+                >
+                  {paid
+                    ? (type === 'income' ? t('transactions_received') : t('transactions_paid'))
+                    : (type === 'income' ? t('transactions_toReceive') : t('transactions_pending'))}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Paid at — só quando pago */}
+          {isPaid && (
+            <DatePicker
+              label={type === 'income' ? t('transactions_receivedAt') : t('transactions_paidAt')}
+              value={paidAt}
+              onChange={setPaidAt}
+              language={language}
+            />
+          )}
+
+          {/* Category */}
+          <Select
+            label={`${t('transactions_category')} (${t('transactions_wizard_optional')})`}
+            placeholder={t('transactions_noCategory')}
+            value={categoryId}
+            onChange={setCategoryId}
+            options={filteredCategories.map((c) => ({ value: c.id, label: c.name }))}
           />
 
           {/* Notes */}

@@ -1,0 +1,759 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Syncero Books — Integration API",
+    "version": "1.0.0",
+    "description": "Public API of **Syncero Books** for external integrations.\n\nEnables third-party systems (ERPs, management tools, spreadsheets) to submit financial transactions and create accounting entries for companies managed by accountants.\n\n### Authentication\nAll routes require an `x-api-key` header with a key generated in the Syncero Books dashboard, or a Bearer JWT.\n\n### Get an API Key\n1. Go to Syncero Books → External Company → Settings → API Keys\n2. Create a new key with a descriptive name\n3. Copy the token — it is shown **only once**\n\n### Required fields\n`nature` (accounting nature) and `counterpart` (who sent/received the amount) are required on all transactions. Providing `nature` correctly powers the automatic classification suggestions in Books.\n\n### Limits\n- Up to 1,000 transactions per listing\n- API Keys can have a configurable expiration date"
+  },
+  "servers": [
+    {
+      "url": "https://syncero-books.vercel.app",
+      "description": "Produção"
+    },
+    {
+      "url": "http://localhost:5175",
+      "description": "Desenvolvimento local"
+    }
+  ],
+  "security": [
+    {
+      "apiKey": []
+    },
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "transactions",
+      "description": "Financial transactions for external companies"
+    },
+    {
+      "name": "journal-entries",
+      "description": "Accounting entries (double-entry bookkeeping)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API Key generated in the Syncero Books dashboard. Format: `sk_...`"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT issued by Supabase Auth (alternative to API Key)"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "TransactionType": {
+        "type": "string",
+        "enum": [
+          "income",
+          "expense"
+        ],
+        "description": "income = money in, expense = money out"
+      },
+      "TransactionNature": {
+        "type": "string",
+        "enum": [
+          "sale_service",
+          "loan_received",
+          "capital_contribution",
+          "operational_expense",
+          "product_cost",
+          "asset_purchase",
+          "debt_payment",
+          "owner_withdrawal"
+        ],
+        "description": "Accounting nature. Powers automatic classification suggestions."
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ext_company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "type": {
+            "$ref": "#/components/schemas/TransactionType"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Accrual date (competency)"
+          },
+          "is_paid": {
+            "type": "boolean"
+          },
+          "paid_at": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "nature": {
+            "$ref": "#/components/schemas/TransactionNature",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "is_classified": {
+            "type": "boolean",
+            "description": "true when there is an accounting entry linked to this transaction"
+          },
+          "journal_entry_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/transactions": {
+      "get": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "List transactions",
+        "description": "Returns the external company's transactions with accounting classification status.",
+        "parameters": [
+          {
+            "name": "extCompanyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "External company ID"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "income",
+                "expense"
+              ]
+            }
+          },
+          {
+            "name": "is_paid",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search by description (case-insensitive)"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "maximum": 1000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction list with total for pagination",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Transaction"
+                      }
+                    },
+                    "count": {
+                      "type": "integer",
+                      "description": "Total records (ignoring pagination)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No access to the specified company",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Create transaction",
+        "description": "Records a financial transaction for the external company. The `nature` and `counterpart` fields are required.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "extCompanyId",
+                  "description",
+                  "amount",
+                  "type",
+                  "date",
+                  "is_paid",
+                  "nature",
+                  "counterpart"
+                ],
+                "properties": {
+                  "extCompanyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "External company ID"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Nota fiscal serviços #1042"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "example": 1500
+                  },
+                  "type": {
+                    "$ref": "#/components/schemas/TransactionType"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Accrual date (competency)",
+                    "example": "2026-05-01"
+                  },
+                  "is_paid": {
+                    "type": "boolean",
+                    "description": "true = paid/received. Transactions must be paid to be classified accountingly."
+                  },
+                  "paid_at": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true,
+                    "description": "Actual payment date"
+                  },
+                  "nature": {
+                    "$ref": "#/components/schemas/TransactionNature"
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Who sent (income) or received (expense) the amount",
+                    "example": "Client XYZ Ltd"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "Related to contract #2024/001"
+                  }
+                }
+              },
+              "examples": {
+                "receita": {
+                  "summary": "Paid service revenue",
+                  "value": {
+                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "Prestação de serviços — Cliente XYZ",
+                    "amount": 5000,
+                    "type": "income",
+                    "date": "2026-05-01",
+                    "is_paid": true,
+                    "paid_at": "2026-05-03",
+                    "nature": "sale_service",
+                    "counterpart": "Client XYZ Ltd"
+                  }
+                },
+                "despesa": {
+                  "summary": "Pending operational expense",
+                  "value": {
+                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "Aluguel do escritório — maio/2026",
+                    "amount": 3200,
+                    "type": "expense",
+                    "date": "2026-05-01",
+                    "is_paid": false,
+                    "nature": "operational_expense",
+                    "counterpart": "Central Real Estate"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data (description, amount or date missing/invalid)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "No access to the specified company",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transactions/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": "ID do lançamento"
+        }
+      ],
+      "patch": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Update transaction",
+        "description": "Updates fields of an existing transaction. Only sent fields are changed. `ext_company_id` and `created_by` are immutable and will be ignored.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "description": {
+                    "type": "string"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0.01
+                  },
+                  "type": {
+                    "$ref": "#/components/schemas/TransactionType"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "is_paid": {
+                    "type": "boolean"
+                  },
+                  "paid_at": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "nature": {
+                    "$ref": "#/components/schemas/TransactionNature"
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Who sent (income) or received (expense) the amount — cannot be cleared"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No valid fields to update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transaction not found or no permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Delete transaction",
+        "description": "Permanently removes a transaction. Transactions already classified accountingly cannot be deleted.",
+        "responses": {
+          "200": {
+            "description": "Deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transaction not found or no permission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/journal-entries": {
+      "post": {
+        "tags": [
+          "journal-entries"
+        ],
+        "summary": "Create accounting entry",
+        "description": "Records an accounting entry using double-entry bookkeeping.\n\n**Fundamental rule:** the sum of debits must equal the sum of credits.\n\n**Linking:** when `flow_transaction_id` is provided, the financial transaction is marked as **Classified** in Syncero Books — it no longer appears in the accountant's classification queue.\n\n**Accounts:** query the company's chart of accounts to obtain the IDs of available analytic accounts.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "extCompanyId",
+                  "entry_date",
+                  "description",
+                  "lines"
+                ],
+                "properties": {
+                  "extCompanyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "External company ID"
+                  },
+                  "entry_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Accounting entry date"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Prestação de serviços — Cliente XYZ"
+                  },
+                  "flow_transaction_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true,
+                    "description": "ID of the financial transaction to classify. **Must belong to the same company.** Returns 403 otherwise."
+                  },
+                  "external_ref": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "External reference (document number, protocol, etc.)"
+                  },
+                  "lines": {
+                    "type": "array",
+                    "minItems": 2,
+                    "description": "Double-entry lines. All debits must sum to the same value as all credits.",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "account_plan_id",
+                        "side",
+                        "amount"
+                      ],
+                      "properties": {
+                        "account_plan_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "ID of the analytic account in the chart of accounts"
+                        },
+                        "side": {
+                          "type": "string",
+                          "enum": [
+                            "debit",
+                            "credit"
+                          ]
+                        },
+                        "amount": {
+                          "type": "number",
+                          "minimum": 0.01
+                        },
+                        "memo": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Line memo/history"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "examples": {
+                "classificar_venda": {
+                  "summary": "Classify a service sale",
+                  "value": {
+                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "entry_date": "2026-05-01",
+                    "description": "Prestação de serviços — Cliente XYZ",
+                    "flow_transaction_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+                    "lines": [
+                      {
+                        "account_plan_id": "uuid-conta-banco",
+                        "side": "debit",
+                        "amount": 5000,
+                        "memo": "Recebimento via PIX"
+                      },
+                      {
+                        "account_plan_id": "uuid-receita-srv",
+                        "side": "credit",
+                        "amount": 5000,
+                        "memo": "Receita de serviços prestados"
+                      }
+                    ]
+                  }
+                },
+                "manual": {
+                  "summary": "Manual entry without linked transaction",
+                  "value": {
+                    "extCompanyId": "550e8400-e29b-41d4-a716-446655440000",
+                    "entry_date": "2026-05-31",
+                    "description": "Depreciação de equipamentos — maio/2026",
+                    "external_ref": "DEP-2026-05",
+                    "lines": [
+                      {
+                        "account_plan_id": "uuid-despesa-depreciacao",
+                        "side": "debit",
+                        "amount": 250
+                      },
+                      {
+                        "account_plan_id": "uuid-deprec-acumulada",
+                        "side": "credit",
+                        "amount": 250
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Accounting entry created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing API Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "flow_transaction_id does not belong to the specified company",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "flow_transaction_id not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error saving accounting lines",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -76,7 +76,7 @@ export function Table<T>({
                 key={rowKey(row)}
                 onClick={() => onRowClick?.(row)}
                 className={clsx(
-                  'border-b border-[var(--bg-border)] transition-colors',
+                  'border-b border-[var(--bg-border)] transition-colors group',
                   onRowClick && 'cursor-pointer hover:bg-[var(--bg-elevated)]'
                 )}
               >

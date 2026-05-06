@@ -96,9 +96,61 @@ router.post('/', async (c) => {
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db.from('transactions').insert({ ...body, created_by: userId }).select().single()
+  const b = body as Record<string, unknown>
+  if (!b.counterpart?.toString().trim()) return c.json({ error: 'counterpart required' }, 400)
+  const { data, error } = await db.from('transactions').insert({
+    company_id:           companyId,
+    created_by:           userId,
+    description:          b.description as string,
+    amount:               b.amount as number,
+    type:                 b.type as string,
+    date:                 b.date as string,
+    is_paid:              (b.is_paid as boolean) ?? false,
+    paid_at:              (b.paid_at as string | null) ?? null,
+    nature:               (b.nature as string | null) ?? null,
+    counterpart:          (b.counterpart as string | null) ?? null,
+    notes:                (b.notes as string | null) ?? null,
+    category_id:          (b.category_id as string | null) ?? null,
+    contact_id:           (b.contact_id as string | null) ?? null,
+    bank_id:              (b.bank_id as string | null) ?? null,
+    payment_method:       (b.payment_method as string | null) ?? null,
+    is_installment:       (b.is_installment as boolean) ?? false,
+    installment_count:    (b.installment_count as number | null) ?? null,
+    installment_number:   (b.installment_number as number | null) ?? null,
+    installment_group_id: (b.installment_group_id as string | null) ?? null,
+  }).select().single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data, 201)
+})
+
+router.patch('/group/:groupId', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { groupId } = c.req.param()
+
+  const { data: sample } = await db.from('transactions')
+    .select('company_id')
+    .eq('installment_group_id', groupId)
+    .limit(1)
+    .maybeSingle()
+
+  if (!sample?.company_id) return c.json({ error: 'not found' }, 404)
+
+  const member = await ensureCompanyMember(db, userId, sample.company_id)
+  if (!member) return c.json({ error: 'forbidden' }, 403)
+
+  const body = await c.req.json<{ nature?: string | null }>()
+  const patch: Record<string, unknown> = {}
+  if ('nature' in body) patch.nature = body.nature
+
+  if (Object.keys(patch).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+
+  const { error } = await db.from('transactions')
+    .update(patch)
+    .eq('installment_group_id', groupId)
+
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
 })
 
 router.patch('/:id', async (c) => {
@@ -113,7 +165,18 @@ router.patch('/:id', async (c) => {
   const member = await ensureCompanyMember(db, userId, row.data.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db.from('transactions').update(payload).eq('id', transactionId).select().single()
+  const p = payload as Record<string, unknown>
+  const allowed: Record<string, unknown> = {}
+  const editableFields = ['description','amount','type','date','is_paid','paid_at','nature','counterpart','notes',
+    'category_id','contact_id','bank_id','payment_method','is_installment','installment_count',
+    'installment_number','payment_registered_at','payment_registered_by']
+  for (const f of editableFields) if (f in p) allowed[f] = p[f]
+  if (Object.keys(allowed).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+  if ('counterpart' in allowed && !allowed.counterpart?.toString().trim()) {
+    return c.json({ error: 'counterpart required' }, 400)
+  }
+
+  const { data, error } = await db.from('transactions').update(allowed).eq('id', transactionId).select().single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data)
 })

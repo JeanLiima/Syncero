@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Syncero Flow — Integration API</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    html, body { margin: 0; padding: 0; }
+    #topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 40px;
+      background: #0b0f19; border-bottom: 1px solid #1e2d45;
+      z-index: 99999;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 12px;
+    }
+    #back {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 6px;
+      background: #1a2236; border: 1px solid #1e2d45;
+      color: #94a3b8; font-size: 12px; font-family: system-ui, sans-serif;
+      text-decoration: none; transition: border-color .15s, color .15s;
+    }
+    #back:hover { border-color: #3b82f6; color: #f1f5f9; }
+    #back svg { width: 14px; height: 14px; flex-shrink: 0; }
+    #lang-toggle { display: flex; gap: 4px; }
+    #lang-toggle button {
+      padding: 3px 9px; border-radius: 5px; border: 1px solid #1e2d45;
+      background: #1a2236; color: #475569;
+      font-size: 11px; font-weight: 600; cursor: pointer; font-family: system-ui, sans-serif;
+      transition: border-color .15s, color .15s;
+    }
+    #lang-toggle button:hover { color: #94a3b8; }
+    #lang-toggle button.active { border-color: #3b82f6; color: #f1f5f9; }
+    body { padding-top: 40px; }
+  </style>
+</head>
+<body>
+  <div id="topbar">
+    <a id="back" href="./index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      <span id="back-label"></span>
+    </a>
+    <div id="lang-toggle">
+      <button id="btn-pt" onclick="switchLang('pt')">PT</button>
+      <button id="btn-en" onclick="switchLang('en')">EN</button>
+    </div>
+  </div>
+
+  <script id="api-reference"></script>
+
+  <script>
+    const LABELS = { pt: 'Voltar', en: 'Back' }
+    const SPECS  = {
+      pt: '/openapi-flow-external.json',
+      en: '/openapi-flow-external-en.json',
+    }
+    const SIDEBAR_CSS = `.sidebar { top: 40px !important; height: calc(100vh - 40px) !important; }
+      .t-doc__sidebar { top: 40px !important; height: calc(100vh - 40px) !important; }`
+
+    function getLang() {
+      try {
+        return JSON.parse(localStorage.getItem('syncero-prefs') || '{}').language
+          || (navigator.language?.startsWith('en') ? 'en' : 'pt')
+      } catch { return 'pt' }
+    }
+
+    function applyLang(lang) {
+      document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR'
+      document.getElementById('back-label').textContent = LABELS[lang] || LABELS.pt
+      document.getElementById('btn-pt').classList.toggle('active', lang === 'pt')
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en')
+      const ref = document.getElementById('api-reference')
+      ref.setAttribute('data-url', SPECS[lang] || SPECS.pt)
+      ref.setAttribute('data-configuration', JSON.stringify({
+        darkMode: true,
+        layout: 'sidebar',
+        defaultHttpClient: { targetKey: 'js', clientKey: 'fetch' },
+        customCss: SIDEBAR_CSS,
+      }))
+    }
+
+    function switchLang(lang) {
+      try {
+        const prefs = JSON.parse(localStorage.getItem('syncero-prefs') || '{}')
+        localStorage.setItem('syncero-prefs', JSON.stringify({ ...prefs, language: lang }))
+      } catch {}
+      location.reload()
+    }
+
+    applyLang(getLang())
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1"></script>
+</body>
+</html>

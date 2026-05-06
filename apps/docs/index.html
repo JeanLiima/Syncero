@@ -18,6 +18,7 @@
       --text-muted:     #475569;
       --accent:  #3b82f6;
       --success: #10b981;
+      --warning: #f59e0b;
     }
 
     body {
@@ -32,122 +33,127 @@
       padding: 2rem;
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: .625rem;
-      margin-bottom: 2.5rem;
+    /* ── Language toggle ── */
+    #lang-toggle {
+      position: fixed; top: 12px; right: 12px;
+      display: flex; gap: 4px;
     }
+    #lang-toggle button {
+      padding: 4px 10px; border-radius: 5px; border: 1px solid var(--bg-border);
+      background: var(--bg-elevated); color: var(--text-muted);
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: border-color .15s, color .15s;
+    }
+    #lang-toggle button:hover   { color: var(--text-secondary); }
+    #lang-toggle button.active  { border-color: var(--accent); color: var(--text-primary); }
+
+    .logo { display: flex; align-items: center; gap: .625rem; margin-bottom: 2rem; }
     .logo-icon {
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: .625rem;
+      width: 2.5rem; height: 2.5rem; border-radius: .625rem;
       background: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 1px;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 1px;
     }
-    .logo-icon span {
-      color: white;
-      font-weight: 700;
-      font-size: 7px;
-      letter-spacing: -.3px;
-      line-height: 1;
-    }
+    .logo-icon span { color: white; font-weight: 700; font-size: 7px; letter-spacing: -.3px; line-height: 1; }
     .logo-name { font-size: 1.125rem; font-weight: 600; }
 
-    h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: .5rem;
+    h1 { font-size: 1.5rem; font-weight: 700; text-align: center; margin-bottom: .375rem; }
+    .subtitle { color: var(--text-secondary); font-size: .875rem; text-align: center; margin-bottom: 2.5rem; }
+
+    .section-label {
+      font-size: .625rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: .75rem;
+      width: 100%; max-width: 720px;
+      display: flex; align-items: center; gap: .5rem;
     }
-    .subtitle {
-      color: var(--text-secondary);
-      font-size: .875rem;
-      text-align: center;
-      margin-bottom: 3rem;
-    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--bg-border); }
 
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-      width: 100%;
-      max-width: 640px;
+      gap: .875rem;
+      width: 100%; max-width: 720px;
+      margin-bottom: 1.5rem;
     }
 
     a.card {
-      display: block;
-      text-decoration: none;
+      display: block; text-decoration: none;
       background: var(--bg-surface);
       border: 1px solid var(--bg-border);
       border-radius: .75rem;
-      padding: 1.5rem;
+      padding: 1.25rem 1.5rem;
       transition: border-color .15s, transform .15s;
     }
-    a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    a.card:hover { transform: translateY(-2px); }
+    a.card.flow-ext:hover   { border-color: var(--accent); }
+    a.card.books-ext:hover  { border-color: var(--success); }
+    a.card.internal:hover   { border-color: var(--bg-border); }
 
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: .875rem; }
+
     .badge {
-      font-size: .625rem;
-      font-weight: 600;
-      letter-spacing: .05em;
-      text-transform: uppercase;
-      padding: .2rem .5rem;
-      border-radius: 9999px;
+      font-size: .625rem; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase;
+      padding: .2rem .6rem; border-radius: 9999px;
     }
-    .badge-flow  { background: rgba(59,130,246,.15); color: #60a5fa; }
-    .badge-books { background: rgba(16,185,129,.15); color: #34d399; }
+    .badge-flow-ext  { background: rgba(59,130,246,.15);  color: #60a5fa; }
+    .badge-books-ext { background: rgba(16,185,129,.15);  color: #34d399; }
+    .badge-internal  { background: rgba(71,85,105,.15);   color: #64748b; }
+    .badge-soon      { background: rgba(245,158,11,.12);  color: #fbbf24; }
 
-    .card-dot { width: .75rem; height: .75rem; border-radius: 9999px; }
-    .dot-flow  { background: var(--accent); }
-    .dot-books { background: var(--success); }
+    .card-dot { width: .625rem; height: .625rem; border-radius: 9999px; }
+    .dot-flow-ext  { background: var(--accent); }
+    .dot-books-ext { background: var(--success); }
+    .dot-internal  { background: #334155; }
 
-    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: .25rem; }
-    .card p { font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; }
+    .card h2 { font-size: .9375rem; font-weight: 600; margin-bottom: .25rem; }
+    .card p  { font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; }
 
-    .card-footer {
-      margin-top: 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-size: .75rem;
-      color: var(--text-muted);
-    }
-    .card-footer svg { width: .875rem; height: .875rem; }
-    a.card:hover .card-footer { color: var(--accent); }
-
-    .endpoints {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .375rem;
-      margin-top: .875rem;
-    }
+    .endpoints { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .75rem; }
     .tag {
-      font-size: .6875rem;
-      padding: .125rem .5rem;
-      border-radius: .25rem;
-      background: var(--bg-elevated);
-      color: var(--text-muted);
+      font-size: .6875rem; padding: .15rem .5rem; border-radius: .25rem;
+      background: var(--bg-elevated); color: var(--text-muted);
       border: 1px solid var(--bg-border);
     }
+    .tag.flow  { border-color: rgba(59,130,246,.3);  color: #93c5fd; }
+    .tag.books { border-color: rgba(16,185,129,.3);  color: #6ee7b7; }
+    .tag.soon  { border-color: rgba(245,158,11,.25); color: #fcd34d; font-style: italic; }
 
-    footer {
-      margin-top: 3rem;
-      font-size: .75rem;
-      color: var(--text-muted);
+    .card-footer {
+      margin-top: 1rem; display: flex; align-items: center; gap: .375rem;
+      font-size: .75rem; color: var(--text-muted);
     }
+    .card-footer svg { width: .8125rem; height: .8125rem; }
+    a.card.flow-ext:hover  .card-footer { color: var(--accent); }
+    a.card.books-ext:hover .card-footer { color: var(--success); }
+
+    .lock-note {
+      display: flex; align-items: flex-start; gap: .625rem;
+      background: rgba(245,158,11,.06);
+      border: 1px solid rgba(245,158,11,.2);
+      border-radius: .5rem;
+      padding: .875rem 1rem;
+      max-width: 720px; width: 100%;
+      margin-bottom: 1.75rem;
+    }
+    .lock-note svg { width: 1rem; height: 1rem; color: var(--warning); flex-shrink: 0; margin-top: .1rem; }
+    .lock-note p { font-size: .8125rem; color: var(--text-secondary); line-height: 1.5; }
+    .lock-note strong { color: var(--text-primary); }
+    .lock-note code { font-size: .75rem; background: var(--bg-elevated); padding: .1rem .3rem; border-radius: .25rem; }
+
+    .dimmed { opacity: .5; }
+
+    footer { font-size: .6875rem; color: var(--text-muted); margin-top: .5rem; }
+    footer a { color: inherit; text-decoration: none; }
+    footer a:hover { color: var(--text-secondary); }
   </style>
 </head>
 <body>
+
+  <div id="lang-toggle">
+    <button id="btn-pt" onclick="setLang('pt')">PT</button>
+    <button id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
 
   <div class="logo">
     <div class="logo-icon">
@@ -157,62 +163,193 @@
     <span class="logo-name">Syncero API Docs</span>
   </div>
 
-  <h1>Referência das APIs</h1>
-  <p class="subtitle">Documentação interativa das APIs internas do Syncero</p>
+  <h1 data-i18n="title"></h1>
+  <p class="subtitle" data-i18n="subtitle"></p>
+
+  <!-- Public -->
+  <div class="section-label" data-i18n="sectionPublic"></div>
 
   <div class="grid">
-
-    <a class="card" href="./flow.html">
+    <a class="card flow-ext" href="./flow-external.html">
       <div class="card-header">
-        <span class="badge badge-flow">Flow</span>
-        <div class="card-dot dot-flow"></div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <span class="badge badge-flow-ext">Flow</span>
+          <span class="badge badge-soon" data-i18n="badgeSoon"></span>
+        </div>
+        <div class="card-dot dot-flow-ext"></div>
       </div>
-      <h2>Syncero Flow API</h2>
-      <p>API do app de gestão financeira para empresas. Lançamentos, categorias, contas, contatos, fluxo de caixa e DRE.</p>
+      <h2 data-i18n="flowExtTitle"></h2>
+      <p data-i18n="flowExtDesc"></p>
+      <div class="endpoints">
+        <span class="tag soon" data-i18n="flowTag1"></span>
+        <span class="tag soon" data-i18n="flowTag2"></span>
+        <span class="tag soon" data-i18n="flowTag3"></span>
+      </div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <span data-i18n="viewSpec"></span>
+      </div>
+    </a>
+
+    <a class="card books-ext" href="./books-external.html">
+      <div class="card-header">
+        <span class="badge badge-books-ext">Books</span>
+        <div class="card-dot dot-books-ext"></div>
+      </div>
+      <h2 data-i18n="booksExtTitle"></h2>
+      <p data-i18n="booksExtDesc"></p>
+      <div class="endpoints">
+        <span class="tag books">GET /transactions</span>
+        <span class="tag books">POST /transactions</span>
+        <span class="tag books">POST /journal-entries</span>
+      </div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <span data-i18n="openDocs"></span>
+      </div>
+    </a>
+  </div>
+
+  <div class="lock-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+    <p data-i18n="lockNote"></p>
+  </div>
+
+  <!-- Internal -->
+  <div class="section-label" data-i18n="sectionInternal"></div>
+
+  <div class="grid dimmed">
+    <a class="card internal" href="./flow.html">
+      <div class="card-header">
+        <span class="badge badge-internal" data-i18n="badgeFlowInternal"></span>
+        <div class="card-dot dot-internal"></div>
+      </div>
+      <h2 data-i18n="flowInternalTitle"></h2>
+      <p data-i18n="flowInternalDesc"></p>
       <div class="endpoints">
         <span class="tag">transactions</span>
         <span class="tag">categories</span>
         <span class="tag">banks</span>
-        <span class="tag">contacts</span>
-        <span class="tag">payables</span>
         <span class="tag">companies</span>
-        <span class="tag">cash-flow</span>
+        <span class="tag">reports</span>
+      </div>
+      <div class="card-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <span data-i18n="localOnly"></span>
+      </div>
+    </a>
+
+    <a class="card internal" href="./books.html">
+      <div class="card-header">
+        <span class="badge badge-internal" data-i18n="badgeBooksInternal"></span>
+        <div class="card-dot dot-internal"></div>
+      </div>
+      <h2 data-i18n="booksInternalTitle"></h2>
+      <p data-i18n="booksInternalDesc"></p>
+      <div class="endpoints">
+        <span class="tag">account-plans</span>
+        <span class="tag">external-companies</span>
+        <span class="tag">fiscal</span>
+        <span class="tag">api-keys</span>
         <span class="tag">invites</span>
       </div>
       <div class="card-footer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
-        Abrir documentação
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <span data-i18n="localOnly"></span>
       </div>
     </a>
-
-    <a class="card" href="./books.html">
-      <div class="card-header">
-        <span class="badge badge-books">Books</span>
-        <div class="card-dot dot-books"></div>
-      </div>
-      <h2>Syncero Books API</h2>
-      <p>API do app para contadores. Plano de contas, lançamentos contábeis, empresas externas, documentos fiscais e chaves de API.</p>
-      <div class="endpoints">
-        <span class="tag">transactions</span>
-        <span class="tag">journal-entries</span>
-        <span class="tag">account-plans</span>
-        <span class="tag">external-companies</span>
-        <span class="tag">fiscal-docs</span>
-        <span class="tag">api-keys</span>
-      </div>
-      <div class="card-footer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
-        Abrir documentação
-      </div>
-    </a>
-
   </div>
 
-  <footer>Syncero &mdash; <a href="https://syncero-docs.vercel.app" style="color:inherit;text-decoration:none;">syncero-docs.vercel.app</a></footer>
+  <footer>
+    <a href="https://syncero-docs.vercel.app">syncero-docs.vercel.app</a>
+    &nbsp;·&nbsp; Syncero
+  </footer>
+
+  <script>
+    const T = {
+      pt: {
+        title:            'Referência das APIs',
+        subtitle:         'Documentação das APIs de integração do Syncero',
+        sectionPublic:    'Pública — integração externa',
+        sectionInternal:  'Interna — somente desenvolvimento local',
+        badgeSoon:        'Em breve',
+        flowExtTitle:     'Flow Integration API',
+        flowExtDesc:      'API externa do app de gestão financeira. Reservada para futuras integrações com bancos, ERPs e gateways de pagamento.',
+        flowTag1:         'extratos bancários',
+        flowTag2:         'webhooks de pagamento',
+        flowTag3:         'importação em lote',
+        booksExtTitle:    'Books Integration API',
+        booksExtDesc:     'Envie lançamentos financeiros e classifique registros contábeis para empresas gerenciadas por contadores.',
+        viewSpec:         'Ver spec',
+        openDocs:         'Abrir documentação',
+        lockNote:         '<strong>APIs internas</strong> (rotas do Flow e Books não listadas acima) são restritas por <code>Origin</code> e não estão documentadas publicamente. Acesse a referência interna localmente em <code>localhost:5176</code>.',
+        badgeFlowInternal:  'Flow — interno',
+        badgeBooksInternal: 'Books — interno',
+        flowInternalTitle:  'Flow API (completo)',
+        flowInternalDesc:   'Spec completo do Flow com todas as rotas. Restrito por Origin em produção.',
+        booksInternalTitle: 'Books API (completo)',
+        booksInternalDesc:  'Spec completo do Books incluindo rotas internas. Restrito por Origin em produção.',
+        localOnly:          'Somente local',
+      },
+      en: {
+        title:            'API Reference',
+        subtitle:         'Syncero integration API documentation',
+        sectionPublic:    'Public — external integration',
+        sectionInternal:  'Internal — local development only',
+        badgeSoon:        'Coming soon',
+        flowExtTitle:     'Flow Integration API',
+        flowExtDesc:      'External API for the financial management app. Reserved for future integrations with banks, ERPs and payment gateways.',
+        flowTag1:         'bank statements',
+        flowTag2:         'payment webhooks',
+        flowTag3:         'bulk import',
+        booksExtTitle:    'Books Integration API',
+        booksExtDesc:     'Submit financial transactions and create accounting entries for companies managed by accountants.',
+        viewSpec:         'View spec',
+        openDocs:         'Open documentation',
+        lockNote:         '<strong>Internal APIs</strong> (Flow and Books routes not listed above) are restricted by <code>Origin</code> header and are not publicly documented. Access the internal reference locally at <code>localhost:5176</code>.',
+        badgeFlowInternal:  'Flow — internal',
+        badgeBooksInternal: 'Books — internal',
+        flowInternalTitle:  'Flow API (full)',
+        flowInternalDesc:   'Complete Flow API spec with all routes. Restricted by Origin in production.',
+        booksInternalTitle: 'Books API (full)',
+        booksInternalDesc:  'Complete Books API spec including internal routes. Restricted by Origin in production.',
+        localOnly:          'Local only',
+      },
+    }
+
+    const PREF_KEY = 'syncero-prefs'
+
+    function getLang() {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(PREF_KEY) || '{}')
+        if (prefs.language) return prefs.language
+      } catch {}
+      return navigator.language?.startsWith('en') ? 'en' : 'pt'
+    }
+
+    function setLang(lang) {
+      try {
+        const prefs = JSON.parse(localStorage.getItem(PREF_KEY) || '{}')
+        localStorage.setItem(PREF_KEY, JSON.stringify({ ...prefs, language: lang }))
+      } catch {}
+      apply(lang)
+    }
+
+    function apply(lang) {
+      const dict = T[lang] || T.pt
+      document.documentElement.lang = lang === 'en' ? 'en' : 'pt-BR'
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n')
+        if (dict[key] !== undefined) el.innerHTML = dict[key]
+      })
+      document.getElementById('btn-pt').classList.toggle('active', lang === 'pt')
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en')
+    }
+
+    apply(getLang())
+  </script>
 
 </body>
 </html>

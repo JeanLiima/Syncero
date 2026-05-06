@@ -17,8 +17,8 @@ async function ensureCompanyMember(db: ReturnType<typeof createServiceClient>, u
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const companyId = c.req.query('companyId')
-  if (!companyId) return c.json({ error: 'companyId is required' }, 400)
+  const companyId = c.req.query('company_id')
+  if (!companyId) return c.json({ error: 'company_id is required' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
@@ -102,16 +102,16 @@ router.patch('/:id', async (c) => {
 })
 
 // ── DELETE /api/categories/:id ────────────────────────────────
-// Body: { transferTo?: string | null }
-//   transferTo = uuid  → reassign transactions to that category then delete
-//   transferTo = null  → set transactions category_id to null then delete
-//   transferTo absent + transactions exist → 409 with { count }
+// Body: { transfer_to?: string | null }
+//   transfer_to = uuid  → reassign transactions to that category then delete
+//   transfer_to = null  → set transactions category_id to null then delete
+//   transfer_to absent + transactions exist → 409 with { count }
 router.delete('/:id', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const categoryId = c.req.param('id')
-  const body = await c.req.json<{ transferTo?: string | null }>().catch(() => ({}))
-  const transferTo = (body as { transferTo?: string | null }).transferTo
+  const body = await c.req.json<{ transfer_to?: string | null }>().catch(() => ({}))
+  const transferTo = (body as { transfer_to?: string | null }).transfer_to
 
   const row = await db.from('categories').select('company_id').eq('id', categoryId).single()
   if (!row.data) return c.json({ error: 'not found' }, 404)

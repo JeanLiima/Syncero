@@ -13,9 +13,9 @@ function generateRawKey(): string {
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { companyId, extCompanyId } = c.req.query()
+  const { company_id: companyId, ext_company_id: extCompanyId } = c.req.query()
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id or ext_company_id required' }, 400)
 
   const q = db.from('api_keys')
     .select('*')
@@ -33,20 +33,20 @@ router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const body = await c.req.json<{
-    name: string; expiresAt?: string | null
-    companyId?: string; extCompanyId?: string
+    name: string; expires_at?: string | null
+    company_id?: string; ext_company_id?: string
   }>()
 
-  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+  if (!body.company_id && !body.ext_company_id) return c.json({ error: 'company_id or ext_company_id required' }, 400)
 
   // Verificar que o contador tem acesso à empresa informada
-  if (body.companyId) {
+  if (body.company_id) {
     const { data: acct } = await db.from('accountant_companies')
-      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
+      .select('id').eq('accountant_id', userId).eq('company_id', body.company_id).eq('status', 'accepted').maybeSingle()
     if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
   } else {
     const { data: ec } = await db.from('external_companies')
-      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
+      .select('id').eq('id', body.ext_company_id!).eq('accountant_id', userId).maybeSingle()
     if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
   }
 
@@ -57,16 +57,16 @@ router.post('/', async (c) => {
   const { error } = await db.from('api_keys').insert({
     accountant_id: userId,
     name: body.name,
-    company_id: body.extCompanyId ? null : (body.companyId ?? null),
-    ext_company_id: body.extCompanyId ?? null,
+    company_id: body.ext_company_id ? null : (body.company_id ?? null),
+    ext_company_id: body.ext_company_id ?? null,
     key_hash: hash,
     key_prefix: prefix,
     // Se vier só a data (YYYY-MM-DD), interpreta como fim do dia UTC para evitar
     // expiração imediata quando a chave é criada depois de meia-noite.
-    expires_at: body.expiresAt
-      ? (/^\d{4}-\d{2}-\d{2}$/.test(body.expiresAt)
-          ? body.expiresAt + 'T23:59:59Z'
-          : body.expiresAt)
+    expires_at: body.expires_at
+      ? (/^\d{4}-\d{2}-\d{2}$/.test(body.expires_at)
+          ? body.expires_at + 'T23:59:59Z'
+          : body.expires_at)
       : null,
   })
   if (error) return c.json({ error: error.message }, 400)

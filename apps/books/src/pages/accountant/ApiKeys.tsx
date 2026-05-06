@@ -33,8 +33,8 @@ export function Component() {
       method: 'POST',
       body: JSON.stringify({
         name: data.name,
-        expiresAt: data.expiresAt,
-        ...(isExternal ? { extCompanyId: id } : { companyId: id }),
+        expires_at: data.expiresAt,
+        ...(isExternal ? { ext_company_id: id } : { company_id: id }),
       }),
     })
     qc.invalidateQueries({ queryKey })

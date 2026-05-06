@@ -25,7 +25,7 @@ router.post('/', async (c) => {
   const body = await c.req.json<{
     name: string; cnpj?: string | null; trade_name?: string | null
     tax_regime?: string | null; integration?: string; segment?: string | null
-    notes?: string | null; seedPlan?: boolean
+    notes?: string | null; seed_plan?: boolean
   }>()
 
   if (!body.name?.trim()) return c.json({ error: 'Nome é obrigatório' }, 400)
@@ -45,7 +45,7 @@ router.post('/', async (c) => {
     .single()
   if (insertErr) return c.json({ error: insertErr.message }, 400)
 
-  if (body.seedPlan && company) {
+  if (body.seed_plan && company) {
     const codeToId = new Map<string, string>()
     for (const account of DEFAULT_ACCOUNT_PLAN) {
       const parentId = account.parent_code ? (codeToId.get(account.parent_code) ?? null) : null

@@ -172,7 +172,7 @@ function InlineCreate({ accountType, companyId, presetName, onCreated, onCancel 
     setSaving(true); setErr(null)
     try {
       const account = await createAccountPlan({
-        companyId,
+        company_id: companyId,
         code: code.trim(),
         name: name.trim(),
         account_type: accountType,
@@ -368,7 +368,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId, extCompan
     setSaving(true); setError(null)
     try {
       await createJournalEntry({
-        ...(extCompanyId ? { extCompanyId } : { companyId }),
+        ...(extCompanyId ? { ext_company_id: extCompanyId } : { company_id: companyId }),
         entry_date: transaction.date,
         description: transaction.description,
         flow_transaction_id: transaction.id,

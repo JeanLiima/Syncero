@@ -8,11 +8,11 @@ const router = new Hono<{ Variables: HonoVariables }>()
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const companyId = c.req.query('companyId')
+  const companyId = c.req.query('company_id')
   const dateFrom  = c.req.query('date_from')
   const dateTo    = c.req.query('date_to')
 
-  if (!companyId) return c.json({ error: 'companyId required' }, 400)
+  if (!companyId) return c.json({ error: 'company_id required' }, 400)
   if (!dateFrom || !dateTo) return c.json({ error: 'date_from and date_to required' }, 400)
 
   // Verify membership

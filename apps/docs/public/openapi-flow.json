@@ -1044,7 +1044,7 @@
         "summary": "Listar membros da empresa",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -1092,13 +1092,13 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "email",
                   "role",
                   "invite_token"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -1276,7 +1276,7 @@
         "summary": "Listar vínculos com contadores",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1359,12 +1359,12 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "email",
                   "invite_token"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -1570,7 +1570,7 @@
         "summary": "Listar lançamentos com paginação",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -1633,7 +1633,7 @@
             }
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -2006,7 +2006,7 @@
         "summary": "Listar categorias",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -2054,12 +2054,12 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "companyId",
+                  "company_id",
                   "name",
                   "type"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -2219,7 +2219,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "transferTo": {
+                  "transfer_to": {
                     "type": "string",
                     "format": "uuid",
                     "nullable": true,
@@ -2267,7 +2267,7 @@
         "summary": "Listar contas bancárias",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -2472,7 +2472,7 @@
         "summary": "Listar contatos",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -2678,7 +2678,7 @@
         "summary": "Listar contas a pagar/receber",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -2926,7 +2926,7 @@
         "summary": "Fluxo de caixa por dia",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -2989,7 +2989,7 @@
         "summary": "DRE — Demonstração do Resultado do Exercício",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {

@@ -99,6 +99,35 @@ flow/books → lê hash manualmente → supabase.auth.setSession()
 
 ---
 
+## Convenção de nomes na API (OBRIGATÓRIO)
+
+**Tudo snake_case** — query params, body fields e path params.  
+Consistente com as colunas do banco e com a maioria dos campos já existentes.
+
+```
+✓ GET /api/transactions?company_id=...&date_from=...&page_size=20
+✓ POST /api/categories  { "company_id": "...", "name": "...", "type": "income" }
+✗ GET /api/transactions?companyId=...&pageSize=20   ← nunca
+✗ POST /api/categories  { "companyId": "...", ... }  ← nunca
+```
+
+**Campos que foram padronizados (referência):**
+
+| Antes (camelCase) | Depois (snake_case) |
+|-------------------|---------------------|
+| `companyId` | `company_id` |
+| `extCompanyId` | `ext_company_id` |
+| `pageSize` | `page_size` |
+| `transferTo` | `transfer_to` |
+| `targetId` | `target_id` |
+| `expiresAt` | `expires_at` |
+| `seedPlan` | `seed_plan` |
+
+**Frontend `buildQuery()`** — auto-converte camelCase → snake_case nas URLs.  
+Parâmetros de função TypeScript podem ser camelCase (`companyId: string`), mas o que vai para o wire deve ser snake_case.
+
+---
+
 ## Padrões de código
 
 - **Path alias:** `@` → `src/` — sempre usar `@/` imports

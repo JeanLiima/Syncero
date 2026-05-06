@@ -1,10 +1,14 @@
 import { apiFetch } from './api'
 import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, PayableReceivable, Bank, Contact } from '@/types'
 
+function toSnake(key: string): string {
+  return key.replace(/([A-Z])/g, '_$1').toLowerCase()
+}
+
 function buildQuery(params: Record<string, string | undefined>) {
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== '') query.set(key, value)
+    if (value !== undefined && value !== '') query.set(toSnake(key), value)
   })
   const queryString = query.toString()
   return queryString ? `?${queryString}` : ''
@@ -28,7 +32,7 @@ export async function getCompanyMembers(companyId: string) {
 export async function inviteCompanyMember(companyId: string, email: string, role: string, invite_token: string, language?: 'pt' | 'en') {
   return apiFetch(`/api/company-members`, {
     method: 'POST',
-    body: JSON.stringify({ companyId, email, role, invite_token, language }),
+    body: JSON.stringify({ company_id: companyId, email, role, invite_token, language }),
   })
 }
 
@@ -54,7 +58,7 @@ export async function getAccountantCompanies(companyId?: string) {
 export async function inviteAccountant(companyId: string, email: string, invite_token: string, language: 'pt' | 'en' = 'pt') {
   return apiFetch(`/api/accountant-companies`, {
     method: 'POST',
-    body: JSON.stringify({ companyId, email, invite_token, language }),
+    body: JSON.stringify({ company_id: companyId, email, invite_token, language }),
   })
 }
 
@@ -151,7 +155,7 @@ export async function updateCategory(id: string, data: Partial<Pick<Category, 'n
 export async function deleteCategory(id: string, transferTo?: string | null) {
   return apiFetch<{ ok: true } | { error: string; count: number }>(
     `/api/categories/${id}`,
-    { method: 'DELETE', body: JSON.stringify(transferTo !== undefined ? { transferTo } : {}) },
+    { method: 'DELETE', body: JSON.stringify(transferTo !== undefined ? { transfer_to: transferTo } : {}) },
   )
 }
 

@@ -7,9 +7,9 @@ const router = new Hono<{ Variables: HonoVariables }>()
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { companyId, extCompanyId, period } = c.req.query()
+  const { company_id: companyId, ext_company_id: extCompanyId, period } = c.req.query()
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id or ext_company_id required' }, 400)
 
   if (companyId) {
     const { data: acct } = await db.from('accountant_companies')
@@ -44,19 +44,19 @@ router.post('/', async (c) => {
     entry_date: string; description: string; external_ref?: string
     flow_transaction_id?: string
     lines: Array<{ account_plan_id: string; side: 'debit' | 'credit'; amount: number; memo?: string }>
-    companyId?: string; extCompanyId?: string
+    company_id?: string; ext_company_id?: string
   }>()
 
-  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+  if (!body.company_id && !body.ext_company_id) return c.json({ error: 'company_id or ext_company_id required' }, 400)
 
   // Verify authorization
-  if (body.companyId) {
+  if (body.company_id) {
     const { data: acct } = await db.from('accountant_companies')
-      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
+      .select('id').eq('accountant_id', userId).eq('company_id', body.company_id).eq('status', 'accepted').maybeSingle()
     if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
   } else {
     const { data: ec } = await db.from('external_companies')
-      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
+      .select('id').eq('id', body.ext_company_id!).eq('accountant_id', userId).maybeSingle()
     if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
   }
 
@@ -65,13 +65,13 @@ router.post('/', async (c) => {
     const { data: tx } = await db.from('transactions')
       .select('company_id, ext_company_id').eq('id', body.flow_transaction_id).maybeSingle()
     if (!tx) return c.json({ error: 'flow_transaction_id not found' }, 404)
-    const expectedId = body.companyId ?? body.extCompanyId
-    const txCompany  = body.companyId ? tx.company_id : tx.ext_company_id
+    const expectedId = body.company_id ?? body.ext_company_id
+    const txCompany  = body.company_id ? tx.company_id : tx.ext_company_id
     if (txCompany !== expectedId) return c.json({ error: 'flow_transaction_id does not belong to the authorized company' }, 403)
   }
 
   const { data: entry, error } = await db.from('journal_entries').insert({
-    ...(body.extCompanyId ? { ext_company_id: body.extCompanyId } : { company_id: body.companyId }),
+    ...(body.ext_company_id ? { ext_company_id: body.ext_company_id } : { company_id: body.company_id }),
     accountant_id: userId,
     entry_date: body.entry_date,
     description: body.description,

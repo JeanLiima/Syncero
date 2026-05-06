@@ -21,9 +21,9 @@ async function authorizeFlow(db: ReturnType<typeof createServiceClient>, userId:
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { companyId, extCompanyId, type, is_paid, date_from, date_to, search, page = '1', pageSize = '20' } = c.req.query()
+  const { company_id: companyId, ext_company_id: extCompanyId, type, is_paid, date_from, date_to, search, page = '1', page_size: pageSize = '20' } = c.req.query()
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id or ext_company_id required' }, 400)
 
   if (companyId) {
     if (!(await authorizeFlow(db, userId, companyId))) return c.json({ error: 'Forbidden' }, 403)
@@ -116,9 +116,9 @@ router.get('/:id', async (c) => {
 router.get('/counterparts', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { extCompanyId } = c.req.query()
+  const { ext_company_id: extCompanyId } = c.req.query()
 
-  if (!extCompanyId) return c.json({ error: 'extCompanyId required' }, 400)
+  if (!extCompanyId) return c.json({ error: 'ext_company_id required' }, 400)
   if (!(await authorizeExt(db, userId, extCompanyId))) return c.json({ error: 'Forbidden' }, 403)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138,7 +138,7 @@ router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const body = await c.req.json<{
-    extCompanyId: string
+    ext_company_id: string
     description: string
     amount: number
     type: 'income' | 'expense'
@@ -150,17 +150,17 @@ router.post('/', async (c) => {
     notes?: string | null
   }>()
 
-  if (!body.extCompanyId) return c.json({ error: 'extCompanyId required' }, 400)
+  if (!body.ext_company_id) return c.json({ error: 'ext_company_id required' }, 400)
   if (!body.description?.trim()) return c.json({ error: 'description required' }, 400)
   if (!body.amount || body.amount <= 0) return c.json({ error: 'amount must be positive' }, 400)
   if (!body.date) return c.json({ error: 'date required' }, 400)
   if (!body.counterpart?.trim()) return c.json({ error: 'counterpart required' }, 400)
   if (!body.type) return c.json({ error: 'type required' }, 400)
 
-  if (!(await authorizeExt(db, userId, body.extCompanyId))) return c.json({ error: 'Forbidden' }, 403)
+  if (!(await authorizeExt(db, userId, body.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
 
   const { data, error } = await db.from('transactions').insert({
-    ext_company_id: body.extCompanyId,
+    ext_company_id: body.ext_company_id,
     created_by:     userId,
     description:    body.description.trim(),
     amount:         body.amount,

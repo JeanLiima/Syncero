@@ -16,8 +16,8 @@ async function ensureCompanyMember(db: ReturnType<typeof createServiceClient>, u
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const companyId = c.req.query('companyId')
-  if (!companyId) return c.json({ error: 'companyId é obrigatório' }, 400)
+  const companyId = c.req.query('company_id')
+  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)

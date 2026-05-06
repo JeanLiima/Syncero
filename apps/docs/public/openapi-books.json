@@ -1060,7 +1060,7 @@
                     "type": "string",
                     "nullable": true
                   },
-                  "seedPlan": {
+                  "seed_plan": {
                     "type": "boolean",
                     "default": false,
                     "description": "Se true, cria o Plano de Contas padrão CFC automaticamente"
@@ -1208,7 +1208,7 @@
         "description": "Retorna lista ordenada de valores únicos de `counterpart` para autocomplete.\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT.",
         "parameters": [
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -1247,7 +1247,7 @@
         "description": "Aceita `companyId` (empresa Flow, somente leitura) ou `extCompanyId` (empresa externa, CRUD completo).\nRetorna `is_classified` e `journal_entry_id` adicionados pelo servidor.\n\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1256,7 +1256,7 @@
             "description": "Empresa Flow (exclusivo com extCompanyId)"
           },
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1310,7 +1310,7 @@
             }
           },
           {
-            "name": "pageSize",
+            "name": "page_size",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -1354,7 +1354,7 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "extCompanyId",
+                  "ext_company_id",
                   "description",
                   "amount",
                   "type",
@@ -1364,7 +1364,7 @@
                   "counterpart"
                 ],
                 "properties": {
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -1629,7 +1629,7 @@
         "summary": "Listar lançamentos contábeis",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1637,7 +1637,7 @@
             }
           },
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1698,12 +1698,12 @@
                   "lines"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid",
                     "description": "Empresa Flow (exclusivo com extCompanyId)"
                   },
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid",
                     "description": "Empresa externa (exclusivo com companyId)"
@@ -1795,7 +1795,7 @@
         "summary": "Listar plano de contas",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1803,7 +1803,7 @@
             }
           },
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -1856,11 +1856,11 @@
                   "is_analytic"
                 ],
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -1929,11 +1929,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
@@ -2185,10 +2185,10 @@
               "schema": {
                 "type": "object",
                 "required": [
-                  "targetId"
+                  "target_id"
                 ],
                 "properties": {
-                  "targetId": {
+                  "target_id": {
                     "type": "string",
                     "format": "uuid",
                     "description": "Conta destino (deve ser analítica e do mesmo contador)"
@@ -2238,7 +2238,7 @@
         "summary": "Listar documentos fiscais (NF-e, NFS-e, CF-e, NFC-e)",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -2311,7 +2311,7 @@
         "summary": "Listar livros fiscais (SPED, ECF, ECD)",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -2355,7 +2355,7 @@
         "summary": "Listar cálculos tributários",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "required": true,
             "schema": {
@@ -2399,7 +2399,7 @@
         "summary": "Listar chaves de API",
         "parameters": [
           {
-            "name": "companyId",
+            "name": "company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -2407,7 +2407,7 @@
             }
           },
           {
-            "name": "extCompanyId",
+            "name": "ext_company_id",
             "in": "query",
             "schema": {
               "type": "string",
@@ -2460,15 +2460,15 @@
                   "name": {
                     "type": "string"
                   },
-                  "companyId": {
+                  "company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
-                  "extCompanyId": {
+                  "ext_company_id": {
                     "type": "string",
                     "format": "uuid"
                   },
-                  "expiresAt": {
+                  "expires_at": {
                     "type": "string",
                     "format": "date-time",
                     "nullable": true

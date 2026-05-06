@@ -8,9 +8,9 @@ const router = new Hono<{ Variables: HonoVariables }>()
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { companyId, extCompanyId } = c.req.query()
+  const { company_id: companyId, ext_company_id: extCompanyId } = c.req.query()
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id or ext_company_id required' }, 400)
 
   if (companyId) {
     const { data: acct } = await db.from('accountant_companies')
@@ -37,18 +37,18 @@ router.post('/', async (c) => {
   const body = await c.req.json<{
     code: string; name: string; account_type: string; nature: string
     is_analytic: boolean; parent_id: string | null
-    companyId?: string; extCompanyId?: string
+    company_id?: string; ext_company_id?: string
   }>()
 
-  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+  if (!body.company_id && !body.ext_company_id) return c.json({ error: 'company_id or ext_company_id required' }, 400)
 
-  if (body.companyId) {
+  if (body.company_id) {
     const { data: acct } = await db.from('accountant_companies')
-      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
+      .select('id').eq('accountant_id', userId).eq('company_id', body.company_id).eq('status', 'accepted').maybeSingle()
     if (!acct) return c.json({ error: 'forbidden' }, 403)
   } else {
     const { data: ec } = await db.from('external_companies')
-      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
+      .select('id').eq('id', body.ext_company_id!).eq('accountant_id', userId).maybeSingle()
     if (!ec) return c.json({ error: 'forbidden' }, 403)
   }
 
@@ -60,7 +60,7 @@ router.post('/', async (c) => {
     is_analytic: body.is_analytic,
     parent_id: body.parent_id,
     accountant_id: userId,
-    ...(body.extCompanyId ? { ext_company_id: body.extCompanyId } : { company_id: body.companyId }),
+    ...(body.ext_company_id ? { ext_company_id: body.ext_company_id } : { company_id: body.company_id }),
   }
 
   const { data, error } = await db.from('account_plans').insert(payload).select('*').single()
@@ -72,13 +72,13 @@ router.post('/', async (c) => {
 router.post('/seed', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const { companyId, extCompanyId, accounts } = await c.req.json<{
-    companyId?: string
-    extCompanyId?: string
+  const { company_id: companyId, ext_company_id: extCompanyId, accounts } = await c.req.json<{
+    company_id?: string
+    ext_company_id?: string
     accounts?: Array<{ code: string; name: string; account_type: string; nature: string; is_analytic: boolean; parent_code: string | null }>
   }>()
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id or ext_company_id required' }, 400)
 
   if (companyId) {
     const { data: acct } = await db.from('accountant_companies')
@@ -173,9 +173,9 @@ router.post('/:id/transfer', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const { id } = c.req.param()
-  const { targetId } = await c.req.json<{ targetId: string }>()
+  const { target_id: targetId } = await c.req.json<{ target_id: string }>()
 
-  if (!targetId) return c.json({ error: 'targetId required' }, 400)
+  if (!targetId) return c.json({ error: 'target_id required' }, 400)
 
   const { data: existing } = await db.from('account_plans')
     .select('accountant_id').eq('id', id).maybeSingle()

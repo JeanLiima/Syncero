@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, Pencil, Trash2, BookOpen, Search, Download } from 'lucide-react'
-import { Badge, Button, Card, ConfirmDialog, DateRangePicker, Input, Modal, Select, Table, useToast } from '@syncero/ui'
+import { Plus, BookOpen, Search, Download } from 'lucide-react'
+import { Badge, Button, Card, ConfirmDialog, DatePicker, DateRangePicker, Input, Modal, Select, Table, useToast } from '@syncero/ui'
 import {
   getTransactions,
   createExtTransaction,
@@ -13,6 +13,7 @@ import {
 } from '@/lib/backend'
 import { ClassifyModal } from '@/components/accountant/ClassifyModal'
 import { ExportModal } from '@/components/accountant/ExportModal'
+import { ExtTransactionDetailModal } from '@/components/accountant/ExtTransactionDetailModal'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import type { Transaction, TransactionNature, TransactionType } from '@/types'
@@ -24,22 +25,24 @@ type TxRow = Transaction & { is_classified: boolean; journal_entry_id: string | 
 interface FormState {
   type: TransactionType
   description: string
-  amount: string
+  amountCents: number
   date: string
   is_paid: boolean
   paid_at: string
   nature: TransactionNature | ''
+  counterpart: string
   notes: string
 }
 
 const emptyForm = (): FormState => ({
   type:        'expense',
   description: '',
-  amount:      '',
+  amountCents: 0,
   date:        new Date().toISOString().slice(0, 10),
   is_paid:     false,
   paid_at:     '',
   nature:      '',
+  counterpart: '',
   notes:       '',
 })
 
@@ -71,6 +74,7 @@ export function Component() {
   const [saving,    setSaving]    = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
+  const [detailTx,     setDetailTx]     = useState<TxRow | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<TxRow | null>(null)
   const [deleting,     setDeleting]     = useState(false)
   const [classifyTx,   setClassifyTx]   = useState<TxRow | null>(null)
@@ -102,15 +106,17 @@ export function Component() {
   }
 
   const openEdit = (row: TxRow) => {
+    setDetailTx(null)
     setEditing(row)
     setForm({
       type:        row.type,
       description: row.description,
-      amount:      String(row.amount),
+      amountCents: Math.round(row.amount * 100),
       date:        row.date,
       is_paid:     row.is_paid,
       paid_at:     row.paid_at ?? '',
       nature:      (row.nature as TransactionNature | null) ?? '',
+      counterpart: (row as TxRow & { counterpart?: string | null }).counterpart ?? '',
       notes:       row.notes ?? '',
     })
     setFormError(null)
@@ -119,21 +125,22 @@ export function Component() {
 
   const handleSave = async () => {
     if (!form.description.trim()) { setFormError(t('extTx_errorDescription')); return }
-    const amount = parseFloat(form.amount)
-    if (!amount || amount <= 0)   { setFormError(t('extTx_errorAmount')); return }
+    if (form.amountCents <= 0)    { setFormError(t('extTx_errorAmount')); return }
     if (!form.date)               { setFormError(t('extTx_errorDate')); return }
+    if (!form.nature)             { setFormError(t('extTx_errorNature')); return }
 
     setSaving(true); setFormError(null)
     try {
       const payload = {
         description: form.description.trim(),
-        amount,
+        amount: form.amountCents / 100,
         type:    form.type,
         date:    form.date,
         is_paid: form.is_paid,
         paid_at: form.is_paid && form.paid_at ? form.paid_at : null,
-        nature:  form.nature || null,
-        notes:   form.notes.trim() || null,
+        nature:      form.nature || null,
+        counterpart: form.counterpart.trim() || null,
+        notes:       form.notes.trim() || null,
       }
 
       if (editing) {
@@ -166,18 +173,6 @@ export function Component() {
       setDeleting(false)
     }
   }
-
-  const natureOptions = [
-    { value: '',                    label: t('extTx_natureNone') },
-    { value: 'sale_service',        label: t('nature_sale_service') },
-    { value: 'loan_received',       label: t('nature_loan_received') },
-    { value: 'capital_contribution',label: t('nature_capital_contribution') },
-    { value: 'operational_expense', label: t('nature_operational_expense') },
-    { value: 'product_cost',        label: t('nature_product_cost') },
-    { value: 'asset_purchase',      label: t('nature_asset_purchase') },
-    { value: 'debt_payment',        label: t('nature_debt_payment') },
-    { value: 'owner_withdrawal',    label: t('nature_owner_withdrawal') },
-  ]
 
   const locale = language === 'en' ? undefined : ptBR
 
@@ -253,6 +248,7 @@ export function Component() {
           loading={isLoading}
           data={rows}
           rowKey={r => r.id}
+          onRowClick={r => setDetailTx(r)}
           emptyMessage={t('extTx_empty')}
           columns={[
             {
@@ -303,53 +299,32 @@ export function Component() {
               key: 'actions',
               header: '',
               align: 'right',
-              render: r => (
-                <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {/* Classify */}
-                  {!r.is_classified && (
-                    <div className="relative group/tip">
-                      <button
-                        onClick={e => { e.stopPropagation(); setClassifyTx(r) }}
-                        disabled={!r.is_paid}
-                        className={`cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] transition-colors ${
-                          r.is_paid
-                            ? 'text-[var(--text-muted)] hover:text-[var(--success)]'
-                            : 'text-[var(--text-muted)] opacity-30 cursor-not-allowed'
-                        }`}
-                      >
-                        <BookOpen className="h-4 w-4" />
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/tip:opacity-100 transition-opacity z-10">
-                        {r.is_paid ? t('classify_action') : t('classify_awaitingPayment')}
-                      </span>
-                    </div>
-                  )}
-                  {/* Edit */}
-                  <div className="relative group/edit">
-                    <button
-                      onClick={e => { e.stopPropagation(); openEdit(r) }}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/edit:opacity-100 transition-opacity z-10">
-                      {t('extTx_edit')}
+              render: r => {
+                if (r.is_classified) return null
+                if (!r.is_paid) return (
+                  <div className="relative group flex justify-end">
+                    <span className="p-1.5 text-[var(--text-muted)] opacity-40">
+                      <BookOpen className="h-4 w-4" />
+                    </span>
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      {t('classify_awaitingPayment')}
                     </span>
                   </div>
-                  {/* Delete */}
-                  <div className="relative group/del">
+                )
+                return (
+                  <div className="relative group/tip">
                     <button
-                      onClick={e => { e.stopPropagation(); setDeleteTarget(r) }}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
+                      onClick={e => { e.stopPropagation(); setClassifyTx(r) }}
+                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <BookOpen className="h-4 w-4" />
                     </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/del:opacity-100 transition-opacity z-10">
-                      {t('extTx_delete')}
+                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/tip:opacity-100 transition-opacity z-10">
+                      {t('classify_action')}
                     </span>
                   </div>
-                </div>
-              ),
+                )
+              },
             },
           ]}
         />
@@ -379,12 +354,28 @@ export function Component() {
         size="md"
         footer={
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>
-              {t('extTx_cancel')}
-            </Button>
-            <Button size="sm" onClick={handleSave} loading={saving}>
-              {t('extTx_save')}
-            </Button>
+            {/* Extrema esquerda — Excluir (só ao editar, não ao criar) */}
+            {editing && !editing.is_classified ? (
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={saving}
+                onClick={() => { setModalOpen(false); setDeleteTarget(editing) }}
+              >
+                {t('extTx_delete')}
+              </Button>
+            ) : (
+              <span />
+            )}
+            {/* Direita — Cancelar + Salvar */}
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)} disabled={saving}>
+                {t('extTx_cancel')}
+              </Button>
+              <Button size="sm" onClick={handleSave} loading={saving}>
+                {t('extTx_save')}
+              </Button>
+            </div>
           </div>
         }
       >
@@ -398,7 +389,7 @@ export function Component() {
                 <button
                   key={tp}
                   type="button"
-                  onClick={() => setForm(f => ({ ...f, type: tp }))}
+                  onClick={() => setForm(f => ({ ...f, type: tp, nature: '' }))}
                   className={`flex-1 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${
                     form.type === tp
                       ? tp === 'income' ? 'bg-[var(--success)] text-white' : 'bg-[var(--danger)] text-white'
@@ -411,7 +402,62 @@ export function Component() {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Nature — logo abaixo do tipo, varia conforme o tipo */}
+          <Select
+            label={t('extTx_nature')}
+            options={[
+              { value: '', label: t('extTx_natureNone') },
+              ...(form.type === 'income' ? [
+                { value: 'sale_service',         label: t('nature_sale_service') },
+                { value: 'loan_received',        label: t('nature_loan_received') },
+                { value: 'capital_contribution', label: t('nature_capital_contribution') },
+              ] : [
+                { value: 'operational_expense',  label: t('nature_operational_expense') },
+                { value: 'product_cost',         label: t('nature_product_cost') },
+                { value: 'asset_purchase',       label: t('nature_asset_purchase') },
+                { value: 'debt_payment',         label: t('nature_debt_payment') },
+                { value: 'owner_withdrawal',     label: t('nature_owner_withdrawal') },
+              ]),
+            ]}
+            value={form.nature}
+            onChange={v => setForm(f => ({ ...f, nature: v as TransactionNature | '' }))}
+          />
+
+          {/* Date + Amount — data primeiro, depois valor */}
+          <div className="grid grid-cols-2 gap-4">
+            <DatePicker
+              label={t('extTx_date')}
+              value={form.date}
+              onChange={v => setForm(f => ({ ...f, date: v }))}
+              language={language}
+            />
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-[var(--text-secondary)]">{t('extTx_amount')}</span>
+              <div className="flex items-center gap-1.5 h-10 px-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] focus-within:border-[var(--accent)] transition-colors">
+                <span className="text-sm text-[var(--text-muted)] shrink-0">R$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={(() => { const p = String(form.amountCents).padStart(3, '0'); return p.slice(0, -2) + ',' + p.slice(-2) })()}
+                  onChange={() => {}}
+                  onKeyDown={e => {
+                    if (e.key >= '0' && e.key <= '9') {
+                      e.preventDefault()
+                      setForm(f => ({ ...f, amountCents: f.amountCents * 10 + parseInt(e.key) > 9999999 ? f.amountCents : f.amountCents * 10 + parseInt(e.key) }))
+                    } else if (e.key === 'Backspace') {
+                      e.preventDefault()
+                      setForm(f => ({ ...f, amountCents: Math.floor(f.amountCents / 10) }))
+                    } else if (!['Tab','ArrowLeft','ArrowRight','Enter'].includes(e.key)) {
+                      e.preventDefault()
+                    }
+                  }}
+                  className="flex-1 bg-transparent text-sm text-[var(--text-primary)] text-right outline-none font-mono min-w-0"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Description — abaixo de data e valor */}
           <Input
             label={t('extTx_description')}
             placeholder={t('extTx_descriptionPlaceholder')}
@@ -419,31 +465,12 @@ export function Component() {
             onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
           />
 
-          {/* Amount + Date */}
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label={t('extTx_amount')}
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0,00"
-              value={form.amount}
-              onChange={e => setForm(f => ({ ...f, amount: e.target.value }))}
-            />
-            <Input
-              label={t('extTx_date')}
-              type="date"
-              value={form.date}
-              onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-            />
-          </div>
-
-          {/* Nature */}
-          <Select
-            label={t('extTx_nature')}
-            options={natureOptions}
-            value={form.nature}
-            onChange={v => setForm(f => ({ ...f, nature: v as TransactionNature | '' }))}
+          {/* Counterpart */}
+          <Input
+            label={`${form.type === 'income' ? t('extTx_counterpartIncome') : t('extTx_counterpartExpense')} (${t('extTx_optional')})`}
+            placeholder={t('extTx_counterpartPlaceholder')}
+            value={form.counterpart}
+            onChange={e => setForm(f => ({ ...f, counterpart: e.target.value }))}
           />
 
           {/* Paid toggle */}
@@ -471,17 +498,17 @@ export function Component() {
 
           {/* Paid at — only when paid */}
           {form.is_paid && (
-            <Input
+            <DatePicker
               label={t('extTx_paidAt')}
-              type="date"
               value={form.paid_at}
-              onChange={e => setForm(f => ({ ...f, paid_at: e.target.value }))}
+              onChange={v => setForm(f => ({ ...f, paid_at: v }))}
+              language={language}
             />
           )}
 
           {/* Notes */}
           <Input
-            label={t('extTx_notes')}
+            label={`${t('extTx_notes')} (${t('extTx_optional')})`}
             placeholder={t('extTx_notesPlaceholder')}
             value={form.notes}
             onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
@@ -500,6 +527,16 @@ export function Component() {
         message={t('extTx_deleteConfirm')}
         confirmLabel={t('extTx_deleteConfirmYes')}
         loading={deleting}
+      />
+
+      {/* Detail */}
+      <ExtTransactionDetailModal
+        tx={detailTx}
+        open={!!detailTx}
+        onClose={() => setDetailTx(null)}
+        onEdit={openEdit}
+        onClassify={r => { setDetailTx(null); setClassifyTx(r) }}
+        language={language}
       />
 
       {/* Classify */}

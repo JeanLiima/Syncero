@@ -126,6 +126,7 @@ router.post('/', async (c) => {
     is_paid: boolean
     paid_at?: string | null
     nature?: string | null
+    counterpart?: string | null
     notes?: string | null
   }>()
 
@@ -147,6 +148,7 @@ router.post('/', async (c) => {
     is_paid:        body.is_paid ?? false,
     paid_at:        body.is_paid ? (body.paid_at || null) : null,
     nature:         body.nature || null,
+    counterpart:    body.counterpart || null,
     notes:          body.notes || null,
   }).select('*').single()
 
@@ -174,6 +176,7 @@ router.patch('/:id', async (c) => {
     is_paid?: boolean
     paid_at?: string | null
     nature?: string | null
+    counterpart?: string | null
     notes?: string | null
   }>()
 
@@ -184,6 +187,7 @@ router.patch('/:id', async (c) => {
   if (body.type        !== undefined) patch.type        = body.type
   if (body.date        !== undefined) patch.date        = body.date
   if (body.nature      !== undefined) patch.nature      = body.nature
+  if (body.counterpart !== undefined) patch.counterpart = body.counterpart
   if (body.notes       !== undefined) patch.notes       = body.notes
   if (body.is_paid     !== undefined) patch.is_paid     = body.is_paid
   if (body.is_paid === false) patch.paid_at = null

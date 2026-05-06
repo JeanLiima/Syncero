@@ -2,6 +2,17 @@ import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { Edit2, TrendingUp, TrendingDown, CheckCircle, Clock } from 'lucide-react'
+
+const NATURE_KEYS: Record<string, string> = {
+  sale_service:         'transactions_nature_sale_service',
+  loan_received:        'transactions_nature_loan_received',
+  capital_contribution: 'transactions_nature_capital_contribution',
+  operational_expense:  'transactions_nature_operational_expense',
+  product_cost:         'transactions_nature_product_cost',
+  asset_purchase:       'transactions_nature_asset_purchase',
+  debt_payment:         'transactions_nature_debt_payment',
+  owner_withdrawal:     'transactions_nature_owner_withdrawal',
+}
 import { Badge, Button, Modal } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { useTransactionDetail } from './queries'
@@ -204,6 +215,14 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
             <Row label={t('transactions_detail_competencyDate')}>
               {fmt(tx.date + 'T00:00:00')}
             </Row>
+            {tx.description && (
+              <Row label={t('transactions_detail_description')}>{tx.description}</Row>
+            )}
+            {tx.nature && (
+              <Row label={t('transactions_detail_nature')}>
+                {t(NATURE_KEYS[tx.nature] as Parameters<typeof t>[0])}
+              </Row>
+            )}
             {tx.categories && (
               <Row label={t('transactions_detail_category')}>
                 <span className="flex items-center gap-1.5 justify-end">
@@ -224,8 +243,10 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
                 </span>
               </Row>
             )}
-            {tx.description && (
-              <Row label={t('transactions_detail_description')}>{tx.description}</Row>
+            {tx.paid_at && (
+              <Row label={isIncome ? t('transactions_detail_receivedAt') : t('transactions_detail_paidAt')}>
+                {fmt(tx.paid_at)}
+              </Row>
             )}
             {tx.notes && (
               <Row label={t('transactions_detail_notes')}>{tx.notes}</Row>

@@ -1622,7 +1622,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Busca por descrição (case-insensitive)"
+            "description": "Busca por texto na descrição (sem distinção de maiúsculas/minúsculas)"
           },
           {
             "name": "page",
@@ -1958,7 +1958,7 @@
           "transactions"
         ],
         "summary": "Atualizar todas as parcelas de um grupo",
-        "description": "Bulk-update de todos os lançamentos com o mesmo `installment_group_id`. Aceita apenas `nature` por enquanto.",
+        "description": "Atualiza em lote todos os lançamentos com o mesmo `installment_group_id`. Aceita apenas `nature` por enquanto.",
         "requestBody": {
           "required": true,
           "content": {

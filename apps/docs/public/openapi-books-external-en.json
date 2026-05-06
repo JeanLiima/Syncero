@@ -313,7 +313,7 @@
                   },
                   "is_paid": {
                     "type": "boolean",
-                    "description": "true = paid/received. Transactions must be paid to be classified accountingly."
+                    "description": "true = paid/received. Transactions must be marked as paid before they can be classified in Books."
                   },
                   "paid_at": {
                     "type": "string",
@@ -341,7 +341,7 @@
                   "summary": "Paid service revenue",
                   "value": {
                     "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
-                    "description": "Prestação de serviços — Cliente XYZ",
+                    "description": "Service delivery — Client XYZ Ltd",
                     "amount": 5000,
                     "type": "income",
                     "date": "2026-05-01",
@@ -355,7 +355,7 @@
                   "summary": "Pending operational expense",
                   "value": {
                     "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
-                    "description": "Aluguel do escritório — maio/2026",
+                    "description": "Office rent — May/2026",
                     "amount": 3200,
                     "type": "expense",
                     "date": "2026-05-01",
@@ -523,7 +523,7 @@
           "transactions"
         ],
         "summary": "Delete transaction",
-        "description": "Permanently removes a transaction. Transactions already classified accountingly cannot be deleted.",
+        "description": "Permanently removes a transaction. Transactions that have already been classified in Books cannot be deleted.",
         "responses": {
           "200": {
             "description": "Deleted successfully",
@@ -595,7 +595,7 @@
                   },
                   "description": {
                     "type": "string",
-                    "example": "Prestação de serviços — Cliente XYZ"
+                    "example": "Service delivery — Client XYZ Ltd"
                   },
                   "flow_transaction_id": {
                     "type": "string",
@@ -652,20 +652,20 @@
                   "value": {
                     "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "entry_date": "2026-05-01",
-                    "description": "Prestação de serviços — Cliente XYZ",
+                    "description": "Service delivery — Client XYZ Ltd",
                     "flow_transaction_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
                     "lines": [
                       {
                         "account_plan_id": "uuid-conta-banco",
                         "side": "debit",
                         "amount": 5000,
-                        "memo": "Recebimento via PIX"
+                        "memo": "Received via PIX"
                       },
                       {
                         "account_plan_id": "uuid-receita-srv",
                         "side": "credit",
                         "amount": 5000,
-                        "memo": "Receita de serviços prestados"
+                        "memo": "Revenue from services rendered"
                       }
                     ]
                   }
@@ -675,7 +675,7 @@
                   "value": {
                     "ext_company_id": "550e8400-e29b-41d4-a716-446655440000",
                     "entry_date": "2026-05-31",
-                    "description": "Depreciação de equipamentos — maio/2026",
+                    "description": "Equipment depreciation — May/2026",
                     "external_ref": "DEP-2026-05",
                     "lines": [
                       {

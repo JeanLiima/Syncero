@@ -6,7 +6,8 @@
 
 ## Campos nos specs OpenAPI (OBRIGATÓRIO)
 
-Use os campos nativos do OpenAPI — **não** coloque default ou exemplo dentro de `description`.
+Use os campos nativos do OpenAPI — **não** coloque default ou exemplo dentro de `description`.  
+Cada spec tem um idioma: PT ou EN. **Todas as descriptions, summaries e examples devem estar no idioma do spec** — nunca misturar.
 
 ```jsonc
 // ✓ correto

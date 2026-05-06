@@ -138,6 +138,26 @@ Analisa os arquivos de rota do backend e mantém os specs OpenAPI em sincronia.
 
 ---
 
+## Regras de idioma nas descriptions
+
+Cada spec tem um idioma definido — PT ou EN. **Todas as descriptions, summaries e examples devem estar no idioma do spec.** Nunca misturar.
+
+| Spec | Idioma | Regra |
+|------|--------|-------|
+| `openapi-flow.json` | PT | tudo em português |
+| `openapi-books.json` | PT | tudo em português |
+| `openapi-flow-external.json` | PT | tudo em português |
+| `openapi-books-external.json` | PT | tudo em português |
+| `openapi-flow-external-en.json` | EN | tudo em inglês |
+| `openapi-books-external-en.json` | EN | tudo em inglês |
+
+**Termos técnicos no spec PT:** escrever em português, sem termos técnicos em inglês dentro de prose. Exemplos corretos:
+- `"case-insensitive"` → `"sem distinção de maiúsculas/minúsculas"`
+- `"Bulk-update"` → `"Atualização em lote"`
+- `"accountingly"` → não é inglês válido — usar `"classified in Books"`
+
+**Examples em specs EN:** os campos `example`, `value` dentro de `examples` e `summary` de exemplos também devem estar em inglês — incluindo textos de exemplo dentro dos objetos.
+
 ## Regras de nomenclatura
 
 - **Tudo snake_case** — query params, body fields e path params. Nunca camelCase no wire.

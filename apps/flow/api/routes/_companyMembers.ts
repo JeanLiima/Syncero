@@ -124,6 +124,19 @@ router.patch('/:id/role', async (c) => {
   const admin = await ensureCompanyAdmin(db, userId, row.data.company_id)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
+  // Proteger contra rebaixamento do último admin
+  if (role !== 'admin') {
+    const { data: target } = await db.from('company_members').select('role').eq('id', id).maybeSingle()
+    if (target?.role === 'admin') {
+      const { count } = await db.from('company_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', row.data.company_id)
+        .eq('role', 'admin')
+        .eq('status', 'accepted')
+      if ((count ?? 0) <= 1) return c.json({ error: 'Cannot demote the last admin of a company' }, 400)
+    }
+  }
+
   const { error } = await db.from('company_members').update({ role }).eq('id', id)
   if (error) return c.json({ error: error.message }, 400)
   return c.json({ ok: true })

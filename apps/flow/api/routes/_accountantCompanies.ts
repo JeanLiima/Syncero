@@ -6,14 +6,14 @@ import { accountantInviteEmail } from '../emails/_accountantInvite'
 const router = new Hono<{ Variables: HonoVariables }>()
 
 async function checkCompanyAccess(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string, requireAdmin = false) {
-  const query = db.from('company_members')
+  let query = db.from('company_members')
     .select('id')
     .eq('user_id', userId)
     .eq('company_id', companyId)
     .eq('status', 'accepted')
   
   if (requireAdmin) {
-    query.eq('role', 'admin')
+    query = query.eq('role', 'admin')
   }
   
   const { data } = await query.maybeSingle()

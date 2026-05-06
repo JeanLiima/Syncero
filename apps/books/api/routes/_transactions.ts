@@ -98,11 +98,11 @@ router.get('/:id', async (c) => {
   if (error || !tx) return c.json({ error: 'Not found' }, 404)
 
   if (tx.company_id) {
-    if (!(await authorizeFlow(db, userId, tx.company_id))) return c.json({ error: 'Forbidden' }, 403)
+    if (!(await authorizeFlow(db, userId, tx.company_id))) return c.json({ error: 'Not found' }, 404)
   } else if (tx.ext_company_id) {
-    if (!(await authorizeExt(db, userId, tx.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
+    if (!(await authorizeExt(db, userId, tx.ext_company_id))) return c.json({ error: 'Not found' }, 404)
   } else {
-    return c.json({ error: 'Forbidden' }, 403)
+    return c.json({ error: 'Not found' }, 404)
   }
 
   return c.json({
@@ -110,6 +110,26 @@ router.get('/:id', async (c) => {
     creator_name:           (tx.creator as { full_name: string } | null)?.full_name ?? null,
     payment_registrar_name: (tx.registrar as { full_name: string } | null)?.full_name ?? null,
   })
+})
+
+// GET /api/transactions/counterparts — distinct counterpart values for an ext company
+router.get('/counterparts', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { extCompanyId } = c.req.query()
+
+  if (!extCompanyId) return c.json({ error: 'extCompanyId required' }, 400)
+  if (!(await authorizeExt(db, userId, extCompanyId))) return c.json({ error: 'Forbidden' }, 403)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (db.from('transactions') as any)
+    .select('counterpart')
+    .eq('ext_company_id', extCompanyId)
+    .not('counterpart', 'is', null)
+
+  if (error) return c.json({ error: error.message }, 500)
+  const unique = [...new Set((data ?? []).map((r: { counterpart: string }) => r.counterpart).filter(Boolean))] as string[]
+  return c.json(unique.sort())
 })
 
 // ── POST /api/transactions ────────────────────────────────────
@@ -126,6 +146,7 @@ router.post('/', async (c) => {
     is_paid: boolean
     paid_at?: string | null
     nature?: string | null
+    counterpart?: string | null
     notes?: string | null
   }>()
 
@@ -133,6 +154,7 @@ router.post('/', async (c) => {
   if (!body.description?.trim()) return c.json({ error: 'description required' }, 400)
   if (!body.amount || body.amount <= 0) return c.json({ error: 'amount must be positive' }, 400)
   if (!body.date) return c.json({ error: 'date required' }, 400)
+  if (!body.counterpart?.trim()) return c.json({ error: 'counterpart required' }, 400)
   if (!body.type) return c.json({ error: 'type required' }, 400)
 
   if (!(await authorizeExt(db, userId, body.extCompanyId))) return c.json({ error: 'Forbidden' }, 403)
@@ -147,6 +169,7 @@ router.post('/', async (c) => {
     is_paid:        body.is_paid ?? false,
     paid_at:        body.is_paid ? (body.paid_at || null) : null,
     nature:         body.nature || null,
+    counterpart:    body.counterpart || null,
     notes:          body.notes || null,
   }).select('*').single()
 
@@ -174,12 +197,27 @@ router.patch('/:id', async (c) => {
     is_paid?: boolean
     paid_at?: string | null
     nature?: string | null
+    counterpart?: string | null
     notes?: string | null
   }>()
 
-  // Clear paid_at if marking as unpaid
-  const patch: Record<string, unknown> = { ...body }
+  // Whitelist — nunca permite sobrescrever ext_company_id, company_id, created_by, etc.
+  const patch: Record<string, unknown> = {}
+  if (body.description !== undefined) patch.description = body.description
+  if (body.amount      !== undefined) patch.amount      = body.amount
+  if (body.type        !== undefined) patch.type        = body.type
+  if (body.date        !== undefined) patch.date        = body.date
+  if (body.nature      !== undefined) patch.nature      = body.nature
+  if (body.counterpart !== undefined) patch.counterpart = body.counterpart
+  if (body.notes       !== undefined) patch.notes       = body.notes
+  if (body.is_paid     !== undefined) patch.is_paid     = body.is_paid
   if (body.is_paid === false) patch.paid_at = null
+  else if (body.paid_at !== undefined) patch.paid_at = body.paid_at
+
+  if (Object.keys(patch).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+  if ('counterpart' in patch && !patch.counterpart?.toString().trim()) {
+    return c.json({ error: 'counterpart required' }, 400)
+  }
 
   const { data, error } = await db.from('transactions')
     .update(patch).eq('id', id).select('*').single()

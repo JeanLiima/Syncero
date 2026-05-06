@@ -100,6 +100,7 @@ export type ExtTransactionBody = {
   is_paid: boolean
   paid_at?: string | null
   nature?: string | null
+  counterpart?: string | null
   notes?: string | null
 }
 
@@ -113,5 +114,9 @@ export async function updateExtTransaction(id: string, body: Partial<Omit<ExtTra
 
 export async function deleteExtTransaction(id: string) {
   return apiFetch<{ ok: true }>(`/api/transactions/${id}`, { method: 'DELETE' })
+}
+
+export async function getExtCounterparts(extCompanyId: string): Promise<string[]> {
+  return apiFetch<string[]>(`/api/transactions/counterparts?extCompanyId=${extCompanyId}`)
 }
 

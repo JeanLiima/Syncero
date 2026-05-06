@@ -33,7 +33,12 @@ router.post('/', async (c) => {
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db.from('banks').insert(body).select().single()
+  const b = body as Record<string, unknown>
+  const { data, error } = await db.from('banks').insert({
+    company_id:   companyId,
+    name:         b.name as string,
+    account_type: (b.account_type as string) ?? 'checking',
+  }).select().single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data, 201)
 })
@@ -50,7 +55,13 @@ router.patch('/:id', async (c) => {
   const member = await ensureCompanyMember(db, userId, row.data.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db.from('banks').update(payload).eq('id', bankId).select().single()
+  const p = payload as Record<string, unknown>
+  const allowed: Record<string, unknown> = {}
+  if (p.name         !== undefined) allowed.name         = p.name
+  if (p.account_type !== undefined) allowed.account_type = p.account_type
+  if (Object.keys(allowed).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+
+  const { data, error } = await db.from('banks').update(allowed).eq('id', bankId).select().single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data)
 })

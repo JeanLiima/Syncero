@@ -40,6 +40,18 @@ router.post('/', async (c) => {
     companyId?: string; extCompanyId?: string
   }>()
 
+  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+
+  if (body.companyId) {
+    const { data: acct } = await db.from('accountant_companies')
+      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
+    if (!acct) return c.json({ error: 'forbidden' }, 403)
+  } else {
+    const { data: ec } = await db.from('external_companies')
+      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
+    if (!ec) return c.json({ error: 'forbidden' }, 403)
+  }
+
   const payload = {
     code: body.code,
     name: body.name,

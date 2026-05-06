@@ -22,3 +22,36 @@ export const authMiddleware: MiddlewareHandler<{ Variables: HonoVariables }> = a
   c.set('userId', user.id)
   await next()
 }
+
+// ── Origin Guard — restringe acesso a origens Syncero autorizadas ──
+// Em produção (VERCEL_ENV=production), bloqueia requisições de origens não listadas
+// em ALLOWED_ORIGINS. Em desenvolvimento, apenas loga um aviso.
+
+function getAllowedOrigins(): string[] {
+  const env = process.env.ALLOWED_ORIGINS
+  if (env) return env.split(',').map(o => o.trim())
+  return [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'http://localhost:5176',
+  ]
+}
+
+export const originGuard: MiddlewareHandler<{ Variables: HonoVariables }> = async (c, next) => {
+  const isProduction = process.env.VERCEL_ENV === 'production'
+  const origin = c.req.header('Origin') ?? c.req.header('Referer')
+  const allowed = getAllowedOrigins()
+
+  if (isProduction) {
+    if (!origin) return c.json({ error: 'Forbidden: origin required' }, 403)
+    const originBase = (() => { try { return new URL(origin).origin } catch { return origin } })()
+    if (!allowed.some(a => originBase === a || origin.startsWith(a))) {
+      return c.json({ error: 'Forbidden: origin not allowed' }, 403)
+    }
+  } else if (origin && !allowed.some(a => origin.startsWith(a))) {
+    console.warn(`[originGuard] Origin not in allowed list: ${origin}`)
+  }
+
+  await next()
+}

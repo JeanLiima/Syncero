@@ -120,6 +120,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     state.setDescError('')
     if (!state.description.trim()) { state.setDescError(t('transactions_errorDescription')); return }
     if (state.amountCents <= 0) { state.setAmountError(t('transactions_errorAmount')); state.goTo(4); return }
+    if (!state.counterpart.trim()) { state.goTo(7); return }
 
     const basePayload = {
       type: state.type,

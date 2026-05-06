@@ -26,16 +26,21 @@ router.post('/:token/accept', async (c) => {
   const { token } = c.req.param()
 
   const { data: profile } = await db.from('profiles')
-    .select('user_type').eq('id', userId).maybeSingle()
+    .select('user_type, email').eq('id', userId).maybeSingle()
 
   if (!profile) return c.json({ error: 'Profile not found. Please complete your account setup first.' }, 403)
   if (profile.user_type !== 'accountant') return c.json({ error: 'Only accountant accounts can accept this invite.' }, 403)
 
   const { data: invite } = await db.from('accountant_companies')
-    .select('id, status').eq('invite_token', token).maybeSingle()
+    .select('id, status, email').eq('invite_token', token).maybeSingle()
 
   if (!invite) return c.json({ error: 'Invite not found.' }, 404)
   if (invite.status !== 'pending') return c.json({ error: 'This invite has already been used or has expired.' }, 400)
+
+  // Garantir que o convite pertence ao e-mail do contador autenticado
+  if (profile.email.toLowerCase() !== (invite.email ?? '').toLowerCase()) {
+    return c.json({ error: 'This invite was sent to a different email address.' }, 403)
+  }
 
   const { error } = await db.from('accountant_companies')
     .update({ status: 'accepted', accountant_id: userId, accepted_at: new Date().toISOString() })

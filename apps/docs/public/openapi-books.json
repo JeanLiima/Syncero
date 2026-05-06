@@ -3,7 +3,7 @@
   "info": {
     "title": "Syncero Books API",
     "version": "1.0.0",
-    "description": "API privada do **Syncero Books** — app para contadores.\n\n### Autenticação\nTodas as rotas protegidas exigem um **Bearer JWT** emitido pelo Supabase.\nAlgumas rotas também aceitam uma **API Key** (`x-api-key`) para integrações externas.\n\n### Autorização\n- Rotas de empresas Flow: exigem vínculo `accountant_companies.status = 'accepted'`.\n- Rotas de empresas externas: exigem que `external_companies.accountant_id = userId`.\n"
+    "description": "API privada do **Syncero Books** — app para contadores.\n\n### Autenticação\n- **Rotas internas:** Bearer JWT emitido pelo Supabase (requer `Origin` de domínio Syncero)\n- **Rotas externas:** `x-api-key` (API Key do sistema) ou Bearer JWT\n\n### Restrição de Origem (Origin Guard)\nRotas internas verificam o header `Origin` em produção.\nApenas origens em `ALLOWED_ORIGINS` são aceitas — rotas externas não têm essa restrição.\n\n### Rotas externas (aceitam x-api-key)\n- `GET /api/transactions` — listar lançamentos de empresa externa\n- `POST /api/transactions` — criar lançamento para empresa externa\n- `POST /api/journal-entries` — classificar lançamento (criar partida dobrada)\n\n### Autorização interna\n- Empresas Flow: `accountant_companies.status = 'accepted'`\n- Empresas externas: `external_companies.accountant_id = userId`"
   },
   "servers": [
     {
@@ -26,39 +26,58 @@
   "tags": [
     {
       "name": "auth",
-      "description": "Perfil do contador autenticado"
+      "description": "Perfil do contador autenticado",
+      "x-access": "internal"
     },
     {
       "name": "companies",
-      "description": "Empresas Flow vinculadas ao contador"
+      "description": "Empresas Flow vinculadas ao contador",
+      "x-access": "internal"
     },
     {
       "name": "external-companies",
-      "description": "Empresas externas gerenciadas pelo contador"
+      "description": "Empresas externas gerenciadas pelo contador",
+      "x-access": "internal"
     },
     {
-      "name": "transactions",
-      "description": "Lançamentos — leitura (empresas Flow) e CRUD (empresas externas)"
+      "name": "transactions-internal",
+      "description": "Leitura de lançamentos de empresas Flow (uso interno)",
+      "x-access": "internal"
     },
     {
-      "name": "journal-entries",
-      "description": "Lançamentos contábeis em partidas dobradas"
+      "name": "transactions-external",
+      "description": "CRUD de lançamentos de empresas externas via API Key",
+      "x-access": "external"
+    },
+    {
+      "name": "journal-entries-internal",
+      "description": "Leitura do diário contábil (uso interno)",
+      "x-access": "internal"
+    },
+    {
+      "name": "journal-entries-external",
+      "description": "Classificação contábil via API Key",
+      "x-access": "external"
     },
     {
       "name": "account-plans",
-      "description": "Plano de contas"
+      "description": "Plano de contas",
+      "x-access": "internal"
     },
     {
       "name": "fiscal",
-      "description": "Livros fiscais, documentos fiscais e cálculos tributários"
+      "description": "Livros fiscais, documentos e cálculos tributários",
+      "x-access": "internal"
     },
     {
       "name": "api-keys",
-      "description": "Chaves de API para integração externa"
+      "description": "Chaves de API para integração externa",
+      "x-access": "internal"
     },
     {
       "name": "invites",
-      "description": "Convites de contador (flow enviado pelo Flow, aceito aqui)"
+      "description": "Convites de contador",
+      "x-access": "internal"
     }
   ],
   "components": {
@@ -71,7 +90,14 @@
       "apiKey": {
         "type": "apiKey",
         "in": "header",
-        "name": "x-api-key"
+        "name": "x-api-key",
+        "description": "API Key gerada pelo sistema (GET/POST /api-keys). Aceita nas rotas externas como alternativa ao Bearer JWT."
+      },
+      "originGuard": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Origin",
+        "description": "Header de origem verificado nas rotas internas. Em produção, apenas origens Syncero são aceitas."
       }
     },
     "schemas": {
@@ -625,6 +651,34 @@
           }
         }
       }
+    },
+    "responses": {
+      "OriginForbidden": {
+        "description": "Origem não autorizada. Apenas frontends Syncero podem acessar rotas internas.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Forbidden: origin not allowed"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso não encontrado (também retornado quando o recurso existe mas o usuário não tem acesso, para evitar oracle de existência).",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "error": "Not found"
+            }
+          }
+        }
+      }
     }
   },
   "paths": {
@@ -670,8 +724,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       },
       "post": {
         "tags": [
@@ -692,8 +757,10 @@
                   "user_type": {
                     "type": "string",
                     "enum": [
+                      "company_user",
                       "accountant"
-                    ]
+                    ],
+                    "description": "Apenas esses dois valores são aceitos."
                   }
                 }
               }
@@ -722,8 +789,26 @@
                 }
               }
             }
+          },
+          "400": {
+            "description": "user_type inválido.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" },
+                "example": { "error": "user_type must be company_user or accountant" }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/companies": {
@@ -766,8 +851,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/companies/{id}": {
@@ -821,7 +917,8 @@
           "403": {
             "description": "Sem acesso"
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/companies/{id}/fiscal-summary": {
@@ -861,8 +958,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/external-companies": {
@@ -883,8 +991,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       },
       "post": {
         "tags": [
@@ -961,8 +1080,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/external-companies/{id}": {
@@ -995,7 +1125,8 @@
           "403": {
             "description": "Sem acesso"
           }
-        }
+        },
+        "x-access": "internal"
       },
       "patch": {
         "tags": [
@@ -1007,6 +1138,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "description": "Campos editáveis. **accountant_id é imutável** — não pode ser alterado após criação.",
+                "x-non-writable": [
+                  "accountant_id",
+                  "id",
+                  "created_at",
+                  "updated_at"
+                ],
                 "properties": {
                   "name": {
                     "type": "string"
@@ -1046,17 +1184,28 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/transactions": {
       "get": {
         "tags": [
-          "transactions"
+          "transactions-external"
         ],
         "summary": "Listar lançamentos com status de classificação",
-        "description": "Aceita `companyId` (empresa Flow, somente leitura) ou `extCompanyId` (empresa externa, CRUD completo).\nRetorna `is_classified` e `journal_entry_id` adicionados pelo servidor.\n",
+        "description": "Aceita `companyId` (empresa Flow, somente leitura) ou `extCompanyId` (empresa externa, CRUD completo).\nRetorna `is_classified` e `journal_entry_id` adicionados pelo servidor.\n\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
         "parameters": [
           {
             "name": "companyId",
@@ -1142,14 +1291,23 @@
               }
             }
           }
-        }
+        },
+        "x-access": "external",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ]
       },
       "post": {
         "tags": [
-          "transactions"
+          "transactions-external"
         ],
         "summary": "Criar lançamento para empresa externa",
-        "description": "Exclusivo para empresas externas (`extCompanyId`). Empresas Flow são somente leitura no Books.",
+        "description": "Exclusivo para empresas externas (`extCompanyId`). Empresas Flow são somente leitura no Books.\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT. Sem restrição de Origin.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1162,7 +1320,9 @@
                   "amount",
                   "type",
                   "date",
-                  "is_paid"
+                  "is_paid",
+                  "nature",
+                  "counterpart"
                 ],
                 "properties": {
                   "extCompanyId": {
@@ -1194,8 +1354,12 @@
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature",
-                    "nullable": true,
-                    "description": "Importante para sugestões inteligentes na classificação contábil"
+                    "description": "Natureza contábil. Alimenta sugestões automáticas de classificação."
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Quem enviou (receita) ou recebeu (despesa) o valor",
+                    "example": "Cliente XYZ Ltda"
                   },
                   "notes": {
                     "type": "string",
@@ -1217,7 +1381,16 @@
               }
             }
           }
-        }
+        },
+        "x-access": "external",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ]
       }
     },
     "/api/transactions/{id}": {
@@ -1234,7 +1407,7 @@
       ],
       "get": {
         "tags": [
-          "transactions"
+          "transactions-internal"
         ],
         "summary": "Obter lançamento com detalhes expandidos",
         "responses": {
@@ -1276,14 +1449,26 @@
               }
             }
           },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Não encontrado"
           }
-        }
+        },
+        "x-access": "internal",
+        "description": "\n\n**Nota de segurança:** Retorna 404 (não 403) quando o recurso existe mas o usuário não tem acesso, para evitar oracle de existência."
       },
       "patch": {
         "tags": [
-          "transactions"
+          "transactions-external"
         ],
         "summary": "Atualizar lançamento de empresa externa",
         "requestBody": {
@@ -1291,15 +1476,28 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "description": "Campos editáveis. **Ignorados mesmo se enviados:** ext_company_id, company_id, created_by, created_at, updated_at.",
+                "x-non-writable": [
+                  "ext_company_id",
+                  "company_id",
+                  "created_by",
+                  "created_at",
+                  "updated_at"
+                ],
                 "properties": {
                   "description": {
                     "type": "string"
                   },
                   "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "minimum": 0.01
                   },
                   "type": {
-                    "$ref": "#/components/schemas/TransactionType"
+                    "type": "string",
+                    "enum": [
+                      "income",
+                      "expense"
+                    ]
                   },
                   "date": {
                     "type": "string",
@@ -1314,7 +1512,12 @@
                     "nullable": true
                   },
                   "nature": {
-                    "$ref": "#/components/schemas/TransactionNature"
+                    "$ref": "#/components/schemas/TransactionNature",
+                    "description": "Não pode ser removido após definido"
+                  },
+                  "counterpart": {
+                    "type": "string",
+                    "description": "Quem enviou (receita) ou recebeu (despesa) — não pode ser removido"
                   },
                   "notes": {
                     "type": "string",
@@ -1335,11 +1538,21 @@
               }
             }
           }
-        }
+        },
+        "x-access": "external",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "description": "Atualiza lançamento de empresa externa. **Rota externa** — aceita x-api-key."
       },
       "delete": {
         "tags": [
-          "transactions"
+          "transactions-external"
         ],
         "summary": "Excluir lançamento de empresa externa",
         "responses": {
@@ -1357,13 +1570,22 @@
               }
             }
           }
-        }
+        },
+        "x-access": "external",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ]
       }
     },
     "/api/journal-entries": {
       "get": {
         "tags": [
-          "journal-entries"
+          "journal-entries-internal"
         ],
         "summary": "Listar lançamentos contábeis",
         "parameters": [
@@ -1405,15 +1627,26 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       },
       "post": {
         "tags": [
-          "journal-entries"
+          "journal-entries-external"
         ],
         "summary": "Criar lançamento contábil (classificar)",
-        "description": "Cria um lançamento em partidas dobradas. Ao informar `flow_transaction_id`,\no lançamento fica vinculado ao lançamento financeiro correspondente,\nmarcando-o como **Classificado**.\n\nDeve sempre ter exatamente 2 linhas (débito e crédito) com o mesmo valor.\n",
+        "description": "Cria um lançamento em partidas dobradas. Ao informar `flow_transaction_id`,\no lançamento fica vinculado ao lançamento financeiro correspondente,\nmarcando-o como **Classificado**.\n\nDeve sempre ter exatamente 2 linhas (débito e crédito) com o mesmo valor.\n\n\n**Rota externa** — aceita `x-api-key`.\n\n**Validação de `flow_transaction_id`:** Se informado, a transação deve pertencer à mesma empresa (`companyId` ou `extCompanyId`) da requisição. Caso contrário, retorna 403.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1447,7 +1680,7 @@
                     "type": "string",
                     "format": "uuid",
                     "nullable": true,
-                    "description": "Vincula ao lançamento financeiro (Flow ou empresa externa)"
+                    "description": "Vincula ao lançamento financeiro. **Deve pertencer à mesma empresa da requisição** — caso contrário retorna 403."
                   },
                   "external_ref": {
                     "type": "string",
@@ -1503,7 +1736,16 @@
               }
             }
           }
-        }
+        },
+        "x-access": "external",
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ]
       }
     },
     "/api/account-plans": {
@@ -1542,8 +1784,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       },
       "post": {
         "tags": [
@@ -1607,8 +1860,20 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "description": "\n\nRequer que o contador seja autorizado para `companyId` (via `accountant_companies`) ou `extCompanyId` (via `external_companies`).",
+        "x-access": "internal"
       }
     },
     "/api/account-plans/seed": {
@@ -1686,8 +1951,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/account-plans/{id}": {
@@ -1751,8 +2027,19 @@
           },
           "400": {
             "description": "Código duplicado ou dados inválidos"
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       },
       "delete": {
         "tags": [
@@ -1773,8 +2060,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/account-plans/{id}/usage": {
@@ -1808,8 +2106,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/account-plans/{id}/transfer": {
@@ -1867,8 +2176,19 @@
           },
           "400": {
             "description": "Conta destino inválida"
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/fiscal-documents": {
@@ -1929,8 +2249,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/fiscal-books": {
@@ -1962,8 +2293,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/tax-calculations": {
@@ -1995,8 +2337,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/api-keys": {
@@ -2035,15 +2388,26 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       },
       "post": {
         "tags": [
           "api-keys"
         ],
         "summary": "Criar chave de API",
-        "description": "O token completo é retornado **uma única vez** no campo `key`. Armazene-o imediatamente — não é possível recuperá-lo depois.",
+        "description": "O token completo é retornado **uma única vez** no campo `key`. Armazene-o imediatamente — não é possível recuperá-lo depois.\n\nVerifica que o contador tem acesso à empresa informada antes de criar a chave.",
         "requestBody": {
           "required": true,
           "content": {
@@ -2098,8 +2462,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/api-keys/{id}/revoke": {
@@ -2133,8 +2508,19 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/invites/{token}": {
@@ -2184,10 +2570,21 @@
               }
             }
           },
+          "403": {
+            "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Token inválido ou expirado"
           }
-        }
+        },
+        "x-access": "internal"
       }
     },
     "/api/invites/{token}/accept": {
@@ -2196,7 +2593,7 @@
           "invites"
         ],
         "summary": "Aceitar convite de contador",
-        "description": "Requer `user_type = 'accountant'`. Vincula o contador à empresa e libera acesso aos dados.",
+        "description": "Requer `user_type = 'accountant'`. Vincula o contador à empresa e libera acesso aos dados.\n\nO e-mail do contador autenticado deve coincidir com o e-mail registrado no convite (`accountant_companies.email`). Caso contrário retorna 403.",
         "parameters": [
           {
             "name": "token",
@@ -2218,7 +2615,8 @@
           "403": {
             "description": "Usuário não é contador ou perfil não encontrado"
           }
-        }
+        },
+        "x-access": "internal"
       }
     }
   }

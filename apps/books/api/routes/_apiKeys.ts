@@ -1,14 +1,7 @@
 import { Hono } from 'hono'
-import { createServiceClient, type HonoVariables } from '../_shared'
+import { createServiceClient, sha256hex, type HonoVariables } from '../_shared'
 
 const router = new Hono<{ Variables: HonoVariables }>()
-
-// ── Helpers ────────────────────────────────────────────────────
-async function sha256hex(text: string): Promise<string> {
-  const encoded = new TextEncoder().encode(text)
-  const hash = await crypto.subtle.digest('SHA-256', encoded)
-  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
-}
 
 function generateRawKey(): string {
   const bytes = new Uint8Array(32)
@@ -44,6 +37,19 @@ router.post('/', async (c) => {
     companyId?: string; extCompanyId?: string
   }>()
 
+  if (!body.companyId && !body.extCompanyId) return c.json({ error: 'companyId or extCompanyId required' }, 400)
+
+  // Verificar que o contador tem acesso à empresa informada
+  if (body.companyId) {
+    const { data: acct } = await db.from('accountant_companies')
+      .select('id').eq('accountant_id', userId).eq('company_id', body.companyId).eq('status', 'accepted').maybeSingle()
+    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
+  } else {
+    const { data: ec } = await db.from('external_companies')
+      .select('id').eq('id', body.extCompanyId!).eq('accountant_id', userId).maybeSingle()
+    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
+  }
+
   const rawKey = generateRawKey()
   const hash = await sha256hex(rawKey)
   const prefix = rawKey.slice(0, 11)
@@ -55,7 +61,13 @@ router.post('/', async (c) => {
     ext_company_id: body.extCompanyId ?? null,
     key_hash: hash,
     key_prefix: prefix,
-    expires_at: body.expiresAt ?? null,
+    // Se vier só a data (YYYY-MM-DD), interpreta como fim do dia UTC para evitar
+    // expiração imediata quando a chave é criada depois de meia-noite.
+    expires_at: body.expiresAt
+      ? (/^\d{4}-\d{2}-\d{2}$/.test(body.expiresAt)
+          ? body.expiresAt + 'T23:59:59Z'
+          : body.expiresAt)
+      : null,
   })
   if (error) return c.json({ error: error.message }, 400)
   return c.json({ key: rawKey }, 201)
@@ -72,6 +84,23 @@ router.patch('/:id/revoke', async (c) => {
   if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('api_keys').update({ is_active: false }).eq('id', id)
+  if (error) return c.json({ error: error.message }, 400)
+  return c.json({ ok: true })
+})
+
+// ── DELETE /api/api-keys/:id ──────────────────────────────────
+// Só permite excluir chaves já revogadas (is_active = false)
+router.delete('/:id', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+
+  const { data: existing } = await db.from('api_keys')
+    .select('accountant_id, is_active').eq('id', id).maybeSingle()
+  if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
+  if (existing.is_active) return c.json({ error: 'Revoke the key before deleting it' }, 400)
+
+  const { error } = await db.from('api_keys').delete().eq('id', id)
   if (error) return c.json({ error: error.message }, 400)
   return c.json({ ok: true })
 })

@@ -42,7 +42,19 @@ router.post('/', async (c) => {
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db.from('payables_receivables').insert(body).select().single()
+  const b = body as Record<string, unknown>
+  const { data, error } = await db.from('payables_receivables').insert({
+    company_id:   companyId,
+    type:         b.type as string,
+    description:  b.description as string,
+    amount:       b.amount as number,
+    due_date:     b.due_date as string,
+    is_paid:      (b.is_paid as boolean) ?? false,
+    paid_at:      (b.paid_at as string | null) ?? null,
+    notes:        (b.notes as string | null) ?? null,
+    contact_id:   (b.contact_id as string | null) ?? null,
+    contact_name: (b.contact_name as string | null) ?? null,
+  }).select().single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data, 201)
 })
@@ -59,7 +71,13 @@ router.patch('/:id', async (c) => {
   const member = await ensureCompanyMember(db, userId, row.data.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db.from('payables_receivables').update(payload).eq('id', payableId).select().single()
+  const p = payload as Record<string, unknown>
+  const allowed: Record<string, unknown> = {}
+  const editableFields = ['type','description','amount','due_date','is_paid','paid_at','notes','contact_id','contact_name','status']
+  for (const f of editableFields) if (f in p) allowed[f] = p[f]
+  if (Object.keys(allowed).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+
+  const { data, error } = await db.from('payables_receivables').update(allowed).eq('id', payableId).select().single()
   if (error) return c.json({ error: error.message }, 400)
   return c.json(data)
 })

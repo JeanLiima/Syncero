@@ -7,6 +7,11 @@
             "type": "command",
             "command": "node -e \"const {execSync}=require('child_process');try{const diff=execSync('git diff --name-only HEAD',{cwd:'J:/Users/Jean/Projetos/Syncero'}).toString();const changed=diff.split('\\n').filter(f=>f.match(/apps\\/(flow|books)\\/api\\/routes\\//));if(changed.length>0){console.log(JSON.stringify({systemMessage:'⚠ Rotas alteradas detectadas:\\n'+changed.map(f=>' • '+f).join('\\n')+'\\n\\nExecute /sync-api-docs para manter os specs OpenAPI em sincronia.'}))}}catch(e){}\"",
             "statusMessage": "Verificando rotas alteradas..."
+          },
+          {
+            "type": "command",
+            "command": "node -e \"const {execSync}=require('child_process');try{const diff=execSync('git diff --name-only HEAD',{cwd:'J:/Users/Jean/Projetos/Syncero'}).toString();const changed=diff.split('\\n').filter(f=>f.match(/src\\/i18n\\/(pt|en)\\.ts|apps\\/docs\\/.*\\.html/));if(changed.length>0){console.log(JSON.stringify({systemMessage:'⚠ Arquivos de tradução alterados:\\n'+changed.map(f=>' • '+f).join('\\n')+'\\n\\nExecute /check-i18n para validar paridade PT ↔ EN e chaves órfãs.'}))}}catch(e){}\"",
+            "statusMessage": "Verificando traduções alteradas..."
           }
         ]
       }

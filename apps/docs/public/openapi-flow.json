@@ -345,6 +345,17 @@
           "installment_count": {
             "type": "integer",
             "nullable": true
+          },
+          "installment_number": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Número desta parcela (ex: 1 de 3)"
+          },
+          "installment_group_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "UUID que agrupa todas as parcelas de um mesmo parcelamento"
           }
         }
       },
@@ -1924,6 +1935,64 @@
                 }
               }
             }
+          }
+        },
+        "x-internal": true
+      }
+    },
+    "/api/transactions/group/{groupId}": {
+      "parameters": [
+        {
+          "name": "groupId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": "installment_group_id que identifica o grupo de parcelas"
+        }
+      ],
+      "patch": {
+        "tags": [
+          "transactions"
+        ],
+        "summary": "Atualizar todas as parcelas de um grupo",
+        "description": "Bulk-update de todos os lançamentos com o mesmo `installment_group_id`. Aceita apenas `nature` por enquanto.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nature": {
+                    "$ref": "#/components/schemas/TransactionNature",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nenhum campo válido para atualizar"
+          },
+          "404": {
+            "description": "Grupo não encontrado"
           }
         },
         "x-internal": true

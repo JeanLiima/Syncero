@@ -1199,6 +1199,45 @@
         "x-access": "internal"
       }
     },
+    "/api/transactions/counterparts": {
+      "get": {
+        "tags": [
+          "transactions-external"
+        ],
+        "summary": "Listar counterparts distintos de empresa externa",
+        "description": "Retorna lista ordenada de valores únicos de `counterpart` para autocomplete.\n\n**Rota externa** — aceita `x-api-key` além de Bearer JWT.",
+        "parameters": [
+          {
+            "name": "extCompanyId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array de strings únicas, ordenado alfabeticamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "extCompanyId obrigatório"
+          },
+          "403": {
+            "description": "Sem acesso à empresa"
+          }
+        }
+      }
+    },
     "/api/transactions": {
       "get": {
         "tags": [

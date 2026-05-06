@@ -165,6 +165,29 @@ Cada spec tem um idioma definido — PT ou EN. **Todas as descriptions, summarie
 
 ---
 
+## Validação de required[]
+
+Um campo só vai para `required[]` se o backend retorna **400** quando ausente. Não basta ser importante ou recomendado.
+
+| Campo | required? | Motivo |
+|-------|-----------|--------|
+| Campo com `if (!body.field)` → 400 | ✓ sim | Backend valida |
+| Campo com `field ?? false` (default) | ✗ não | Tem default → usar `default:` no schema |
+| Campo nullable (`field \|\| null`) | ✗ não | Aceita ausência sem erro |
+| Campo de path param | ✓ sim | Sempre required por definição |
+| Campo de query param que retorna 400 se ausente | ✓ sim | Backend valida |
+
+**Antes de marcar como `required: true`, confirme no código da rota que há um `return 400` explícito quando o campo está ausente.**
+
+## Script de exemplos
+
+Para repopular examples em todos os campos required após grandes mudanças:
+```bash
+node .claude/scripts/populate-spec-examples.js
+```
+
+Atualizar o script quando novos campos required forem adicionados.
+
 ## Regras importantes
 
 - **Fonte de verdade é o código** — o spec deve refletir exatamente o que o backend faz, não o que deveria fazer

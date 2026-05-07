@@ -44,7 +44,8 @@
         "type": "object",
         "properties": {
           "error": {
-            "type": "string"
+            "type": "string",
+            "description": "Mensagem de erro legível."
           }
         }
       }

@@ -53,7 +53,8 @@
         "type": "object",
         "properties": {
           "error": {
-            "type": "string"
+            "type": "string",
+            "description": "Human-readable error message."
           }
         }
       },
@@ -84,17 +85,21 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "Transaction UUID."
           },
           "ext_company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID of the external company that owns this transaction."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Text description of the financial transaction."
           },
           "amount": {
-            "type": "number"
+            "type": "number",
+            "description": "Amount in BRL."
           },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
@@ -102,16 +107,18 @@
           "date": {
             "type": "string",
             "format": "date",
-            "description": "Accrual date (competency)"
+            "description": "Accrual date (YYYY-MM-DD)."
           },
           "is_paid": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "true = paid/received; false = pending."
           },
           "paid_at": {
             "type": "string",
             "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Effective payment/receipt date (YYYY-MM-DD)."
           },
           "nature": {
             "$ref": "#/components/schemas/TransactionNature",
@@ -119,7 +126,8 @@
           },
           "notes": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Free-form notes. null if not provided."
           },
           "is_classified": {
             "type": "boolean",
@@ -128,15 +136,18 @@
           "journal_entry_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID of the linked accounting entry. null if not yet classified."
           },
           "created_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Creation timestamp."
           },
           "updated_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Last update timestamp."
           }
         }
       }
@@ -291,6 +302,7 @@
                   "amount",
                   "type",
                   "date",
+                  "nature",
                   "counterpart"
                 ],
                 "properties": {
@@ -329,7 +341,7 @@
                     "type": "string",
                     "format": "date",
                     "nullable": true,
-                    "description": "Actual payment date"
+                    "description": "Effective payment/receipt date (YYYY-MM-DD). Required if is_paid = true."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"
@@ -467,13 +479,14 @@
                     "description": "Accrual date (YYYY-MM-DD)."
                   },
                   "is_paid": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Marks as paid/received. When set to true, paid_at is required."
                   },
                   "paid_at": {
                     "type": "string",
                     "format": "date",
                     "nullable": true,
-                    "description": "Actual payment/receipt date. Send null when is_paid returns to false."
+                    "description": "Effective payment/receipt date (YYYY-MM-DD). Required if is_paid = true. Send null when is_paid returns to false."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"

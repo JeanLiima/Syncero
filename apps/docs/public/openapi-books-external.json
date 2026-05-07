@@ -53,7 +53,8 @@
         "type": "object",
         "properties": {
           "error": {
-            "type": "string"
+            "type": "string",
+            "description": "Mensagem de erro legível."
           }
         }
       },
@@ -84,17 +85,21 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID do lançamento."
           },
           "ext_company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da empresa externa proprietária do lançamento."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Texto descritivo do lançamento financeiro."
           },
           "amount": {
-            "type": "number"
+            "type": "number",
+            "description": "Valor em reais."
           },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
@@ -106,12 +111,14 @@
           },
           "is_paid": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "true = pago/recebido; false = pendente."
           },
           "paid_at": {
             "type": "string",
             "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD)."
           },
           "nature": {
             "$ref": "#/components/schemas/TransactionNature",
@@ -119,7 +126,8 @@
           },
           "notes": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Observações livres. null se não preenchido."
           },
           "is_classified": {
             "type": "boolean",
@@ -128,15 +136,18 @@
           "journal_entry_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID do lançamento contábil vinculado. null se não classificado."
           },
           "created_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp de criação."
           },
           "updated_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp da última atualização."
           }
         }
       }
@@ -291,6 +302,7 @@
                   "amount",
                   "type",
                   "date",
+                  "nature",
                   "counterpart"
                 ],
                 "properties": {
@@ -329,7 +341,7 @@
                     "type": "string",
                     "format": "date",
                     "nullable": true,
-                    "description": "Data do pagamento efetivo"
+                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD). Obrigatório se is_paid = true."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"
@@ -467,13 +479,14 @@
                     "description": "Data de competência (YYYY-MM-DD)."
                   },
                   "is_paid": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Marca como pago/recebido. Ao definir true, paid_at é obrigatório."
                   },
                   "paid_at": {
                     "type": "string",
                     "format": "date",
                     "nullable": true,
-                    "description": "Data efetiva do pagamento/recebimento. Enviado null quando is_paid volta a false."
+                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD). Obrigatório se is_paid = true. Enviado null quando is_paid volta a false."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature"

@@ -145,7 +145,7 @@ router.post('/', async (c) => {
     date: string
     is_paid: boolean
     paid_at?: string | null
-    nature?: string | null
+    nature: string
     counterpart?: string | null
     notes?: string | null
   }>()
@@ -155,7 +155,9 @@ router.post('/', async (c) => {
   if (!body.amount || body.amount <= 0) return c.json({ error: 'amount must be positive' }, 400)
   if (!body.date) return c.json({ error: 'date required' }, 400)
   if (!body.counterpart?.trim()) return c.json({ error: 'counterpart required' }, 400)
+  if (!body.nature?.trim()) return c.json({ error: 'nature required' }, 400)
   if (!body.type) return c.json({ error: 'type required' }, 400)
+  if (body.is_paid && !body.paid_at) return c.json({ error: 'paid_at required when is_paid is true' }, 400)
 
   if (!(await authorizeExt(db, userId, body.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
 
@@ -217,6 +219,12 @@ router.patch('/:id', async (c) => {
   if (Object.keys(patch).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
   if ('counterpart' in patch && !patch.counterpart?.toString().trim()) {
     return c.json({ error: 'counterpart required' }, 400)
+  }
+  if ('nature' in patch && !patch.nature?.toString().trim()) {
+    return c.json({ error: 'nature required' }, 400)
+  }
+  if (patch.is_paid === true && !patch.paid_at) {
+    return c.json({ error: 'paid_at required when is_paid is true' }, 400)
   }
 
   const { data, error } = await db.from('transactions')

@@ -14,8 +14,6 @@ const INTERNAL_PATHS = new Set([
   '/books.html',
   '/openapi-flow.json',
   '/openapi-books.json',
-  '/openapi-flow.yaml',
-  '/openapi-books.yaml',
 ])
 
 export default function middleware(request) {
@@ -32,7 +30,5 @@ export const config = {
     '/books.html',
     '/openapi-flow.json',
     '/openapi-books.json',
-    '/openapi-flow.yaml',
-    '/openapi-books.yaml',
   ],
 }

@@ -86,7 +86,8 @@
         "type": "object",
         "properties": {
           "error": {
-            "type": "string"
+            "type": "string",
+            "description": "Mensagem de erro legível."
           }
         }
       },
@@ -122,43 +123,52 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID do lançamento."
           },
           "company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da empresa proprietária do lançamento."
           },
           "category_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID da categoria. null se sem categoria."
           },
           "contact_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID do contato vinculado. null se não vinculado."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Texto descritivo do lançamento financeiro."
           },
           "amount": {
             "type": "number",
-            "minimum": 0.01
+            "minimum": 0.01,
+            "description": "Valor em reais."
           },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
           },
           "date": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "description": "Data de competência (YYYY-MM-DD)."
           },
           "is_paid": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "true = pago/recebido; false = pendente."
           },
           "notes": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Observações livres. null se não preenchido."
           },
           "counterpart": {
             "type": "string",
@@ -167,7 +177,8 @@
           "paid_at": {
             "type": "string",
             "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD)."
           },
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
@@ -175,49 +186,59 @@
           "bank_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID da conta bancária. null se pagamento em dinheiro."
           },
           "nature": {
             "$ref": "#/components/schemas/TransactionNature"
           },
           "is_installment": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Indica se o lançamento faz parte de um parcelamento."
           },
           "installment_count": {
             "type": "integer",
-            "nullable": true
+            "nullable": true,
+            "description": "Total de parcelas do grupo. null se não parcelado."
           },
           "installment_number": {
             "type": "integer",
-            "nullable": true
+            "nullable": true,
+            "description": "Número desta parcela dentro do grupo. null se não parcelado."
           },
           "installment_group_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID que agrupa todas as parcelas. null se não parcelado."
           },
           "payment_registered_at": {
             "type": "string",
             "format": "date-time",
-            "nullable": true
+            "nullable": true,
+            "description": "Timestamp do registro do pagamento. null se não registrado."
           },
           "payment_registered_by": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID do usuário que registrou o pagamento. null se não registrado."
           },
           "created_by": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID do usuário que criou o lançamento."
           },
           "created_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp de criação."
           },
           "updated_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp da última atualização."
           },
           "categories": {
             "nullable": true,
@@ -234,7 +255,8 @@
                 "type": "string",
                 "nullable": true
               }
-            }
+            },
+            "description": "Categoria vinculada (join). null se sem categoria."
           },
           "banks": {
             "nullable": true,
@@ -247,7 +269,8 @@
               "name": {
                 "type": "string"
               }
-            }
+            },
+            "description": "Conta bancária vinculada (join). null se sem conta."
           },
           "contacts": {
             "nullable": true,
@@ -268,7 +291,8 @@
                 "type": "string",
                 "nullable": true
               }
-            }
+            },
+            "description": "Contato vinculado (join). null se sem contato."
           }
         }
       },
@@ -280,22 +304,26 @@
           "amount",
           "type",
           "date",
+          "nature",
           "counterpart"
         ],
         "properties": {
           "company_id": {
             "type": "string",
             "format": "uuid",
-            "example": "550e8400-e29b-41d4-a716-446655440000"
+            "example": "550e8400-e29b-41d4-a716-446655440000",
+            "description": "UUID da empresa à qual o lançamento pertence."
           },
           "description": {
             "type": "string",
-            "example": "Prestação de serviços — Cliente XYZ"
+            "example": "Prestação de serviços — Cliente XYZ",
+            "description": "Texto descritivo do lançamento financeiro."
           },
           "amount": {
             "type": "number",
             "minimum": 0.01,
-            "example": 1500
+            "example": 1500,
+            "description": "Valor em reais (maior que zero)."
           },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
@@ -303,16 +331,19 @@
           "date": {
             "type": "string",
             "format": "date",
-            "example": "2026-05-01"
+            "example": "2026-05-01",
+            "description": "Data de competência do lançamento (YYYY-MM-DD)."
           },
           "is_paid": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Marca o lançamento como pago/recebido. Ao definir true, paid_at é obrigatório."
           },
           "paid_at": {
             "type": "string",
             "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD). Obrigatório se is_paid = true."
           },
           "payment_method": {
             "$ref": "#/components/schemas/PaymentMethod"
@@ -320,24 +351,28 @@
           "bank_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID da conta bancária. Obrigatório se payment_method = bank."
           },
           "category_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID da categoria do lançamento. null para remover."
           },
           "contact_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID do contato vinculado. null para remover."
           },
           "nature": {
             "$ref": "#/components/schemas/TransactionNature"
           },
           "notes": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Observações livres sobre o lançamento."
           },
           "counterpart": {
             "type": "string",
@@ -346,11 +381,13 @@
           },
           "is_installment": {
             "type": "boolean",
-            "default": false
+            "default": false,
+            "description": "Define se o lançamento faz parte de um parcelamento."
           },
           "installment_count": {
             "type": "integer",
-            "nullable": true
+            "nullable": true,
+            "description": "Total de parcelas. Obrigatório e mínimo 2 se is_installment = true."
           },
           "installment_number": {
             "type": "integer",
@@ -370,25 +407,30 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da categoria."
           },
           "company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da empresa proprietária."
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Nome da categoria."
           },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
           },
           "color": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Cor em hexadecimal (ex: #3b82f6). null se não definida."
           },
           "created_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp de criação."
           }
         }
       },
@@ -397,21 +439,26 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da conta bancária."
           },
           "company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da empresa proprietária."
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Nome ou apelido da conta bancária."
           },
           "account_type": {
-            "type": "string"
+            "type": "string",
+            "description": "Tipo da conta (corrente, poupança, etc.)."
           },
           "created_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp de criação."
           }
         }
       },
@@ -420,26 +467,32 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID do contato."
           },
           "company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da empresa proprietária."
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Nome do contato (cliente ou fornecedor)."
           },
           "cpf": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "CPF do contato (apenas dígitos). null se não informado."
           },
           "cnpj": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "CNPJ do contato (apenas dígitos). null se não informado."
           },
           "created_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp de criação."
           }
         }
       },
@@ -448,33 +501,40 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da conta."
           },
           "company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da empresa proprietária."
           },
           "description": {
-            "type": "string"
+            "type": "string",
+            "description": "Descrição da conta a pagar/receber."
           },
           "amount": {
-            "type": "number"
+            "type": "number",
+            "description": "Valor em reais."
           },
           "type": {
             "type": "string",
             "enum": [
               "payable",
               "receivable"
-            ]
+            ],
+            "description": "Tipo: payable (a pagar) ou receivable (a receber)."
           },
           "due_date": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "description": "Data de vencimento (YYYY-MM-DD)."
           },
           "paid_date": {
             "type": "string",
             "format": "date",
-            "nullable": true
+            "nullable": true,
+            "description": "Data do pagamento efetivo (YYYY-MM-DD). null se pendente."
           },
           "status": {
             "type": "string",
@@ -483,19 +543,23 @@
               "paid",
               "overdue",
               "cancelled"
-            ]
+            ],
+            "description": "Status: pending, paid, overdue ou cancelled."
           },
           "contact_name": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Nome do contato vinculado. null se não vinculado."
           },
           "notes": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Observações livres. null se não preenchido."
           },
           "created_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp de criação."
           }
         }
       },
@@ -504,18 +568,22 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da empresa."
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Razão social da empresa."
           },
           "cnpj": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "CNPJ da empresa (apenas dígitos). null se não cadastrado."
           },
           "trade_name": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "description": "Nome fantasia. null se não cadastrado."
           },
           "tax_regime": {
             "type": "string",
@@ -524,7 +592,8 @@
               "lucro_presumido",
               "lucro_real"
             ],
-            "nullable": true
+            "nullable": true,
+            "description": "Regime tributário: simples, lucro_presumido ou lucro_real. null se não definido."
           },
           "segment": {
             "type": "string",
@@ -540,19 +609,23 @@
               "technology",
               "financial",
               "other"
-            ]
+            ],
+            "description": "Segmento de atuação da empresa. null se não definido."
           },
           "owner_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID do usuário proprietário."
           },
           "created_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp de criação."
           },
           "updated_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp da última atualização."
           }
         }
       },
@@ -577,20 +650,24 @@
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID do membro."
           },
           "company_id": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "UUID da empresa."
           },
           "user_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID do usuário (null enquanto o convite não é aceito)."
           },
           "email": {
             "type": "string",
-            "format": "email"
+            "format": "email",
+            "description": "E-mail do membro convidado."
           },
           "role": {
             "$ref": "#/components/schemas/MemberRole"
@@ -600,12 +677,14 @@
           },
           "invited_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "Timestamp do envio do convite."
           },
           "joined_at": {
             "type": "string",
             "format": "date-time",
-            "nullable": true
+            "nullable": true,
+            "description": "Timestamp de aceitação. null se ainda pendente."
           }
         }
       },
@@ -619,7 +698,8 @@
             }
           },
           "count": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Total de lançamentos que correspondem ao filtro (ignorando paginação)."
           }
         }
       },
@@ -628,16 +708,20 @@
         "properties": {
           "date": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "description": "Data do dia (YYYY-MM-DD)."
           },
           "income": {
-            "type": "number"
+            "type": "number",
+            "description": "Total de receitas do dia."
           },
           "expense": {
-            "type": "number"
+            "type": "number",
+            "description": "Total de despesas do dia."
           },
           "balance": {
-            "type": "number"
+            "type": "number",
+            "description": "Saldo do dia (income − expense)."
           }
         }
       },
@@ -647,16 +731,19 @@
           "category_id": {
             "type": "string",
             "format": "uuid",
-            "nullable": true
+            "nullable": true,
+            "description": "UUID da categoria. null para lançamentos sem categoria."
           },
           "category_name": {
-            "type": "string"
+            "type": "string",
+            "description": "Nome da categoria. 'Sem categoria' se não categorizado."
           },
           "type": {
             "$ref": "#/components/schemas/TransactionType"
           },
           "total": {
-            "type": "number"
+            "type": "number",
+            "description": "Total do período para esta categoria."
           }
         }
       }
@@ -966,7 +1053,8 @@
             "type": "string",
             "format": "uuid",
             "example": "550e8400-e29b-41d4-a716-446655440000"
-          }
+          },
+          "description": "UUID da empresa"
         }
       ],
       "get": {
@@ -1207,7 +1295,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "UUID do membro"
           }
         ],
         "requestBody": {
@@ -1261,7 +1350,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "UUID do membro"
           }
         ],
         "responses": {
@@ -1297,7 +1387,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "UUID do membro"
           }
         ],
         "responses": {
@@ -1331,7 +1422,8 @@
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Filtra vínculos de uma empresa específica."
           }
         ],
         "responses": {
@@ -1473,7 +1565,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "UUID do vínculo contador-empresa"
           }
         ],
         "responses": {
@@ -1509,7 +1602,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "UUID do vínculo contador-empresa"
           }
         ],
         "responses": {
@@ -1647,7 +1741,8 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/TransactionType"
-            }
+            },
+            "description": "Filtra por tipo: receita ou despesa."
           },
           {
             "name": "category_id",
@@ -1655,14 +1750,16 @@
             "schema": {
               "type": "string",
               "format": "uuid"
-            }
+            },
+            "description": "Filtra pelo ID da categoria. Use 'none' para lançamentos sem categoria."
           },
           {
             "name": "is_paid",
             "in": "query",
             "schema": {
               "type": "boolean"
-            }
+            },
+            "description": "Filtra por status de pagamento."
           },
           {
             "name": "date_from",
@@ -1670,7 +1767,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Filtra a partir desta data de competência (YYYY-MM-DD), inclusive."
           },
           {
             "name": "date_to",
@@ -1678,7 +1776,8 @@
             "schema": {
               "type": "string",
               "format": "date"
-            }
+            },
+            "description": "Filtra até esta data de competência (YYYY-MM-DD), inclusive."
           },
           {
             "name": "search",
@@ -1686,7 +1785,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Busca por texto na descrição (sem distinção de maiúsculas/minúsculas)"
+            "description": "Busca por texto na descrição (sem distinção de maiúsculas/minúsculas)."
           },
           {
             "name": "page",
@@ -1694,7 +1793,8 @@
             "schema": {
               "type": "integer",
               "default": 1
-            }
+            },
+            "description": "Número da página (começa em 1)."
           },
           {
             "name": "page_size",
@@ -1703,7 +1803,8 @@
               "type": "integer",
               "default": 20,
               "maximum": 1000
-            }
+            },
+            "description": "Número de registros por página."
           },
           {
             "name": "installment_group_id",
@@ -1789,7 +1890,8 @@
             "type": "string",
             "format": "uuid",
             "example": "550e8400-e29b-41d4-a716-446655440000"
-          }
+          },
+          "description": "UUID do lançamento"
         }
       ],
       "get": {
@@ -1874,7 +1976,8 @@
                     "enum": [
                       "income",
                       "expense"
-                    ]
+                    ],
+                    "description": "Tipo do lançamento."
                   },
                   "date": {
                     "type": "string",
@@ -1882,13 +1985,14 @@
                     "description": "Data de competência (YYYY-MM-DD)."
                   },
                   "is_paid": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Marca como pago/recebido. Ao definir true, paid_at é obrigatório."
                   },
                   "paid_at": {
                     "type": "string",
                     "format": "date",
                     "nullable": true,
-                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD)."
+                    "description": "Data efetiva do pagamento/recebimento (YYYY-MM-DD). Obrigatório se is_paid = true."
                   },
                   "nature": {
                     "$ref": "#/components/schemas/TransactionNature",
@@ -1931,7 +2035,8 @@
                     "description": "Forma de pagamento: cash (dinheiro/pix) ou bank (débito bancário)."
                   },
                   "is_installment": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Indica se o lançamento faz parte de um parcelamento."
                   },
                   "installment_count": {
                     "type": "integer",
@@ -2207,7 +2312,8 @@
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
-            }
+            },
+            "description": "UUID da categoria"
           }
         ],
         "responses": {
@@ -2249,7 +2355,8 @@
             "type": "string",
             "format": "uuid",
             "example": "550e8400-e29b-41d4-a716-446655440000"
-          }
+          },
+          "description": "UUID da categoria"
         }
       ],
       "patch": {
@@ -2264,11 +2371,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "Novo nome da categoria."
                   },
                   "color": {
                     "type": "string",
-                    "nullable": true
+                    "nullable": true,
+                    "description": "Cor em hexadecimal (ex: #3b82f6). Enviar null para remover."
                   }
                 }
               }
@@ -2487,7 +2596,8 @@
             "type": "string",
             "format": "uuid",
             "example": "550e8400-e29b-41d4-a716-446655440000"
-          }
+          },
+          "description": "UUID da conta bancária"
         }
       ],
       "patch": {
@@ -2595,7 +2705,8 @@
             "in": "query",
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Busca por texto no nome ou documento do contato (sem distinção de maiúsculas/minúsculas)."
           }
         ],
         "responses": {
@@ -2700,7 +2811,8 @@
             "type": "string",
             "format": "uuid",
             "example": "550e8400-e29b-41d4-a716-446655440000"
-          }
+          },
+          "description": "UUID do contato"
         }
       ],
       "patch": {
@@ -2817,7 +2929,8 @@
                 "payable",
                 "receivable"
               ]
-            }
+            },
+            "description": "Filtra por tipo de conta: a pagar ou a receber."
           }
         ],
         "responses": {
@@ -2946,7 +3059,8 @@
             "type": "string",
             "format": "uuid",
             "example": "550e8400-e29b-41d4-a716-446655440000"
-          }
+          },
+          "description": "UUID da conta a pagar/receber"
         }
       ],
       "patch": {

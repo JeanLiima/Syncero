@@ -468,7 +468,6 @@ export const en: Record<TranslationKey, string> = {
   transactions_import_ofx_defaultCategory: 'Default category',
   transactions_import_ofx_confirm: 'Import {count} transaction(s)',
   transactions_import_ofx_noneSelected: 'None selected',
-  transactions_import_contact_found: 'Contact on file',
   transactions_import_contact_notfound: 'No contact for this tax ID',
   transactions_import_contact_create: 'Create contact',
   transactions_wizard_contact_new_for: 'New contact identified in import',

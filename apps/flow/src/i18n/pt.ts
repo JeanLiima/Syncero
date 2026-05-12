@@ -466,7 +466,6 @@ export const pt = {
   transactions_import_ofx_defaultCategory: 'Categoria padrão',
   transactions_import_ofx_confirm: 'Importar {count} lançamento(s)',
   transactions_import_ofx_noneSelected: 'Nenhum selecionado',
-  transactions_import_contact_found: 'Contato cadastrado',
   transactions_import_contact_notfound: 'Nenhum contato para este CNPJ',
   transactions_import_contact_create: 'Criar contato',
   transactions_wizard_contact_new_for: 'Novo contato identificado na importação',

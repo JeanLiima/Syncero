@@ -13,7 +13,7 @@ import { SEGMENTS_WITH_COST } from '@/lib/segments'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
-import type { MemberRole, AccountantCompany } from '@/types'
+import type { MemberRole, AccountantCompany, TaxRegime } from '@/types'
 
 const companySchema = z.object({
   name:       z.string().min(2, 'Nome muito curto'),
@@ -25,7 +25,7 @@ const companySchema = z.object({
 
 type CompanyForm = z.infer<typeof companySchema>
 
-function taxRegimeLabel(regime: string | null | undefined, t: (k: any) => string) {
+function taxRegimeLabel(regime: TaxRegime | null | undefined, t: (k: any) => string) {
   if (regime === 'simples')         return t('settings_simplesNacional')
   if (regime === 'lucro_presumido') return t('settings_lucroPresumido')
   if (regime === 'lucro_real')      return t('settings_lucroReal')

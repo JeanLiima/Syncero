@@ -5,8 +5,9 @@ import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
+import type { TaxRegime } from '@/types'
 
-const taxRegimeLabel: Record<string, string> = {
+const taxRegimeLabel: Record<TaxRegime, string> = {
   simples: 'Simples Nacional',
   lucro_presumido: 'Lucro Presumido',
   lucro_real: 'Lucro Real',
@@ -18,7 +19,7 @@ export function Component() {
 
   const { data: company } = useQuery({
     queryKey: ['company-readonly', companyId],
-    queryFn: () => apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: string | null }>(`/api/companies/${companyId}`),
+    queryFn: () => apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: TaxRegime | null }>(`/api/companies/${companyId}`),
     enabled: !!companyId,
   })
 

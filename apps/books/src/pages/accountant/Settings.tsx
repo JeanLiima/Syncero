@@ -112,8 +112,8 @@ function ExternalCompanySettings({ id }: { id: string }) {
     setName(company.name ?? '')
     setTradeName(company.trade_name ?? '')
     setCnpj(company.cnpj ?? '')
-    setTaxRegime((company.tax_regime as TaxRegime) ?? '')
-    setSegment((company.segment as CompanySegment) ?? '')
+    setTaxRegime(company.tax_regime ?? '')
+    setSegment(company.segment ?? '')
     setIssRaw(company.iss_rate != null ? String(company.iss_rate * 100) : '')
   }, [company])
 

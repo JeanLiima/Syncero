@@ -11,6 +11,7 @@ import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
 import { PWABanner } from '@/components/PWABanner'
 import { apiFetch } from '@/lib/api'
+import type { TaxRegime } from '@/types'
 
 export function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
@@ -37,7 +38,7 @@ export function Layout({ children }: { children: ReactNode }) {
       : ['company-readonly', entityId],
     queryFn: () => isExternal
       ? apiFetch<{ id: string; name: string }>(`/api/external-companies/${entityId}`)
-      : apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: string | null }>(`/api/companies/${entityId}`),
+      : apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: TaxRegime | null }>(`/api/companies/${entityId}`),
     enabled: isInCompany && !!entityId,
     select: (data) => data.name,
     staleTime: 5 * 60 * 1000,

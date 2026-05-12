@@ -6,12 +6,12 @@ import { getTransactions } from '@/lib/backend'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
-import type { ExternalCompany } from '@/types'
+import type { ExternalCompany, TaxRegime } from '@/types'
 
 export function Component() {
   const t = useT()
 
-  const taxRegimeLabel: Record<string, string> = {
+  const taxRegimeLabel: Record<TaxRegime, string> = {
     simples:          t('settings_simplesNacional'),
     lucro_presumido:  t('settings_lucroPresumido'),
     lucro_real:       t('settings_lucroReal'),

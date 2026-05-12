@@ -7,7 +7,7 @@ import { useT } from '@/i18n'
 import { Button } from '@syncero/ui'
 import { CompanyCard } from '@/components/accountant/CompanyCard'
 import { CreateExternalCompanyModal } from '@/components/accountant/CreateExternalCompanyModal'
-import type { AccountantCompany, ExternalCompany, TaxRegime } from '@/types'
+import type { AccountantCompany, CompanySegment, ExternalCompany, TaxRegime } from '@/types'
 
 type Filter = 'all' | 'syncero' | 'external'
 
@@ -80,7 +80,7 @@ export function Component() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(filter === 'all' || filter === 'syncero') &&
             synceroCompanies.map((ac) => {
-              const c = ac.companies as unknown as { id: string; name: string; cnpj: string | null; tax_regime: string | null } | null
+              const c = ac.companies as unknown as { id: string; name: string; cnpj: string | null; tax_regime: TaxRegime | null; segment: CompanySegment | null } | null
               if (!c) return null
               return (
                 <CompanyCard
@@ -88,8 +88,8 @@ export function Component() {
                   id={c.id}
                   name={c.name}
                   cnpj={c.cnpj}
-                  taxRegime={c.tax_regime as TaxRegime | null}
-                  segment={(c as any).segment ?? null}
+                  taxRegime={c.tax_regime}
+                  segment={c.segment}
                   isExternal={false}
                 />
               )

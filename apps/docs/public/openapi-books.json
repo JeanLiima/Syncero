@@ -699,32 +699,43 @@
           "id": {
             "type": "string",
             "format": "uuid",
-            "description": "UUID do cálculo tributário."
+            "description": "UUID do calculo tributario."
           },
           "company_id": {
             "type": "string",
             "format": "uuid",
-            "description": "UUID da empresa."
+            "nullable": true,
+            "description": "UUID da empresa Flow. Nulo quando ext_company_id estiver preenchido."
           },
-          "reference_period": {
+          "ext_company_id": {
             "type": "string",
-            "example": "2024-01",
-            "description": "Período de referência (YYYY-MM)."
+            "format": "uuid",
+            "nullable": true,
+            "description": "UUID da empresa externa. Nulo quando company_id estiver preenchido."
+          },
+          "period": {
+            "type": "string",
+            "example": "2026-05",
+            "description": "Periodo de referencia (YYYY-MM)."
           },
           "tax_type": {
             "type": "string",
-            "description": "Tipo do tributo (IRPJ, CSLL, PIS, COFINS, etc.)."
+            "example": "DAS",
+            "description": "Tipo do tributo: DAS, PIS, COFINS, ISS, IRPJ ou CSLL."
           },
-          "base_value": {
+          "base_amount": {
             "type": "number",
-            "description": "Base de cálculo em reais."
+            "example": 50000,
+            "description": "Base de calculo em reais."
           },
           "rate": {
             "type": "number",
-            "description": "Alíquota aplicada (ex: 0.15 para 15%)."
+            "example": 0.06,
+            "description": "Aliquota aplicada (ex: 0.06 = 6%)."
           },
-          "tax_value": {
+          "tax_amount": {
             "type": "number",
+            "example": 3000,
             "description": "Valor do tributo calculado em reais."
           },
           "status": {
@@ -734,19 +745,44 @@
               "calculated",
               "paid"
             ],
-            "description": "Status: draft, calculated ou paid."
+            "description": "Estado: rascunho, revisado ou pago."
           },
           "due_date": {
             "type": "string",
             "format": "date",
             "nullable": true,
-            "description": "Data de vencimento (YYYY-MM-DD). null se não definida."
+            "description": "Data de vencimento."
           },
           "paid_date": {
             "type": "string",
             "format": "date",
             "nullable": true,
-            "description": "Data do pagamento efetivo (YYYY-MM-DD). null se não pago."
+            "description": "Data do pagamento efetivo."
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true,
+            "description": "Observacoes geradas no calculo (ex: presuncao utilizada, RBT12)."
+          },
+          "accountant_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "UUID do contador que gerou a apuracao."
+          },
+          "calculated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Momento em que a apuracao foi executada."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }
@@ -1308,6 +1344,14 @@
                     "type": "string",
                     "nullable": true,
                     "description": "Segmento de atuação da empresa."
+                  },
+                  "iss_rate": {
+                    "type": "number",
+                    "nullable": true,
+                    "minimum": 0,
+                    "maximum": 0.05,
+                    "example": 0.03,
+                    "description": "Aliquota ISS da empresa (0 a 5%). null remove o valor."
                   }
                 }
               }
@@ -2581,13 +2625,24 @@
           {
             "name": "company_id",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
             },
-            "description": "ID da empresa Flow cujos documentos serão listados."
+            "description": "UUID da empresa Flow. Obrigatorio se ext_company_id nao for fornecido."
+          },
+          {
+            "name": "ext_company_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+            },
+            "description": "UUID da empresa externa. Obrigatorio se company_id nao for fornecido."
           }
         ],
         "responses": {
@@ -2599,6 +2654,16 @@
                   "items": {
                     "$ref": "#/components/schemas/TaxCalculation"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Nenhum company_id ou ext_company_id fornecido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
                 }
               }
             }
@@ -2895,6 +2960,373 @@
           }
         },
         "x-access": "internal"
+      }
+    },
+    "/api/tax-calculations/calculate": {
+      "post": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Apurar impostos de um periodo",
+        "description": "Calcula tributos com base nos lancamentos contabeis do periodo e no regime tributario da empresa. Substitui apuracao anterior para o mesmo periodo.",
+        "x-access": "internal",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "period"
+                ],
+                "properties": {
+                  "company_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true,
+                    "description": "UUID da empresa Flow. Obrigatorio se ext_company_id nao for fornecido."
+                  },
+                  "ext_company_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true,
+                    "description": "UUID da empresa externa. Obrigatorio se company_id nao for fornecido."
+                  },
+                  "period": {
+                    "type": "string",
+                    "example": "2026-05",
+                    "description": "Periodo a apurar (YYYY-MM)."
+                  },
+                  "revenue_12m": {
+                    "type": "number",
+                    "minimum": 0.01,
+                    "example": 720000,
+                    "description": "Receita bruta acumulada dos ultimos 12 meses. Obrigatorio para Simples Nacional."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Apuracao concluida. Retorna os registros criados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxCalculation"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parametros invalidos ou ausentes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Empresa nao encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Regime tributario ou segmento nao configurado; sem lancamentos no periodo; receita 12m ausente para Simples.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao persistir os dados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tax-calculations/{id}": {
+      "patch": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Atualizar status de um tributo apurado",
+        "x-access": "internal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "UUID do calculo tributario."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "calculated",
+                      "paid"
+                    ],
+                    "description": "Novo status."
+                  },
+                  "paid_date": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true,
+                    "example": "2026-06-20",
+                    "description": "Data do pagamento. Preenchida automaticamente ao marcar como pago."
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Observacoes livres sobre o tributo."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxCalculation"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Calculo tributario nao encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao atualizar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/companies/{id}/tax-settings": {
+      "get": {
+        "tags": [
+          "companies"
+        ],
+        "summary": "Configuracoes fiscais do contador para a empresa",
+        "x-access": "internal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "UUID da empresa vinculada."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuracoes fiscais atuais.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "iss_rate": {
+                      "type": "number",
+                      "nullable": true,
+                      "example": 0.03,
+                      "description": "Aliquota ISS configurada pelo contador (0 a 0.05)."
+                    },
+                    "segment": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Segmento da empresa para fins de apuracao tributaria."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "companies"
+        ],
+        "summary": "Salvar configuracoes fiscais do contador",
+        "description": "Armazena ISS rate e segmento em accountant_companies, independentes dos dados gerenciados pelo Flow.",
+        "x-access": "internal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "UUID da empresa vinculada."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "iss_rate": {
+                    "type": "number",
+                    "nullable": true,
+                    "minimum": 0,
+                    "maximum": 0.05,
+                    "example": 0.03,
+                    "description": "Aliquota ISS (0 a 5%). null remove o valor."
+                  },
+                  "segment": {
+                    "type": "string",
+                    "nullable": true,
+                    "enum": [
+                      "retail",
+                      "services",
+                      "manufacturing",
+                      "construction",
+                      "agribusiness",
+                      "healthcare",
+                      "education",
+                      "technology",
+                      "financial",
+                      "other"
+                    ],
+                    "description": "Segmento para fins de apuracao tributaria."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuracoes salvas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "iss_rate": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "segment": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro ao salvar.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

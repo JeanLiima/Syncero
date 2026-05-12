@@ -168,7 +168,11 @@ export function useTransactionWizardState(
     } else if (prefill) {
       setStep(initialStep ?? 1)
       setType(prefill.type ?? null)
-      setNature(null)
+      setNature(
+        prefill.type === 'income'  ? 'sale_service' :
+        prefill.type === 'expense' ? 'operational_expense' :
+        null
+      )
       setAmountCents(prefill.amountCents ?? 0)
       setDate(prefill.date ?? format(new Date(), 'yyyy-MM-dd'))
       setCategoryId(undefined)

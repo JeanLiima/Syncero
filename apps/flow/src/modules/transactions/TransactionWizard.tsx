@@ -7,10 +7,11 @@ import {
 } from 'lucide-react'
 import { Button, Checkbox, DayCalendar, Input, Modal } from '@syncero/ui'
 import { useT, type TranslationKey } from '@/i18n'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from './mutations'
 import { useCategories, useBanks, useContacts } from './queries'
-import { getContacts } from '@/lib/backend'
+import { getContacts, createContact } from '@/lib/backend'
+import { maskCnpj } from '@/lib/cnpj'
 import { useAuthStore } from '@syncero/auth'
 import { ContactModal } from './ContactModal'
 import { ContactCombobox } from './ContactCombobox'
@@ -105,6 +106,7 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
   const state = useTransactionWizardState(open, editing, language, prefill, !editing ? firstNonSkippedStep : undefined)
   const { data: contacts = [] } = useContacts(state.contactSearch)
   const [contactModalInitialCnpj, setContactModalInitialCnpj] = useState('')
+  const qc = useQueryClient()
 
   // Look up existing contact by counterpart CNPJ from import
   const { data: cnpjContact } = useQuery({
@@ -112,6 +114,22 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
     queryFn: () => getContacts(activeCompany!.id, prefill!.counterpartCnpj!),
     enabled: !!activeCompany?.id && !!prefill?.counterpartCnpj && !prefill?.contactId,
     select: (list) => list.find((c) => c.cnpj?.replace(/\D/g, '') === prefill?.counterpartCnpj) ?? null,
+  })
+
+  // Quick-create contact directly from import data (no modal needed)
+  const quickCreate = useMutation({
+    mutationFn: () => createContact({
+      company_id: activeCompany!.id,
+      name: state.counterpart.trim(),
+      cnpj: prefill?.counterpartCnpj,
+    }),
+    onSuccess: (contact) => {
+      state.setCounterpart(contact.name)
+      state.setContactId(contact.id)
+      qc.invalidateQueries({ queryKey: ['contacts', activeCompany?.id] })
+      const next = nextStepFrom(7)
+      if (next) state.goTo(next)
+    },
   })
 
   const isCreating = !editing
@@ -126,6 +144,13 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
   useEffect(() => {
     if (cnpjContact && !state.contactId) state.setContactId(cnpjContact.id)
   }, [cnpjContact]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-select most common nature when entering step 2 with no nature set
+  useEffect(() => {
+    if (state.step === 2 && !state.nature && state.type) {
+      state.setNature(state.type === 'income' ? 'sale_service' : 'operational_expense')
+    }
+  }, [state.step]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handlers ────────────────────────────────────────────────
 
@@ -744,8 +769,58 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
             ? t('transactions_wizard_counterpartIncomeLabel')
             : t('transactions_wizard_counterpartExpenseLabel')}
         </p>
+
+        {/* Quick-create card — visible above combobox when import has counterpart CNPJ */}
+        {prefill?.counterpartCnpj && !state.contactId && (
+          <>
+            <button
+              type="button"
+              onClick={() => !quickCreate.isPending && quickCreate.mutate()}
+              disabled={quickCreate.isPending}
+              className="w-full text-left rounded-xl border-2 border-[var(--accent)]/30 bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/50 transition-all cursor-pointer px-4 py-3.5 group disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col min-w-0 gap-0.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)] mb-0.5">
+                    {t('transactions_wizard_contact_new_for')}
+                  </span>
+                  <span className="text-sm font-medium text-[var(--text-primary)] truncate leading-tight">
+                    {state.counterpart}
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)] font-mono">
+                    {maskCnpj(prefill.counterpartCnpj)}
+                  </span>
+                </div>
+                <div className={`shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  quickCreate.isPending
+                    ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                    : 'bg-[var(--accent)] text-white group-hover:bg-[var(--accent)]'
+                }`}>
+                  {quickCreate.isPending ? (
+                    <span className="text-xs">…</span>
+                  ) : (
+                    <>
+                      <UserPlus className="h-3.5 w-3.5" />
+                      {t('transactions_wizard_contact_create')}
+                    </>
+                  )}
+                </div>
+              </div>
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-[var(--bg-border)]" />
+              <span className="text-xs text-[var(--text-muted)]">
+                {t('transactions_wizard_contact_or_select')}
+              </span>
+              <div className="flex-1 h-px bg-[var(--bg-border)]" />
+            </div>
+          </>
+        )}
+
         <ContactCombobox
-          value={state.counterpart}
+          value={prefill?.counterpartCnpj && !state.contactId ? '' : state.counterpart}
+          autoFocus={!(prefill?.counterpartCnpj && !state.contactId)}
           onChange={(name, contact) => {
             state.setCounterpart(name)
             state.setContactSearch(name)
@@ -761,27 +836,6 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
           placeholder={t('contact_searchPlaceholder')}
           addLabel={t('transactions_wizard_counterpartAdd')}
         />
-        {prefill?.counterpartCnpj && !state.contactId && (
-          <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--bg-border)]">
-            <div className="flex items-center gap-2 min-w-0">
-              <UserPlus className="h-3.5 w-3.5 shrink-0 text-[var(--text-muted)]" />
-              <span className="text-xs text-[var(--text-muted)] truncate">
-                {t('transactions_import_contact_notfound')}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                state.setContactModalInitialName(state.counterpart)
-                setContactModalInitialCnpj(prefill.counterpartCnpj!)
-                state.setContactModalOpen(true)
-              }}
-              className="shrink-0 text-xs font-medium text-[var(--accent)] hover:underline"
-            >
-              {t('transactions_import_contact_create')}
-            </button>
-          </div>
-        )}
       </div>
     ),
 
@@ -832,7 +886,9 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
     if (state.phase === 'payment-form') return t('transactions_wizard_keyHintPaymentForm')
     if (state.step === 1 || state.step === 5 || state.step === 6) return t('transactions_wizard_keyHintCards')
     if (state.step === 2) return t('transactions_wizard_keyHintNature')
-    if (state.step === 7) return t('transactions_wizard_keyHintContact')
+    if (state.step === 7) return prefill?.counterpartCnpj && !state.contactId
+      ? t('transactions_wizard_keyHintContactImport')
+      : t('transactions_wizard_keyHintContact')
     if (state.step === 8) return t('transactions_wizard_keyHintSave')
     return t('transactions_wizard_keyHintEnter')
   })()

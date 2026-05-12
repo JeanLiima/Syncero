@@ -154,6 +154,7 @@ export const en: Record<TranslationKey, string> = {
   transactions_wizard_keyHintNature: '↑ ↓ navigate · ↵ advance',
   transactions_wizard_keyHintEnter: '↵ advance',
   transactions_wizard_keyHintContact: '↑↓ navigate · ↵ select',
+  transactions_wizard_keyHintContactImport: '↵ create contact · or search below',
   transactions_wizard_keyHintSave: '↵ save',
   transactions_wizard_keyHintPaymentPrompt: '↵ register · Esc close without registering',
   transactions_wizard_keyHintPaymentForm: '↵ confirm',
@@ -470,6 +471,9 @@ export const en: Record<TranslationKey, string> = {
   transactions_import_contact_found: 'Contact on file',
   transactions_import_contact_notfound: 'No contact for this tax ID',
   transactions_import_contact_create: 'Create contact',
+  transactions_wizard_contact_new_for: 'New contact identified in import',
+  transactions_wizard_contact_create: 'Create',
+  transactions_wizard_contact_or_select: 'or select another contact',
   transactions_import_error_parse: 'Could not read the file. Make sure it is a valid NFe XML or OFX file.',
 
   // Common

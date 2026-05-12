@@ -11,6 +11,7 @@ interface ContactComboboxProps {
   contacts: Contact[]
   placeholder: string
   addLabel: string
+  autoFocus?: boolean
 }
 
 export function ContactCombobox({
@@ -21,6 +22,7 @@ export function ContactCombobox({
   contacts,
   placeholder,
   addLabel,
+  autoFocus = true,
 }: ContactComboboxProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value)
@@ -110,7 +112,7 @@ export function ContactCombobox({
         type="text"
         value={query}
         placeholder={placeholder}
-        autoFocus
+        autoFocus={autoFocus}
         onChange={(e) => {
           setQuery(e.target.value)
           onChange(e.target.value)

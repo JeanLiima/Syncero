@@ -152,6 +152,7 @@ export const pt = {
   transactions_wizard_keyHintNature: '↑ ↓ navegar · ↵ avançar',
   transactions_wizard_keyHintEnter: '↵ avançar',
   transactions_wizard_keyHintContact: '↑↓ navegar · ↵ selecionar',
+  transactions_wizard_keyHintContactImport: '↵ criar contato · ou buscar abaixo',
   transactions_wizard_keyHintSave: '↵ salvar',
   transactions_wizard_keyHintPaymentPrompt: '↵ registrar · Esc fechar sem registrar',
   transactions_wizard_keyHintPaymentForm: '↵ confirmar',
@@ -468,6 +469,9 @@ export const pt = {
   transactions_import_contact_found: 'Contato cadastrado',
   transactions_import_contact_notfound: 'Nenhum contato para este CNPJ',
   transactions_import_contact_create: 'Criar contato',
+  transactions_wizard_contact_new_for: 'Novo contato identificado na importação',
+  transactions_wizard_contact_create: 'Criar',
+  transactions_wizard_contact_or_select: 'ou selecionar outro contato',
   transactions_import_error_parse: 'Não foi possível ler o arquivo. Verifique se é um XML de NFe ou OFX válido.',
 
   // Common

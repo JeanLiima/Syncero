@@ -154,13 +154,14 @@ function buildHints(
 
 interface InlineCreateProps {
   accountType: AccountType
-  companyId: string
+  companyId?: string
+  extCompanyId?: string
   presetName?: string
   onCreated: (account: AccountPlan) => void
   onCancel: () => void
 }
 
-function InlineCreate({ accountType, companyId, presetName, onCreated, onCancel }: InlineCreateProps) {
+function InlineCreate({ accountType, companyId, extCompanyId, presetName, onCreated, onCancel }: InlineCreateProps) {
   const t = useT()
   const [code, setCode]   = useState('')
   const [name, setName]   = useState(presetName ?? '')
@@ -172,7 +173,7 @@ function InlineCreate({ accountType, companyId, presetName, onCreated, onCancel 
     setSaving(true); setErr(null)
     try {
       const account = await createAccountPlan({
-        company_id: companyId,
+        ...(extCompanyId ? { ext_company_id: extCompanyId } : { company_id: companyId }),
         code: code.trim(),
         name: name.trim(),
         account_type: accountType,
@@ -213,12 +214,13 @@ interface AccountPickerProps {
   accounts: AccountPlan[]
   value: string
   onChange: (id: string) => void
-  companyId: string
+  companyId?: string
+  extCompanyId?: string
   onAccountCreated: (account: AccountPlan) => void
   createPreset?: string
 }
 
-function AccountPicker({ label, accountType, accounts, value, onChange, companyId, onAccountCreated, createPreset }: AccountPickerProps) {
+function AccountPicker({ label, accountType, accounts, value, onChange, companyId, extCompanyId, onAccountCreated, createPreset }: AccountPickerProps) {
   const t = useT()
   const [creating, setCreating] = useState(false)
 
@@ -262,6 +264,7 @@ function AccountPicker({ label, accountType, accounts, value, onChange, companyI
         <InlineCreate
           accountType={accountType}
           companyId={companyId}
+          extCompanyId={extCompanyId}
           presetName={createPreset}
           onCreated={account => { onAccountCreated(account); onChange(account.id); setCreating(false) }}
           onCancel={() => setCreating(false)}
@@ -350,6 +353,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId, extCompan
   const handleAccountCreated = (account: AccountPlan) => {
     setLocalAccounts(prev => [...prev, account])
     refetchAccounts()
+    qc.invalidateQueries({ queryKey: ['account-plans-analytic', resolvedCompanyId] })
   }
 
   const applyHint = async (hint: SmartHint) => {
@@ -381,6 +385,7 @@ export function ClassifyModal({ transaction, open, onClose, companyId, extCompan
         ? ['ext-transactions', extCompanyId]
         : ['transactions-books', companyId],
       })
+      qc.invalidateQueries({ queryKey: ['journal-entries', resolvedCompanyId] })
       toastSuccess(t('classify_success'))
       handleClose()
     } catch (e: unknown) {
@@ -487,7 +492,8 @@ export function ClassifyModal({ transaction, open, onClose, companyId, extCompan
             accounts={accounts}
             value={debitId}
             onChange={setDebitId}
-            companyId={resolvedCompanyId ?? ''}
+            companyId={companyId}
+            extCompanyId={extCompanyId}
             onAccountCreated={handleAccountCreated}
             createPreset={debitCreatePreset}
           />
@@ -498,7 +504,8 @@ export function ClassifyModal({ transaction, open, onClose, companyId, extCompan
             accounts={accounts}
             value={creditId}
             onChange={setCreditId}
-            companyId={resolvedCompanyId ?? ''}
+            companyId={companyId}
+            extCompanyId={extCompanyId}
             onAccountCreated={handleAccountCreated}
             createPreset={creditCreatePreset}
           />

@@ -40,6 +40,7 @@ export interface Company {
   name: string
   cnpj: string | null
   tax_regime: TaxRegime | null
+  segment: CompanySegment | null
   owner_id: string
   created_at: string
   updated_at: string
@@ -184,15 +185,19 @@ export interface FiscalBook {
 
 export interface TaxCalculation {
   id: string
-  company_id: string
-  reference_period: string
+  company_id: string | null
+  ext_company_id: string | null
+  period: string
   tax_type: string
-  base_value: number
+  base_amount: number
   rate: number
-  tax_value: number
+  tax_amount: number
   status: 'draft' | 'calculated' | 'paid'
   due_date: string | null
   paid_date: string | null
+  notes: string | null
+  accountant_id: string | null
+  calculated_at: string | null
   created_at: string
   updated_at: string
 }
@@ -253,7 +258,7 @@ export interface JournalEntry {
   reversal_of: string | null
   created_at: string
   updated_at: string
-  lines?: JournalEntryLine[]
+  journal_entry_lines?: JournalEntryLine[]
 }
 
 export interface JournalEntryLine {
@@ -264,7 +269,7 @@ export interface JournalEntryLine {
   amount: number
   memo: string | null
   created_at: string
-  account_plan?: Pick<AccountPlan, 'code' | 'name'>
+  account_plans?: Pick<AccountPlan, 'code' | 'name'> | null
 }
 
 export interface ApiKey {

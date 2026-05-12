@@ -1,12 +1,13 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { FileText, BookOpen, Calculator, LayoutList, BookMarked, ArrowDownUp, ArrowRight } from 'lucide-react'
+import { FileText, BookOpen, Calculator, LayoutList, ArrowDownUp, ArrowRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
+import type { TaxRegime } from '@/types'
 
-const taxRegimeLabel: Record<string, string> = {
+const taxRegimeLabel: Record<TaxRegime, string> = {
   simples: 'Simples Nacional',
   lucro_presumido: 'Lucro Presumido',
   lucro_real: 'Lucro Real',
@@ -18,7 +19,7 @@ export function Component() {
 
   const { data: company } = useQuery({
     queryKey: ['company-readonly', companyId],
-    queryFn: () => apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: string | null }>(`/api/companies/${companyId}`),
+    queryFn: () => apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: TaxRegime | null }>(`/api/companies/${companyId}`),
     enabled: !!companyId,
   })
 
@@ -37,7 +38,6 @@ export function Component() {
     { label: t('overview_sped'),            value: String(summary?.booksCount ?? 0),                                                         icon: <BookOpen    className="h-6 w-6 text-[var(--warning)]" />, to: 'sped'              },
     { label: t('overview_taxes'),           value: (summary?.taxTotal ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: <Calculator  className="h-6 w-6 text-[var(--success)]" />, to: 'taxes'             },
     { label: t('overview_transactions'),    value: t('overview_viewTransactions'), icon: <ArrowDownUp className="h-6 w-6 text-sky-400"           />, to: 'transactions'      },
-    { label: t('overview_chartOfAccounts'), value: t('overview_viewAccounts'),    icon: <BookMarked  className="h-6 w-6 text-violet-400"        />, to: 'chart-of-accounts' },
     { label: t('overview_journal'),         value: t('overview_viewEntries'),     icon: <LayoutList  className="h-6 w-6 text-[var(--warning)]" />, to: 'journal-entries'   },
   ]
 

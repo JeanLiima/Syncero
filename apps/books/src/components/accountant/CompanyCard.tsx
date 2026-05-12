@@ -9,7 +9,7 @@ interface CompanyCardProps {
   name: string
   cnpj: string | null
   taxRegime: TaxRegime | null
-  segment: string | null
+  segment: CompanySegment | null
   isExternal: boolean
 }
 

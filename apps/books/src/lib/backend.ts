@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { AccountPlan, Category, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
+import type { AccountPlan, Category, CompanySegment, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
 
 function toSnake(key: string): string {
   return key.replace(/([A-Z])/g, '_$1').toLowerCase()
@@ -22,8 +22,40 @@ export async function getFiscalDocuments(companyId: string, opts: { doc_type?: s
   return apiFetch<FiscalDocument[]>(`/api/fiscal-documents${buildQuery({ companyId, ...opts })}`)
 }
 
-export async function getTaxCalculations(companyId: string) {
-  return apiFetch<TaxCalculation[]>(`/api/tax-calculations${buildQuery({ companyId })}`)
+export async function getTaxCalculations(params: { companyId?: string; extCompanyId?: string }) {
+  return apiFetch<TaxCalculation[]>(`/api/tax-calculations${buildQuery(params)}`)
+}
+
+export async function calculateTaxes(params: {
+  companyId?: string; extCompanyId?: string
+  period: string; revenue12m?: number
+}) {
+  const { companyId, extCompanyId, period, revenue12m } = params
+  return apiFetch<TaxCalculation[]>('/api/tax-calculations/calculate', {
+    method: 'POST',
+    body: JSON.stringify({
+      ...(companyId ? { company_id: companyId } : { ext_company_id: extCompanyId }),
+      period, revenue_12m: revenue12m,
+    }),
+  })
+}
+
+export async function updateTaxStatus(id: string, status: TaxCalculation['status'], paidDate?: string) {
+  return apiFetch<TaxCalculation>(`/api/tax-calculations/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, paid_date: paidDate ?? null }),
+  })
+}
+
+export async function getCompanyTaxSettings(companyId: string) {
+  return apiFetch<{ iss_rate: number | null; segment: CompanySegment | null }>(`/api/companies/${companyId}/tax-settings`)
+}
+
+export async function saveCompanyTaxSettings(companyId: string, data: { issRate?: number | null; segment?: CompanySegment | null }) {
+  return apiFetch<{ iss_rate: number | null; segment: CompanySegment | null }>(`/api/companies/${companyId}/tax-settings`, {
+    method: 'PATCH',
+    body: JSON.stringify({ iss_rate: data.issRate, segment: data.segment }),
+  })
 }
 
 export type TransactionQueryParams = {

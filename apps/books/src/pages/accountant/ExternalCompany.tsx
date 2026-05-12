@@ -1,17 +1,17 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { LayoutList, BookMarked, ArrowRight, Receipt } from 'lucide-react'
+import { LayoutList, ArrowRight, Receipt } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { getTransactions } from '@/lib/backend'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
-import type { ExternalCompany } from '@/types'
+import type { ExternalCompany, TaxRegime } from '@/types'
 
 export function Component() {
   const t = useT()
 
-  const taxRegimeLabel: Record<string, string> = {
+  const taxRegimeLabel: Record<TaxRegime, string> = {
     simples:          t('settings_simplesNacional'),
     lucro_presumido:  t('settings_lucroPresumido'),
     lucro_real:       t('settings_lucroReal'),
@@ -38,12 +38,6 @@ export function Component() {
     enabled: !!extCompanyId,
   })
 
-  const { data: planCount = 0 } = useQuery({
-    queryKey: ['account-plan-count', extCompanyId],
-    queryFn: () => apiFetch<unknown[]>(`/api/account-plans?extCompanyId=${extCompanyId}`).then(d => d.length),
-    enabled: !!extCompanyId,
-  })
-
   const { data: txData } = useQuery({
     queryKey: ['ext-transactions-count', extCompanyId],
     queryFn: () => getTransactions({ extCompanyId: extCompanyId!, pageSize: '1' }),
@@ -62,12 +56,6 @@ export function Component() {
     : null
 
   const items = [
-    {
-      label: t('overview_chartOfAccounts'),
-      value: `${planCount} ${planCount !== 1 ? t('overview_accountCountPlural') : t('overview_accountCount')}`,
-      icon: <BookMarked className="h-6 w-6 text-[var(--accent)]" />,
-      to: 'chart-of-accounts',
-    },
     {
       label: t('overview_transactions'),
       value: `${txCount} ${txCount !== 1 ? t('overview_txCountPlural') : t('overview_txCount')}`,

@@ -8,7 +8,7 @@ import { Button, Card, ConfirmDialog, Input, Modal, Select, useToast } from '@sy
 import { AccountPlanModal, type AccountPlanModalProps } from '@/components/accountant/AccountPlanModal'
 import { CfcPreviewModal } from '@/components/accountant/CfcPreviewModal'
 import { useT } from '@/i18n'
-import type { AccountPlan, AccountType } from '@/types'
+import type { AccountPlan, AccountType, CompanySegment } from '@/types'
 
 // ── constants ─────────────────────────────────────────────────
 
@@ -203,7 +203,7 @@ export function Component() {
   // Fetch segment to conditionally show Custo section
   const { data: companyData } = useQuery({
     queryKey: isExternal ? ['external-company', id] : ['company-readonly', id],
-    queryFn: () => apiFetch<{ segment?: string | null }>(
+    queryFn: () => apiFetch<{ segment?: CompanySegment | null }>(
       isExternal ? `/api/external-companies/${id}` : `/api/companies/${id}`
     ),
     enabled: !!id,

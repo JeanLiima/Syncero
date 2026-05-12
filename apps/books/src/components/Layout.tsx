@@ -3,7 +3,7 @@ import { NavLink, useMatch } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   Building2, ArrowLeft, LayoutDashboard,
-  FileText, BookOpen, Calculator, LayoutList, BookMarked, ArrowDownUp, Settings,
+  FileText, BookOpen, Calculator, BookMarked, ArrowDownUp, Settings, Receipt,
 } from 'lucide-react'
 import { AppLayout, type NavItem } from '@syncero/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -11,6 +11,7 @@ import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
 import { PWABanner } from '@/components/PWABanner'
 import { apiFetch } from '@/lib/api'
+import type { TaxRegime } from '@/types'
 
 export function Layout({ children }: { children: ReactNode }) {
   const { profile, signOut } = useAuth()
@@ -37,7 +38,7 @@ export function Layout({ children }: { children: ReactNode }) {
       : ['company-readonly', entityId],
     queryFn: () => isExternal
       ? apiFetch<{ id: string; name: string }>(`/api/external-companies/${entityId}`)
-      : apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: string | null }>(`/api/companies/${entityId}`),
+      : apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: TaxRegime | null }>(`/api/companies/${entityId}`),
     enabled: isInCompany && !!entityId,
     select: (data) => data.name,
     staleTime: 5 * 60 * 1000,
@@ -54,16 +55,19 @@ export function Layout({ children }: { children: ReactNode }) {
       { to: `${basePath}/sped`,         label: t('nav_sped'),         icon: icon(BookOpen)    },
       { to: `${basePath}/taxes`,        label: t('nav_taxes'),        icon: icon(Calculator)  },
     ] : []),
-    { to: `${basePath}/transactions`, label: t('nav_transactions'), icon: icon(ArrowDownUp) },
-    { to: `${basePath}/chart-of-accounts`, label: t('nav_accountPlan'), icon: icon(LayoutList) },
-    { to: `${basePath}/journal-entries`,   label: t('nav_journal'),     icon: icon(BookMarked) },
+    { to: `${basePath}/transactions`,   label: t('nav_transactions'), icon: icon(ArrowDownUp) },
+    { to: `${basePath}/journal-entries`, label: t('nav_journal'),     icon: icon(BookMarked) },
+    ...(extCompanyId ? [
+      { to: `${basePath}/taxes`, label: t('nav_taxes'), icon: icon(Receipt) },
+    ] : []),
     {
       to: `${basePath}/settings`,
       label: t('nav_settings'),
       icon: icon(Settings),
       children: [
-        { to: `${basePath}/settings`,  label: t('settings_company') },
-        { to: `${basePath}/api-keys`,  label: t('nav_apiKeys') },
+        { to: `${basePath}/settings`,          label: t('settings_company') },
+        { to: `${basePath}/chart-of-accounts`, label: t('nav_accountPlan') },
+        { to: `${basePath}/api-keys`,          label: t('nav_apiKeys') },
       ],
     },
   ]

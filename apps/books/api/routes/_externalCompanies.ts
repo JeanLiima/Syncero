@@ -91,7 +91,7 @@ router.patch('/:id', async (c) => {
 
   const body = await c.req.json<{
     name?: string; cnpj?: string | null; trade_name?: string | null
-    tax_regime?: string | null; segment?: string | null
+    tax_regime?: string | null; segment?: string | null; iss_rate?: number | null
   }>()
 
   const updates: Record<string, unknown> = {}
@@ -100,6 +100,7 @@ router.patch('/:id', async (c) => {
   if (body.trade_name  !== undefined) updates.trade_name  = body.trade_name
   if (body.tax_regime  !== undefined) updates.tax_regime  = body.tax_regime
   if (body.segment     !== undefined) updates.segment     = body.segment
+  if (body.iss_rate    !== undefined) updates.iss_rate    = body.iss_rate
 
   if (Object.keys(updates).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
 

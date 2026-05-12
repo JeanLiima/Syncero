@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus } from 'lucide-react'
+import { Download, Plus, Search } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, Badge, MonthPicker, SkeletonRows } from '@syncero/ui'
+import { Badge, Button, Card, Input, MonthPicker, SkeletonRows } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { JournalEntryModal } from '@/components/accountant/JournalEntryModal'
+import { JournalEntryDetailModal } from '@/components/accountant/JournalEntryDetailModal'
+import { JournalExportModal } from '@/components/accountant/JournalExportModal'
 import { useT } from '@/i18n'
 import type { JournalEntry, AccountPlan, EntrySource } from '@/types'
 
@@ -31,6 +33,10 @@ export function Component() {
 
   const [entryModalOpen, setEntryModalOpen] = useState(false)
   const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7))
+  const [search, setSearch]               = useState('')
+  const [accountFilter, setAccountFilter] = useState('')
+  const [detailEntry, setDetailEntry]     = useState<JournalEntry | null>(null)
+  const [exportOpen, setExportOpen]       = useState(false)
 
   const periodLabel = (() => {
     const raw = format(parseISO(`${period}-01`), 'MMMM yyyy', { locale })
@@ -54,6 +60,28 @@ export function Component() {
     enabled: !!id,
   })
 
+  // Client-side filtering
+  const filtered = useMemo(() => {
+    let result = entries
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter(e =>
+        e.description.toLowerCase().includes(q) ||
+        (e.external_ref ?? '').toLowerCase().includes(q)
+      )
+    }
+    if (accountFilter.trim()) {
+      const q = accountFilter.toLowerCase()
+      result = result.filter(e =>
+        (e.journal_entry_lines ?? []).some(l =>
+          (l.account_plans?.code ?? '').toLowerCase().includes(q) ||
+          (l.account_plans?.name ?? '').toLowerCase().includes(q)
+        )
+      )
+    }
+    return result
+  }, [entries, search, accountFilter])
+
   const handleCreateEntry = async (data: {
     entry_date: string; description: string; external_ref: string
     lines: Array<{ account_plan_id: string; side: 'debit' | 'credit'; amount: number; memo: string }>
@@ -74,20 +102,26 @@ export function Component() {
       .reduce((s, l) => s + Number(l.amount), 0)
   }
 
+  const isFiltering = search.trim() !== '' || accountFilter.trim() !== ''
+
   return (
     <div className="flex flex-col gap-6">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('lancamentos_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">{entries.length} {entries.length !== 1 ? t('lancamentos_countPlural') : t('lancamentos_countSingular')} — {periodLabel}</p>
+          <p className="text-sm text-[var(--text-muted)]">
+            {isFiltering
+              ? t('lancamentos_filterCount').replace('{count}', String(filtered.length)).replace('{total}', String(entries.length))
+              : `${entries.length} ${entries.length !== 1 ? t('lancamentos_countPlural') : t('lancamentos_countSingular')} — ${periodLabel}`
+            }
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <MonthPicker
-            value={period}
-            onChange={setPeriod}
-            language={language}
-            size="sm"
-          />
+          <Button size="sm" variant="ghost" onClick={() => setExportOpen(true)}>
+            <Download className="h-4 w-4" />
+            {t('lancamentos_export')}
+          </Button>
           {canWrite && (
             <Button size="sm" onClick={() => setEntryModalOpen(true)}>
               <Plus className="h-4 w-4" />
@@ -97,17 +131,54 @@ export function Component() {
         </div>
       </div>
 
+      {/* Filters card */}
+      <Card padding="sm">
+        <div className="flex flex-wrap gap-3">
+          <MonthPicker
+            value={period}
+            onChange={setPeriod}
+            language={language}
+            size="sm"
+          />
+          <div className="relative flex-1 min-w-48">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+            <Input
+              size="sm"
+              placeholder={t('lancamentos_searchPlaceholder')}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <div className="relative flex-1 min-w-48">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[var(--text-muted)]" />
+            <Input
+              size="sm"
+              placeholder={t('lancamentos_accountFilterPlaceholder')}
+              value={accountFilter}
+              onChange={e => setAccountFilter(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Table */}
       {isLoading ? (
         <Card className="p-0 overflow-hidden">
           <table className="w-full text-sm">
             <tbody><SkeletonRows rows={6} cols={6} /></tbody>
           </table>
         </Card>
-      ) : entries.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <p className="text-sm text-[var(--text-muted)]">{t('lancamentos_emptyPeriod')} {periodLabel}.</p>
-            {canWrite && (
+            <p className="text-sm text-[var(--text-muted)]">
+              {isFiltering
+                ? 'Nenhum lançamento encontrado para os filtros aplicados.'
+                : `${t('lancamentos_emptyPeriod')} ${periodLabel}.`}
+            </p>
+            {canWrite && !isFiltering && (
               <Button size="sm" variant="ghost" onClick={() => setEntryModalOpen(true)}>{t('lancamentos_create')}</Button>
             )}
           </div>
@@ -126,13 +197,17 @@ export function Component() {
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry) => {
+              {filtered.map((entry) => {
                 const lines = entry.journal_entry_lines ?? []
                 const debits  = lines.filter(l => l.side === 'debit').map(l => l.account_plans?.code ?? '').join(', ')
                 const credits = lines.filter(l => l.side === 'credit').map(l => l.account_plans?.code ?? '').join(', ')
                 const total = getEntryTotal(entry)
                 return (
-                  <tr key={entry.id} className="border-b border-[var(--bg-border)]/50 hover:bg-[var(--bg-elevated)] transition-colors">
+                  <tr
+                    key={entry.id}
+                    onClick={() => setDetailEntry(entry)}
+                    className="border-b border-[var(--bg-border)]/50 hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
+                  >
                     <td className="px-4 py-3 text-xs font-mono text-[var(--text-muted)]">
                       {new Date(entry.entry_date + 'T00:00:00').toLocaleDateString('pt-BR')}
                     </td>
@@ -160,6 +235,7 @@ export function Component() {
         </Card>
       )}
 
+      {/* Modals */}
       {canWrite && (
         <JournalEntryModal
           open={entryModalOpen}
@@ -168,6 +244,20 @@ export function Component() {
           accounts={accounts}
         />
       )}
+
+      <JournalEntryDetailModal
+        entry={detailEntry}
+        open={!!detailEntry}
+        onClose={() => setDetailEntry(null)}
+        sourceLabel={sourceLabel}
+      />
+
+      <JournalExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        entries={filtered}
+        period={period}
+      />
     </div>
   )
 }

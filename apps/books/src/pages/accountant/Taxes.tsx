@@ -105,8 +105,8 @@ export function Component() {
   const { data: company } = useQuery({
     queryKey: isExternal ? ['external-company', id] : ['company-readonly', id],
     queryFn: () => isExternal
-      ? apiFetch<{ id: string; name: string; tax_regime: string | null }>(`/api/external-companies/${id}`)
-      : apiFetch<{ id: string; name: string; tax_regime: string | null }>(`/api/companies/${id}`),
+      ? apiFetch<{ tax_regime: string | null }>(`/api/external-companies/${id}`)
+      : apiFetch<{ tax_regime: string | null }>(`/api/companies/${id}`),
     enabled: !!id,
   })
 
@@ -177,7 +177,6 @@ export function Component() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('impostos_title')}</h1>
-          {company?.name && <p className="text-sm text-[var(--text-muted)]">{company.name}</p>}
         </div>
         <div className="flex items-center gap-2">
           <MonthPicker value={period} onChange={setPeriod} language={language} size="sm" />

@@ -148,7 +148,6 @@ export const en: Record<TranslationKey, string> = {
   impostos_calculate: 'Calculate',
   impostos_recalculate: 'Recalculate',
   impostos_calculatedAt: 'Calculated on',
-  impostos_period: 'Period',
   impostos_total: 'Total:',
   impostos_tax: 'Tax',
   impostos_base: 'Tax base',
@@ -162,8 +161,6 @@ export const en: Record<TranslationKey, string> = {
   impostos_markPaid: 'Mark as paid',
   impostos_markCalculated: 'Mark as reviewed',
   impostos_markDraft: 'Revert to draft',
-  impostos_paidDate: 'Payment date',
-  impostos_notes: 'Notes',
   impostos_revenue12m_title: 'Accumulated Gross Revenue',
   impostos_revenue12m_desc: 'Enter the gross revenue of the last 12 months to calculate the effective Simples Nacional rate.',
   impostos_revenue12m_label: 'Last 12-month gross revenue (R$)',
@@ -174,10 +171,8 @@ export const en: Record<TranslationKey, string> = {
   impostos_infoSimples: 'Calculation by Simples Nacional (Annex III — Services). Verify the current table with your client.',
   impostos_infoPresumido: 'IRPJ and CSLL are quarterly and appear only in quarter-end months (March, June, September, December).',
   impostos_infoReal: 'Monthly calculation based on the period\'s journal entries.',
-  settings_taxConfig: 'Tax settings',
   settings_issRate: 'ISS rate',
   settings_issRatePlaceholder: '0.00% – 5.00%',
-  settings_issRateSaved: 'Tax settings saved.',
 
   // Lançamentos contábeis
   lancamentos_title: 'Journal Entries',

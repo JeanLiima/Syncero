@@ -9,7 +9,7 @@ import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
-import type { TaxCalculation } from '@/types'
+import type { CompanySegment, TaxCalculation, TaxRegime } from '@/types'
 
 // ── helpers ───────────────────────────────────────────────────
 
@@ -19,11 +19,14 @@ const statusVariant = (s: TaxCalculation['status']): 'success' | 'info' | 'warni
   return 'warning'
 }
 
-type InfoKey = 'impostos_infoSimples' | 'impostos_infoPresumido' | 'impostos_infoReal'
-const regimeInfo: Record<string, InfoKey> = {
-  simples:         'impostos_infoSimples',
-  lucro_presumido: 'impostos_infoPresumido',
-  lucro_real:      'impostos_infoReal',
+type InfoKey = 'impostos_infoSimplesServicos' | 'impostos_infoSimplesComercio' | 'impostos_infoPresumido' | 'impostos_infoReal'
+
+const COMMERCE_SEGMENTS = new Set<CompanySegment>(['retail', 'manufacturing', 'agribusiness', 'construction'])
+
+function simplesInfoKey(segment: CompanySegment | null): InfoKey {
+  return segment && COMMERCE_SEGMENTS.has(segment)
+    ? 'impostos_infoSimplesComercio'
+    : 'impostos_infoSimplesServicos'
 }
 
 // ── Revenue-12m modal (Simples only) ─────────────────────────
@@ -105,8 +108,8 @@ export function Component() {
   const { data: company } = useQuery({
     queryKey: isExternal ? ['external-company', id] : ['company-readonly', id],
     queryFn: () => isExternal
-      ? apiFetch<{ tax_regime: string | null }>(`/api/external-companies/${id}`)
-      : apiFetch<{ tax_regime: string | null }>(`/api/companies/${id}`),
+      ? apiFetch<{ tax_regime: TaxRegime | null; segment: CompanySegment | null }>(`/api/external-companies/${id}`)
+      : apiFetch<{ tax_regime: TaxRegime | null; segment: CompanySegment | null }>(`/api/companies/${id}`),
     enabled: !!id,
   })
 
@@ -123,6 +126,7 @@ export function Component() {
   }, {})
 
   const taxRegime = company?.tax_regime ?? null
+  const segment   = company?.segment ?? null
   const isSimples = taxRegime === 'simples'
   const hasCurrent = !!grouped[period]
 
@@ -168,7 +172,11 @@ export function Component() {
   }
 
   const fmt = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-  const infoKey = taxRegime ? regimeInfo[taxRegime] : null
+  const infoKey: InfoKey | null = taxRegime === 'simples'
+    ? simplesInfoKey(segment)
+    : taxRegime === 'lucro_presumido' ? 'impostos_infoPresumido'
+    : taxRegime === 'lucro_real'      ? 'impostos_infoReal'
+    : null
 
   return (
     <div className="flex flex-col gap-6">

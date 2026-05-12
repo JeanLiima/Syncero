@@ -53,10 +53,7 @@ const SIMPLES_III = [ // Serviços (default)
   { max: 4800000, rate: 0.33,  ded: 648000 },
 ]
 
-const COMMERCE_SEGMENTS = new Set([
-  'retail','manufacturing','agribusiness','construction',
-  'comercio','industria','agronegocio','construcao_civil', // legacy PT values
-])
+const COMMERCE_SEGMENTS = new Set(['retail', 'manufacturing', 'agribusiness', 'construction'])
 
 function simplisRate(rev12m: number, segment: string | null): number {
   const table = COMMERCE_SEGMENTS.has(segment ?? '') ? SIMPLES_I : SIMPLES_III

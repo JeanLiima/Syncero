@@ -14,7 +14,7 @@ const schema = z.object({
   name:       z.string().min(2),
   trade_name: z.string().optional(),
   cnpj:       z.string().optional(),
-  tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real']).optional(),
+  tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real'], { required_error: 'Obrigatório' }),
   segment:    z.string().min(1, 'Obrigatório'),
 })
 type FormData = z.infer<typeof schema>

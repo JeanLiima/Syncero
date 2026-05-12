@@ -59,28 +59,43 @@ export function ImportModal({ open, onClose, onNfePrefill }: Props) {
 
   const handleFile = (file: File) => {
     const name = file.name.toLowerCase()
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const content = e.target?.result as string
-      if (!content) { setView('error'); return }
 
-      if (name.endsWith('.xml')) {
+    const tryParseXml = (content: string) => {
+      const cnpj = company?.cnpj ?? ''
+      const result = parseNfe(content, cnpj)
+      if (result) { setNfeParsed(result); setView('nfe-preview') }
+      else setView('error')
+    }
+
+    const readAs = (encoding: string, onSuccess: (content: string) => void) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const content = e.target?.result as string
+        if (!content) { setView('error'); return }
+        onSuccess(content)
+      }
+      reader.onerror = () => setView('error')
+      reader.readAsText(file, encoding)
+    }
+
+    if (name.endsWith('.xml')) {
+      // Try UTF-8 first; fall back to ISO-8859-1 (common in older NFe files)
+      readAs('UTF-8', (content) => {
         const cnpj = company?.cnpj ?? ''
         const result = parseNfe(content, cnpj)
-        if (!result) { setView('error'); return }
-        setNfeParsed(result)
-        setView('nfe-preview')
-      } else if (name.endsWith('.ofx') || name.endsWith('.qfx')) {
+        if (result) { setNfeParsed(result); setView('nfe-preview'); return }
+        readAs('ISO-8859-1', tryParseXml)
+      })
+    } else if (name.endsWith('.ofx') || name.endsWith('.qfx')) {
+      readAs('UTF-8', (content) => {
         const txns = parseOFX(content)
         if (txns.length === 0) { setView('error'); return }
         setOfxTransactions(txns)
         setView('ofx-review')
-      } else {
-        setView('error')
-      }
+      })
+    } else {
+      setView('error')
     }
-    reader.onerror = () => setView('error')
-    reader.readAsText(file, 'UTF-8')
   }
 
   const handleDrop = (e: React.DragEvent) => {

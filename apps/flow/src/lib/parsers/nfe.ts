@@ -14,32 +14,33 @@ function stripCnpj(v: string) {
   return v.replace(/\D/g, '')
 }
 
-function getText(el: Element | null): string {
-  return el?.textContent?.trim() ?? ''
+function tag(root: Document | Element, name: string): string {
+  return root.getElementsByTagName(name)[0]?.textContent?.trim() ?? ''
 }
 
 export function parseNfe(xml: string, companyCnpj: string): NfeParsed | null {
   try {
     const doc = new DOMParser().parseFromString(xml, 'text/xml')
-    const parseError = doc.querySelector('parsererror')
-    if (parseError) return null
 
-    const infNFe = doc.querySelector('infNFe')
-    if (!infNFe) return null
+    // DOMParser signals XML errors via a <parsererror> root or documentElement
+    if (doc.documentElement.nodeName === 'parsererror') return null
+    if (doc.getElementsByTagName('parsererror').length > 0) return null
 
-    const cnpjIssuer = stripCnpj(getText(infNFe.querySelector('emit > CNPJ')))
-    const cnpjRecipient = stripCnpj(getText(infNFe.querySelector('dest > CNPJ')))
-    const issuerName = getText(infNFe.querySelector('emit > xNome'))
-    const recipientName = getText(infNFe.querySelector('dest > xNome'))
+    if (doc.getElementsByTagName('infNFe').length === 0) return null
 
-    const rawDate = getText(infNFe.querySelector('ide > dhEmi')) || getText(infNFe.querySelector('ide > dEmi'))
+    const cnpjIssuer   = stripCnpj(tag(doc, 'emit') ? (doc.getElementsByTagName('emit')[0]?.getElementsByTagName('CNPJ')[0]?.textContent?.trim() ?? '') : '')
+    const issuerName   = doc.getElementsByTagName('emit')[0]?.getElementsByTagName('xNome')[0]?.textContent?.trim() ?? ''
+    const cnpjRecipient = stripCnpj(doc.getElementsByTagName('dest')[0]?.getElementsByTagName('CNPJ')[0]?.textContent?.trim() ?? '')
+    const recipientName = doc.getElementsByTagName('dest')[0]?.getElementsByTagName('xNome')[0]?.textContent?.trim() ?? ''
+
+    const rawDate = tag(doc, 'dhEmi') || tag(doc, 'dEmi')
     const dateMatch = rawDate.match(/(\d{4}-\d{2}-\d{2})/)
     const date = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10)
 
-    const rawAmount = getText(infNFe.querySelector('total > ICMSTot > vNF'))
+    const rawAmount = tag(doc, 'vNF')
     const amountCents = Math.round(parseFloat(rawAmount || '0') * 100)
 
-    const description = getText(infNFe.querySelector('ide > natOp'))
+    const description = tag(doc, 'natOp')
 
     const clean = stripCnpj(companyCnpj)
     let type: 'income' | 'expense' | null = null

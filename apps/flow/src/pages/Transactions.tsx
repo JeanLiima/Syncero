@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, CheckCircle, Search, Download, Upload } from 'lucide-react'
+import { Plus, CheckCircle, Search, Download, Upload, ChevronDown } from 'lucide-react'
 import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useAuthStore } from '@/store/auth'
@@ -38,6 +38,17 @@ export function Component() {
   const [exportOpen, setExportOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [nfePrefill, setNfePrefill] = useState<WizardPrefill | null>(null)
+  const [splitOpen, setSplitOpen] = useState(false)
+  const splitRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!splitOpen) return
+    const handler = (e: MouseEvent) => {
+      if (!splitRef.current?.contains(e.target as Node)) setSplitOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [splitOpen])
 
   const { data, isLoading } = useTransactions(filters, page)
   const { data: categories = [] } = useCategories()
@@ -73,14 +84,43 @@ export function Component() {
             <Download className="h-4 w-4" /> {t('export_button')}
           </Button>
           {canWrite && (
-            <>
-              <Button variant="ghost" size="sm" onClick={() => setImportOpen(true)}>
-                <Upload className="h-4 w-4" /> {t('transactions_import')}
-              </Button>
-              <Button size="sm" onClick={openCreate}>
-                <Plus className="h-4 w-4" /> {t('transactions_new')}
-              </Button>
-            </>
+            <div className="relative" ref={splitRef}>
+              <div className="flex rounded-[var(--radius-md)] overflow-hidden shadow-sm">
+                <button
+                  type="button"
+                  onClick={openCreate}
+                  className="flex items-center gap-1.5 h-8 pl-3 pr-3 bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer"
+                >
+                  <Plus className="h-4 w-4 shrink-0" />
+                  {t('transactions_new')}
+                </button>
+                <div className="w-px bg-white/25 shrink-0" />
+                <button
+                  type="button"
+                  onClick={() => setSplitOpen((v) => !v)}
+                  className="flex items-center justify-center w-8 bg-[var(--accent)] text-white hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer"
+                  aria-label="Mais opções"
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${splitOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              {splitOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-52 rounded-[var(--radius-lg)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg overflow-hidden z-20">
+                  <button
+                    type="button"
+                    onClick={() => { setSplitOpen(false); setImportOpen(true) }}
+                    className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
+                  >
+                    <Upload className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium leading-tight">{t('transactions_import')}</span>
+                      <span className="text-xs text-[var(--text-muted)] leading-tight">XML (NFe / NFSe) · OFX</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

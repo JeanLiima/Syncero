@@ -462,7 +462,7 @@ export const en: Record<TranslationKey, string> = {
   transactions_import_nfe_type_unknown: 'Tax ID not identified',
   transactions_import_nfe_cnpj_warning: 'Your tax ID was not found in this file. This document may not belong to your company.',
   transactions_import_nfe_proceed_anyway: 'Proceed anyway',
-  transactions_import_nfe_continue: 'Continue in wizard',
+  transactions_import_nfe_continue: 'Create transaction',
   transactions_import_ofx_found: '{count} transactions found',
   transactions_import_ofx_defaultNature: 'Default nature',
   transactions_import_ofx_defaultCategory: 'Default category',

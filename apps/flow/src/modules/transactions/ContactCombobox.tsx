@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { UserPlus } from 'lucide-react'
 import { maskCnpj } from '@/lib/cnpj'
 import type { Contact } from '@/types'
@@ -27,7 +28,9 @@ export function ContactCombobox({
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const [dropdownRect, setDropdownRect] = useState<DOMRect | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   const filtered = query.trim()
@@ -47,9 +50,27 @@ export function ContactCombobox({
   useEffect(() => { setQuery(value) }, [value])
   useEffect(() => { setHighlightedIndex(-1) }, [query])
 
+  // Update dropdown position whenever it opens or window resizes/scrolls
+  useEffect(() => {
+    if (!open || !inputRef.current) { setDropdownRect(null); return }
+    const update = () => {
+      if (inputRef.current) setDropdownRect(inputRef.current.getBoundingClientRect())
+    }
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [open])
+
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (!containerRef.current?.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      const inContainer = containerRef.current?.contains(target)
+      const inList = listRef.current?.contains(target)
+      if (!inContainer && !inList) setOpen(false)
     }
     document.addEventListener('mousedown', h)
     return () => document.removeEventListener('mousedown', h)
@@ -106,9 +127,57 @@ export function ContactCombobox({
     }
   }
 
+  const dropdown = showDropdown && dropdownRect && createPortal(
+    <div
+      ref={listRef}
+      style={{
+        position: 'fixed',
+        top: dropdownRect.bottom + 4,
+        left: dropdownRect.left,
+        width: dropdownRect.width,
+        zIndex: 9999,
+      }}
+      className="rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg overflow-hidden max-h-52 overflow-y-auto"
+    >
+      {filtered.map((c, i) => (
+        <button
+          key={c.id}
+          type="button"
+          data-item
+          onMouseDown={(e) => { e.preventDefault(); commit(c) }}
+          className={`w-full text-left px-3 py-2.5 transition-colors hover:bg-[var(--bg-elevated)] cursor-pointer ${
+            i === highlightedIndex || c.name === value ? 'bg-[var(--bg-elevated)]' : ''
+          }`}
+        >
+          <p className={`text-sm ${c.name === value ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
+            {c.name}
+          </p>
+          {formatDoc(c) && (
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">{formatDoc(c)}</p>
+          )}
+        </button>
+      ))}
+      {showAddNew && (
+        <button
+          type="button"
+          data-item
+          onMouseDown={(e) => { e.preventDefault(); onAddNew(query.trim()) }}
+          className={`w-full text-left px-3 py-2.5 text-sm text-[var(--accent)] hover:bg-[var(--bg-elevated)] cursor-pointer flex items-center gap-2 border-t border-[var(--bg-border)] ${
+            highlightedIndex === filtered.length ? 'bg-[var(--bg-elevated)]' : ''
+          }`}
+        >
+          <UserPlus className="h-3.5 w-3.5 shrink-0" />
+          {addLabel} &ldquo;{query.trim()}&rdquo;
+        </button>
+      )}
+    </div>,
+    document.body
+  )
+
   return (
     <div ref={containerRef} className="relative">
       <input
+        ref={inputRef}
         type="text"
         value={query}
         placeholder={placeholder}
@@ -122,41 +191,7 @@ export function ContactCombobox({
         onKeyDown={handleKeyDown}
         className="w-full h-10 px-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
       />
-      {showDropdown && (
-        <div ref={listRef} className="absolute z-10 w-full mt-1 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg overflow-hidden max-h-52 overflow-y-auto">
-          {filtered.map((c, i) => (
-            <button
-              key={c.id}
-              type="button"
-              data-item
-              onMouseDown={(e) => { e.preventDefault(); commit(c) }}
-              className={`w-full text-left px-3 py-2.5 transition-colors hover:bg-[var(--bg-elevated)] cursor-pointer ${
-                i === highlightedIndex || c.name === value ? 'bg-[var(--bg-elevated)]' : ''
-              }`}
-            >
-              <p className={`text-sm ${c.name === value ? 'text-[var(--accent)]' : 'text-[var(--text-primary)]'}`}>
-                {c.name}
-              </p>
-              {formatDoc(c) && (
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">{formatDoc(c)}</p>
-              )}
-            </button>
-          ))}
-          {showAddNew && (
-            <button
-              type="button"
-              data-item
-              onMouseDown={(e) => { e.preventDefault(); onAddNew(query.trim()) }}
-              className={`w-full text-left px-3 py-2.5 text-sm text-[var(--accent)] hover:bg-[var(--bg-elevated)] cursor-pointer flex items-center gap-2 border-t border-[var(--bg-border)] ${
-                highlightedIndex === filtered.length ? 'bg-[var(--bg-elevated)]' : ''
-              }`}
-            >
-              <UserPlus className="h-3.5 w-3.5 shrink-0" />
-              {addLabel} &ldquo;{query.trim()}&rdquo;
-            </button>
-          )}
-        </div>
-      )}
+      {dropdown}
     </div>
   )
 }

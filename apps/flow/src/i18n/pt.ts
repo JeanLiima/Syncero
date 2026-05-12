@@ -460,7 +460,7 @@ export const pt = {
   transactions_import_nfe_type_unknown: 'CNPJ não identificado',
   transactions_import_nfe_cnpj_warning: 'Seu CNPJ não foi encontrado neste arquivo. O documento pode não pertencer à sua empresa.',
   transactions_import_nfe_proceed_anyway: 'Prosseguir mesmo assim',
-  transactions_import_nfe_continue: 'Continuar no wizard',
+  transactions_import_nfe_continue: 'Criar lançamento',
   transactions_import_ofx_found: '{count} transações encontradas',
   transactions_import_ofx_defaultNature: 'Natureza padrão',
   transactions_import_ofx_defaultCategory: 'Categoria padrão',

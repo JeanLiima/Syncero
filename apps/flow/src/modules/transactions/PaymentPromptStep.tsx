@@ -1,7 +1,10 @@
+import { useEffect, useRef, useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import { Button } from '@syncero/ui'
 import { useT } from '@/i18n'
 import type { TransactionType } from '@/types'
+
+const SKIP_DURATION_MS = 5000
 
 interface PaymentPromptStepProps {
   type: TransactionType
@@ -13,6 +16,19 @@ interface PaymentPromptStepProps {
 export function PaymentPromptStep({ type, onRegisterPayment, onSkip, skipCountdown }: PaymentPromptStepProps) {
   const t = useT()
   const isIncome = type === 'income'
+  const [progress, setProgress] = useState(0)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    const start = performance.now()
+    const tick = () => {
+      const p = Math.min((performance.now() - start) / SKIP_DURATION_MS, 1)
+      setProgress(p)
+      if (p < 1) rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [])
 
   return (
     <div className="flex flex-col items-center gap-5 py-4">
@@ -35,11 +51,8 @@ export function PaymentPromptStep({ type, onRegisterPayment, onSkip, skipCountdo
         >
           <span
             aria-hidden
-            className="absolute inset-y-0 left-0 rounded-[inherit] bg-[var(--bg-elevated)] group-hover:bg-[var(--bg-border)] transition-[width,background-color] ease-linear"
-            style={{
-              width: `${((5 - skipCountdown) / 5) * 100}%`,
-              transitionDuration: `1000ms, 50ms`,
-            }}
+            className="absolute inset-y-0 left-0 rounded-[inherit] bg-[var(--bg-elevated)] group-hover:bg-[var(--bg-border)] transition-[background-color] duration-50"
+            style={{ width: `${progress * 100}%` }}
           />
           <span className="relative z-10 flex items-center gap-1.5">
             {t('transactions_payment_skip')}

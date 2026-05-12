@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { UserPlus } from 'lucide-react'
+import { maskCnpj } from '@/lib/cnpj'
 import type { Contact } from '@/types'
 
 interface ContactComboboxProps {
@@ -67,7 +68,7 @@ export function ContactCombobox({
 
   const formatDoc = (c: Contact) => {
     if (c.cpf) return `CPF ${c.cpf}`
-    if (c.cnpj) return `CNPJ ${c.cnpj}`
+    if (c.cnpj) return `CNPJ ${maskCnpj(c.cnpj)}`
     return null
   }
 

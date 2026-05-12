@@ -6,6 +6,7 @@ import { Button, Input, Modal, Select, useToast } from '@syncero/ui'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { getCompanyTaxSettings, saveCompanyTaxSettings } from '@/lib/backend'
 import { useT } from '@/i18n'
+import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import type { ExternalCompany, TaxRegime, CompanySegment } from '@/types'
 
 // ── helpers ───────────────────────────────────────────────────
@@ -43,7 +44,7 @@ function taxLabel(regime: string | null | undefined, t: (k: any) => string) {
 }
 
 function fmt(cnpj: string | null | undefined) {
-  return cnpj ? cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5') : '—'
+  return cnpj ? maskCnpj(cnpj) : '—'
 }
 
 function InfoRow({ label, value }: { label: string; value?: string | null }) {
@@ -102,6 +103,7 @@ function ExternalCompanySettings({ id }: { id: string }) {
   const [name,      setName]      = useState('')
   const [tradeName, setTradeName] = useState('')
   const [cnpj,      setCnpj]      = useState('')
+  const [cnpjError, setCnpjError] = useState('')
   const [taxRegime, setTaxRegime] = useState<TaxRegime | ''>('')
   const [segment,   setSegment]   = useState<CompanySegment | ''>('')
   const [issRaw,    setIssRaw]    = useState('')
@@ -111,7 +113,7 @@ function ExternalCompanySettings({ id }: { id: string }) {
     if (!company) return
     setName(company.name ?? '')
     setTradeName(company.trade_name ?? '')
-    setCnpj(company.cnpj ?? '')
+    setCnpj(company.cnpj ? maskCnpj(company.cnpj) : '')
     setTaxRegime(company.tax_regime ?? '')
     setSegment(company.segment ?? '')
     setIssRaw(company.iss_rate != null ? String(company.iss_rate * 100) : '')
@@ -119,6 +121,7 @@ function ExternalCompanySettings({ id }: { id: string }) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (cnpj && !validateCnpj(cnpj)) { setCnpjError(t('common_cnpjInvalid')); return }
     setSaving(true)
     try {
       const iss = issRaw.trim() === '' ? null : parseFloat(issRaw.replace(',', '.')) / 100
@@ -127,7 +130,7 @@ function ExternalCompanySettings({ id }: { id: string }) {
         body: JSON.stringify({
           name:       name.trim() || undefined,
           trade_name: tradeName.trim() || null,
-          cnpj:       cnpj.replace(/\D/g, '') || null,
+          cnpj:       stripCnpj(cnpj) || null,
           tax_regime: taxRegime || null,
           segment:    segment   || null,
           iss_rate:   iss,
@@ -171,7 +174,10 @@ function ExternalCompanySettings({ id }: { id: string }) {
           <Input label={t('settings_tradeName')} value={tradeName} onChange={e => setTradeName(e.target.value)} />
           <Input
             label={t('settings_cnpj')} placeholder="00.000.000/0000-00"
-            value={cnpj} onChange={e => setCnpj(e.target.value)} maxLength={18}
+            value={cnpj}
+            onChange={(e) => { setCnpj(maskCnpj(e.target.value)); setCnpjError('') }}
+            onBlur={() => { if (cnpj && !validateCnpj(cnpj)) setCnpjError(t('common_cnpjInvalid')) }}
+            maxLength={18} error={cnpjError}
           />
           <Select
             label={t('settings_taxRegime')}

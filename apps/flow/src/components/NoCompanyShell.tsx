@@ -1,6 +1,7 @@
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import { LogOut, Info } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
@@ -13,7 +14,7 @@ import { SEGMENTS_WITH_COST } from '@/lib/segments'
 const schema = z.object({
   name:       z.string().min(2),
   trade_name: z.string().optional(),
-  cnpj:       z.string().optional(),
+  cnpj:       z.string().optional().refine((v) => !v || validateCnpj(v), 'CNPJ inválido'),
   tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real'], { required_error: 'Obrigatório' }),
   segment:    z.string().min(1, 'Obrigatório'),
 })
@@ -36,7 +37,7 @@ export function NoCompanyShell() {
   const { user, profile, signOut } = useAuth()
   const setActiveCompany = useAuthStore((s) => s.setActiveCompany)
   const { success, error: toastError } = useToast()
-  const { register, handleSubmit, control, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, control, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
@@ -56,7 +57,7 @@ export function NoCompanyShell() {
         body: JSON.stringify({
           name:       data.name,
           trade_name: data.trade_name || undefined,
-          cnpj:       data.cnpj       || undefined,
+          cnpj:       stripCnpj(data.cnpj ?? '') || undefined,
           tax_regime: data.tax_regime || undefined,
           segment:    data.segment    || undefined,
         }),
@@ -113,8 +114,11 @@ export function NoCompanyShell() {
             />
             <Input
               label={t('noCompany_cnpjLabel')}
-              placeholder={t('noCompany_cnpjPlaceholder')}
+              placeholder="00.000.000/0000-00"
               {...register('cnpj')}
+              onChange={(e) => setValue('cnpj', maskCnpj(e.target.value), { shouldValidate: true })}
+              error={errors.cnpj?.message}
+              maxLength={18}
             />
             <Controller
               control={control}

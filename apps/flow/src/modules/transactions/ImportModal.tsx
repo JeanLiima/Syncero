@@ -21,6 +21,25 @@ interface Props {
 
 type View = 'dropzone' | 'nfe-preview' | 'ofx-review' | 'error'
 
+function debugNfe(xml: string) {
+  try {
+    const clean = xml.replace(/\s+xmlns(?::\w+)?="[^"]*"/g, '')
+    const doc = new DOMParser().parseFromString(clean, 'text/xml')
+    if (doc.documentElement.nodeName === 'parsererror' || doc.querySelector('parsererror')) {
+      console.error('[NFe] XML parse error:', doc.documentElement.textContent)
+      return
+    }
+    const hasInfNFe = !!doc.querySelector('infNFe')
+    console.info('[NFe] infNFe found:', hasInfNFe)
+    console.info('[NFe] root tag:', doc.documentElement.nodeName)
+    console.info('[NFe] emit CNPJ:', doc.querySelector('emit CNPJ')?.textContent)
+    console.info('[NFe] dest CNPJ:', doc.querySelector('dest CNPJ')?.textContent)
+    console.info('[NFe] vNF:', doc.querySelector('ICMSTot vNF')?.textContent)
+  } catch (e) {
+    console.error('[NFe] exception:', e)
+  }
+}
+
 function fmtAmount(cents: number) {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
@@ -84,6 +103,7 @@ export function ImportModal({ open, onClose, onNfePrefill }: Props) {
         const cnpj = company?.cnpj ?? ''
         const result = parseNfe(content, cnpj)
         if (result) { setNfeParsed(result); setView('nfe-preview'); return }
+        debugNfe(content)
         readAs('ISO-8859-1', tryParseXml)
       })
     } else if (name.endsWith('.ofx') || name.endsWith('.qfx')) {
@@ -112,12 +132,16 @@ export function ImportModal({ open, onClose, onNfePrefill }: Props) {
 
   const handleNfeContinue = () => {
     if (!nfeParsed) return
+    const counterpartCnpj = nfeParsed.type === 'income'  ? nfeParsed.cnpjRecipient
+                          : nfeParsed.type === 'expense' ? nfeParsed.cnpjIssuer
+                          : undefined
     onNfePrefill({
       type: nfeParsed.type ?? undefined,
       date: nfeParsed.date,
       amountCents: nfeParsed.amountCents,
       counterpart: nfeParsed.counterpart || undefined,
       description: nfeParsed.description || undefined,
+      counterpartCnpj: counterpartCnpj || undefined,
     })
   }
 
@@ -201,9 +225,9 @@ export function ImportModal({ open, onClose, onNfePrefill }: Props) {
 
             <div className="flex flex-col divide-y divide-[var(--bg-border)]">
               {nfeParsed.counterpart && (
-                <div className="flex justify-between items-center px-4 py-2.5">
-                  <span className="text-xs text-[var(--text-muted)]">{t('transactions_import_nfe_counterpart')}</span>
-                  <span className="text-sm text-[var(--text-primary)] font-medium">{nfeParsed.counterpart}</span>
+                <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <span className="text-xs text-[var(--text-muted)] shrink-0">{t('transactions_import_nfe_counterpart')}</span>
+                  <span className="text-sm text-[var(--text-primary)] font-medium text-right">{nfeParsed.counterpart}</span>
                 </div>
               )}
               <div className="flex justify-between items-center px-4 py-2.5">
@@ -223,13 +247,28 @@ export function ImportModal({ open, onClose, onNfePrefill }: Props) {
             </div>
           </div>
 
+          {nfeParsed.type === null && (
+            <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-[var(--warning)]/10 border border-[var(--warning)]/30">
+              <AlertCircle className="h-4 w-4 shrink-0 text-[var(--warning)] mt-0.5" />
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                {t('transactions_import_nfe_cnpj_warning')}
+              </p>
+            </div>
+          )}
+
           <div className="flex items-center justify-between pt-2 border-t border-[var(--bg-border)]">
             <Button variant="ghost" size="sm" onClick={reset}>
               {t('transactions_cancel')}
             </Button>
-            <Button size="sm" onClick={handleNfeContinue}>
-              {t('transactions_import_nfe_continue')}
-            </Button>
+            {nfeParsed.type === null ? (
+              <Button variant="ghost" size="sm" onClick={handleNfeContinue}>
+                {t('transactions_import_nfe_proceed_anyway')}
+              </Button>
+            ) : (
+              <Button size="sm" onClick={handleNfeContinue}>
+                {t('transactions_import_nfe_continue')}
+              </Button>
+            )}
           </div>
         </div>
       )}

@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { Button, Input, Select, Modal, Checkbox } from '@syncero/ui'
 import { useT } from '@/i18n'
+import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import type { TaxRegime, CompanySegment } from '@/types'
 
 
@@ -41,6 +42,7 @@ export function CreateExternalCompanyModal({ open, onClose }: Props) {
   const [name,      setName]      = useState('')
   const [tradeName, setTradeName] = useState('')
   const [cnpj,      setCnpj]      = useState('')
+  const [cnpjError, setCnpjError] = useState('')
   const [taxRegime, setTaxRegime] = useState<TaxRegime | ''>('')
   const [segment,   setSegment]   = useState<CompanySegment | ''>('')
   const [seedPlan,  setSeedPlan]  = useState(true)
@@ -63,7 +65,8 @@ export function CreateExternalCompanyModal({ open, onClose }: Props) {
 
     setSubmitting(true)
     try {
-      const rawCnpj = cnpj.replace(/\D/g, '')
+      if (cnpj && !validateCnpj(cnpj)) { setCnpjError(t('common_cnpjInvalid')); return }
+      const rawCnpj = stripCnpj(cnpj)
       const company = await apiFetch<{ id: string }>('/api/external-companies', {
         method: 'POST',
         body: JSON.stringify({
@@ -115,8 +118,10 @@ export function CreateExternalCompanyModal({ open, onClose }: Props) {
           label={t('external_cnpj')}
           placeholder={t('external_cnpjPlaceholder')}
           value={cnpj}
-          onChange={e => setCnpj(e.target.value)}
+          onChange={(e) => { setCnpj(maskCnpj(e.target.value)); setCnpjError('') }}
+          onBlur={() => { if (cnpj && !validateCnpj(cnpj)) setCnpjError(t('common_cnpjInvalid')) }}
           maxLength={18}
+          error={cnpjError}
         />
         <Select
           label={t('external_taxRegime')}

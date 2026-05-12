@@ -13,12 +13,13 @@ import { SEGMENTS_WITH_COST } from '@/lib/segments'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
+import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import type { MemberRole, AccountantCompany, TaxRegime } from '@/types'
 
 const companySchema = z.object({
   name:       z.string().min(2, 'Nome muito curto'),
   trade_name: z.string().optional(),
-  cnpj:       z.string().optional(),
+  cnpj:       z.string().optional().refine((v) => !v || validateCnpj(v), 'CNPJ inválido'),
   tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real'], { required_error: 'Obrigatório' }),
   segment:    z.string().min(1, 'Obrigatório'),
 })
@@ -66,7 +67,7 @@ function CompanyTab() {
     enabled: !!activeCompany?.id,
   })
 
-  const { register, handleSubmit, reset, control, watch, formState: { errors, isSubmitting } } = useForm<CompanyForm>({
+  const { register, handleSubmit, reset, control, watch, setValue, formState: { errors, isSubmitting } } = useForm<CompanyForm>({
     resolver: zodResolver(companySchema),
   })
 
@@ -74,7 +75,7 @@ function CompanyTab() {
     if (company) reset({
       name:       company.name,
       trade_name: company.trade_name ?? '',
-      cnpj:       company.cnpj       ?? '',
+      cnpj:       company.cnpj ? maskCnpj(company.cnpj) : '',
       tax_regime: company.tax_regime  ?? undefined,
       segment:    company.segment     ?? '',
     })
@@ -84,7 +85,7 @@ function CompanyTab() {
     mutationFn: async (data: CompanyForm) => {
       const payload: Record<string, unknown> = { name: data.name }
       if (data.trade_name !== undefined) payload.trade_name = data.trade_name || null
-      if (data.cnpj       !== undefined) payload.cnpj       = data.cnpj       || null
+      if (data.cnpj       !== undefined) payload.cnpj       = stripCnpj(data.cnpj) || null
       payload.tax_regime = data.tax_regime ?? null
       payload.segment    = data.segment    || null
       return updateCompany(activeCompany!.id, payload)
@@ -122,7 +123,7 @@ function CompanyTab() {
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-[var(--text-muted)]">{t('settings_cnpj')}</span>
-            <span className="text-sm font-medium text-[var(--text-primary)]">{company?.cnpj ?? '—'}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">{company?.cnpj ? maskCnpj(company.cnpj) : '—'}</span>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-[var(--text-muted)]">{t('settings_taxRegime')}</span>
@@ -139,7 +140,14 @@ function CompanyTab() {
         <form onSubmit={handleSubmit((d) => save.mutateAsync(d))} className="flex flex-col gap-4">
           <Input label={t('settings_companyName')} error={errors.name?.message} {...register('name')} />
           <Input label={t('settings_tradeName')} {...register('trade_name')} />
-          <Input label={t('settings_cnpj')} {...register('cnpj')} />
+          <Input
+            label={t('settings_cnpj')}
+            placeholder="00.000.000/0000-00"
+            {...register('cnpj')}
+            onChange={(e) => setValue('cnpj', maskCnpj(e.target.value), { shouldValidate: true })}
+            error={errors.cnpj?.message}
+            maxLength={18}
+          />
           <Controller
             control={control}
             name="tax_regime"

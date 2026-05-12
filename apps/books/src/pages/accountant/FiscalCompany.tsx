@@ -5,6 +5,7 @@ import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
+import { maskCnpj } from '@/lib/cnpj'
 import type { TaxRegime } from '@/types'
 
 const taxRegimeLabel: Record<TaxRegime, string> = {
@@ -29,9 +30,7 @@ export function Component() {
     enabled: !!companyId,
   })
 
-  const formattedCnpj = company?.cnpj
-    ? company.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')
-    : null
+  const formattedCnpj = company?.cnpj ? maskCnpj(company.cnpj) : null
 
   const items = [
     { label: t('overview_nfe'),             value: String(summary?.nfeCount ?? 0),                                                           icon: <FileText    className="h-6 w-6 text-[var(--accent)]"   />, to: 'nfe'               },

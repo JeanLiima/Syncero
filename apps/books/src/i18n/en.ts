@@ -543,4 +543,5 @@ export const en: Record<TranslationKey, string> = {
   export_col_bank: 'Bank account',
   export_col_installment: 'Installment',
   export_col_notes: 'Notes',
+  common_cnpjInvalid: 'Invalid CNPJ',
 }

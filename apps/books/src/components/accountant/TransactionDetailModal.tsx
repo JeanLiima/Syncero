@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { TrendingUp, TrendingDown, CheckCircle, Clock, Edit2, BookOpen } from 'lucide-react'
+import { maskCnpj } from '@/lib/cnpj'
 import { Badge, Button, Modal } from '@syncero/ui'
 import { useQuery } from '@tanstack/react-query'
 import { getTransactionDetail } from '@/lib/backend'
@@ -199,7 +200,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onClassif
                 <span className="flex flex-col items-end gap-0.5">
                   <span>{tx.contacts.name}</span>
                   {tx.contacts.cpf  && <span className="text-xs text-[var(--text-muted)]">CPF {tx.contacts.cpf}</span>}
-                  {tx.contacts.cnpj && <span className="text-xs text-[var(--text-muted)]">CNPJ {tx.contacts.cnpj}</span>}
+                  {tx.contacts.cnpj && <span className="text-xs text-[var(--text-muted)]">CNPJ {maskCnpj(tx.contacts.cnpj)}</span>}
                 </span>
               </Row>
             )}

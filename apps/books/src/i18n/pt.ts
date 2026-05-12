@@ -541,6 +541,7 @@ export const pt = {
   export_col_bank: 'Conta bancária',
   export_col_installment: 'Parcela',
   export_col_notes: 'Observações',
+  common_cnpjInvalid: 'CNPJ inválido',
 } as const
 
 export type TranslationKey = keyof typeof pt

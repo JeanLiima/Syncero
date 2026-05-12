@@ -12,6 +12,8 @@ export interface WizardPrefill {
   amountCents?: number
   counterpart?: string
   description?: string
+  contactId?: string
+  counterpartCnpj?: string
 }
 
 interface UseTransactionWizardState {
@@ -173,7 +175,7 @@ export function useTransactionWizardState(
       setDescription(prefill.description ?? '')
       setNotes('')
       setCounterpart(prefill.counterpart ?? '')
-      setContactId(undefined)
+      setContactId(prefill.contactId)
       setIsInstallment(false)
       setInstallmentCount(2)
       setCreateFutureInstallments(true)

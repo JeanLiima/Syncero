@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { format, addMonths, parseISO, parse, isValid } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import {
   TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat,
-  ShoppingCart, Banknote, Users, Receipt, Package, ArrowDownLeft, ArrowUpRight,
+  ShoppingCart, Banknote, Users, Receipt, Package, ArrowDownLeft, ArrowUpRight, UserPlus,
 } from 'lucide-react'
 import { Button, Checkbox, DayCalendar, Input, Modal } from '@syncero/ui'
 import { useT, type TranslationKey } from '@/i18n'
+import { useQuery } from '@tanstack/react-query'
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from './mutations'
 import { useCategories, useBanks, useContacts } from './queries'
+import { getContacts } from '@/lib/backend'
 import { useAuthStore } from '@syncero/auth'
 import { ContactModal } from './ContactModal'
 import { ContactCombobox } from './ContactCombobox'
@@ -75,7 +77,7 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
     if (prefill.date) skip.add(3)
     if ((prefill.amountCents ?? 0) > 0) skip.add(4)
     skip.add(5)
-    if (prefill.counterpart) skip.add(7)
+    if (prefill.counterpart && prefill.contactId) skip.add(7)
     return skip
   }, [prefill, editing])
 
@@ -102,6 +104,15 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
 
   const state = useTransactionWizardState(open, editing, language, prefill, !editing ? firstNonSkippedStep : undefined)
   const { data: contacts = [] } = useContacts(state.contactSearch)
+  const [contactModalInitialCnpj, setContactModalInitialCnpj] = useState('')
+
+  // Look up existing contact by counterpart CNPJ from import
+  const { data: cnpjContact } = useQuery({
+    queryKey: ['contacts', activeCompany?.id, prefill?.counterpartCnpj],
+    queryFn: () => getContacts(activeCompany!.id, prefill!.counterpartCnpj!),
+    enabled: !!activeCompany?.id && !!prefill?.counterpartCnpj && !prefill?.contactId,
+    select: (list) => list.find((c) => c.cnpj?.replace(/\D/g, '') === prefill?.counterpartCnpj) ?? null,
+  })
 
   const isCreating = !editing
   const isPending = create.isPending || update.isPending
@@ -110,6 +121,11 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
   useEffect(() => {
     if (state.phase === 'payment-prompt' && state.skipCountdown === 0) onClose()
   }, [state.skipCountdown]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-link contact when found by CNPJ lookup
+  useEffect(() => {
+    if (cnpjContact && !state.contactId) state.setContactId(cnpjContact.id)
+  }, [cnpjContact]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Handlers ────────────────────────────────────────────────
 
@@ -722,7 +738,7 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
 
     // Step 7 — Contato / Contraparte
     7: (
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         <p className="text-sm text-[var(--text-muted)] text-center">
           {state.type === 'income'
             ? t('transactions_wizard_counterpartIncomeLabel')
@@ -737,6 +753,7 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
           }}
           onAddNew={(name) => {
             state.setContactModalInitialName(name)
+            setContactModalInitialCnpj('')
             state.setContactModalOpen(true)
           }}
           onConfirm={handleNext}
@@ -744,6 +761,27 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
           placeholder={t('contact_searchPlaceholder')}
           addLabel={t('transactions_wizard_counterpartAdd')}
         />
+        {prefill?.counterpartCnpj && !state.contactId && (
+          <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--bg-border)]">
+            <div className="flex items-center gap-2 min-w-0">
+              <UserPlus className="h-3.5 w-3.5 shrink-0 text-[var(--text-muted)]" />
+              <span className="text-xs text-[var(--text-muted)] truncate">
+                {t('transactions_import_contact_notfound')}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                state.setContactModalInitialName(state.counterpart)
+                setContactModalInitialCnpj(prefill.counterpartCnpj!)
+                state.setContactModalOpen(true)
+              }}
+              className="shrink-0 text-xs font-medium text-[var(--accent)] hover:underline"
+            >
+              {t('transactions_import_contact_create')}
+            </button>
+          </div>
+        )}
       </div>
     ),
 
@@ -904,6 +942,7 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
         open={state.contactModalOpen}
         onClose={() => state.setContactModalOpen(false)}
         initialName={state.contactModalInitialName}
+        initialCnpj={contactModalInitialCnpj || undefined}
         onCreated={(contact) => {
           state.setCounterpart(contact.name)
           state.setContactSearch(contact.name)

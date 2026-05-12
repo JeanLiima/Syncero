@@ -210,7 +210,7 @@ function IntegratedCompanySettings({ id }: { id: string }) {
 
   const { data: company } = useQuery({
     queryKey: ['company-readonly', id],
-    queryFn: () => apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: string | null; segment: string | null }>(`/api/companies/${id}`),
+    queryFn: () => apiFetch<{ id: string; name: string; cnpj: string | null; tax_regime: TaxRegime | null; segment: CompanySegment | null }>(`/api/companies/${id}`),
     enabled: !!id,
   })
 

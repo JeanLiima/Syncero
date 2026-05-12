@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Pencil, Check, ChevronDown, ChevronRight, Info, Plus } from 'lucide-react'
 import { Button, Checkbox, Modal } from '@syncero/ui'
 import { useT } from '@/i18n'
+import type { CompanySegment } from '@/types'
 import type { PlanEntry } from '@/lib/backend'
 import { DEFAULT_PLAN } from '@/lib/defaultPlan'
 import type { AccountType } from '@/types'
@@ -28,7 +29,7 @@ const SEGMENT_RECOMMENDATIONS: Partial<Record<AccountType, string[] | null>> = {
   cost:     ['retail', 'manufacturing', 'agribusiness', 'construction'],
 }
 
-function isRecommended(type: AccountType, segment: string | null | undefined): boolean {
+function isRecommended(type: AccountType, segment: CompanySegment | null | undefined): boolean {
   const rule = SEGMENT_RECOMMENDATIONS[type]
   if (rule === null) return true                             // always recommended
   if (!segment) return false                                 // segment unknown → don't badge
@@ -194,7 +195,7 @@ interface Props {
   onConfirm: (accounts: PlanEntry[]) => void
   seeding: boolean
   hasCostSegment: boolean | null
-  segment?: string | null
+  segment?: CompanySegment | null
 }
 
 export function CfcPreviewModal({ open, onClose, onConfirm, seeding, hasCostSegment, segment }: Props) {

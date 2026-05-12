@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { AccountPlan, Category, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
+import type { AccountPlan, Category, CompanySegment, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
 
 function toSnake(key: string): string {
   return key.replace(/([A-Z])/g, '_$1').toLowerCase()
@@ -48,11 +48,11 @@ export async function updateTaxStatus(id: string, status: TaxCalculation['status
 }
 
 export async function getCompanyTaxSettings(companyId: string) {
-  return apiFetch<{ iss_rate: number | null; segment: string | null }>(`/api/companies/${companyId}/tax-settings`)
+  return apiFetch<{ iss_rate: number | null; segment: CompanySegment | null }>(`/api/companies/${companyId}/tax-settings`)
 }
 
-export async function saveCompanyTaxSettings(companyId: string, data: { issRate?: number | null; segment?: string | null }) {
-  return apiFetch<{ iss_rate: number | null; segment: string | null }>(`/api/companies/${companyId}/tax-settings`, {
+export async function saveCompanyTaxSettings(companyId: string, data: { issRate?: number | null; segment?: CompanySegment | null }) {
+  return apiFetch<{ iss_rate: number | null; segment: CompanySegment | null }>(`/api/companies/${companyId}/tax-settings`, {
     method: 'PATCH',
     body: JSON.stringify({ iss_rate: data.issRate, segment: data.segment }),
   })

@@ -46,7 +46,7 @@ export interface Company {
   cnpj: string | null
   trade_name: string | null
   tax_regime: TaxRegime | null
-  segment: string | null
+  segment: CompanySegment | null
   owner_id: string
   created_at: string
   updated_at: string

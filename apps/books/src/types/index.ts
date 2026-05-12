@@ -253,7 +253,7 @@ export interface JournalEntry {
   reversal_of: string | null
   created_at: string
   updated_at: string
-  lines?: JournalEntryLine[]
+  journal_entry_lines?: JournalEntryLine[]
 }
 
 export interface JournalEntryLine {
@@ -264,7 +264,7 @@ export interface JournalEntryLine {
   amount: number
   memo: string | null
   created_at: string
-  account_plan?: Pick<AccountPlan, 'code' | 'name'>
+  account_plans?: Pick<AccountPlan, 'code' | 'name'> | null
 }
 
 export interface ApiKey {

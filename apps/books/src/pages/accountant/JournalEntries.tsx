@@ -69,8 +69,9 @@ export function Component() {
   }
 
   const getEntryTotal = (entry: JournalEntry) => {
-    const lines = (entry as any).journal_entry_lines ?? []
-    return lines.filter((l: any) => l.side === 'debit').reduce((s: number, l: any) => s + Number(l.amount), 0)
+    return (entry.journal_entry_lines ?? [])
+      .filter(l => l.side === 'debit')
+      .reduce((s, l) => s + Number(l.amount), 0)
   }
 
   return (
@@ -126,9 +127,9 @@ export function Component() {
             </thead>
             <tbody>
               {entries.map((entry) => {
-                const lines = (entry as any).journal_entry_lines ?? []
-                const debits = lines.filter((l: any) => l.side === 'debit').map((l: any) => l.account_plans?.code ?? '').join(', ')
-                const credits = lines.filter((l: any) => l.side === 'credit').map((l: any) => l.account_plans?.code ?? '').join(', ')
+                const lines = entry.journal_entry_lines ?? []
+                const debits  = lines.filter(l => l.side === 'debit').map(l => l.account_plans?.code ?? '').join(', ')
+                const credits = lines.filter(l => l.side === 'credit').map(l => l.account_plans?.code ?? '').join(', ')
                 const total = getEntryTotal(entry)
                 return (
                   <tr key={entry.id} className="border-b border-[var(--bg-border)]/50 hover:bg-[var(--bg-elevated)] transition-colors">

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, CheckCircle, Search, Download } from 'lucide-react'
+import { Plus, CheckCircle, Search, Download, Upload } from 'lucide-react'
 import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useAuthStore } from '@/store/auth'
@@ -11,9 +11,11 @@ import { TransactionEditModal } from '@/modules/transactions/TransactionEditModa
 import { TransactionDetailModal } from '@/modules/transactions/TransactionDetailModal'
 import { PaymentModal } from '@/modules/transactions/PaymentModal'
 import { ExportModal } from '@/modules/transactions/ExportModal'
+import { ImportModal } from '@/modules/transactions/ImportModal'
 import { useT } from '@/i18n'
 import type { Transaction, TransactionType } from '@/types'
 import type { TransactionFilters } from '@/modules/transactions/types'
+import type { WizardPrefill } from '@/modules/transactions/useTransactionWizard'
 
 export function Component() {
   const t = useT()
@@ -34,6 +36,8 @@ export function Component() {
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editing, setEditing] = useState<Transaction | null>(null)
   const [exportOpen, setExportOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
+  const [nfePrefill, setNfePrefill] = useState<WizardPrefill | null>(null)
 
   const { data, isLoading } = useTransactions(filters, page)
   const { data: categories = [] } = useCategories()
@@ -69,9 +73,14 @@ export function Component() {
             <Download className="h-4 w-4" /> {t('export_button')}
           </Button>
           {canWrite && (
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="h-4 w-4" /> {t('transactions_new')}
-            </Button>
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setImportOpen(true)}>
+                <Upload className="h-4 w-4" /> {t('transactions_import')}
+              </Button>
+              <Button size="sm" onClick={openCreate}>
+                <Plus className="h-4 w-4" /> {t('transactions_new')}
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -236,9 +245,16 @@ export function Component() {
 
       <TransactionWizard
         open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
+        onClose={() => { setWizardOpen(false); setNfePrefill(null) }}
         editing={null}
         language={language}
+        prefill={nfePrefill ?? undefined}
+      />
+
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onNfePrefill={(p) => { setImportOpen(false); setNfePrefill(p); setWizardOpen(true) }}
       />
 
       <TransactionEditModal

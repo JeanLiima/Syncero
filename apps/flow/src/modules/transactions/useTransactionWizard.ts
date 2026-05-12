@@ -6,6 +6,14 @@ import type { Transaction, TransactionNature, TransactionType } from '@/types'
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 type Phase = 'wizard' | 'payment-prompt' | 'payment-form'
 
+export interface WizardPrefill {
+  type?: TransactionType
+  date?: string
+  amountCents?: number
+  counterpart?: string
+  description?: string
+}
+
 interface UseTransactionWizardState {
   // Phase management
   phase: Phase
@@ -82,7 +90,9 @@ interface UseTransactionWizardState {
 export function useTransactionWizardState(
   open: boolean,
   editing: Transaction | null,
-  _language: 'pt' | 'en'
+  _language: 'pt' | 'en',
+  prefill?: WizardPrefill,
+  initialStep?: Step
 ): UseTransactionWizardState {
   const t = useT()
 
@@ -153,6 +163,20 @@ export function useTransactionWizardState(
       setIsInstallment(editing.is_installment)
       setInstallmentCount(editing.installment_count ?? 2)
       setCreateFutureInstallments(false)
+    } else if (prefill) {
+      setStep(initialStep ?? 1)
+      setType(prefill.type ?? null)
+      setNature(null)
+      setAmountCents(prefill.amountCents ?? 0)
+      setDate(prefill.date ?? format(new Date(), 'yyyy-MM-dd'))
+      setCategoryId(undefined)
+      setDescription(prefill.description ?? '')
+      setNotes('')
+      setCounterpart(prefill.counterpart ?? '')
+      setContactId(undefined)
+      setIsInstallment(false)
+      setInstallmentCount(2)
+      setCreateFutureInstallments(true)
     } else {
       setStep(1)
       setType(null)

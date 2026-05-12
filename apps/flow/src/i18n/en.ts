@@ -446,6 +446,27 @@ export const en: Record<TranslationKey, string> = {
   export_col_installment: 'Installment',
   export_col_notes: 'Notes',
 
+  // Import
+  transactions_import: 'Import',
+  transactions_import_title: 'Import transactions',
+  transactions_import_dropzone: 'Drop an XML (NFe) or OFX file here',
+  transactions_import_dropzone_hint: 'or click to select',
+  transactions_import_accept: 'Accepted formats: .xml (NFe), .ofx, .qfx',
+  transactions_import_nfe_preview_title: 'Fiscal note detected',
+  transactions_import_nfe_counterpart: 'Counterpart',
+  transactions_import_nfe_date: 'Issue date',
+  transactions_import_nfe_amount: 'Total amount',
+  transactions_import_nfe_type_income: 'Income — company is issuer',
+  transactions_import_nfe_type_expense: 'Expense — company is recipient',
+  transactions_import_nfe_type_unknown: 'Type not identified — confirm in the wizard',
+  transactions_import_nfe_continue: 'Continue in wizard',
+  transactions_import_ofx_found: '{count} transactions found',
+  transactions_import_ofx_defaultNature: 'Default nature',
+  transactions_import_ofx_defaultCategory: 'Default category',
+  transactions_import_ofx_confirm: 'Import {count} transaction(s)',
+  transactions_import_ofx_noneSelected: 'None selected',
+  transactions_import_error_parse: 'Could not read the file. Make sure it is a valid NFe XML or OFX file.',
+
   // Common
   common_select: 'Select',
   common_savedSuccess: 'Saved successfully',

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { format, addMonths, parseISO, parse, isValid } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import {
@@ -12,7 +12,7 @@ import { useCategories, useBanks, useContacts } from './queries'
 import { useAuthStore } from '@syncero/auth'
 import { ContactModal } from './ContactModal'
 import { ContactCombobox } from './ContactCombobox'
-import { useTransactionWizardState } from './useTransactionWizard'
+import { useTransactionWizardState, type WizardPrefill } from './useTransactionWizard'
 import { PaymentPromptStep } from './PaymentPromptStep'
 import { PaymentFormStep } from './PaymentFormStep'
 import { SEGMENTS_WITH_COST } from '@/lib/segments'
@@ -23,6 +23,7 @@ interface Props {
   onClose: () => void
   editing: Transaction | null
   language: 'pt' | 'en'
+  prefill?: WizardPrefill
 }
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
@@ -53,7 +54,7 @@ const BASE_EXPENSE_NATURES: NatureOption[] = [
 
 // ── Wizard ───────────────────────────────────────────────────
 
-export function TransactionWizard({ open, onClose, editing, language }: Props) {
+export function TransactionWizard({ open, onClose, editing, language, prefill }: Props) {
   const t = useT()
   const activeCompany  = useAuthStore(s => s.activeCompany)
   const hasCostSegment = activeCompany?.segment ? SEGMENTS_WITH_COST.has(activeCompany.segment) : false
@@ -67,7 +68,39 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const { data: categories = [] } = useCategories()
   const { data: banks = [] } = useBanks()
 
-  const state = useTransactionWizardState(open, editing, language)
+  const skippedSteps = useMemo((): Set<Step> => {
+    if (!prefill || editing) return new Set()
+    const skip = new Set<Step>()
+    if (prefill.type) skip.add(1)
+    if (prefill.date) skip.add(3)
+    if ((prefill.amountCents ?? 0) > 0) skip.add(4)
+    skip.add(5)
+    if (prefill.counterpart) skip.add(7)
+    return skip
+  }, [prefill, editing])
+
+  const nextStepFrom = (from: Step): Step | null => {
+    for (let s = from + 1; s <= 8; s++) {
+      if (!skippedSteps.has(s as Step)) return s as Step
+    }
+    return null
+  }
+
+  const prevStepFrom = (from: Step): Step | null => {
+    for (let s = from - 1; s >= 1; s--) {
+      if (!skippedSteps.has(s as Step)) return s as Step
+    }
+    return null
+  }
+
+  const firstNonSkippedStep = useMemo((): Step => {
+    for (let s = 1; s <= 8; s++) {
+      if (!skippedSteps.has(s as Step)) return s as Step
+    }
+    return 1
+  }, [skippedSteps])
+
+  const state = useTransactionWizardState(open, editing, language, prefill, !editing ? firstNonSkippedStep : undefined)
   const { data: contacts = [] } = useContacts(state.contactSearch)
 
   const isCreating = !editing
@@ -84,7 +117,9 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (state.step === 1 && !state.type) return
     if (state.step === 2 && !state.nature) return
     if (state.step === 4 && !validateAmount()) return
-    state.goTo((state.step + 1) as Step)
+    const next = nextStepFrom(state.step)
+    if (next) state.goTo(next)
+    else handleSave()
   }
 
   const validateAmount = () => {
@@ -112,7 +147,10 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   const selectCategory = (id: string | undefined) => {
     state.setCategoryId(id)
-    if (isCreating) state.goTo(7)
+    if (isCreating) {
+      const next = nextStepFrom(6)
+      if (next) state.goTo(next)
+    }
   }
 
   const handleSave = async () => {
@@ -234,7 +272,13 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (state.step === 7) return // contact — handled by combobox
 
     if (state.step === 4) {
-      if (e.key === 'Enter') { e.preventDefault(); if (validateAmount()) state.goTo(5) }
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        if (validateAmount()) {
+          const next = nextStepFrom(4)
+          if (next) state.goTo(next)
+        }
+      }
       return
     }
 
@@ -261,7 +305,11 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           : (currentIdx - 1 + options.length) % options.length
         state.setNature(options[nextIdx])
       }
-      if (e.key === 'Enter' && state.nature) { e.preventDefault(); state.goTo(3) }
+      if (e.key === 'Enter' && state.nature) {
+        e.preventDefault()
+        const next = nextStepFrom(2)
+        if (next) state.goTo(next)
+      }
       return
     }
 
@@ -285,7 +333,15 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           : (currentIdx - 1 + options.length) % options.length
         state.setCategoryId(options[nextIdx])
       }
-      if (e.key === 'Enter') { e.preventDefault(); isCreating ? state.goTo(7) : handleNext() }
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        if (isCreating) {
+          const next = nextStepFrom(6)
+          if (next) state.goTo(next)
+        } else {
+          handleNext()
+        }
+      }
       return
     }
 
@@ -714,7 +770,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   // ── Render ──────────────────────────────────────────────────
 
-  const showNext = state.step < 8 && (
+  const showNext = nextStepFrom(state.step) !== null && (
     state.step === 2 ||
     state.step === 3 ||
     state.step === 4 ||
@@ -758,7 +814,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         {state.phase === 'wizard' && (
           <>
             <div className="flex justify-center gap-2 mb-6">
-              {([1, 2, 3, 4, 5, 6, 7, 8] as const).map((s) => (
+              {([1, 2, 3, 4, 5, 6, 7, 8] as const).filter((s) => !skippedSteps.has(s)).map((s) => (
                 <div
                   key={s}
                   className={`h-1.5 rounded-full transition-all duration-200 ${
@@ -776,12 +832,15 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--bg-border)]">
               <div>
-                {state.step === 1 ? (
+                {state.step === firstNonSkippedStep ? (
                   <Button variant="ghost" size="sm" onClick={onClose}>
                     {t('transactions_cancel')}
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={state.goBack}>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    const prev = prevStepFrom(state.step)
+                    if (prev) state.goTo(prev)
+                  }}>
                     <ChevronLeft className="h-4 w-4" />
                     {t('transactions_wizard_back')}
                   </Button>

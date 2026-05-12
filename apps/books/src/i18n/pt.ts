@@ -93,13 +93,9 @@ export const pt = {
   overview_sped: 'Livros SPED',
   overview_taxes: 'Impostos do mês',
   overview_transactions: 'Lançamentos',
-  overview_chartOfAccounts: 'Plano de Contas',
   overview_journal: 'Lançamentos Cont.',
   overview_viewTransactions: 'Ver lançamentos',
-  overview_viewAccounts: 'Ver contas',
   overview_viewEntries: 'Ver entradas',
-  overview_accountCount: 'conta',
-  overview_accountCountPlural: 'contas',
   overview_entryCount: 'lançamento',
   overview_entryCountPlural: 'lançamentos',
 

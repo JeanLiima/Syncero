@@ -95,13 +95,9 @@ export const en: Record<TranslationKey, string> = {
   overview_sped: 'SPED Books',
   overview_taxes: 'Monthly taxes',
   overview_transactions: 'Transactions',
-  overview_chartOfAccounts: 'Chart of Accounts',
   overview_journal: 'Journal',
   overview_viewTransactions: 'View transactions',
-  overview_viewAccounts: 'View accounts',
   overview_viewEntries: 'View entries',
-  overview_accountCount: 'account',
-  overview_accountCountPlural: 'accounts',
   overview_entryCount: 'entry',
   overview_entryCountPlural: 'entries',
 

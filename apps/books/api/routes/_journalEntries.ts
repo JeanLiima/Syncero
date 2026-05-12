@@ -21,8 +21,14 @@ router.get('/', async (c) => {
     if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
   }
 
-  const dateFrom = period ? `${period}-01` : undefined
-  const dateTo   = period ? `${period}-31` : undefined
+  let dateFrom: string | undefined
+  let dateTo: string | undefined
+  if (period) {
+    const [y, m] = period.split('-').map(Number)
+    const lastDay = new Date(y, m, 0).getDate()
+    dateFrom = `${period}-01`
+    dateTo   = `${period}-${String(lastDay).padStart(2, '0')}`
+  }
 
   let q = db.from('journal_entries')
     .select('id, entry_date, description, external_ref, source, journal_entry_lines(side, amount, memo, account_plans(code, name))')

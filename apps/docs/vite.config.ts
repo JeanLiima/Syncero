@@ -4,7 +4,7 @@ import { resolve } from 'path'
 export default defineConfig({
   publicDir: resolve(__dirname, 'public'),
   build: {
-    outDir: resolve(__dirname, 'dist'),
+    outDir: resolve(__dirname, '../../dist'),
     emptyOutDir: true,
     rollupOptions: {
       input: {

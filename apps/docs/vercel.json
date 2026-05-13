@@ -1,5 +1,5 @@
 {
-  "outputDirectory": "apps/docs/dist",
+  "outputDirectory": "dist",
   "headers": [
     {
       "source": "/(.*\\.json)",

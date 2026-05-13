@@ -4,7 +4,7 @@ import {
   CheckCircle2, RefreshCw, Trash2, Upload, AlertCircle,
   FileKey2, Plus, ShieldOff,
 } from 'lucide-react'
-import { Button, Card, ConfirmDialog, Modal, Tabs, TabList, Tab, TabPanel, useToast } from '@syncero/ui'
+import { Button, Card, ConfirmDialog, Modal, Select, Tabs, TabList, Tab, TabPanel, useToast } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
 import {
@@ -173,19 +173,15 @@ function CertModal({ open, onClose, companyId, hasCnpj }: CertModalProps) {
 
         {/* UF */}
         <div>
-          <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
-            {t('sefaz_uploadUf')}
-          </label>
-          <select
+          <Select
+            label={t('sefaz_uploadUf')}
+            options={UF_OPTIONS}
             value={ufCode}
-            onChange={(e) => setUfCode(e.target.value)}
-            className="w-full h-9 px-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-base)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-          >
-            <option value="">—</option>
-            {UF_OPTIONS.map((u) => (
-              <option key={u.value} value={u.value}>{u.label}</option>
-            ))}
-          </select>
+            onChange={setUfCode}
+            placeholder="—"
+            searchable
+            searchPlaceholder="Buscar estado…"
+          />
           <p className="text-xs text-[var(--text-muted)] mt-1">{t('sefaz_uploadUfHint')}</p>
         </div>
 
@@ -388,11 +384,8 @@ export function Component() {
   const hasCnpj = !!company?.cnpj
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_integrations')}</h1>
-        <p className="mt-1 text-sm text-[var(--text-muted)]">{t('settings_integrationsHint')}</p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_integrations')}</h1>
 
       <Tabs defaultTab="sefaz">
         <TabList>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useId } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Check, Search } from 'lucide-react'
 import { clsx } from 'clsx'
 
@@ -39,32 +40,68 @@ export function Select({
 }: SelectProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const containerRef = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
+
+  const triggerRef  = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const searchRef   = useRef<HTMLInputElement>(null)
   const id = useId()
 
   const selected = options.find((o) => o.value === value)
-
   const filtered = searchable && query
     ? options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase()))
     : options
 
+  // Posiciona o dropdown baseado no trigger (funciona dentro de modais e portals)
+  function updatePosition() {
+    if (!triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    setDropdownStyle({
+      position: 'fixed',
+      top:      rect.bottom + 4,
+      left:     rect.left,
+      width:    rect.width,
+      zIndex:   9999,
+    })
+  }
+
+  function handleOpen() {
+    if (disabled) return
+    if (!open) updatePosition()
+    setOpen((v) => !v)
+  }
+
+  // Fecha ao clicar fora (trigger ou dropdown)
   useEffect(() => {
+    if (!open) return
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-        setQuery('')
-        onBlur?.()
-      }
+      const target = e.target as Node
+      if (
+        triggerRef.current?.contains(target) ||
+        dropdownRef.current?.contains(target)
+      ) return
+      setOpen(false)
+      setQuery('')
+      onBlur?.()
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [onBlur])
+  }, [open, onBlur])
+
+  // Reposiciona ao rolar ou redimensionar
+  useEffect(() => {
+    if (!open) return
+    const handler = () => updatePosition()
+    window.addEventListener('scroll', handler, true)
+    window.addEventListener('resize', handler)
+    return () => {
+      window.removeEventListener('scroll', handler, true)
+      window.removeEventListener('resize', handler)
+    }
+  }, [open])
 
   useEffect(() => {
-    if (open && searchable) {
-      setTimeout(() => searchRef.current?.focus(), 0)
-    }
+    if (open && searchable) setTimeout(() => searchRef.current?.focus(), 0)
     if (!open) setQuery('')
   }, [open, searchable])
 
@@ -76,7 +113,7 @@ export function Select({
   }
 
   return (
-    <div className={clsx('flex flex-col gap-1.5', className)} ref={containerRef}>
+    <div className={clsx('flex flex-col gap-1.5', className)}>
       {label && (
         <label htmlFor={id} className="text-xs font-medium text-[var(--text-secondary)]">
           {label}
@@ -86,14 +123,15 @@ export function Select({
       <div className="relative">
         <button
           id={id}
+          ref={triggerRef}
           type="button"
           disabled={disabled}
-          onClick={() => !disabled && setOpen((v) => !v)}
+          onClick={handleOpen}
           className={clsx(
             'w-full rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border text-left transition-colors duration-150 cursor-pointer flex items-center',
             size === 'sm' ? 'h-8 px-2.5 pr-8 text-xs' : 'h-10 px-3 pr-9 text-sm',
             error
-              ? 'border-[var(--danger)] focus:border-[var(--danger)]'
+              ? 'border-[var(--danger)]'
               : open
               ? 'border-[var(--accent)]'
               : 'border-[var(--bg-border)] hover:border-[var(--text-muted)]',
@@ -110,9 +148,13 @@ export function Select({
             )}
           />
         </button>
+      </div>
 
-        {open && (
-          <div className="absolute z-50 mt-1 w-full rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg animate-in overflow-hidden">
+      {error && <span className="text-xs text-[var(--danger)]">{error}</span>}
+
+      {open && createPortal(
+        <div ref={dropdownRef} style={dropdownStyle}>
+          <div className="rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg overflow-hidden">
             {searchable && (
               <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--bg-border)]">
                 <Search className="h-3.5 w-3.5 text-[var(--text-muted)] shrink-0" />
@@ -148,10 +190,9 @@ export function Select({
               )}
             </div>
           </div>
-        )}
-      </div>
-
-      {error && <span className="text-xs text-[var(--danger)]">{error}</span>}
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

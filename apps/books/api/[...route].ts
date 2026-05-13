@@ -9,6 +9,7 @@ import accountPlansRouter from './routes/_accountPlans'
 import journalEntriesRouter from './routes/_journalEntries'
 import apiKeysRouter from './routes/_apiKeys'
 import fiscalDocumentsRouter from './routes/_fiscalDocuments'
+import sefazCredentialsRouter from './routes/_sefazCredentials'
 import fiscalBooksRouter from './routes/_fiscalBooks'
 import taxCalculationsRouter from './routes/_taxCalculations'
 import invitesRouter from './routes/_invites'
@@ -46,6 +47,8 @@ app.use('/api-keys', originGuard)
 app.use('/api-keys/*', originGuard)
 app.use('/fiscal-documents', originGuard)
 app.use('/fiscal-documents/*', originGuard)
+app.use('/sefaz-credentials', originGuard)
+app.use('/sefaz-credentials/*', originGuard)
 app.use('/fiscal-books', originGuard)
 app.use('/fiscal-books/*', originGuard)
 app.use('/tax-calculations', originGuard)
@@ -64,6 +67,8 @@ app.use('/api-keys', authMiddleware)
 app.use('/api-keys/*', authMiddleware)
 app.use('/fiscal-documents', authMiddleware)
 app.use('/fiscal-documents/*', authMiddleware)
+app.use('/sefaz-credentials', authMiddleware)
+app.use('/sefaz-credentials/*', authMiddleware)
 app.use('/fiscal-books', authMiddleware)
 app.use('/fiscal-books/*', authMiddleware)
 app.use('/tax-calculations', authMiddleware)
@@ -84,6 +89,7 @@ app.route('/account-plans', accountPlansRouter)
 app.route('/journal-entries', journalEntriesRouter)
 app.route('/api-keys', apiKeysRouter)
 app.route('/fiscal-documents', fiscalDocumentsRouter)
+app.route('/sefaz-credentials', sefazCredentialsRouter)
 app.route('/fiscal-books', fiscalBooksRouter)
 app.route('/tax-calculations', taxCalculationsRouter)
 app.route('/invites', invitesRouter)

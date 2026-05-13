@@ -18,7 +18,7 @@ export type MemberStatus = 'active' | 'invited' | 'inactive'
 export type AccountantStatus = 'pending' | 'accepted' | 'rejected'
 export type PayableStatus = 'pending' | 'paid' | 'overdue' | 'cancelled'
 export type PayableType = 'payable' | 'receivable'
-export type FiscalDocType = 'nfe' | 'nfse' | 'cfe' | 'nfce'
+export type FiscalDocType = 'nfe' | 'nfse' | 'cfe' | 'nfce' | 'cte'
 export type FiscalDocStatus = 'authorized' | 'cancelled' | 'denied' | 'pending'
 export type FiscalBookType = 'sped_fiscal' | 'sped_contribuicoes' | 'ecf' | 'ecd'
 export type FiscalBookStatus = 'draft' | 'validated' | 'transmitted'
@@ -157,17 +157,22 @@ export interface FiscalDocument {
   id: string
   company_id: string
   doc_type: FiscalDocType
-  number: string
+  doc_number: string | null
   series: string | null
   issue_date: string
-  value: number
+  amount: number | null
+  counterpart: string | null
   issuer_cnpj: string | null
   issuer_name: string | null
   recipient_cnpj: string | null
   recipient_name: string | null
-  status: FiscalDocStatus
-  xml_url: string | null
+  doc_direction: 'income' | 'expense' | null
+  doc_status: 'authorized' | 'cancelled' | 'denied'
+  source: 'upload' | 'sefaz_sync'
+  nsu: string | null
   access_key: string | null
+  transaction_id: string | null
+  xml_url: string | null
   created_at: string
 }
 

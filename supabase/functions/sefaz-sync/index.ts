@@ -548,28 +548,45 @@ Deno.serve(async (req) => {
 
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-  let body: { company_id?: string } = {}
+  let body: { company_id?: string; ext_company_id?: string } = {}
   try { body = await req.json() } catch { /* sem body = todas as empresas */ }
 
-  let credQuery = db.from('company_sefaz_credentials')
-    .select('id, company_id, cert_pfx_enc, cert_pfx_iv, cert_password_enc, cert_password_iv, environment, uf_code, last_nsu, companies!inner(cnpj)')
-    .eq('is_active', true)
+  const baseSelect = 'id, company_id, ext_company_id, cert_pfx_enc, cert_pfx_iv, cert_password_enc, cert_password_iv, environment, uf_code, last_nsu'
 
-  if (body.company_id) credQuery = credQuery.eq('company_id', body.company_id)
+  // Busca credenciais de empresas internas e externas
+  let internalRows: Record<string, unknown>[] = []
+  let externalRows: Record<string, unknown>[] = []
 
-  const { data: creds, error: credsErr } = await credQuery
-  if (credsErr) {
-    return new Response(JSON.stringify({ error: credsErr.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+  if (!body.ext_company_id) {
+    let q = db.from('company_sefaz_credentials')
+      .select(`${baseSelect}, companies!inner(cnpj)`)
+      .eq('is_active', true).not('company_id', 'is', null)
+    if (body.company_id) q = q.eq('company_id', body.company_id)
+    const { data } = await q
+    internalRows = (data ?? []) as Record<string, unknown>[]
   }
+
+  if (!body.company_id) {
+    let q = db.from('company_sefaz_credentials')
+      .select(`${baseSelect}, external_companies!inner(cnpj)`)
+      .eq('is_active', true).not('ext_company_id', 'is', null)
+    if (body.ext_company_id) q = q.eq('ext_company_id', body.ext_company_id)
+    const { data } = await q
+    externalRows = (data ?? []) as Record<string, unknown>[]
+  }
+
+  const allCreds = [
+    ...internalRows.map(c => ({ cred: c, cnpj: (c.companies as { cnpj: string } | null)?.cnpj ?? null })),
+    ...externalRows.map(c => ({ cred: c, cnpj: (c.external_companies as { cnpj: string } | null)?.cnpj ?? null })),
+  ]
 
   const results: Record<string, unknown>[] = []
 
-  for (const cred of creds ?? []) {
-    const company = (cred as Record<string, unknown>).companies as { cnpj: string }
+  for (const { cred, cnpj } of allCreds) {
+    const entityId = (cred.company_id ?? cred.ext_company_id) as string
+    const company = cnpj ? { cnpj } : null
     if (!company?.cnpj) {
-      results.push({ company_id: cred.company_id, error: 'Empresa sem CNPJ cadastrado' })
+      results.push({ entity_id: entityId, error: 'Empresa sem CNPJ cadastrado' })
       continue
     }
 
@@ -582,7 +599,7 @@ Deno.serve(async (req) => {
       last_error:   error ?? null,
     }).eq('id', cred.id)
 
-    results.push({ company_id: cred.company_id, imported, cancelled, last_nsu, error: error ?? null })
+    results.push({ entity_id: entityId, imported, cancelled, last_nsu, error: error ?? null })
   }
 
   return new Response(JSON.stringify({ results }), {

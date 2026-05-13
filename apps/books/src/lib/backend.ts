@@ -18,8 +18,55 @@ export async function getFiscalBooks(companyId: string) {
   return apiFetch<FiscalBook[]>(`/api/fiscal-books${buildQuery({ companyId })}`)
 }
 
-export async function getFiscalDocuments(companyId: string, opts: { doc_type?: string; date_from?: string; date_to?: string } = {}) {
-  return apiFetch<FiscalDocument[]>(`/api/fiscal-documents${buildQuery({ companyId, ...opts })}`)
+export type FiscalDocumentParams = {
+  companyId?: string
+  extCompanyId?: string
+  doc_type?: string
+  direction?: string
+  pending?: string
+  date_from?: string
+  date_to?: string
+  page?: string
+  page_size?: string
+}
+
+export async function getFiscalDocuments(params: FiscalDocumentParams) {
+  return apiFetch<{ data: FiscalDocument[]; count: number }>(`/api/fiscal-documents${buildQuery(params)}`)
+}
+
+export interface SefazCredentialBooks {
+  id: string
+  environment: 'production' | 'homologation'
+  uf_code: string
+  is_active: boolean
+  last_nsu: string
+  last_sync_at: string | null
+  last_error: string | null
+  created_at: string
+  updated_at: string
+}
+
+export async function getSefazCredentialBooks(params: { companyId?: string; extCompanyId?: string }) {
+  return apiFetch<SefazCredentialBooks | null>(`/api/sefaz-credentials${buildQuery(params)}`)
+}
+
+export async function saveSefazCredentialBooks(form: FormData) {
+  return apiFetch<SefazCredentialBooks>('/api/sefaz-credentials', { method: 'POST', body: form })
+}
+
+export async function deleteSefazCredentialBooks(extCompanyId: string) {
+  return apiFetch<{ ok: true }>(`/api/sefaz-credentials${buildQuery({ extCompanyId })}`, { method: 'DELETE' })
+}
+
+export async function toggleSefazBooks(extCompanyId: string, isActive: boolean) {
+  return apiFetch<SefazCredentialBooks>(`/api/sefaz-credentials/toggle${buildQuery({ extCompanyId })}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active: isActive }),
+  })
+}
+
+export async function triggerSefazSyncBooks(params: { companyId?: string; extCompanyId?: string }) {
+  return apiFetch<{ results: unknown[] }>(`/api/sefaz-credentials/sync${buildQuery(params)}`, { method: 'POST', body: '{}' })
 }
 
 export async function getTaxCalculations(params: { companyId?: string; extCompanyId?: string }) {

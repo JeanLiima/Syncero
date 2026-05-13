@@ -323,7 +323,7 @@ function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extC
   const t  = useT()
   const qc = useQueryClient()
   const { success, error: toastError } = useToast()
-  const isExternal = !!extCompanyId
+  const entityParams = companyId ? { companyId } : { extCompanyId: extCompanyId! }
 
   const fileRef = useRef<HTMLInputElement>(null)
   const [modalOpen,   setModalOpen]   = useState(false)
@@ -345,9 +345,10 @@ function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extC
 
   const save = useMutation({
     mutationFn: () => {
-      if (!certFile || !extCompanyId) throw new Error('missing')
+      if (!certFile || (!companyId && !extCompanyId)) throw new Error('missing')
       const form = new FormData()
-      form.append('ext_company_id', extCompanyId)
+      if (companyId)    form.append('company_id',    companyId)
+      if (extCompanyId) form.append('ext_company_id', extCompanyId)
       form.append('cert',           certFile)
       form.append('password',       password)
       form.append('environment',    environment)
@@ -363,7 +364,7 @@ function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extC
   })
 
   const revoke = useMutation({
-    mutationFn: () => deleteSefazCredentialBooks(extCompanyId!),
+    mutationFn: () => deleteSefazCredentialBooks(entityParams),
     onSuccess: () => {
       setRevokeOpen(false)
       success(t('common_deletedSuccess'))
@@ -394,8 +395,8 @@ function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extC
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Botão topo — empresa externa com cert ativo */}
-      {isExternal && credential && (
+      {/* Botão topo — quando cert já existe, para substituir */}
+      {credential && (
         <div className="flex justify-end">
           <Button size="sm" onClick={() => setModalOpen(true)}>
             <FileKey2 className="h-3.5 w-3.5" />
@@ -420,9 +421,6 @@ function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extC
                     {' · '}
                     {UF_OPTIONS_FULL.find(u => u.value === credential.uf_code)?.label ?? credential.uf_code}
                   </p>
-                  {!isExternal && (
-                    <p className="text-xs text-[var(--text-muted)] mt-1 italic">{t('sefaz_readOnlyHint')}</p>
-                  )}
                 </div>
               </div>
               <div className="flex gap-2 shrink-0">
@@ -430,12 +428,10 @@ function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extC
                   <RefreshCw className={`h-3.5 w-3.5 ${sync.isPending ? 'animate-spin' : ''}`} />
                   {sync.isPending ? t('sefaz_syncing') : t('sefaz_syncNow')}
                 </Button>
-                {isExternal && (
-                  <Button size="sm" variant="ghost" onClick={() => setRevokeOpen(true)}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {t('sefaz_revoke')}
-                  </Button>
-                )}
+                <Button size="sm" variant="ghost" onClick={() => setRevokeOpen(true)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {t('sefaz_revoke')}
+                </Button>
               </div>
             </div>
 
@@ -466,19 +462,16 @@ function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extC
               <p className="text-sm font-medium text-[var(--text-primary)]">{t('sefaz_noCertTitle')}</p>
               <p className="text-xs text-[var(--text-muted)] mt-1 max-w-xs">{t('sefaz_noCertHint')}</p>
             </div>
-            {isExternal && (
-              <Button size="sm" onClick={() => setModalOpen(true)}>
-                <FileKey2 className="h-3.5 w-3.5" />
-                {t('sefaz_addCert')}
-              </Button>
-            )}
+            <Button size="sm" onClick={() => setModalOpen(true)}>
+              <FileKey2 className="h-3.5 w-3.5" />
+              {t('sefaz_addCert')}
+            </Button>
           </div>
         )}
       </Card>
 
-      {/* Modal de upload — apenas empresa externa */}
-      {isExternal && (
-        <Modal
+      {/* Modal de upload */}
+      <Modal
           open={modalOpen}
           onClose={closeModal}
           title={t('sefaz_uploadTitle')}
@@ -544,20 +537,17 @@ function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extC
             </div>
           </div>
         </Modal>
-      )}
 
-      {isExternal && (
-        <ConfirmDialog
-          open={revokeOpen}
-          onClose={() => setRevokeOpen(false)}
-          title={t('sefaz_revokeTitle')}
-          message={t('sefaz_revokeMessage')}
-          confirmLabel={t('sefaz_revoke')}
-          onConfirm={() => revoke.mutate()}
-          loading={revoke.isPending}
-          variant="danger"
-        />
-      )}
+      <ConfirmDialog
+        open={revokeOpen}
+        onClose={() => setRevokeOpen(false)}
+        title={t('sefaz_revokeTitle')}
+        message={t('sefaz_revokeMessage')}
+        confirmLabel={t('sefaz_revoke')}
+        onConfirm={() => revoke.mutate()}
+        loading={revoke.isPending}
+        variant="danger"
+      />
     </div>
   )
 }

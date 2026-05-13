@@ -54,12 +54,12 @@ export async function saveSefazCredentialBooks(form: FormData) {
   return apiFetch<SefazCredentialBooks>('/api/sefaz-credentials', { method: 'POST', body: form })
 }
 
-export async function deleteSefazCredentialBooks(extCompanyId: string) {
-  return apiFetch<{ ok: true }>(`/api/sefaz-credentials${buildQuery({ extCompanyId })}`, { method: 'DELETE' })
+export async function deleteSefazCredentialBooks(params: { companyId?: string; extCompanyId?: string }) {
+  return apiFetch<{ ok: true }>(`/api/sefaz-credentials${buildQuery(params)}`, { method: 'DELETE' })
 }
 
-export async function toggleSefazBooks(extCompanyId: string, isActive: boolean) {
-  return apiFetch<SefazCredentialBooks>(`/api/sefaz-credentials/toggle${buildQuery({ extCompanyId })}`, {
+export async function toggleSefazBooks(params: { companyId?: string; extCompanyId?: string }, isActive: boolean) {
+  return apiFetch<SefazCredentialBooks>(`/api/sefaz-credentials/toggle${buildQuery(params)}`, {
     method: 'PATCH',
     body: JSON.stringify({ is_active: isActive }),
   })

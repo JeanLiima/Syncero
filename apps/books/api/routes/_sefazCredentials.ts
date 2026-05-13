@@ -77,7 +77,7 @@ router.get('/', async (c) => {
   return c.json(data ?? null)
 })
 
-// POST /api/sefaz-credentials — somente para empresa externa
+// POST /api/sefaz-credentials — empresa externa (ext_company_id) ou interna vinculada (company_id)
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db     = createServiceClient()
@@ -89,30 +89,39 @@ router.post('/', async (c) => {
   try { form = await c.req.formData() }
   catch { return c.json({ error: 'Esperado multipart/form-data' }, 400) }
 
+  const companyId    = form.get('company_id')    as string | null
   const extCompanyId = form.get('ext_company_id') as string | null
   const password     = form.get('password')       as string | null
   const environment  = (form.get('environment')   as string | null) ?? 'production'
   const ufCode       = form.get('uf_code')        as string | null
   const certFile     = form.get('cert')           as File | null
 
-  if (!extCompanyId) return c.json({ error: 'ext_company_id obrigatório' }, 400)
-  if (!password)     return c.json({ error: 'password obrigatório' }, 400)
-  if (!ufCode)       return c.json({ error: 'uf_code obrigatório' }, 400)
-  if (!certFile)     return c.json({ error: 'cert obrigatório' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
+  if (!password)  return c.json({ error: 'password obrigatório' }, 400)
+  if (!ufCode)    return c.json({ error: 'uf_code obrigatório' }, 400)
+  if (!certFile)  return c.json({ error: 'cert obrigatório' }, 400)
   if (!['production', 'homologation'].includes(environment)) return c.json({ error: 'environment inválido' }, 400)
 
-  const ok = await ensureOwnsExtCompany(db, userId, extCompanyId)
-  if (!ok) return c.json({ error: 'forbidden' }, 403)
+  if (companyId) {
+    const ok = await ensureAccountantOfCompany(db, userId, companyId)
+    if (!ok) return c.json({ error: 'forbidden' }, 403)
+  } else {
+    const ok = await ensureOwnsExtCompany(db, userId, extCompanyId!)
+    if (!ok) return c.json({ error: 'forbidden' }, 403)
+  }
 
   const pfxBytes = new Uint8Array(await certFile.arrayBuffer())
   const key      = await deriveKey(encKey)
   const { enc: certEnc, iv: certIv } = await encrypt(key, pfxBytes)
   const { enc: passEnc, iv: passIv } = await encrypt(key, new TextEncoder().encode(password))
 
+  const payload = companyId
+    ? { company_id: companyId, accountant_id: userId }
+    : { ext_company_id: extCompanyId!, accountant_id: userId }
+
   const { data, error } = await db.from('company_sefaz_credentials')
     .upsert({
-      ext_company_id:    extCompanyId,
-      accountant_id:     userId,
+      ...payload,
       cert_pfx_enc:      certEnc,
       cert_pfx_iv:       certIv,
       cert_password_enc: passEnc,
@@ -123,7 +132,7 @@ router.post('/', async (c) => {
       last_error:        null,
       last_sync_at:      null,
       is_active:         true,
-    }, { onConflict: 'ext_company_id' })
+    }, { onConflict: companyId ? 'company_id' : 'ext_company_id' })
     .select(SELECT_FIELDS)
     .single()
 
@@ -131,38 +140,56 @@ router.post('/', async (c) => {
   return c.json(data, 201)
 })
 
-// DELETE /api/sefaz-credentials?ext_company_id=... — somente empresa externa
+// DELETE /api/sefaz-credentials?company_id=... ou ?ext_company_id=...
 router.delete('/', async (c) => {
   const userId       = c.get('userId')
   const db           = createServiceClient()
+  const companyId    = c.req.query('company_id')
   const extCompanyId = c.req.query('ext_company_id')
-  if (!extCompanyId) return c.json({ error: 'ext_company_id obrigatório' }, 400)
 
-  const ok = await ensureOwnsExtCompany(db, userId, extCompanyId)
-  if (!ok) return c.json({ error: 'forbidden' }, 403)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
 
-  const { error } = await db.from('company_sefaz_credentials')
-    .delete().eq('ext_company_id', extCompanyId)
-  if (error) return c.json({ error: error.message }, 500)
+  if (companyId) {
+    const ok = await ensureAccountantOfCompany(db, userId, companyId)
+    if (!ok) return c.json({ error: 'forbidden' }, 403)
+    const { error } = await db.from('company_sefaz_credentials').delete().eq('company_id', companyId)
+    if (error) return c.json({ error: error.message }, 500)
+  } else {
+    const ok = await ensureOwnsExtCompany(db, userId, extCompanyId!)
+    if (!ok) return c.json({ error: 'forbidden' }, 403)
+    const { error } = await db.from('company_sefaz_credentials').delete().eq('ext_company_id', extCompanyId!)
+    if (error) return c.json({ error: error.message }, 500)
+  }
+
   return c.json({ ok: true })
 })
 
-// PATCH /api/sefaz-credentials/toggle — empresa externa only
+// PATCH /api/sefaz-credentials/toggle — empresa externa ou interna vinculada
 router.patch('/toggle', async (c) => {
   const userId       = c.get('userId')
   const db           = createServiceClient()
+  const companyId    = c.req.query('company_id')
   const extCompanyId = c.req.query('ext_company_id')
-  if (!extCompanyId) return c.json({ error: 'ext_company_id obrigatório' }, 400)
 
-  const ok = await ensureOwnsExtCompany(db, userId, extCompanyId)
-  if (!ok) return c.json({ error: 'forbidden' }, 403)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
+
+  if (companyId) {
+    const ok = await ensureAccountantOfCompany(db, userId, companyId)
+    if (!ok) return c.json({ error: 'forbidden' }, 403)
+  } else {
+    const ok = await ensureOwnsExtCompany(db, userId, extCompanyId!)
+    if (!ok) return c.json({ error: 'forbidden' }, 403)
+  }
 
   const { is_active } = await c.req.json<{ is_active: boolean }>()
   if (typeof is_active !== 'boolean') return c.json({ error: 'is_active deve ser boolean' }, 400)
 
+  const col = companyId ? 'company_id' : 'ext_company_id'
+  const val = companyId ? companyId    : extCompanyId!
+
   const { data, error } = await db.from('company_sefaz_credentials')
     .update({ is_active })
-    .eq('ext_company_id', extCompanyId)
+    .eq(col, val)
     .select(SELECT_FIELDS)
     .single()
 

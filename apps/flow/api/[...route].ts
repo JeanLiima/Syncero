@@ -13,6 +13,8 @@ import payablesRouter from './routes/_payables'
 import incomeStatementRouter from './routes/_incomeStatement'
 import cashFlowRouter from './routes/_cashFlow'
 import contactsRouter from './routes/_contacts'
+import sefazCredentialsRouter from './routes/_sefazCredentials'
+import fiscalDocumentsRouter from './routes/_fiscalDocuments'
 
 export const config = { runtime: 'edge' }
 
@@ -46,6 +48,10 @@ app.use('/income-statement', authMiddleware)
 app.use('/cash-flow', authMiddleware)
 app.use('/contacts', authMiddleware)
 app.use('/contacts/*', authMiddleware)
+app.use('/sefaz-credentials', authMiddleware)
+app.use('/sefaz-credentials/*', authMiddleware)
+app.use('/fiscal-documents', authMiddleware)
+app.use('/fiscal-documents/*', authMiddleware)
 app.use('/invites/:token/accept', authMiddleware)
 
 // ── Route registrations ────────────────────────────────────────
@@ -62,5 +68,7 @@ app.route('/payables', payablesRouter)
 app.route('/income-statement', incomeStatementRouter)
 app.route('/cash-flow', cashFlowRouter)
 app.route('/contacts', contactsRouter)
+app.route('/sefaz-credentials', sefazCredentialsRouter)
+app.route('/fiscal-documents', fiscalDocumentsRouter)
 
 export default handle(app)

@@ -130,6 +130,7 @@ export const router = createBrowserRouter([
       { path: '/cash-flow',     lazy: lazyLoad(() => import('../pages/CashFlow')) },
       { path: '/accounts',      lazy: lazyLoad(() => import('../pages/Accounts')) },
       { path: '/income-statement', lazy: lazyLoad(() => import('../pages/IncomeStatement')) },
+      { path: '/fiscal-documents', lazy: lazyLoad(() => import('../pages/FiscalDocuments')) },
       {
         path: '/settings',
         lazy: lazyLoad(() => import('../pages/Settings')),
@@ -139,6 +140,7 @@ export const router = createBrowserRouter([
           { path: 'categories', lazy: lazyLoad(() => import('../pages/settings/Categories')) },
           { path: 'banks',      lazy: lazyLoad(() => import('../pages/settings/Banks')) },
           { path: 'contacts',   lazy: lazyLoad(() => import('../pages/settings/Contacts')) },
+          { path: 'sefaz',      lazy: lazyLoad(() => import('../pages/settings/Sefaz')) },
         ],
       },
       { path: '/preferences',   lazy: lazyLoad(() => import('../pages/Preferences')) },

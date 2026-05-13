@@ -1,6 +1,39 @@
 import { apiFetch } from './api'
 import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, PayableReceivable, Bank, Contact } from '@/types'
 
+export interface SefazCredential {
+  id: string
+  environment: 'production' | 'homologation'
+  uf_code: string
+  last_nsu: string
+  last_sync_at: string | null
+  last_error: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface FiscalDocument {
+  id: string
+  company_id: string
+  doc_type: string
+  doc_number: string | null
+  series: string | null
+  issue_date: string
+  amount: number | null
+  counterpart: string | null
+  access_key: string | null
+  issuer_cnpj: string | null
+  issuer_name: string | null
+  recipient_cnpj: string | null
+  recipient_name: string | null
+  doc_direction: 'income' | 'expense' | null
+  nsu: string | null
+  doc_status: 'authorized' | 'cancelled' | 'denied'
+  source: 'upload' | 'sefaz_sync'
+  transaction_id: string | null
+  created_at: string
+}
+
 function toSnake(key: string): string {
   return key.replace(/([A-Z])/g, '_$1').toLowerCase()
 }
@@ -195,4 +228,44 @@ export async function updatePayable(id: string, data: Partial<PayableReceivable>
 
 export async function deletePayable(id: string) {
   return apiFetch<{ ok: true }>(`/api/payables/${id}`, { method: 'DELETE' })
+}
+
+// ── SEFAZ Credentials ──────────────────────────────────────────
+
+export async function getSefazCredential(companyId: string) {
+  return apiFetch<SefazCredential | null>(`/api/sefaz-credentials${buildQuery({ companyId })}`)
+}
+
+export async function saveSefazCredential(form: FormData) {
+  return apiFetch<SefazCredential>('/api/sefaz-credentials', { method: 'POST', body: form })
+}
+
+export async function deleteSefazCredential(companyId: string) {
+  return apiFetch<{ ok: true }>(`/api/sefaz-credentials${buildQuery({ companyId })}`, { method: 'DELETE' })
+}
+
+export async function triggerSefazSync(companyId: string) {
+  return apiFetch<{ results: unknown[] }>(`/api/sefaz-credentials/sync${buildQuery({ companyId })}`, { method: 'POST', body: '{}' })
+}
+
+// ── Fiscal Documents ───────────────────────────────────────────
+
+export type FiscalDocumentQueryParams = {
+  companyId: string
+  direction?: string
+  status?: string
+  pending?: string
+  page?: string
+  pageSize?: string
+}
+
+export async function getFiscalDocuments(params: FiscalDocumentQueryParams) {
+  return apiFetch<{ data: FiscalDocument[]; count: number }>(`/api/fiscal-documents${buildQuery(params)}`)
+}
+
+export async function linkFiscalDocumentTransaction(docId: string, transactionId: string | null) {
+  return apiFetch<FiscalDocument>(`/api/fiscal-documents/${docId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ transaction_id: transactionId }),
+  })
 }

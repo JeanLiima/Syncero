@@ -528,9 +528,9 @@ export const en: Record<TranslationKey, string> = {
   // Fiscal Documents
   fiscalDocs_title: 'Fiscal Documents',
   fiscalDocs_subtitle: 'Fiscal documents synced from SEFAZ',
-  fiscalDocs_empty: 'No fiscal documents imported',
-  fiscalDocs_emptyHint: 'Set up SEFAZ integration in settings to automatically import documents.',
-  fiscalDocs_configure: 'Configure SEFAZ',
+  fiscalDocs_empty: 'No fiscal documents found',
+  fiscalDocs_emptyHint: 'Enable an integration to automatically import fiscal documents.',
+  fiscalDocs_configure: 'View integrations',
   fiscalDocs_income: 'Income',
   fiscalDocs_expense: 'Expense',
   fiscalDocs_allDirections: 'All',

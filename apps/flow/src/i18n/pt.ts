@@ -526,9 +526,9 @@ export const pt = {
   // Fiscal Documents
   fiscalDocs_title: 'Notas Fiscais',
   fiscalDocs_subtitle: 'Documentos fiscais sincronizados do SEFAZ',
-  fiscalDocs_empty: 'Nenhuma nota fiscal importada',
-  fiscalDocs_emptyHint: 'Configure a integração SEFAZ nas configurações para importar notas automaticamente.',
-  fiscalDocs_configure: 'Configurar SEFAZ',
+  fiscalDocs_empty: 'Nenhuma nota fiscal encontrada',
+  fiscalDocs_emptyHint: 'Habilite uma integração para importar notas fiscais automaticamente.',
+  fiscalDocs_configure: 'Ver integrações',
   fiscalDocs_income: 'Receita',
   fiscalDocs_expense: 'Despesa',
   fiscalDocs_allDirections: 'Todas',

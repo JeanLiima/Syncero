@@ -85,10 +85,7 @@ export function Component() {
     <div className="flex flex-col gap-4 p-4 md:p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('fiscalDocs_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-0.5">{t('fiscalDocs_subtitle')}</p>
-        </div>
+        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('fiscalDocs_title')}</h1>
         <Button size="sm" variant="ghost" onClick={() => navigate('/settings/integrations')}>
           {t('fiscalDocs_configure')}
         </Button>

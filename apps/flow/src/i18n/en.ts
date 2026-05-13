@@ -476,10 +476,17 @@ export const en: Record<TranslationKey, string> = {
   transactions_wizard_contact_or_select: 'or select another contact',
   transactions_import_error_parse: 'Could not read the file. Make sure it is a valid NFe XML or OFX file.',
 
+  // Settings — Integrations
+  settings_integrations: 'Integrations',
+  settings_integrationsHint: 'Connect Syncero to external systems to automatically import data.',
+
   // SEFAZ Integration
   sefaz_title: 'SEFAZ Integration',
   sefaz_subtitle: 'Sync fiscal documents directly from SEFAZ using your A1 digital certificate.',
   sefaz_certSection: 'Digital Certificate (A1)',
+  sefaz_noCertTitle: 'No certificate configured',
+  sefaz_noCertHint: 'Add your A1 digital certificate to automatically sync fiscal documents from SEFAZ.',
+  sefaz_addCert: 'Add certificate',
   sefaz_active: 'Integration active',
   sefaz_lastSync: 'Last sync',
   sefaz_lastError: 'Last error',

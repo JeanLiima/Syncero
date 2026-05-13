@@ -35,7 +35,7 @@ export function Layout({ children }: { children: ReactNode }) {
         { to: '/settings/categories', label: t('settings_categories') },
         { to: '/settings/banks',      label: t('settings_banks') },
         { to: '/settings/contacts',   label: t('settings_contacts') },
-        { to: '/settings/sefaz',      label: t('sefaz_title') },
+        { to: '/settings/integrations', label: t('settings_integrations') },
       ],
     },
   ]

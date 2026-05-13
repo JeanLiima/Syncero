@@ -140,7 +140,7 @@ export const router = createBrowserRouter([
           { path: 'categories', lazy: lazyLoad(() => import('../pages/settings/Categories')) },
           { path: 'banks',      lazy: lazyLoad(() => import('../pages/settings/Banks')) },
           { path: 'contacts',   lazy: lazyLoad(() => import('../pages/settings/Contacts')) },
-          { path: 'sefaz',      lazy: lazyLoad(() => import('../pages/settings/Sefaz')) },
+          { path: 'integrations', lazy: lazyLoad(() => import('../pages/settings/Integrations')) },
         ],
       },
       { path: '/preferences',   lazy: lazyLoad(() => import('../pages/Preferences')) },

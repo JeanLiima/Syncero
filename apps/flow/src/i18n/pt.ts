@@ -474,10 +474,17 @@ export const pt = {
   transactions_wizard_contact_or_select: 'ou selecionar outro contato',
   transactions_import_error_parse: 'Não foi possível ler o arquivo. Verifique se é um XML de NFe ou OFX válido.',
 
+  // Settings — Integrations
+  settings_integrations: 'Integrações',
+  settings_integrationsHint: 'Conecte o Syncero a sistemas externos para importar dados automaticamente.',
+
   // SEFAZ Integration
   sefaz_title: 'Integração SEFAZ',
   sefaz_subtitle: 'Sincronize notas fiscais diretamente do SEFAZ usando seu certificado digital A1.',
   sefaz_certSection: 'Certificado Digital (A1)',
+  sefaz_noCertTitle: 'Nenhum certificado configurado',
+  sefaz_noCertHint: 'Adicione seu certificado digital A1 para sincronizar notas fiscais automaticamente com o SEFAZ.',
+  sefaz_addCert: 'Adicionar certificado',
   sefaz_active: 'Integração ativa',
   sefaz_lastSync: 'Última sincronização',
   sefaz_lastError: 'Último erro',

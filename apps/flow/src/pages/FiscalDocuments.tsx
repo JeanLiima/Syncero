@@ -89,7 +89,7 @@ export function Component() {
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('fiscalDocs_title')}</h1>
           <p className="text-sm text-[var(--text-muted)] mt-0.5">{t('fiscalDocs_subtitle')}</p>
         </div>
-        <Button size="sm" variant="ghost" onClick={() => navigate('/settings/sefaz')}>
+        <Button size="sm" variant="ghost" onClick={() => navigate('/settings/integrations')}>
           {t('fiscalDocs_configure')}
         </Button>
       </div>
@@ -138,7 +138,7 @@ export function Component() {
             <FileText className="h-8 w-8 text-[var(--text-muted)]" />
             <p className="text-sm font-medium text-[var(--text-primary)]">{t('fiscalDocs_empty')}</p>
             <p className="text-xs text-[var(--text-muted)] max-w-xs">{t('fiscalDocs_emptyHint')}</p>
-            <Button size="sm" variant="ghost" onClick={() => navigate('/settings/sefaz')}>
+            <Button size="sm" variant="ghost" onClick={() => navigate('/settings/integrations')}>
               {t('fiscalDocs_configure')}
             </Button>
           </div>

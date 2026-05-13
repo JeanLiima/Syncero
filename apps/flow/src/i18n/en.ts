@@ -478,7 +478,6 @@ export const en: Record<TranslationKey, string> = {
 
   // Settings — Integrations
   settings_integrations: 'Integrations',
-  settings_integrationsHint: 'Connect Syncero to external systems to automatically import data.',
   settings_certificates: 'Certificates',
 
   // Integrations page
@@ -491,7 +490,6 @@ export const en: Record<TranslationKey, string> = {
 
   // SEFAZ Integration
   sefaz_title: 'SEFAZ Integration',
-  sefaz_subtitle: 'Sync fiscal documents directly from SEFAZ using your A1 digital certificate.',
   sefaz_certSection: 'Digital Certificate (A1)',
   sefaz_noCertTitle: 'No certificate configured',
   sefaz_noCertHint: 'Add your A1 digital certificate to automatically sync fiscal documents from SEFAZ.',
@@ -521,13 +519,10 @@ export const en: Record<TranslationKey, string> = {
   sefaz_uploadSuccess: 'Certificate saved successfully',
   sefaz_uploadError: 'Error saving certificate',
   sefaz_noCnpj: 'Add your company CNPJ before setting up SEFAZ integration.',
-  sefaz_certFile: 'Selected certificate',
-  sefaz_noCertSelected: 'No file selected',
   sefaz_clickToSelect: 'Click to select the .pfx file',
 
   // Fiscal Documents
   fiscalDocs_title: 'Fiscal Documents',
-  fiscalDocs_subtitle: 'Fiscal documents synced from SEFAZ',
   fiscalDocs_empty: 'No fiscal documents found',
   fiscalDocs_emptyHint: 'Enable an integration to automatically import fiscal documents.',
   fiscalDocs_configure: 'View integrations',
@@ -535,24 +530,9 @@ export const en: Record<TranslationKey, string> = {
   fiscalDocs_expense: 'Expense',
   fiscalDocs_allDirections: 'All',
   fiscalDocs_pending: 'No transaction',
-  fiscalDocs_linked: 'With transaction',
   fiscalDocs_allStatus: 'All',
-  fiscalDocs_authorized: 'Authorized',
   fiscalDocs_cancelled: 'Cancelled',
-  fiscalDocs_issuer: 'Issuer',
-  fiscalDocs_recipient: 'Recipient',
-  fiscalDocs_number: 'Number',
-  fiscalDocs_date: 'Date',
-  fiscalDocs_amount: 'Amount',
-  fiscalDocs_type: 'Type',
-  fiscalDocs_transaction: 'Transaction',
   fiscalDocs_createTransaction: 'Create transaction',
-  fiscalDocs_viewTransaction: 'View transaction',
-  fiscalDocs_nfe: 'NF-e',
-  fiscalDocs_nfse: 'NFS-e',
-  fiscalDocs_cfe: 'CF-e',
-  fiscalDocs_cte: 'CT-e',
-  fiscalDocs_noSefaz: 'SEFAZ integration not configured',
 
   // Common
   common_cnpjInvalid: 'Invalid CNPJ',

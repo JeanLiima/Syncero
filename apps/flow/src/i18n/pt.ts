@@ -476,7 +476,6 @@ export const pt = {
 
   // Settings — Integrations
   settings_integrations: 'Integrações',
-  settings_integrationsHint: 'Conecte o Syncero a sistemas externos para importar dados automaticamente.',
   settings_certificates: 'Certificados',
 
   // Integrations page
@@ -489,7 +488,6 @@ export const pt = {
 
   // SEFAZ Integration
   sefaz_title: 'Integração SEFAZ',
-  sefaz_subtitle: 'Sincronize notas fiscais diretamente do SEFAZ usando seu certificado digital A1.',
   sefaz_certSection: 'Certificado Digital (A1)',
   sefaz_noCertTitle: 'Nenhum certificado configurado',
   sefaz_noCertHint: 'Adicione seu certificado digital A1 para sincronizar notas fiscais automaticamente com o SEFAZ.',
@@ -519,13 +517,10 @@ export const pt = {
   sefaz_uploadSuccess: 'Certificado salvo com sucesso',
   sefaz_uploadError: 'Erro ao salvar certificado',
   sefaz_noCnpj: 'Cadastre o CNPJ da empresa antes de configurar a integração SEFAZ.',
-  sefaz_certFile: 'Certificado selecionado',
-  sefaz_noCertSelected: 'Nenhum arquivo selecionado',
   sefaz_clickToSelect: 'Clique para selecionar o arquivo .pfx',
 
   // Fiscal Documents
   fiscalDocs_title: 'Notas Fiscais',
-  fiscalDocs_subtitle: 'Documentos fiscais sincronizados do SEFAZ',
   fiscalDocs_empty: 'Nenhuma nota fiscal encontrada',
   fiscalDocs_emptyHint: 'Habilite uma integração para importar notas fiscais automaticamente.',
   fiscalDocs_configure: 'Ver integrações',
@@ -533,24 +528,9 @@ export const pt = {
   fiscalDocs_expense: 'Despesa',
   fiscalDocs_allDirections: 'Todas',
   fiscalDocs_pending: 'Sem lançamento',
-  fiscalDocs_linked: 'Com lançamento',
   fiscalDocs_allStatus: 'Todos',
-  fiscalDocs_authorized: 'Autorizada',
   fiscalDocs_cancelled: 'Cancelada',
-  fiscalDocs_issuer: 'Emitente',
-  fiscalDocs_recipient: 'Destinatário',
-  fiscalDocs_number: 'Número',
-  fiscalDocs_date: 'Data',
-  fiscalDocs_amount: 'Valor',
-  fiscalDocs_type: 'Tipo',
-  fiscalDocs_transaction: 'Lançamento',
   fiscalDocs_createTransaction: 'Criar lançamento',
-  fiscalDocs_viewTransaction: 'Ver lançamento',
-  fiscalDocs_nfe: 'NF-e',
-  fiscalDocs_nfse: 'NFS-e',
-  fiscalDocs_cfe: 'CF-e',
-  fiscalDocs_cte: 'CT-e',
-  fiscalDocs_noSefaz: 'Integração SEFAZ não configurada',
 
   // Common
   common_cnpjInvalid: 'CNPJ inválido',

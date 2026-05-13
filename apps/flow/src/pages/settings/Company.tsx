@@ -673,6 +673,7 @@ function CertificatesTab() {
   const isAdmin = activeCompany?.role === 'admin'
 
   const fileRef = useRef<HTMLInputElement>(null)
+  const [modalOpen,   setModalOpen]   = useState(false)
   const [certFile,    setCertFile]    = useState<File | null>(null)
   const [password,    setPassword]    = useState('')
   const [environment, setEnvironment] = useState<'production' | 'homologation'>('production')
@@ -691,6 +692,12 @@ function CertificatesTab() {
     enabled:  !!activeCompany?.id && isAdmin,
   })
 
+  function closeModal() {
+    setModalOpen(false)
+    setCertFile(null); setPassword(''); setUfCode('')
+    setEnvironment('production')
+  }
+
   const save = useMutation({
     mutationFn: () => {
       if (!certFile) throw new Error('cert required')
@@ -704,7 +711,7 @@ function CertificatesTab() {
     },
     onSuccess: () => {
       success(t('sefaz_uploadSuccess'))
-      setCertFile(null); setPassword(''); setUfCode('')
+      closeModal()
       qc.invalidateQueries({ queryKey: ['sefaz-credential', activeCompany?.id] })
     },
     onError: () => toastError(t('sefaz_uploadError')),
@@ -744,128 +751,159 @@ function CertificatesTab() {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Certificado ativo */}
-      {credential && (
-        <Card padding="md">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[var(--text-primary)]">{t('sefaz_active')}</p>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                  {credential.environment === 'production' ? t('sefaz_uploadEnvironmentProd') : t('sefaz_uploadEnvironmentHomol')}
-                  {' · '}
-                  {UF_OPTIONS.find((u) => u.value === credential.uf_code)?.label ?? credential.uf_code}
-                </p>
-              </div>
-            </div>
-            {isAdmin && (
-              <div className="flex gap-2 shrink-0">
-                <Button size="sm" variant="ghost" onClick={() => sync.mutate()} disabled={sync.isPending}>
-                  <RefreshCw className={`h-3.5 w-3.5 ${sync.isPending ? 'animate-spin' : ''}`} />
-                  {sync.isPending ? t('sefaz_syncing') : t('sefaz_syncNow')}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setRevokeOpen(true)}>
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {t('sefaz_revoke')}
-                </Button>
-              </div>
-            )}
-          </div>
+      {/* Botão topo — só quando cert ativo */}
+      {isAdmin && credential && (
+        <div className="flex items-center justify-end">
+          <Button size="sm" onClick={() => setModalOpen(true)}>
+            <FileKey2 className="h-3.5 w-3.5" />
+            {t('sefaz_addCert')}
+          </Button>
+        </div>
+      )}
 
-          {credential.last_sync_at && (
-            <div className="mt-4 pt-4 border-t border-[var(--bg-border)] flex gap-6 text-xs">
-              <div>
-                <p className="text-[var(--text-muted)]">{t('sefaz_lastSync')}</p>
-                <p className="text-[var(--text-primary)] font-medium mt-0.5">
-                  {new Date(credential.last_sync_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
-                </p>
-              </div>
-              {credential.last_error && (
+      {/* Card: estado do certificado ou empty state */}
+      <Card padding="sm">
+        {credential ? (
+          /* ── Certificado ativo ── */
+          <div className="flex flex-col gap-4 p-1">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                </div>
                 <div>
-                  <p className="text-[var(--text-muted)]">{t('sefaz_lastError')}</p>
-                  <p className="text-red-500 font-medium mt-0.5 line-clamp-1">{credential.last_error}</p>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{t('sefaz_active')}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    {credential.environment === 'production' ? t('sefaz_uploadEnvironmentProd') : t('sefaz_uploadEnvironmentHomol')}
+                    {' · '}
+                    {UF_OPTIONS.find((u) => u.value === credential.uf_code)?.label ?? credential.uf_code}
+                  </p>
+                </div>
+              </div>
+              {isAdmin && (
+                <div className="flex gap-2 shrink-0">
+                  <Button size="sm" variant="ghost" onClick={() => sync.mutate()} disabled={sync.isPending}>
+                    <RefreshCw className={`h-3.5 w-3.5 ${sync.isPending ? 'animate-spin' : ''}`} />
+                    {sync.isPending ? t('sefaz_syncing') : t('sefaz_syncNow')}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setRevokeOpen(true)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {t('sefaz_revoke')}
+                  </Button>
                 </div>
               )}
             </div>
-          )}
-        </Card>
-      )}
 
-      {/* Formulário de upload */}
-      {!credential && isAdmin && (
-        <Card padding="md">
-          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4">{t('sefaz_certSection')}</h2>
+            {credential.last_sync_at && (
+              <div className="pt-3 border-t border-[var(--bg-border)] flex gap-6 text-xs">
+                <div>
+                  <p className="text-[var(--text-muted)]">{t('sefaz_lastSync')}</p>
+                  <p className="text-[var(--text-primary)] font-medium mt-0.5">
+                    {new Date(credential.last_sync_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                  </p>
+                </div>
+                {credential.last_error && (
+                  <div>
+                    <p className="text-[var(--text-muted)]">{t('sefaz_lastError')}</p>
+                    <p className="text-red-500 font-medium mt-0.5 line-clamp-1">{credential.last_error}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ── Empty state ── */
+          <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+            <div className="h-12 w-12 rounded-xl bg-[var(--bg-elevated)] border border-[var(--bg-border)] flex items-center justify-center">
+              <FileKey2 className="h-5 w-5 text-[var(--text-muted)]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[var(--text-primary)]">{t('sefaz_noCertTitle')}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1 max-w-xs">{t('sefaz_noCertHint')}</p>
+            </div>
+            {isAdmin && (
+              <Button size="sm" onClick={() => setModalOpen(true)}>
+                <FileKey2 className="h-3.5 w-3.5" />
+                {t('sefaz_addCert')}
+              </Button>
+            )}
+          </div>
+        )}
+      </Card>
 
+      {/* Modal de upload */}
+      <Modal open={modalOpen} onClose={closeModal} title={t('sefaz_uploadTitle')} size="md"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={closeModal}>{t('settings_cancel')}</Button>
+            <Button onClick={() => save.mutate()} disabled={!canSave}>
+              {save.isPending ? t('sefaz_uploadSaving') : t('sefaz_uploadSave')}
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-4">
           {!hasCnpj && (
-            <div className="flex items-center gap-2 p-3 mb-4 rounded-[var(--radius-md)] bg-amber-500/10 text-amber-600 text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-[var(--radius-md)] bg-amber-500/10 text-amber-600 text-sm">
               <Info className="h-4 w-4 shrink-0" />
               {t('sefaz_noCnpj')}
             </div>
           )}
 
-          <div className="flex flex-col gap-4">
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadCert')}</label>
-              <input ref={fileRef} type="file" accept=".pfx,.p12" className="hidden" onChange={(e) => setCertFile(e.target.files?.[0] ?? null)} />
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="w-full h-20 rounded-[var(--radius-md)] border-2 border-dashed border-[var(--bg-border)] flex flex-col items-center justify-center gap-1.5 text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors cursor-pointer"
-              >
-                {certFile ? (
-                  <><FileKey2 className="h-5 w-5" /><span className="text-xs font-medium">{certFile.name}</span></>
-                ) : (
-                  <><Upload className="h-5 w-5" /><span className="text-xs">{t('sefaz_clickToSelect')}</span></>
-                )}
-              </button>
-              <p className="text-xs text-[var(--text-muted)] mt-1">{t('sefaz_uploadCertHint')}</p>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadPassword')}</label>
-              <input
-                type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off"
-                className="w-full h-9 px-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-base)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-              />
-            </div>
-
-            <Select
-              label={t('sefaz_uploadUf')}
-              options={UF_OPTIONS}
-              value={ufCode}
-              onChange={setUfCode}
-              placeholder="—"
-              searchable
-              searchPlaceholder="Buscar estado…"
-            />
-
-            <div>
-              <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadEnvironment')}</label>
-              <div className="flex gap-2">
-                {(['production', 'homologation'] as const).map((env) => (
-                  <button
-                    key={env} type="button" onClick={() => setEnvironment(env)}
-                    className={`flex-1 h-9 rounded-[var(--radius-md)] border text-sm font-medium transition-colors cursor-pointer ${
-                      environment === env
-                        ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
-                        : 'border-[var(--bg-border)] text-[var(--text-secondary)] hover:border-[var(--accent)]'
-                    }`}
-                  >
-                    {env === 'production' ? t('sefaz_uploadEnvironmentProd') : t('sefaz_uploadEnvironmentHomol')}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <Button className="self-start" onClick={() => save.mutate()} disabled={!canSave}>
-              {save.isPending ? t('sefaz_uploadSaving') : t('sefaz_uploadSave')}
-            </Button>
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadCert')}</label>
+            <input ref={fileRef} type="file" accept=".pfx,.p12" className="hidden" onChange={(e) => setCertFile(e.target.files?.[0] ?? null)} />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full h-20 rounded-[var(--radius-md)] border-2 border-dashed border-[var(--bg-border)] flex flex-col items-center justify-center gap-1.5 text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors cursor-pointer"
+            >
+              {certFile ? (
+                <><FileKey2 className="h-5 w-5" /><span className="text-xs font-medium">{certFile.name}</span></>
+              ) : (
+                <><Upload className="h-5 w-5" /><span className="text-xs">{t('sefaz_clickToSelect')}</span></>
+              )}
+            </button>
+            <p className="text-xs text-[var(--text-muted)] mt-1">{t('sefaz_uploadCertHint')}</p>
           </div>
-        </Card>
-      )}
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadPassword')}</label>
+            <input
+              type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off"
+              className="w-full h-9 px-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-base)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+            />
+          </div>
+
+          <Select
+            label={t('sefaz_uploadUf')}
+            options={UF_OPTIONS}
+            value={ufCode}
+            onChange={setUfCode}
+            placeholder="—"
+            searchable
+            searchPlaceholder="Buscar estado…"
+          />
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadEnvironment')}</label>
+            <div className="flex gap-2">
+              {(['production', 'homologation'] as const).map((env) => (
+                <button
+                  key={env} type="button" onClick={() => setEnvironment(env)}
+                  className={`flex-1 h-9 rounded-[var(--radius-md)] border text-sm font-medium transition-colors cursor-pointer ${
+                    environment === env
+                      ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
+                      : 'border-[var(--bg-border)] text-[var(--text-secondary)] hover:border-[var(--accent)]'
+                  }`}
+                >
+                  {env === 'production' ? t('sefaz_uploadEnvironmentProd') : t('sefaz_uploadEnvironmentHomol')}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       <ConfirmDialog
         open={revokeOpen}

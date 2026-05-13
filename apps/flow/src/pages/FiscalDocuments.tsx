@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, ArrowRight, CheckCircle2, ExternalLink } from 'lucide-react'
-import { Button, Card, Badge } from '@syncero/ui'
+import { Button, Card, Badge, Select } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
@@ -84,45 +84,34 @@ export function Component() {
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('fiscalDocs_title')}</h1>
-        <Button size="sm" variant="ghost" onClick={() => navigate('/settings/integrations')}>
-          {t('fiscalDocs_configure')}
-        </Button>
-      </div>
+      <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('fiscalDocs_title')}</h1>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        {(['', 'income', 'expense'] as Direction[]).map((d) => (
-          <button
-            key={d || 'all'}
-            onClick={() => { setDirection(d); setPage(1) }}
-            className={`h-8 px-3 rounded-full text-xs font-medium transition-colors cursor-pointer ${
-              direction === d
-                ? 'bg-[var(--accent)] text-white'
-                : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-border)]'
-            }`}
-          >
-            {d === '' ? t('fiscalDocs_allDirections') : d === 'income' ? t('fiscalDocs_income') : t('fiscalDocs_expense')}
-          </button>
-        ))}
-
-        <div className="w-px bg-[var(--bg-border)]" />
-
-        {([['', t('fiscalDocs_allStatus')], ['true', t('fiscalDocs_pending')]] as ['' | 'true', string][]).map(([v, label]) => (
-          <button
-            key={v || 'all'}
-            onClick={() => { setPending(v); setPage(1) }}
-            className={`h-8 px-3 rounded-full text-xs font-medium transition-colors cursor-pointer ${
-              pending === v
-                ? 'bg-[var(--accent)] text-white'
-                : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:bg-[var(--bg-border)]'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <Card padding="sm">
+        <div className="flex flex-wrap gap-3">
+          <Select
+            size="sm"
+            options={[
+              { value: '',        label: t('fiscalDocs_allDirections') },
+              { value: 'income',  label: t('fiscalDocs_income') },
+              { value: 'expense', label: t('fiscalDocs_expense') },
+            ]}
+            value={direction}
+            onChange={(v) => { setDirection(v as Direction); setPage(1) }}
+            className="w-36"
+          />
+          <Select
+            size="sm"
+            options={[
+              { value: '',     label: t('fiscalDocs_allStatus') },
+              { value: 'true', label: t('fiscalDocs_pending') },
+            ]}
+            value={pending}
+            onChange={(v) => { setPending(v as '' | 'true'); setPage(1) }}
+            className="w-40"
+          />
+        </div>
+      </Card>
 
       {/* Content */}
       {isLoading ? (

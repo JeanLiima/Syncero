@@ -44,7 +44,7 @@ router.get('/', async (c) => {
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
   const { data } = await db.from('company_sefaz_credentials')
-    .select('id, environment, uf_code, last_nsu, last_sync_at, last_error, created_at, updated_at')
+    .select('id, environment, uf_code, is_active, last_nsu, last_sync_at, last_error, created_at, updated_at')
     .eq('company_id', companyId)
     .maybeSingle()
 
@@ -104,7 +104,7 @@ router.post('/', async (c) => {
 
   const { data, error } = await db.from('company_sefaz_credentials')
     .upsert(payload, { onConflict: 'company_id' })
-    .select('id, environment, uf_code, last_nsu, last_sync_at, last_error, created_at, updated_at')
+    .select('id, environment, uf_code, is_active, last_nsu, last_sync_at, last_error, created_at, updated_at')
     .single()
 
   if (error) return c.json({ error: error.message }, 500)
@@ -127,6 +127,29 @@ router.delete('/', async (c) => {
 
   if (error) return c.json({ error: error.message }, 500)
   return c.json({ ok: true })
+})
+
+// PATCH /api/sefaz-credentials/toggle?company_id=... — ativa ou desativa a integração
+router.patch('/toggle', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const companyId = c.req.query('company_id')
+  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
+
+  const admin = await ensureAdmin(db, userId, companyId)
+  if (!admin) return c.json({ error: 'forbidden' }, 403)
+
+  const { is_active } = await c.req.json<{ is_active: boolean }>()
+  if (typeof is_active !== 'boolean') return c.json({ error: 'is_active deve ser boolean' }, 400)
+
+  const { data, error } = await db.from('company_sefaz_credentials')
+    .update({ is_active })
+    .eq('company_id', companyId)
+    .select('id, environment, uf_code, is_active, last_nsu, last_sync_at, last_error, created_at, updated_at')
+    .single()
+
+  if (error) return c.json({ error: error.message }, 500)
+  return c.json(data)
 })
 
 // POST /api/sefaz-credentials/sync?company_id=... — dispara sincronização manual

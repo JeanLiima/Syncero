@@ -5,6 +5,7 @@ export interface SefazCredential {
   id: string
   environment: 'production' | 'homologation'
   uf_code: string
+  is_active: boolean
   last_nsu: string
   last_sync_at: string | null
   last_error: string | null
@@ -246,6 +247,13 @@ export async function deleteSefazCredential(companyId: string) {
 
 export async function triggerSefazSync(companyId: string) {
   return apiFetch<{ results: unknown[] }>(`/api/sefaz-credentials/sync${buildQuery({ companyId })}`, { method: 'POST', body: '{}' })
+}
+
+export async function toggleSefazIntegration(companyId: string, isActive: boolean) {
+  return apiFetch<SefazCredential>(`/api/sefaz-credentials/toggle${buildQuery({ companyId })}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ is_active: isActive }),
+  })
 }
 
 // ── Fiscal Documents ───────────────────────────────────────────

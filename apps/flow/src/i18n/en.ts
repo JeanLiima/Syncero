@@ -479,6 +479,15 @@ export const en: Record<TranslationKey, string> = {
   // Settings — Integrations
   settings_integrations: 'Integrations',
   settings_integrationsHint: 'Connect Syncero to external systems to automatically import data.',
+  settings_certificates: 'Certificates',
+
+  // Integrations page
+  integrations_sefaz_name: 'SEFAZ DF-e',
+  integrations_sefaz_desc: 'Automatic sync of NF-e, NFS-e and CT-e directly from SEFAZ.',
+  integrations_sefaz_noCert: 'No digital certificate configured.',
+  integrations_sefaz_configureCert: 'Configure in Company → Certificates',
+  integrations_enabled: 'Enabled',
+  integrations_disabled: 'Disabled',
 
   // SEFAZ Integration
   sefaz_title: 'SEFAZ Integration',

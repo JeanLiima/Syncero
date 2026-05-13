@@ -553,6 +553,7 @@ Deno.serve(async (req) => {
 
   let credQuery = db.from('company_sefaz_credentials')
     .select('id, company_id, cert_pfx_enc, cert_pfx_iv, cert_password_enc, cert_password_iv, environment, uf_code, last_nsu, companies!inner(cnpj)')
+    .eq('is_active', true)
 
   if (body.company_id) credQuery = credQuery.eq('company_id', body.company_id)
 

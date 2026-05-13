@@ -477,6 +477,15 @@ export const pt = {
   // Settings — Integrations
   settings_integrations: 'Integrações',
   settings_integrationsHint: 'Conecte o Syncero a sistemas externos para importar dados automaticamente.',
+  settings_certificates: 'Certificados',
+
+  // Integrations page
+  integrations_sefaz_name: 'SEFAZ DF-e',
+  integrations_sefaz_desc: 'Sincronização automática de NF-e, NFS-e e CT-e diretamente do SEFAZ.',
+  integrations_sefaz_noCert: 'Nenhum certificado digital configurado.',
+  integrations_sefaz_configureCert: 'Configure em Empresa → Certificados',
+  integrations_enabled: 'Habilitado',
+  integrations_disabled: 'Desabilitado',
 
   // SEFAZ Integration
   sefaz_title: 'Integração SEFAZ',

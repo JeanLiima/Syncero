@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, ArrowRight, CheckCircle2, ExternalLink } from 'lucide-react'
-import { Button, Card, Badge, Select } from '@syncero/ui'
+import { Button, Card, Badge, Select, DateRangePicker } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
@@ -35,6 +35,8 @@ export function Component() {
 
   const [direction, setDirection] = useState<Direction>('')
   const [pending,   setPending]   = useState<'' | 'true'>('')
+  const [dateFrom,  setDateFrom]  = useState('')
+  const [dateTo,    setDateTo]    = useState('')
   const [page,      setPage]      = useState(1)
 
   const [wizardOpen,    setWizardOpen]    = useState(false)
@@ -43,11 +45,13 @@ export function Component() {
   const PAGE_SIZE = 20
 
   const { data, isLoading } = useQuery({
-    queryKey: ['fiscal-documents', activeCompany?.id, direction, pending, page],
+    queryKey: ['fiscal-documents', activeCompany?.id, direction, pending, dateFrom, dateTo, page],
     queryFn:  () => getFiscalDocuments({
       companyId: activeCompany!.id,
-      direction:  direction || undefined,
-      pending:    pending || undefined,
+      direction:  direction  || undefined,
+      pending:    pending    || undefined,
+      date_from:  dateFrom   || undefined,
+      date_to:    dateTo     || undefined,
       page:       String(page),
       pageSize:   String(PAGE_SIZE),
     }),
@@ -109,6 +113,14 @@ export function Component() {
             value={pending}
             onChange={(v) => { setPending(v as '' | 'true'); setPage(1) }}
             className="w-40"
+          />
+          <DateRangePicker
+            size="sm"
+            from={dateFrom}
+            to={dateTo}
+            language={language}
+            onChange={(f, t2) => { setDateFrom(f); setDateTo(t2); setPage(1) }}
+            className="w-64"
           />
         </div>
       </Card>

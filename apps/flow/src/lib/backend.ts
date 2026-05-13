@@ -263,6 +263,8 @@ export type FiscalDocumentQueryParams = {
   direction?: string
   status?: string
   pending?: string
+  date_from?: string
+  date_to?: string
   page?: string
   pageSize?: string
 }

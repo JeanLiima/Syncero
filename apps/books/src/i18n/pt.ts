@@ -78,6 +78,9 @@ export const pt = {
   login_emailError: 'E-mail ou senha incorretos. Tente novamente.',
   login_emailSignUpError: 'Não foi possível criar a conta. Tente novamente.',
   login_emailConfirmation: 'Conta criada! Verifique seu e-mail para confirmar.',
+  login_confirmTitle: 'Verifique seu e-mail',
+  login_confirmSent: 'Enviamos um link de confirmação para',
+  login_confirmAction: 'Clique no link para ativar sua conta.',
 
   // Onboarding
   onboarding_loading: 'Configurando sua conta...',

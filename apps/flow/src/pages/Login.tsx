@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Mail } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n'
 import { Button, Card, useToast } from '@syncero/ui'
@@ -26,6 +27,7 @@ export function Component() {
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [pendingEmail, setPendingEmail] = useState('')
 
   const handleGoogleLogin = async () => {
     setLoading(true)
@@ -56,7 +58,7 @@ export function Component() {
       if (err) {
         setError(t('login_emailSignUpError'))
       } else {
-        toast.success(t('login_emailConfirmation'))
+        setPendingEmail(email)
       }
     }
   }
@@ -85,6 +87,28 @@ export function Component() {
             <p className="text-sm text-[var(--text-muted)]">{t('login_subtitle')}</p>
           </div>
 
+          {pendingEmail ? (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="h-12 w-12 rounded-full bg-[var(--accent-subtle)] flex items-center justify-center">
+                <Mail className="h-6 w-6 text-[var(--accent)]" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">{t('login_confirmTitle')}</p>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                  {t('login_confirmSent')} <span className="font-medium text-[var(--text-primary)]">{pendingEmail}</span>.<br />
+                  {t('login_confirmAction')}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setPendingEmail(''); setMode('signin') }}
+                className="text-xs text-[var(--accent)] hover:underline cursor-pointer"
+              >
+                {t('login_backToLogin')}
+              </button>
+            </div>
+          ) : (
+            <>
           {mode !== 'reset' && (
             <div className="flex rounded-[var(--radius-md)] bg-[var(--bg-elevated)] p-1 mb-6 gap-1">
               {(['signin', 'signup'] as const).map(m => (
@@ -201,9 +225,14 @@ export function Component() {
             </>
           )}
 
-          <p className="text-xs text-[var(--text-muted)] text-center mt-6 leading-relaxed">
-            {t('login_terms')}
-          </p>
+          </>
+          )}
+
+          {!pendingEmail && (
+            <p className="text-xs text-[var(--text-muted)] text-center mt-6 leading-relaxed">
+              {t('login_terms')}
+            </p>
+          )}
         </Card>
       </div>
     </div>

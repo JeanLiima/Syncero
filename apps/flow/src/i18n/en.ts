@@ -390,6 +390,9 @@ export const en: Record<TranslationKey, string> = {
   login_emailError: 'Incorrect email or password. Please try again.',
   login_emailSignUpError: 'Could not create account. Please try again.',
   login_emailConfirmation: 'Account created! Check your email to confirm.',
+  login_confirmTitle: 'Check your email',
+  login_confirmSent: 'We sent a confirmation link to',
+  login_confirmAction: 'Click the link to activate your account.',
 
   // Onboarding
   onboarding_loading: 'Setting up your account...',

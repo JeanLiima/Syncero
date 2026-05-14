@@ -36,6 +36,15 @@ export const en: Record<TranslationKey, string> = {
   dashboard_noTransactions: 'No transactions yet',
   dashboard_cashFlowChart: 'Last 30 days cash flow',
   dashboard_fab: 'New transaction',
+  dashboard_dueDates: 'Due Dates',
+  dashboard_dueOverdue: 'Overdue',
+  dashboard_dueToday: 'Due today',
+  dashboard_dueNext7: 'Next 7 days',
+  dashboard_dueNone: 'No due items in this period',
+  dashboard_duePay: 'Pay',
+  dashboard_dueReceive: 'Receive',
+  dashboard_dueTypePayable: 'Payable',
+  dashboard_dueTypeReceivable: 'Receivable',
 
   // Transactions
   transactions_title: 'Transactions',

@@ -34,6 +34,15 @@ export const pt = {
   dashboard_noTransactions: 'Nenhum lançamento ainda',
   dashboard_cashFlowChart: 'Fluxo dos últimos 30 dias',
   dashboard_fab: 'Novo lançamento',
+  dashboard_dueDates: 'Vencimentos',
+  dashboard_dueOverdue: 'Vencidas',
+  dashboard_dueToday: 'Vence hoje',
+  dashboard_dueNext7: 'Próximos 7 dias',
+  dashboard_dueNone: 'Nenhum vencimento no período',
+  dashboard_duePay: 'Pagar',
+  dashboard_dueReceive: 'Receber',
+  dashboard_dueTypePayable: 'Pagar',
+  dashboard_dueTypeReceivable: 'Receber',
 
   // Transactions (Lançamentos)
   transactions_title: 'Lançamentos',

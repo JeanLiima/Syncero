@@ -1,15 +1,16 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { format, startOfMonth, endOfMonth, subDays } from 'date-fns'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { format, startOfMonth, endOfMonth, subDays, addDays } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
-import { TrendingUp, TrendingDown, DollarSign, Clock, Plus } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Clock, Plus, AlertCircle, CheckCircle2, CalendarClock } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Link } from 'react-router-dom'
 import { Card, Badge, Button } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { getTransactions, getPayables } from '@/lib/backend'
+import { getTransactions, getPayables, updatePayable } from '@/lib/backend'
+import type { PayableReceivable } from '@/types'
 import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -101,11 +102,95 @@ function useRecentTransactions() {
   })
 }
 
+function useUpcomingPayables() {
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+  const today = format(new Date(), 'yyyy-MM-dd')
+  const in7Days = format(addDays(new Date(), 7), 'yyyy-MM-dd')
+
+  return useQuery({
+    queryKey: ['dashboard-upcoming', activeCompany?.id],
+    queryFn: async () => {
+      if (!activeCompany?.id) return { overdue: [], today: [], next7: [] }
+      const [payables, receivables] = await Promise.all([
+        getPayables(activeCompany.id, 'payable'),
+        getPayables(activeCompany.id, 'receivable'),
+      ])
+      const active = [...payables, ...receivables].filter(
+        (p) => p.status !== 'paid' && p.status !== 'cancelled'
+      )
+      return {
+        overdue: active.filter((p) => p.due_date < today),
+        today:   active.filter((p) => p.due_date === today),
+        next7:   active.filter((p) => p.due_date > today && p.due_date <= in7Days),
+      }
+    },
+    enabled: !!activeCompany?.id,
+  })
+}
+
+type DueGroup = { labelKey: 'dashboard_dueOverdue' | 'dashboard_dueToday' | 'dashboard_dueNext7'; items: PayableReceivable[]; icon: React.ReactNode; color: string }
+
+function DueSection({ group }: { group: DueGroup }) {
+  const t = useT()
+  const qc = useQueryClient()
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+
+  const markPaid = useMutation({
+    mutationFn: (id: string) =>
+      updatePayable(id, { status: 'paid', paid_date: format(new Date(), 'yyyy-MM-dd') }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['dashboard-upcoming', activeCompany?.id] })
+      qc.invalidateQueries({ queryKey: ['dashboard-summary', activeCompany?.id] })
+    },
+  })
+
+  if (group.items.length === 0) return null
+
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 mb-2">
+        {group.icon}
+        <span className={`text-xs font-semibold uppercase tracking-wide ${group.color}`}>{t(group.labelKey)}</span>
+        <span className="text-xs text-[var(--text-muted)] ml-1">({group.items.length})</span>
+      </div>
+      <div className="flex flex-col divide-y divide-[var(--bg-border)]">
+        {group.items.map((item) => (
+          <div key={item.id} className="flex items-center justify-between py-2.5 gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-[var(--text-primary)] truncate">{item.description}</p>
+              {item.contact_name && (
+                <p className="text-xs text-[var(--text-muted)] truncate">{item.contact_name}</p>
+              )}
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <Badge variant={item.type === 'payable' ? 'danger' : 'success'}>
+                {item.type === 'payable' ? t('dashboard_dueTypePayable') : t('dashboard_dueTypeReceivable')}
+              </Badge>
+              <span className={`font-mono text-sm font-medium ${item.type === 'payable' ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>
+                {fmt(item.amount)}
+              </span>
+              <Button
+                size="sm"
+                variant={item.type === 'payable' ? 'primary' : 'ghost'}
+                disabled={markPaid.isPending}
+                onClick={() => markPaid.mutate(item.id)}
+              >
+                {item.type === 'payable' ? t('dashboard_duePay') : t('dashboard_dueReceive')}
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function Component() {
   const t = useT()
   const { data: summary } = useMonthSummary()
   const { data: chartData = [] } = useLast30Days()
   const { data: recent = [] } = useRecentTransactions()
+  const { data: upcoming } = useUpcomingPayables()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const language = usePreferencesStore((s) => s.language)
   const [wizardOpen, setWizardOpen] = useState(false)
@@ -195,6 +280,42 @@ export function Component() {
             </AreaChart>
           </ResponsiveContainer>
         )}
+      </Card>
+
+      {/* Due dates */}
+      <Card>
+        <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">{t('dashboard_dueDates')}</h2>
+        {(() => {
+          const groups: DueGroup[] = [
+            {
+              labelKey: 'dashboard_dueOverdue',
+              items: upcoming?.overdue ?? [],
+              icon: <AlertCircle className="h-3.5 w-3.5 text-[var(--danger)]" />,
+              color: 'text-[var(--danger)]',
+            },
+            {
+              labelKey: 'dashboard_dueToday',
+              items: upcoming?.today ?? [],
+              icon: <CheckCircle2 className="h-3.5 w-3.5 text-[var(--warning)]" />,
+              color: 'text-[var(--warning)]',
+            },
+            {
+              labelKey: 'dashboard_dueNext7',
+              items: upcoming?.next7 ?? [],
+              icon: <CalendarClock className="h-3.5 w-3.5 text-[var(--text-muted)]" />,
+              color: 'text-[var(--text-muted)]',
+            },
+          ]
+          const total = groups.reduce((s, g) => s + g.items.length, 0)
+          if (total === 0) {
+            return <p className="text-sm text-[var(--text-muted)] text-center py-4">{t('dashboard_dueNone')}</p>
+          }
+          return (
+            <div className="flex flex-col gap-4">
+              {groups.map((g) => <DueSection key={g.labelKey} group={g} />)}
+            </div>
+          )
+        })()}
       </Card>
 
       {/* Recent transactions */}

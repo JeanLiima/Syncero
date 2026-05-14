@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n'
-import { Button, Card } from '@syncero/ui'
+import { Button, Card, useToast } from '@syncero/ui'
 
 function GoogleIcon() {
   return (
@@ -14,9 +14,16 @@ function GoogleIcon() {
   )
 }
 
+type Mode = 'signin' | 'signup' | 'reset'
+
 export function Component() {
   const t = useT()
-  const { signInWithGoogle } = useAuth()
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } = useAuth()
+  const toast = useToast()
+  const [mode, setMode] = useState<Mode>('signin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [passwordConfirm, setPasswordConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -28,13 +35,44 @@ export function Component() {
       setError(t('login_error'))
       setLoading(false)
     }
-    // Se OK, o Supabase redireciona — não há retorno
+  }
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (mode === 'signup') {
+      if (password.length < 6) { setError(t('login_passwordTooShort')); return }
+      if (password !== passwordConfirm) { setError(t('login_passwordMismatch')); return }
+    }
+
+    setLoading(true)
+    if (mode === 'signin') {
+      const { error: err } = await signInWithEmail(email, password)
+      if (err) { setError(t('login_emailError')); setLoading(false) }
+    } else {
+      const { error: err } = await signUpWithEmail(email, password)
+      setLoading(false)
+      if (err) {
+        setError(t('login_emailSignUpError'))
+      } else {
+        toast.success(t('login_emailConfirmation'))
+      }
+    }
+  }
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    const { error: err } = await resetPassword(email)
+    setLoading(false)
+    if (err) { setError(t('login_emailError')) } else { toast.success(t('login_resetSent')) }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)] p-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="h-14 w-14 rounded-2xl bg-[var(--accent)] flex items-center justify-center shadow-lg">
             <span className="text-white font-bold text-xl">SF</span>
@@ -42,28 +80,129 @@ export function Component() {
         </div>
 
         <Card>
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">{t('login_title')}</h1>
             <p className="text-sm text-[var(--text-muted)]">{t('login_subtitle')}</p>
           </div>
 
-          {error && (
-            <p className="text-xs text-[var(--danger)] text-center mb-4">{error}</p>
+          {mode !== 'reset' && (
+            <div className="flex rounded-[var(--radius-md)] bg-[var(--bg-elevated)] p-1 mb-6 gap-1">
+              {(['signin', 'signup'] as const).map(m => (
+                <button
+                  key={m}
+                  onClick={() => { setMode(m); setError('') }}
+                  className={`flex-1 text-sm font-medium py-1.5 rounded-[var(--radius-sm)] transition-colors cursor-pointer ${
+                    mode === m
+                      ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
+                      : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
+                  }`}
+                >
+                  {m === 'signin' ? t('login_tabSignIn') : t('login_tabSignUp')}
+                </button>
+              ))}
+            </div>
           )}
 
-          <Button
-            onClick={handleGoogleLogin}
-            loading={loading}
-            variant="ghost"
-            className="w-full gap-3 h-11 text-sm font-medium"
-          >
-            {!loading && <GoogleIcon />}
-            {t('login_google')}
-          </Button>
+          {error && (
+            <p className="text-xs text-center mb-4 text-[var(--danger)]">{error}</p>
+          )}
+
+          {mode === 'reset' ? (
+            <form onSubmit={handleReset} className="flex flex-col gap-3">
+              <p className="text-sm text-[var(--text-secondary)] text-center mb-2">{t('login_forgotPassword')}</p>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder={t('login_emailPlaceholder')}
+                className="w-full h-10 px-3 text-sm rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+              />
+              <Button type="submit" loading={loading} className="w-full h-10 text-sm">
+                {t('login_sendReset')}
+              </Button>
+              <button
+                type="button"
+                onClick={() => { setMode('signin'); setError('') }}
+                className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
+              >
+                {t('login_backToLogin')}
+              </button>
+            </form>
+          ) : (
+            <>
+              <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3 mb-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-[var(--text-secondary)]">{t('login_email')}</label>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder={t('login_emailPlaceholder')}
+                    className="w-full h-10 px-3 text-sm rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-[var(--text-secondary)]">{t('login_password')}</label>
+                    {mode === 'signin' && (
+                      <button
+                        type="button"
+                        onClick={() => { setMode('reset'); setError('') }}
+                        className="text-xs text-[var(--accent)] hover:underline cursor-pointer"
+                      >
+                        {t('login_forgotPassword')}
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder={t('login_passwordPlaceholder')}
+                    className="w-full h-10 px-3 text-sm rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                  />
+                </div>
+                {mode === 'signup' && (
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-[var(--text-secondary)]">{t('login_passwordConfirm')}</label>
+                    <input
+                      type="password"
+                      required
+                      value={passwordConfirm}
+                      onChange={e => setPasswordConfirm(e.target.value)}
+                      placeholder={t('login_passwordPlaceholder')}
+                      className="w-full h-10 px-3 text-sm rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+                    />
+                  </div>
+                )}
+                <Button type="submit" loading={loading} className="w-full h-10 text-sm mt-1">
+                  {mode === 'signin' ? t('login_signIn') : t('login_signUp')}
+                </Button>
+              </form>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-[var(--bg-border)]" />
+                <span className="text-xs text-[var(--text-muted)]">{t('login_or')}</span>
+                <div className="flex-1 h-px bg-[var(--bg-border)]" />
+              </div>
+
+              <Button
+                onClick={handleGoogleLogin}
+                loading={loading}
+                variant="ghost"
+                className="w-full gap-3 h-11 text-sm font-medium"
+              >
+                {!loading && <GoogleIcon />}
+                {t('login_google')}
+              </Button>
+            </>
+          )}
 
           <p className="text-xs text-[var(--text-muted)] text-center mt-6 leading-relaxed">
-            {t('login_terms')}<br />
-            {t('login_firstAccess')}
+            {t('login_terms')}
           </p>
         </Card>
       </div>

@@ -13,6 +13,9 @@ import type { WizardPrefill } from '@/modules/transactions/useTransactionWizard'
 
 type Direction = '' | 'income' | 'expense'
 
+const DEFAULT_DATE_FROM = format(startOfMonth(new Date()), 'yyyy-MM-dd')
+const DEFAULT_DATE_TO   = format(endOfMonth(new Date()),   'yyyy-MM-dd')
+
 function formatCurrency(v: number | null) {
   if (v === null) return '—'
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -36,8 +39,8 @@ export function Component() {
 
   const [direction, setDirection] = useState<Direction>('')
   const [pending,   setPending]   = useState<'' | 'true'>('')
-  const [dateFrom,  setDateFrom]  = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'))
-  const [dateTo,    setDateTo]    = useState(() => format(endOfMonth(new Date()),   'yyyy-MM-dd'))
+  const [dateFrom,  setDateFrom]  = useState(DEFAULT_DATE_FROM)
+  const [dateTo,    setDateTo]    = useState(DEFAULT_DATE_TO)
   const [page,      setPage]      = useState(1)
 
   const [wizardOpen,    setWizardOpen]    = useState(false)

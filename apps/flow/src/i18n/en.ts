@@ -5,7 +5,6 @@ export const en: Record<TranslationKey, string> = {
   nav_dashboard: 'Dashboard',
   nav_transactions: 'Transactions',
   nav_cashFlow: 'Cash Flow',
-  nav_accounts: 'Accounts',
   nav_fiscalDocs: 'Fiscal Documents',
   nav_settings: 'Settings',
   nav_preferences: 'Preferences',
@@ -37,8 +36,6 @@ export const en: Record<TranslationKey, string> = {
 
   // Transactions
   transactions_title: 'Transactions',
-  transactions_countSingular: 'transaction',
-  transactions_countPlural: 'transactions',
   transactions_empty: 'No transactions found',
   transactions_searchPlaceholder: 'Search by description…',
   transactions_new: 'New transaction',
@@ -244,7 +241,6 @@ export const en: Record<TranslationKey, string> = {
   cashFlow_noEntries: 'No entries in this period',
 
   // Income Statement
-  incomeStatement_title: 'Income Statement',
   incomeStatement_period: 'Period',
   incomeStatement_category: 'Category',
   incomeStatement_income: 'Revenue',

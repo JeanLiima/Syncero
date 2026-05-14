@@ -3,7 +3,6 @@ export const pt = {
   nav_dashboard: 'Dashboard',
   nav_transactions: 'Lançamentos',
   nav_cashFlow: 'Fluxo de Caixa',
-  nav_accounts: 'Contas',
   nav_fiscalDocs: 'Notas Fiscais',
   nav_settings: 'Configurações',
   nav_preferences: 'Preferências',
@@ -35,8 +34,6 @@ export const pt = {
 
   // Transactions (Lançamentos)
   transactions_title: 'Lançamentos',
-  transactions_countSingular: 'lançamento',
-  transactions_countPlural: 'lançamentos',
   transactions_empty: 'Nenhum lançamento encontrado',
   transactions_searchPlaceholder: 'Buscar por descrição…',
   transactions_new: 'Novo lançamento',
@@ -242,7 +239,6 @@ export const pt = {
   cashFlow_noEntries: 'Nenhum lançamento no período',
 
   // Income Statement (DRE)
-  incomeStatement_title: 'DRE',
   incomeStatement_period: 'Período',
   incomeStatement_category: 'Categoria',
   incomeStatement_income: 'Receitas',

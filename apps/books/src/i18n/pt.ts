@@ -99,7 +99,6 @@ export const pt = {
 
   // API Keys
   apiKeys_title: 'API Keys',
-  apiKeys_subtitle: 'Chaves para integração com sistemas externos',
   apiKeys_new: 'Nova chave',
   apiKeys_howTo: 'Como usar',
   apiKeys_howToDesc: 'Inclua a chave no header Authorization: Bearer <chave> ao fazer POST para a API de lançamentos.',

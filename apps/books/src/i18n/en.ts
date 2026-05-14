@@ -101,7 +101,6 @@ export const en: Record<TranslationKey, string> = {
 
   // API Keys
   apiKeys_title: 'API Keys',
-  apiKeys_subtitle: 'Keys for integration with external systems',
   apiKeys_new: 'New key',
   apiKeys_howTo: 'How to use',
   apiKeys_howToDesc: 'Include the key in the Authorization: Bearer <key> header when making POST requests to the entries API.',

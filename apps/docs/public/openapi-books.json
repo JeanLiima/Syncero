@@ -695,6 +695,12 @@
             "format": "uuid",
             "description": "UUID da empresa."
           },
+          "ext_company_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "UUID da empresa externa. Preenchido quando o livro pertence a uma empresa externa."
+          },
           "book_type": {
             "type": "string",
             "enum": [
@@ -1178,7 +1184,7 @@
         "tags": [
           "companies"
         ],
-        "summary": "Resumo fiscal da empresa (mês atual)",
+        "summary": "Resumo fiscal da empresa (totais acumulados)",
         "parameters": [
           {
             "name": "id",
@@ -1206,7 +1212,16 @@
                       "type": "integer"
                     },
                     "taxTotal": {
-                      "type": "number"
+                      "type": "number",
+                      "description": "Soma dos impostos apurados não pagos (status diferente de paid), em reais."
+                    },
+                    "txCount": {
+                      "type": "integer",
+                      "description": "Total de lançamentos da empresa."
+                    },
+                    "entryCount": {
+                      "type": "integer",
+                      "description": "Total de lançamentos contábeis."
                     }
                   }
                 }
@@ -2747,13 +2762,24 @@
           {
             "name": "company_id",
             "in": "query",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string",
               "format": "uuid",
               "example": "550e8400-e29b-41d4-a716-446655440000"
             },
-            "description": "ID da empresa Flow cujos documentos serão listados."
+            "description": "UUID da empresa Flow. Obrigatório se ext_company_id não for fornecido."
+          },
+          {
+            "name": "ext_company_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "UUID da empresa externa. Obrigatório se company_id não for fornecido."
           }
         ],
         "responses": {
@@ -2769,8 +2795,109 @@
               }
             }
           },
+          "400": {
+            "description": "Nenhum dos campos company_id ou ext_company_id foi fornecido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Acesso negado ou origem não autorizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      },
+      "post": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Criar registro de livro fiscal",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "book_type",
+                  "reference_period"
+                ],
+                "properties": {
+                  "company_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "UUID da empresa Flow. Obrigatório se ext_company_id não for fornecido."
+                  },
+                  "ext_company_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "550e8400-e29b-41d4-a716-446655440000",
+                    "description": "UUID da empresa externa. Obrigatório se company_id não for fornecido."
+                  },
+                  "book_type": {
+                    "type": "string",
+                    "enum": [
+                      "sped_fiscal",
+                      "sped_contribuicoes",
+                      "ecf",
+                      "ecd"
+                    ],
+                    "example": "ecd"
+                  },
+                  "reference_period": {
+                    "type": "string",
+                    "example": "2026-01",
+                    "description": "Período de referência (YYYY-MM)."
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "validated",
+                      "transmitted"
+                    ],
+                    "default": "draft"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Livro fiscal criado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalBook"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parâmetros inválidos ou ausentes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3866,6 +3993,184 @@
           },
           "502": {
             "description": "Erro ao chamar a Edge Function do SEFAZ.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      }
+    },
+    "/api/fiscal-books/{id}": {
+      "patch": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Atualizar status do livro fiscal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID do livro fiscal."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "draft",
+                      "validated",
+                      "transmitted"
+                    ],
+                    "description": "Novo status. Ao marcar como transmitted, transmitted_at é preenchido automaticamente."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalBook"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      },
+      "delete": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Excluir registro de livro fiscal",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID do livro fiscal."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Livro excluído com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      }
+    },
+    "/api/external-companies/{id}/summary": {
+      "get": {
+        "tags": [
+          "external-companies"
+        ],
+        "summary": "Resumo da empresa externa (totais acumulados)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "description": "UUID da empresa externa."
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "txCount": {
+                      "type": "integer",
+                      "description": "Total de lançamentos."
+                    },
+                    "entryCount": {
+                      "type": "integer",
+                      "description": "Total de lançamentos contábeis."
+                    },
+                    "nfeCount": {
+                      "type": "integer",
+                      "description": "Total de documentos fiscais."
+                    },
+                    "booksCount": {
+                      "type": "integer",
+                      "description": "Total de livros fiscais gerados."
+                    },
+                    "taxTotal": {
+                      "type": "number",
+                      "description": "Soma dos impostos apurados não pagos, em reais."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
             "content": {
               "application/json": {
                 "schema": {

@@ -15,9 +15,15 @@ import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
+function periodToRef(period: string) {
+  const year = Number(period.slice(0, 4))
+  const month = Number(period.slice(5, 7))
+  return new Date(year, month - 1, 1)
+}
+
 function useMonthSummary(period: string) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
-  const ref      = new Date(period + '-01')
+  const ref      = periodToRef(period)
   const dateFrom = format(startOfMonth(ref), 'yyyy-MM-dd')
   const dateTo   = format(endOfMonth(ref),   'yyyy-MM-dd')
 
@@ -51,7 +57,7 @@ function useMonthSummary(period: string) {
 
 function useMonthChart(period: string) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
-  const ref      = new Date(period + '-01')
+  const ref      = periodToRef(period)
   const dateFrom = format(startOfMonth(ref), 'yyyy-MM-dd')
   const dateTo   = format(endOfMonth(ref),   'yyyy-MM-dd')
 
@@ -87,7 +93,7 @@ function useMonthChart(period: string) {
 
 function useRecentTransactions(period: string) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
-  const ref      = new Date(period + '-01')
+  const ref      = periodToRef(period)
   const dateFrom = format(startOfMonth(ref), 'yyyy-MM-dd')
   const dateTo   = format(endOfMonth(ref),   'yyyy-MM-dd')
 
@@ -194,7 +200,7 @@ function DueSection({ group }: { group: DueGroup }) {
 export function Component() {
   const t = useT()
   const language = usePreferencesStore((s) => s.language)
-  const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7))
+  const [period, setPeriod] = useState(() => format(new Date(), 'yyyy-MM'))
   const { data: summary } = useMonthSummary(period)
   const { data: chartData = [] } = useMonthChart(period)
   const { data: recent = [] } = useRecentTransactions(period)

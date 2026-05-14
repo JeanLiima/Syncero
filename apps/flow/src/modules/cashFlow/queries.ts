@@ -16,7 +16,7 @@ export function useCashFlow(dateFrom: string, dateTo: string) {
     queryKey: ['cashflow', activeCompany?.id, dateFrom, dateTo],
     queryFn: () =>
       apiFetch<DailyFlow[]>(
-        `/api/cash-flow?companyId=${activeCompany!.id}&date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/cash-flow?company_id=${activeCompany!.id}&date_from=${dateFrom}&date_to=${dateTo}`
       ),
     enabled: !!activeCompany?.id && !!dateFrom && !!dateTo,
   })

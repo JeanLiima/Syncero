@@ -319,7 +319,7 @@ const UF_OPTIONS_FULL = [
 
 void UF_OPTIONS // keep import
 
-function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extCompanyId?: string }) {
+export function CertificatesTab({ companyId, extCompanyId }: { companyId?: string; extCompanyId?: string }) {
   const t  = useT()
   const qc = useQueryClient()
   const { success, error: toastError } = useToast()

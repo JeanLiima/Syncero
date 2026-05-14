@@ -282,6 +282,7 @@ export const en: Record<TranslationKey, string> = {
   sefaz_revokeMessage: 'The certificate will be removed and automatic sync will stop.',
   sefaz_readOnlyHint: 'This certificate is managed by the company in Syncero Flow.',
   settings_certificates: 'Certificates',
+  settings_integrations: 'Integrations',
   common_errorGeneric: 'Something went wrong. Please try again.',
   common_deletedSuccess: 'Deleted successfully',
 

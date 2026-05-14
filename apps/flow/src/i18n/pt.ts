@@ -469,7 +469,7 @@ export const pt = {
   sefaz_title: 'Integração SEFAZ',
   sefaz_certSection: 'Certificado Digital (A1)',
   sefaz_noCertTitle: 'Nenhum certificado configurado',
-  sefaz_noCertHint: 'Adicione seu certificado digital A1 para sincronizar notas fiscais automaticamente com o SEFAZ.',
+  sefaz_noCertHint: 'Adicione seu certificado digital A1 para sincronizar documentos fiscais automaticamente com o SEFAZ.',
   sefaz_addCert: 'Adicionar certificado',
   sefaz_active: 'Integração ativa',
   sefaz_lastSync: 'Última sincronização',

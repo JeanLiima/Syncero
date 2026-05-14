@@ -252,7 +252,7 @@ export const pt = {
   sefaz_certSection: 'Certificado Digital (A1)',
   sefaz_active: 'Certificado ativo',
   sefaz_noCertTitle: 'Nenhum certificado configurado',
-  sefaz_noCertHint: 'Adicione o certificado digital A1 para sincronizar notas fiscais automaticamente.',
+  sefaz_noCertHint: 'Adicione o certificado digital A1 para sincronizar documentos fiscais automaticamente.',
   sefaz_addCert: 'Adicionar certificado',
   sefaz_uploadTitle: 'Adicionar certificado',
   sefaz_uploadCert: 'Arquivo .pfx',
@@ -280,6 +280,7 @@ export const pt = {
   sefaz_revokeMessage: 'O certificado será removido e a sincronização automática será interrompida.',
   sefaz_readOnlyHint: 'Este certificado é gerenciado pela empresa no Syncero Flow.',
   settings_certificates: 'Certificados',
+  settings_integrations: 'Integrações',
   common_errorGeneric: 'Algo deu errado. Tente novamente.',
   common_deletedSuccess: 'Excluído com sucesso',
 

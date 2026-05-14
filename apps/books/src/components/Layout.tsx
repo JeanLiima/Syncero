@@ -60,9 +60,10 @@ export function Layout({ children }: { children: ReactNode }) {
       label: t('nav_settings'),
       icon: icon(Settings),
       children: [
-        { to: `${basePath}/settings`,          label: t('settings_company') },
+        { to: `${basePath}/settings`,      label: t('settings_company') },
         { to: `${basePath}/chart-of-accounts`, label: t('nav_accountPlan') },
-        { to: `${basePath}/api-keys`,          label: t('nav_apiKeys') },
+        { to: `${basePath}/api-keys`,      label: t('nav_apiKeys') },
+        { to: `${basePath}/integrations`,  label: t('settings_integrations') },
       ],
     },
   ]

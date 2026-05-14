@@ -105,7 +105,7 @@ function SidebarGroup({ item, collapsed, activeClass }: {
           'flex w-full items-center gap-3 px-3 py-2.5 text-sm rounded-[var(--radius-md)] transition-colors cursor-pointer',
           isAnyActive
             ? 'text-[var(--text-primary)] font-medium hover:bg-[var(--bg-elevated)]'
-            : 'text-[var(--text-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-secondary)]',
+            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]',
         )}
       >
         {item.icon}

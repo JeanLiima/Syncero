@@ -1,7 +1,8 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format, startOfMonth, endOfMonth, subDays } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
-import { TrendingUp, TrendingDown, DollarSign, Clock } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Clock, Plus } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Link } from 'react-router-dom'
 import { Card, Badge, Button } from '@syncero/ui'
@@ -9,6 +10,7 @@ import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import { getTransactions, getPayables } from '@/lib/backend'
+import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -106,6 +108,7 @@ export function Component() {
   const { data: recent = [] } = useRecentTransactions()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const language = usePreferencesStore((s) => s.language)
+  const [wizardOpen, setWizardOpen] = useState(false)
   const locale = language === 'en' ? enUS : ptBR
   const monthLabel = (() => {
     const raw = format(new Date(), 'MMMM yyyy', { locale })
@@ -225,6 +228,23 @@ export function Component() {
           </div>
         )}
       </Card>
+
+      {/* FAB */}
+      <button
+        onClick={() => setWizardOpen(true)}
+        className="fixed bottom-8 right-8 z-40 flex items-center gap-2.5 h-13 px-5 rounded-full bg-[var(--accent)] text-white shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+        aria-label={t('dashboard_fab')}
+      >
+        <Plus className="h-5 w-5 shrink-0" />
+        <span className="text-sm font-medium">{t('dashboard_fab')}</span>
+      </button>
+
+      <TransactionWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        editing={null}
+        language={language}
+      />
     </div>
   )
 }

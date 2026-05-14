@@ -110,4 +110,34 @@ router.patch('/:id', async (c) => {
   return c.json(data)
 })
 
+// ── GET /api/external-companies/:id/summary ───────────────────
+
+router.get('/:id/summary', async (c) => {
+  const userId = c.get('userId')
+  const db = createServiceClient()
+  const { id } = c.req.param()
+
+  const { data: ec } = await db.from('external_companies')
+    .select('id').eq('id', id).eq('accountant_id', userId).maybeSingle()
+  if (!ec) return c.json({ error: 'forbidden' }, 403)
+
+  const [txs, entries, nfe, books, taxes] = await Promise.all([
+    db.from('transactions').select('id', { count: 'exact', head: true }).eq('ext_company_id', id),
+    db.from('journal_entries').select('id', { count: 'exact', head: true }).eq('ext_company_id', id),
+    db.from('fiscal_documents').select('id', { count: 'exact', head: true }).eq('ext_company_id', id),
+    db.from('fiscal_books').select('id', { count: 'exact', head: true }).eq('ext_company_id', id),
+    db.from('tax_calculations').select('tax_amount').eq('ext_company_id', id).neq('status', 'paid'),
+  ])
+
+  const taxTotal = taxes.data?.reduce((s, t) => s + ((t.tax_amount as number) ?? 0), 0) ?? 0
+
+  return c.json({
+    txCount: txs.count ?? 0,
+    entryCount: entries.count ?? 0,
+    nfeCount: nfe.count ?? 0,
+    booksCount: books.count ?? 0,
+    taxTotal,
+  })
+})
+
 export default router

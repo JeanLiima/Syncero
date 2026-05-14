@@ -96,8 +96,6 @@ export const en: Record<TranslationKey, string> = {
   overview_taxes: 'Monthly taxes',
   overview_transactions: 'Transactions',
   overview_journal: 'Journal',
-  overview_viewTransactions: 'View transactions',
-  overview_viewEntries: 'View entries',
   overview_entryCount: 'entry',
   overview_entryCountPlural: 'entries',
 
@@ -142,7 +140,7 @@ export const en: Record<TranslationKey, string> = {
   apiKeys_errorCreate: 'Error creating key. Please try again.',
 
   // Impostos
-  impostos_title: 'Tax Calculation',
+  impostos_title: 'Taxes',
   impostos_empty: 'No tax calculations found for this company.',
   impostos_noJournalData: 'No journal entries for this period. Post entries before calculating taxes.',
   impostos_calculate: 'Calculate',
@@ -213,7 +211,6 @@ export const en: Record<TranslationKey, string> = {
   lancamentos_register: 'Post entry',
   lancamentos_searchPlaceholder: 'Search description or document...',
   lancamentos_accountFilterPlaceholder: 'Filter by account (code or name)',
-  lancamentos_filterCount: '{count} of {total} entries',
   lancamentos_export: 'Export',
   lancamentos_export_title: 'Export Journal Entries',
   lancamentos_export_subtitle: 'Format compatible with common accounting systems (Domínio, Questor, Alterdata, TOTVS).',
@@ -292,15 +289,31 @@ export const en: Record<TranslationKey, string> = {
   // Livros SPED
   sped_title: 'SPED Books',
   sped_empty: 'No SPED books found',
-  sped_period: 'Period',
-  sped_type: 'Type',
   sped_status: 'Status',
   sped_transmittedAt: 'Transmitted at',
-  sped_file: 'File',
-  sped_download: 'Download',
   sped_transmitted: 'Transmitted',
   sped_validated: 'Validated',
   sped_draft: 'Draft',
+
+  sped_tab_ecd: 'ECD',
+  sped_tab_ecf: 'ECF',
+  sped_tab_efd_contrib: 'EFD Contributions',
+  sped_tab_efd_icms: 'EFD ICMS/IPI',
+  sped_coming_soon: 'Coming soon',
+  sped_coming_soon_hint: 'Support for this book will be added in a future version.',
+  sped_generate_ecd: 'Generate ECD',
+  sped_generating: 'Generating...',
+  sped_generated_at: 'Generated at',
+  sped_mark_validated: 'Mark as validated',
+  sped_mark_transmitted: 'Mark as transmitted',
+  sped_delete_book: 'Delete',
+  sped_delete_confirm: 'Delete this fiscal book record?',
+  sped_no_plans: 'Set up the chart of accounts before generating ECD.',
+  sped_ecd_description: 'Digital accounting bookkeeping generated from the period\'s journal entries.',
+  sped_status_error: 'Error updating status.',
+  sped_delete_error: 'Error deleting record.',
+  sped_generate_error: 'Error fetching data for generation. Please try again.',
+  sped_history: 'Generation history',
 
   // Plano de Contas
   plano_title: 'Chart of Accounts',
@@ -433,8 +446,6 @@ export const en: Record<TranslationKey, string> = {
 
   // Transactions (read-only view for accountants)
   transactions_title: 'Transactions',
-  transactions_countSingular: 'transaction',
-  transactions_countPlural: 'transactions',
   transactions_searchPlaceholder: 'Search by description…',
   transactions_allTypes: 'All types',
   transactions_income: 'Income',
@@ -513,8 +524,6 @@ export const en: Record<TranslationKey, string> = {
   extTx_edit: 'Edit',
   extTx_editTitle: 'Edit transaction',
   extTx_empty: 'No transactions yet. Add the first one to start classifying.',
-  extTx_countSingular: 'transaction',
-  extTx_countPlural: 'transactions',
   extTx_description: 'Description',
   extTx_descriptionPlaceholder: 'E.g. Office rent, Service revenue…',
   extTx_amount: 'Amount',
@@ -560,10 +569,6 @@ export const en: Record<TranslationKey, string> = {
   extTx_errorDate: 'Please enter a date.',
   extTx_errorNature: 'Please select the accounting nature.',
 
-  // Overview — external company transaction counts
-  overview_txCount: 'transaction',
-  overview_txCountPlural: 'transactions',
-
   // Export
   export_title: 'Export Transactions',
   export_button: 'Export',
@@ -590,4 +595,26 @@ export const en: Record<TranslationKey, string> = {
   export_col_installment: 'Installment',
   export_col_notes: 'Notes',
   common_cnpjInvalid: 'Invalid CNPJ',
+
+  // Import
+  transactions_import: 'Import',
+  transactions_import_title: 'Import transactions',
+  transactions_import_dropzone: 'Drag an XML (NFe) or OFX file here',
+  transactions_import_dropzone_hint: 'or click to select',
+  transactions_import_accept: 'Accepted formats: .xml (NFe), .ofx, .qfx',
+  transactions_import_nfe_preview_title: 'Fiscal document detected',
+  transactions_import_nfe_counterpart: 'Counterpart',
+  transactions_import_nfe_date: 'Issue date',
+  transactions_import_nfe_amount: 'Total amount',
+  transactions_import_nfe_type_income: 'Income — issuing company',
+  transactions_import_nfe_type_expense: 'Expense — recipient company',
+  transactions_import_nfe_type_unknown: 'CNPJ not identified',
+  transactions_import_nfe_cnpj_warning: 'Your CNPJ was not found in this file. The document may not belong to your company.',
+  transactions_import_nfe_proceed_anyway: 'Proceed anyway',
+  transactions_import_nfe_continue: 'Create transaction',
+  transactions_import_ofx_found: '{count} transactions found',
+  transactions_import_ofx_defaultNature: 'Default nature',
+  transactions_import_ofx_confirm: 'Import {count} transaction(s)',
+  transactions_import_ofx_noneSelected: 'None selected',
+  transactions_import_error_parse: 'Could not read the file. Make sure it is a valid NFe XML or OFX file.',
 }

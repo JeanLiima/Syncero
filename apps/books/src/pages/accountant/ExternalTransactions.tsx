@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Plus, BookOpen, Search, Download } from 'lucide-react'
+import { Plus, BookOpen, Search, Download, Upload } from 'lucide-react'
 import { Badge, Button, Card, ConfirmDialog, DatePicker, DateRangePicker, Input, Modal, Select, Table, useToast } from '@syncero/ui'
 import {
   getTransactions,
@@ -15,9 +15,11 @@ import {
 import { ClassifyModal } from '@/components/accountant/ClassifyModal'
 import { ExportModal } from '@/components/accountant/ExportModal'
 import { ExtTransactionDetailModal } from '@/components/accountant/ExtTransactionDetailModal'
+import { ImportModal } from '@/components/accountant/ImportModal'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import type { Transaction, TransactionNature, TransactionType } from '@/types'
+import type { NfePrefill } from '@/components/accountant/ImportModal'
 
 type TxRow = Transaction & { is_classified: boolean; journal_entry_id: string | null }
 
@@ -164,6 +166,7 @@ export function Component() {
   const [deleting,     setDeleting]     = useState(false)
   const [classifyTx,   setClassifyTx]   = useState<TxRow | null>(null)
   const [exportOpen,   setExportOpen]   = useState(false)
+  const [importOpen,   setImportOpen]   = useState(false)
 
   const [counterpartSuggestions, setCounterpartSuggestions] = useState<string[]>([])
   const [counterpartError, setCounterpartError] = useState('')
@@ -198,6 +201,26 @@ export function Component() {
     setFormError(null)
     setCounterpartError('')
     setModalOpen(true)
+  }
+
+  const handleNfePrefill = (prefill: NfePrefill) => {
+    setEditing(null)
+    setForm({
+      ...emptyForm(),
+      type:        prefill.type ?? 'expense',
+      date:        prefill.date,
+      amountCents: prefill.amountCents,
+      counterpart: prefill.counterpart,
+      description: prefill.description,
+    })
+    setFormError(null)
+    setCounterpartError('')
+    setModalOpen(true)
+  }
+
+  const handleOFXImported = () => {
+    qc.invalidateQueries({ queryKey: QUERY_KEY })
+    toastSuccess(t('extTx_createdSuccess'))
   }
 
   const openEdit = (row: TxRow) => {
@@ -280,13 +303,13 @@ export function Component() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('extTx_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('extTx_countPlural') : t('extTx_countSingular')}
-          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>
             <Download className="h-4 w-4" /> {t('export_button')}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setImportOpen(true)}>
+            <Upload className="h-4 w-4" /> {t('transactions_import')}
           </Button>
           <Button size="sm" onClick={openCreate}>
             <Plus className="h-4 w-4" /> {t('extTx_new')}
@@ -657,6 +680,15 @@ export function Component() {
         onClose={() => setExportOpen(false)}
         filters={filters}
         extCompanyId={extCompanyId!}
+      />
+
+      {/* Import */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        extCompanyId={extCompanyId!}
+        onNfePrefill={handleNfePrefill}
+        onOFXImported={handleOFXImported}
       />
     </div>
   )

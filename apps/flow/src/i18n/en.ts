@@ -35,6 +35,7 @@ export const en: Record<TranslationKey, string> = {
   dashboard_recentTransactions: 'Recent transactions',
   dashboard_noTransactions: 'No transactions yet',
   dashboard_cashFlowChart: 'Last 30 days cash flow',
+  dashboard_fab: 'New transaction',
 
   // Transactions
   transactions_title: 'Transactions',

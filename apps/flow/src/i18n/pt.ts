@@ -33,6 +33,7 @@ export const pt = {
   dashboard_recentTransactions: 'Últimos lançamentos',
   dashboard_noTransactions: 'Nenhum lançamento ainda',
   dashboard_cashFlowChart: 'Fluxo dos últimos 30 dias',
+  dashboard_fab: 'Novo lançamento',
 
   // Transactions (Lançamentos)
   transactions_title: 'Lançamentos',

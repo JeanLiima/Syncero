@@ -1,13 +1,24 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { LayoutList, ArrowRight, Receipt } from 'lucide-react'
+import { ArrowDownUp, BookMarked, FileText, BookOpen, Calculator, ArrowRight } from 'lucide-react'
+
+function fmt(v: number) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
 import { apiFetch } from '@/lib/api'
-import { getTransactions } from '@/lib/backend'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
 import { maskCnpj } from '@/lib/cnpj'
 import type { ExternalCompany, TaxRegime } from '@/types'
+
+interface ExtSummary {
+  txCount: number
+  entryCount: number
+  nfeCount: number
+  booksCount: number
+  taxTotal: number
+}
 
 export function Component() {
   const t = useT()
@@ -39,16 +50,9 @@ export function Component() {
     enabled: !!extCompanyId,
   })
 
-  const { data: txData } = useQuery({
-    queryKey: ['ext-transactions-count', extCompanyId],
-    queryFn: () => getTransactions({ extCompanyId: extCompanyId!, pageSize: '1' }),
-    enabled: !!extCompanyId,
-  })
-  const txCount = txData?.count ?? 0
-
-  const { data: entryCount = 0 } = useQuery({
-    queryKey: ['journal-entry-count', extCompanyId],
-    queryFn: () => apiFetch<unknown[]>(`/api/journal-entries?extCompanyId=${extCompanyId}`).then(d => d.length),
+  const { data: summary } = useQuery({
+    queryKey: ['ext-summary', extCompanyId],
+    queryFn: () => apiFetch<ExtSummary>(`/api/external-companies/${extCompanyId}/summary`),
     enabled: !!extCompanyId,
   })
 
@@ -57,15 +61,33 @@ export function Component() {
   const items = [
     {
       label: t('overview_transactions'),
-      value: `${txCount} ${txCount !== 1 ? t('overview_txCountPlural') : t('overview_txCount')}`,
-      icon: <Receipt className="h-6 w-6 text-[var(--success)]" />,
+      value: String(summary?.txCount ?? 0),
+      icon: <ArrowDownUp className="h-6 w-6 text-sky-400" />,
       to: 'transactions',
     },
     {
       label: t('overview_journal'),
-      value: `${entryCount} ${entryCount !== 1 ? t('overview_entryCountPlural') : t('overview_entryCount')}`,
-      icon: <LayoutList className="h-6 w-6 text-[var(--warning)]" />,
+      value: String(summary?.entryCount ?? 0),
+      icon: <BookMarked className="h-6 w-6 text-[var(--warning)]" />,
       to: 'journal-entries',
+    },
+    {
+      label: t('overview_nfe'),
+      value: String(summary?.nfeCount ?? 0),
+      icon: <FileText className="h-6 w-6 text-[var(--accent)]" />,
+      to: 'nfe',
+    },
+    {
+      label: t('overview_sped'),
+      value: String(summary?.booksCount ?? 0),
+      icon: <BookOpen className="h-6 w-6 text-[var(--warning)]" />,
+      to: 'sped',
+    },
+    {
+      label: t('overview_taxes'),
+      value: fmt(summary?.taxTotal ?? 0),
+      icon: <Calculator className="h-6 w-6 text-[var(--success)]" />,
+      to: 'taxes',
     },
   ]
 

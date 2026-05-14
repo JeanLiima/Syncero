@@ -13,19 +13,22 @@ router.get('/:id/fiscal-summary', async (c) => {
     .select('id').eq('accountant_id', userId).eq('company_id', id).eq('status', 'accepted').maybeSingle()
   if (!acct) return c.json({ error: 'forbidden' }, 403)
 
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const period = `${year}-${month}`
-
-  const [nfe, books, taxes] = await Promise.all([
+  const [nfe, books, taxes, txs, entries] = await Promise.all([
     db.from('fiscal_documents').select('id', { count: 'exact', head: true }).eq('company_id', id),
     db.from('fiscal_books').select('id', { count: 'exact', head: true }).eq('company_id', id),
-    db.from('tax_calculations').select('tax_amount').eq('company_id', id).eq('period', period),
+    db.from('tax_calculations').select('tax_amount').eq('company_id', id).neq('status', 'paid'),
+    db.from('transactions').select('id', { count: 'exact', head: true }).eq('company_id', id),
+    db.from('journal_entries').select('id', { count: 'exact', head: true }).eq('company_id', id),
   ])
 
-  const taxTotal = taxes.data?.reduce((s, t) => s + (t.tax_amount as number), 0) ?? 0
-  return c.json({ nfeCount: nfe.count ?? 0, booksCount: books.count ?? 0, taxTotal })
+  const taxTotal = taxes.data?.reduce((s, t) => s + ((t.tax_amount as number) ?? 0), 0) ?? 0
+  return c.json({
+    nfeCount: nfe.count ?? 0,
+    booksCount: books.count ?? 0,
+    taxTotal,
+    txCount: txs.count ?? 0,
+    entryCount: entries.count ?? 0,
+  })
 })
 
 // ── GET /api/companies/:id/tax-settings ───────────────────────

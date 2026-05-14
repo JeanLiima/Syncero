@@ -94,8 +94,6 @@ export const pt = {
   overview_taxes: 'Impostos do mês',
   overview_transactions: 'Lançamentos',
   overview_journal: 'Lançamentos Cont.',
-  overview_viewTransactions: 'Ver lançamentos',
-  overview_viewEntries: 'Ver entradas',
   overview_entryCount: 'lançamento',
   overview_entryCountPlural: 'lançamentos',
 
@@ -140,7 +138,7 @@ export const pt = {
   apiKeys_errorCreate: 'Erro ao criar chave. Tente novamente.',
 
   // Impostos
-  impostos_title: 'Apuração de Impostos',
+  impostos_title: 'Impostos',
   impostos_empty: 'Nenhuma apuração encontrada para esta empresa.',
   impostos_noJournalData: 'Sem lançamentos contábeis neste período. Registre os lançamentos antes de apurar.',
   impostos_calculate: 'Apurar',
@@ -211,7 +209,6 @@ export const pt = {
   lancamentos_register: 'Registrar',
   lancamentos_searchPlaceholder: 'Buscar histórico ou documento...',
   lancamentos_accountFilterPlaceholder: 'Filtrar por conta (código ou nome)',
-  lancamentos_filterCount: '{count} de {total} lançamentos',
   lancamentos_export: 'Exportar',
   lancamentos_export_title: 'Exportar Lançamentos Contábeis',
   lancamentos_export_subtitle: 'Formato compatível com Domínio, Questor, Alterdata, TOTVS e outros sistemas contábeis brasileiros.',
@@ -290,15 +287,30 @@ export const pt = {
   // Livros SPED
   sped_title: 'Livros SPED',
   sped_empty: 'Nenhum livro SPED encontrado',
-  sped_period: 'Período',
-  sped_type: 'Tipo',
   sped_status: 'Status',
   sped_transmittedAt: 'Transmitido em',
-  sped_file: 'Arquivo',
-  sped_download: 'Download',
   sped_transmitted: 'Transmitido',
   sped_validated: 'Validado',
   sped_draft: 'Rascunho',
+  sped_tab_ecd: 'ECD',
+  sped_tab_ecf: 'ECF',
+  sped_tab_efd_contrib: 'EFD Contribuições',
+  sped_tab_efd_icms: 'EFD ICMS/IPI',
+  sped_coming_soon: 'Em breve',
+  sped_coming_soon_hint: 'Suporte a este livro será adicionado em versão futura.',
+  sped_generate_ecd: 'Gerar ECD',
+  sped_generating: 'Gerando...',
+  sped_generated_at: 'Gerado em',
+  sped_mark_validated: 'Marcar como validado',
+  sped_mark_transmitted: 'Marcar como transmitido',
+  sped_delete_book: 'Excluir',
+  sped_delete_confirm: 'Excluir este registro de livro fiscal?',
+  sped_no_plans: 'Configure o plano de contas antes de gerar o ECD.',
+  sped_ecd_description: 'Escrituração Contábil Digital gerada a partir dos lançamentos contábeis do período.',
+  sped_status_error: 'Erro ao atualizar status.',
+  sped_delete_error: 'Erro ao excluir.',
+  sped_generate_error: 'Erro ao buscar dados para geração. Tente novamente.',
+  sped_history: 'Histórico de gerações',
 
   // Plano de Contas
   plano_title: 'Plano de Contas',
@@ -431,8 +443,6 @@ export const pt = {
 
   // Transactions (read-only view for accountants)
   transactions_title: 'Lançamentos',
-  transactions_countSingular: 'lançamento',
-  transactions_countPlural: 'lançamentos',
   transactions_searchPlaceholder: 'Buscar por descrição…',
   transactions_allTypes: 'Todos os tipos',
   transactions_income: 'Entrada',
@@ -511,8 +521,6 @@ export const pt = {
   extTx_edit: 'Editar',
   extTx_editTitle: 'Editar lançamento',
   extTx_empty: 'Nenhum lançamento cadastrado. Adicione o primeiro para começar a classificar.',
-  extTx_countSingular: 'lançamento',
-  extTx_countPlural: 'lançamentos',
   extTx_description: 'Descrição',
   extTx_descriptionPlaceholder: 'Ex: Aluguel de escritório, Venda de serviço…',
   extTx_amount: 'Valor',
@@ -559,9 +567,6 @@ export const pt = {
   extTx_errorNature: 'Selecione a natureza contábil.',
 
   // Overview — external company transaction counts
-  overview_txCount: 'lançamento',
-  overview_txCountPlural: 'lançamentos',
-
   // Export
   export_title: 'Exportar Lançamentos',
   export_button: 'Exportar',
@@ -588,6 +593,28 @@ export const pt = {
   export_col_installment: 'Parcela',
   export_col_notes: 'Observações',
   common_cnpjInvalid: 'CNPJ inválido',
+
+  // Import
+  transactions_import: 'Importar',
+  transactions_import_title: 'Importar lançamentos',
+  transactions_import_dropzone: 'Arraste um arquivo XML (NFe) ou OFX aqui',
+  transactions_import_dropzone_hint: 'ou clique para selecionar',
+  transactions_import_accept: 'Formatos aceitos: .xml (NFe), .ofx, .qfx',
+  transactions_import_nfe_preview_title: 'Nota fiscal detectada',
+  transactions_import_nfe_counterpart: 'Contraparte',
+  transactions_import_nfe_date: 'Data de emissão',
+  transactions_import_nfe_amount: 'Valor total',
+  transactions_import_nfe_type_income: 'Receita — empresa emitente',
+  transactions_import_nfe_type_expense: 'Despesa — empresa destinatária',
+  transactions_import_nfe_type_unknown: 'CNPJ não identificado',
+  transactions_import_nfe_cnpj_warning: 'Seu CNPJ não foi encontrado neste arquivo. O documento pode não pertencer à sua empresa.',
+  transactions_import_nfe_proceed_anyway: 'Prosseguir mesmo assim',
+  transactions_import_nfe_continue: 'Criar lançamento',
+  transactions_import_ofx_found: '{count} transações encontradas',
+  transactions_import_ofx_defaultNature: 'Natureza padrão',
+  transactions_import_ofx_confirm: 'Importar {count} lançamento(s)',
+  transactions_import_ofx_noneSelected: 'Nenhum selecionado',
+  transactions_import_error_parse: 'Não foi possível ler o arquivo. Verifique se é um XML de NFe ou OFX válido.',
 } as const
 
 export type TranslationKey = keyof typeof pt

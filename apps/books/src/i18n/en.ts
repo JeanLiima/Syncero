@@ -288,7 +288,7 @@ export const en: Record<TranslationKey, string> = {
   integrations_enabled: 'Enabled',
   integrations_disabled: 'Disabled',
   integrations_sefaz_noCert: 'No digital certificate configured.',
-  integrations_sefaz_configureCert: 'Configure in Settings → Certificates',
+  integrations_sefaz_configureCert: 'Configure in Company → Certificates',
   common_errorGeneric: 'Something went wrong. Please try again.',
   common_deletedSuccess: 'Deleted successfully',
 

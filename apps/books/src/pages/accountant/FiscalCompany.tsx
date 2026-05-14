@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { FileText, BookOpen, Calculator, LayoutList, ArrowDownUp, ArrowRight } from 'lucide-react'
+import { FileText, BookOpen, Calculator, BookMarked, ArrowDownUp, ArrowRight } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
@@ -8,10 +8,22 @@ import { useT } from '@/i18n'
 import { maskCnpj } from '@/lib/cnpj'
 import type { TaxRegime } from '@/types'
 
+interface FiscalSummary {
+  nfeCount: number
+  booksCount: number
+  taxTotal: number
+  txCount: number
+  entryCount: number
+}
+
 const taxRegimeLabel: Record<TaxRegime, string> = {
   simples: 'Simples Nacional',
   lucro_presumido: 'Lucro Presumido',
   lucro_real: 'Lucro Real',
+}
+
+function fmt(v: number) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export function Component() {
@@ -26,18 +38,43 @@ export function Component() {
 
   const { data: summary } = useQuery({
     queryKey: ['fiscal-summary', companyId],
-    queryFn: () => apiFetch<{ nfeCount: number; booksCount: number; taxTotal: number }>(`/api/companies/${companyId}/fiscal-summary`),
+    queryFn: () => apiFetch<FiscalSummary>(`/api/companies/${companyId}/fiscal-summary`),
     enabled: !!companyId,
   })
 
   const formattedCnpj = company?.cnpj ? maskCnpj(company.cnpj) : null
 
   const items = [
-    { label: t('overview_nfe'),             value: String(summary?.nfeCount ?? 0),                                                           icon: <FileText    className="h-6 w-6 text-[var(--accent)]"   />, to: 'nfe'               },
-    { label: t('overview_sped'),            value: String(summary?.booksCount ?? 0),                                                         icon: <BookOpen    className="h-6 w-6 text-[var(--warning)]" />, to: 'sped'              },
-    { label: t('overview_taxes'),           value: (summary?.taxTotal ?? 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), icon: <Calculator  className="h-6 w-6 text-[var(--success)]" />, to: 'taxes'             },
-    { label: t('overview_transactions'),    value: t('overview_viewTransactions'), icon: <ArrowDownUp className="h-6 w-6 text-sky-400"           />, to: 'transactions'      },
-    { label: t('overview_journal'),         value: t('overview_viewEntries'),     icon: <LayoutList  className="h-6 w-6 text-[var(--warning)]" />, to: 'journal-entries'   },
+    {
+      label: t('overview_nfe'),
+      value: String(summary?.nfeCount ?? 0),
+      icon: <FileText className="h-6 w-6 text-[var(--accent)]" />,
+      to: 'nfe',
+    },
+    {
+      label: t('overview_sped'),
+      value: String(summary?.booksCount ?? 0),
+      icon: <BookOpen className="h-6 w-6 text-[var(--warning)]" />,
+      to: 'sped',
+    },
+    {
+      label: t('overview_taxes'),
+      value: fmt(summary?.taxTotal ?? 0),
+      icon: <Calculator className="h-6 w-6 text-[var(--success)]" />,
+      to: 'taxes',
+    },
+    {
+      label: t('overview_transactions'),
+      value: String(summary?.txCount ?? 0),
+      icon: <ArrowDownUp className="h-6 w-6 text-sky-400" />,
+      to: 'transactions',
+    },
+    {
+      label: t('overview_journal'),
+      value: String(summary?.entryCount ?? 0),
+      icon: <BookMarked className="h-6 w-6 text-[var(--warning)]" />,
+      to: 'journal-entries',
+    },
   ]
 
   return (

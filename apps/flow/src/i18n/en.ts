@@ -5,8 +5,7 @@ export const en: Record<TranslationKey, string> = {
   nav_dashboard: 'Dashboard',
   nav_transactions: 'Transactions',
   nav_cashFlow: 'Cash Flow',
-  nav_fiscalDocs: 'Fiscal Documents',
-  nav_settings: 'Settings',
+  nav_fiscalDocs: 'Fiscal Documents',  nav_settings: 'Settings',
   nav_preferences: 'Preferences',
   nav_signOut: 'Sign Out',
 

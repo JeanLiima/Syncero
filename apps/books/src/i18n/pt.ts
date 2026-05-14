@@ -2,7 +2,7 @@ export const pt = {
   // Nav
   nav_companies: 'Empresas',
   nav_overview: 'Visão Geral',
-  nav_fiscalDocs: 'Doc. Fiscais',
+  nav_fiscalDocs: 'Documentos Fiscais',
   nav_sped: 'Livros SPED',
   nav_taxes: 'Impostos',
   nav_transactions: 'Lançamentos',

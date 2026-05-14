@@ -4,7 +4,7 @@ export const en: Record<TranslationKey, string> = {
   // Nav
   nav_companies: 'Companies',
   nav_overview: 'Overview',
-  nav_fiscalDocs: 'Fiscal Docs',
+  nav_fiscalDocs: 'Fiscal Documents',
   nav_sped: 'SPED Books',
   nav_taxes: 'Taxes',
   nav_transactions: 'Transactions',

@@ -3,7 +3,7 @@ export const pt = {
   nav_dashboard: 'Dashboard',
   nav_transactions: 'Lançamentos',
   nav_cashFlow: 'Fluxo de Caixa',
-  nav_fiscalDocs: 'Notas Fiscais',
+  nav_fiscalDocs: 'Documentos Fiscais',
   nav_settings: 'Configurações',
   nav_preferences: 'Preferências',
   nav_signOut: 'Sair',
@@ -499,7 +499,7 @@ export const pt = {
   sefaz_clickToSelect: 'Clique para selecionar o arquivo .pfx',
 
   // Fiscal Documents
-  fiscalDocs_title: 'Notas Fiscais',
+  fiscalDocs_title: 'Documentos Fiscais',
   fiscalDocs_empty: 'Nenhuma nota fiscal encontrada',
   fiscalDocs_emptyHint: 'Habilite uma integração para importar notas fiscais automaticamente.',
   fiscalDocs_configure: 'Ver integrações',

@@ -285,6 +285,9 @@ export const en: Record<TranslationKey, string> = {
   incomeStatement_noExpense: 'No expenses in this period',
   incomeStatement_profit: 'Profit',
   incomeStatement_loss: 'Loss',
+  incomeStatement_drillDownTitle: 'Transactions',
+  incomeStatement_drillDownEmpty: 'No transactions found',
+  incomeStatement_drillDownNoCategory: 'No category',
 
   // Settings
   settings_company: 'Company',

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Modal, Input, Button } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { createContact } from '@/lib/backend'
+import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import { useAuthStore } from '@syncero/auth'
 import type { Contact } from '@/types'
 
@@ -11,21 +12,24 @@ interface ContactModalProps {
   onClose: () => void
   onCreated: (contact: Contact) => void
   initialName: string
+  initialCnpj?: string
 }
 
-export function ContactModal({ open, onClose, onCreated, initialName }: ContactModalProps) {
+export function ContactModal({ open, onClose, onCreated, initialName, initialCnpj }: ContactModalProps) {
   const t = useT()
   const qc = useQueryClient()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const [name, setName] = useState(initialName)
   const [cpf, setCpf] = useState('')
-  const [cnpj, setCnpj] = useState('')
+  const [cnpj, setCnpj] = useState(initialCnpj ? maskCnpj(initialCnpj) : '')
+  const [cnpjError, setCnpjError] = useState('')
 
   useEffect(() => {
     if (open) {
       setName(initialName)
       setCpf('')
-      setCnpj('')
+      setCnpj(initialCnpj ? maskCnpj(initialCnpj) : '')
+      setCnpjError('')
     }
   }, [open])
 
@@ -34,7 +38,7 @@ export function ContactModal({ open, onClose, onCreated, initialName }: ContactM
       company_id: activeCompany!.id,
       name: name.trim(),
       cpf: cpf.trim() || undefined,
-      cnpj: cnpj.trim() || undefined,
+      cnpj: stripCnpj(cnpj) || undefined,
     }),
     onSuccess: (contact) => {
       qc.invalidateQueries({ queryKey: ['contacts', activeCompany?.id] })
@@ -42,8 +46,10 @@ export function ContactModal({ open, onClose, onCreated, initialName }: ContactM
     },
   })
 
+  const canSave = name.trim().length > 0 && !cnpjError
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && name.trim() && !save.isPending) save.mutate()
+    if (e.key === 'Enter' && canSave && !save.isPending) save.mutate()
   }
 
   return (
@@ -66,8 +72,11 @@ export function ContactModal({ open, onClose, onCreated, initialName }: ContactM
           <Input
             label={`${t('contact_cnpj')} (${t('transactions_wizard_optional')})`}
             value={cnpj}
-            onChange={(e) => setCnpj(e.target.value)}
+            onChange={(e) => { setCnpj(maskCnpj(e.target.value)); setCnpjError('') }}
+            onBlur={() => { if (cnpj && !validateCnpj(cnpj)) setCnpjError(t('common_cnpjInvalid')) }}
             placeholder="00.000.000/0000-00"
+            maxLength={18}
+            error={cnpjError}
           />
         </div>
       </div>
@@ -78,7 +87,7 @@ export function ContactModal({ open, onClose, onCreated, initialName }: ContactM
         <Button
           onClick={() => save.mutate()}
           loading={save.isPending}
-          disabled={!name.trim()}
+          disabled={!canSave}
         >
           {t('contact_save')}
         </Button>

@@ -65,6 +65,14 @@
       "name": "invites",
       "description": "Convites de membros e contadores",
       "x-access": "internal"
+    },
+    {
+      "name": "fiscal",
+      "description": "Documentos fiscais sincronizados via SEFAZ."
+    },
+    {
+      "name": "integrations",
+      "description": "Gerenciamento de integrações externas (SEFAZ DF-e)."
     }
   ],
   "components": {
@@ -744,6 +752,159 @@
           "total": {
             "type": "number",
             "description": "Total do período para esta categoria."
+          }
+        }
+      },
+      "FiscalDocument": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "company_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "doc_type": {
+            "type": "string",
+            "enum": [
+              "nfe",
+              "nfse",
+              "cfe",
+              "cte"
+            ],
+            "description": "Tipo do documento."
+          },
+          "doc_number": {
+            "type": "string",
+            "nullable": true,
+            "description": "Número do documento."
+          },
+          "series": {
+            "type": "string",
+            "nullable": true
+          },
+          "issue_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-05-01"
+          },
+          "amount": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "example": 1500,
+            "description": "Valor total em reais."
+          },
+          "counterpart": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nome da contraparte."
+          },
+          "issuer_cnpj": {
+            "type": "string",
+            "nullable": true
+          },
+          "issuer_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "recipient_cnpj": {
+            "type": "string",
+            "nullable": true
+          },
+          "recipient_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "doc_direction": {
+            "type": "string",
+            "enum": [
+              "income",
+              "expense"
+            ],
+            "nullable": true,
+            "description": "income = nota emitida pela empresa; expense = nota recebida."
+          },
+          "doc_status": {
+            "type": "string",
+            "enum": [
+              "authorized",
+              "cancelled",
+              "denied"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "upload",
+              "sefaz_sync"
+            ]
+          },
+          "nsu": {
+            "type": "string",
+            "nullable": true,
+            "description": "NSU do DF-e SEFAZ."
+          },
+          "access_key": {
+            "type": "string",
+            "nullable": true,
+            "description": "Chave de acesso de 44 dígitos."
+          },
+          "transaction_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Lançamento vinculado. null se não classificado."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "SefazCredential": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "production",
+              "homologation"
+            ]
+          },
+          "uf_code": {
+            "type": "string",
+            "example": "35"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "last_nsu": {
+            "type": "string",
+            "example": "000000000000042"
+          },
+          "last_sync_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_error": {
+            "type": "string",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }
@@ -3312,6 +3473,591 @@
           }
         },
         "x-internal": true
+      }
+    },
+    "/api/fiscal-documents": {
+      "get": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Listar documentos fiscais",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "income",
+                "expense"
+              ]
+            },
+            "description": "Filtro por direção."
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "authorized",
+                "cancelled",
+                "denied"
+              ]
+            },
+            "description": "Filtro por status."
+          },
+          {
+            "name": "pending",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            },
+            "description": "Se true, retorna apenas documentos sem lançamento vinculado."
+          },
+          {
+            "name": "date_from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-01-01"
+            }
+          },
+          {
+            "name": "date_to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-12-31"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 200,
+              "example": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista paginada de documentos fiscais.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FiscalDocument"
+                      }
+                    },
+                    "count": {
+                      "type": "integer",
+                      "description": "Total com os filtros aplicados."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "company_id obrigatório.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      }
+    },
+    "/api/fiscal-documents/{id}": {
+      "patch": {
+        "tags": [
+          "fiscal"
+        ],
+        "summary": "Vincular ou desvincular lançamento",
+        "description": "Associa ou remove a associação entre um documento fiscal e um lançamento financeiro.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "transaction_id"
+                ],
+                "properties": {
+                  "transaction_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true,
+                    "description": "UUID do lançamento. null para desvincular."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Documento atualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FiscalDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "transaction_id obrigatório.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acesso negado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documento não encontrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      }
+    },
+    "/api/sefaz-credentials": {
+      "get": {
+        "tags": [
+          "integrations"
+        ],
+        "summary": "Consultar credencial SEFAZ da empresa",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credencial ou null.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/SefazCredential"
+                    },
+                    {
+                      "type": "object",
+                      "nullable": true
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "company_id obrigatório.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Apenas administradores.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      },
+      "post": {
+        "tags": [
+          "integrations"
+        ],
+        "summary": "Cadastrar certificado digital A1",
+        "description": "Cadastra ou substitui o certificado A1 da empresa. O arquivo .pfx é criptografado com AES-256-GCM antes de ser armazenado. Apenas administradores podem usar esta rota.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "company_id",
+                  "cert",
+                  "password",
+                  "uf_code"
+                ],
+                "properties": {
+                  "company_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "cert": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Arquivo .pfx ou .p12."
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Senha do certificado."
+                  },
+                  "environment": {
+                    "type": "string",
+                    "enum": [
+                      "production",
+                      "homologation"
+                    ],
+                    "default": "production"
+                  },
+                  "uf_code": {
+                    "type": "string",
+                    "example": "35",
+                    "description": "Código IBGE da UF da empresa."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Credencial cadastrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SefazCredential"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campo obrigatório ausente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Apenas administradores.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      },
+      "delete": {
+        "tags": [
+          "integrations"
+        ],
+        "summary": "Revogar certificado SEFAZ",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Credencial removida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "company_id obrigatório.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Apenas administradores.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      }
+    },
+    "/api/sefaz-credentials/toggle": {
+      "patch": {
+        "tags": [
+          "integrations"
+        ],
+        "summary": "Ativar ou desativar sincronização SEFAZ",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "is_active"
+                ],
+                "properties": {
+                  "is_active": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Credencial atualizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SefazCredential"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Campo inválido.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Apenas administradores.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
+      }
+    },
+    "/api/sefaz-credentials/sync": {
+      "post": {
+        "tags": [
+          "integrations"
+        ],
+        "summary": "Disparar sincronização SEFAZ manualmente",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resultado da sincronização.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "entity_id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "imported": {
+                            "type": "integer",
+                            "description": "Documentos importados neste ciclo."
+                          },
+                          "cancelled": {
+                            "type": "integer",
+                            "description": "Documentos marcados como cancelados."
+                          },
+                          "last_nsu": {
+                            "type": "string"
+                          },
+                          "error": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "company_id obrigatório.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Apenas administradores.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Erro ao chamar a Edge Function do SEFAZ.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-access": "internal"
       }
     }
   }

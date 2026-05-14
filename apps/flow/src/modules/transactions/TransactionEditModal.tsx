@@ -6,6 +6,7 @@ import { useT } from '@/i18n'
 import { useCategories, useContacts } from './queries'
 import { useUpdateTransaction, useDeleteTransaction } from './mutations'
 import { createContact, updateTransactionGroup } from '@/lib/backend'
+import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import { useAuthStore } from '@/store/auth'
 import type { Transaction, TransactionNature, TransactionType, Contact } from '@/types'
 
@@ -28,15 +29,18 @@ function ContactModal({
   const [name, setName] = useState(initialName)
   const [cpf, setCpf] = useState('')
   const [cnpj, setCnpj] = useState('')
+  const [cnpjError, setCnpjError] = useState('')
 
-  useEffect(() => { if (open) { setName(initialName); setCpf(''); setCnpj('') } }, [open])
+  useEffect(() => { if (open) { setName(initialName); setCpf(''); setCnpj(''); setCnpjError('') } }, [open])
+
+  const canSave = name.trim().length > 0 && !cnpjError
 
   const save = useMutation({
     mutationFn: () => createContact({
       company_id: activeCompany!.id,
       name: name.trim(),
       cpf: cpf.trim() || undefined,
-      cnpj: cnpj.trim() || undefined,
+      cnpj: stripCnpj(cnpj) || undefined,
     }),
     onSuccess: (contact) => {
       qc.invalidateQueries({ queryKey: ['contacts', activeCompany?.id] })
@@ -64,14 +68,17 @@ function ContactModal({
           <Input
             label={`${t('contact_cnpj')} (${t('transactions_wizard_optional')})`}
             value={cnpj}
-            onChange={(e) => setCnpj(e.target.value)}
+            onChange={(e) => { setCnpj(maskCnpj(e.target.value)); setCnpjError('') }}
+            onBlur={() => { if (cnpj && !validateCnpj(cnpj)) setCnpjError(t('common_cnpjInvalid')) }}
             placeholder="00.000.000/0000-00"
+            maxLength={18}
+            error={cnpjError}
           />
         </div>
       </div>
       <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
         <Button variant="ghost" size="sm" onClick={onClose}>{t('contact_cancel')}</Button>
-        <Button onClick={() => save.mutate()} loading={save.isPending} disabled={!name.trim()}>
+        <Button onClick={() => save.mutate()} loading={save.isPending} disabled={!canSave}>
           {t('contact_save')}
         </Button>
       </div>
@@ -141,7 +148,7 @@ function ContactCombobox({
 
   const formatDoc = (c: Contact) => {
     if (c.cpf) return `CPF ${c.cpf}`
-    if (c.cnpj) return `CNPJ ${c.cnpj}`
+    if (c.cnpj) return `CNPJ ${maskCnpj(c.cnpj)}`
     return null
   }
 

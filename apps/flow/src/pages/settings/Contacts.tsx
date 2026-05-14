@@ -5,6 +5,7 @@ import { Button, Card, Input, Modal, Select, Table, ConfirmDialog, useToast } fr
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
 import { getContacts, createContact, updateContact, deleteContact } from '@/lib/backend'
+import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import type { Contact } from '@/types'
 
 type DocType = 'none' | 'cpf' | 'cnpj'
@@ -23,7 +24,7 @@ function fromContact(c: Contact): ContactForm {
     name: c.name,
     docType: c.cpf ? 'cpf' : c.cnpj ? 'cnpj' : 'none',
     cpf: c.cpf ?? '',
-    cnpj: c.cnpj ?? '',
+    cnpj: c.cnpj ? maskCnpj(c.cnpj) : '',
   }
 }
 
@@ -39,6 +40,7 @@ export function Component() {
   const [editing, setEditing] = useState<Contact | null>(null)
   const [form, setForm] = useState<ContactForm>(emptyForm())
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [cnpjError, setCnpjError] = useState('')
 
   const { data: contacts = [], isLoading } = useQuery<Contact[]>({
     queryKey: ['contacts', activeCompany?.id, search],
@@ -49,12 +51,14 @@ export function Component() {
   const openCreate = () => {
     setEditing(null)
     setForm(emptyForm())
+    setCnpjError('')
     setModalOpen(true)
   }
 
   const openEdit = (c: Contact) => {
     setEditing(c)
     setForm(fromContact(c))
+    setCnpjError('')
     setModalOpen(true)
   }
 
@@ -63,7 +67,7 @@ export function Component() {
       const payload = {
         name: form.name.trim(),
         cpf: form.docType === 'cpf' ? form.cpf.trim() || null : null,
-        cnpj: form.docType === 'cnpj' ? form.cnpj.trim() || null : null,
+        cnpj: form.docType === 'cnpj' ? stripCnpj(form.cnpj) || null : null,
       }
       if (editing) return updateContact(editing.id, payload)
       return createContact({
@@ -91,11 +95,11 @@ export function Component() {
     onError: () => toastError(t('common_errorGeneric')),
   })
 
-  const canSave = form.name.trim().length > 0
+  const canSave = form.name.trim().length > 0 && !cnpjError
 
   const docLabel = (c: Contact) => {
     if (c.cpf) return <span className="text-xs font-mono text-[var(--text-muted)]">{c.cpf}</span>
-    if (c.cnpj) return <span className="text-xs font-mono text-[var(--text-muted)]">{c.cnpj}</span>
+    if (c.cnpj) return <span className="text-xs font-mono text-[var(--text-muted)]">{maskCnpj(c.cnpj)}</span>
     return <span className="text-xs text-[var(--text-muted)]">—</span>
   }
 
@@ -224,9 +228,17 @@ export function Component() {
             <Input
               label={t('contact_cnpj')}
               value={form.cnpj}
-              onChange={(e) => setForm((f) => ({ ...f, cnpj: e.target.value }))}
+              onChange={(e) => {
+                const masked = maskCnpj(e.target.value)
+                setForm((f) => ({ ...f, cnpj: masked }))
+                setCnpjError('')
+              }}
+              onBlur={() => {
+                if (form.cnpj && !validateCnpj(form.cnpj)) setCnpjError(t('common_cnpjInvalid'))
+              }}
               placeholder="00.000.000/0000-00"
               maxLength={18}
+              error={cnpjError}
             />
           )}
 

@@ -131,6 +131,7 @@ export const router = createBrowserRouter([
       { path: '/accountant/company/:companyId/chart-of-accounts', lazy: lazyLoad(() => import('../pages/accountant/ChartOfAccounts')) },
       { path: '/accountant/company/:companyId/journal-entries',   lazy: lazyLoad(() => import('../pages/accountant/JournalEntries')) },
       { path: '/accountant/external/:extCompanyId',                    lazy: lazyLoad(() => import('../pages/accountant/ExternalCompany')) },
+      { path: '/accountant/external/:extCompanyId/nfe',               lazy: lazyLoad(() => import('../pages/accountant/NFe')) },
       { path: '/accountant/external/:extCompanyId/chart-of-accounts', lazy: lazyLoad(() => import('../pages/accountant/ChartOfAccounts')) },
       { path: '/accountant/external/:extCompanyId/journal-entries',   lazy: lazyLoad(() => import('../pages/accountant/JournalEntries')) },
       { path: '/accountant/external/:extCompanyId/transactions',      lazy: lazyLoad(() => import('../pages/accountant/ExternalTransactions')) },

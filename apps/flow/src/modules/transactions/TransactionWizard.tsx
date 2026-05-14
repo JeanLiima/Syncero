@@ -1,18 +1,21 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { format, addMonths, parseISO, parse, isValid } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import {
   TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat,
-  ShoppingCart, Banknote, Users, Receipt, Package, ArrowDownLeft, ArrowUpRight,
+  ShoppingCart, Banknote, Users, Receipt, Package, ArrowDownLeft, ArrowUpRight, UserPlus,
 } from 'lucide-react'
 import { Button, Checkbox, DayCalendar, Input, Modal } from '@syncero/ui'
 import { useT, type TranslationKey } from '@/i18n'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from './mutations'
 import { useCategories, useBanks, useContacts } from './queries'
+import { getContacts, createContact } from '@/lib/backend'
+import { maskCnpj } from '@/lib/cnpj'
 import { useAuthStore } from '@syncero/auth'
 import { ContactModal } from './ContactModal'
 import { ContactCombobox } from './ContactCombobox'
-import { useTransactionWizardState } from './useTransactionWizard'
+import { useTransactionWizardState, type WizardPrefill } from './useTransactionWizard'
 import { PaymentPromptStep } from './PaymentPromptStep'
 import { PaymentFormStep } from './PaymentFormStep'
 import { SEGMENTS_WITH_COST } from '@/lib/segments'
@@ -23,6 +26,7 @@ interface Props {
   onClose: () => void
   editing: Transaction | null
   language: 'pt' | 'en'
+  prefill?: WizardPrefill
 }
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
@@ -53,7 +57,7 @@ const BASE_EXPENSE_NATURES: NatureOption[] = [
 
 // ── Wizard ───────────────────────────────────────────────────
 
-export function TransactionWizard({ open, onClose, editing, language }: Props) {
+export function TransactionWizard({ open, onClose, editing, language, prefill }: Props) {
   const t = useT()
   const activeCompany  = useAuthStore(s => s.activeCompany)
   const hasCostSegment = activeCompany?.segment ? SEGMENTS_WITH_COST.has(activeCompany.segment) : false
@@ -67,8 +71,66 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
   const { data: categories = [] } = useCategories()
   const { data: banks = [] } = useBanks()
 
-  const state = useTransactionWizardState(open, editing, language)
+  const skippedSteps = useMemo((): Set<Step> => {
+    if (!prefill || editing) return new Set()
+    const skip = new Set<Step>()
+    if (prefill.type) skip.add(1)
+    if (prefill.date) skip.add(3)
+    if ((prefill.amountCents ?? 0) > 0) skip.add(4)
+    skip.add(5)
+    if (prefill.counterpart && prefill.contactId) skip.add(7)
+    return skip
+  }, [prefill, editing])
+
+  const nextStepFrom = (from: Step): Step | null => {
+    for (let s = from + 1; s <= 8; s++) {
+      if (!skippedSteps.has(s as Step)) return s as Step
+    }
+    return null
+  }
+
+  const prevStepFrom = (from: Step): Step | null => {
+    for (let s = from - 1; s >= 1; s--) {
+      if (!skippedSteps.has(s as Step)) return s as Step
+    }
+    return null
+  }
+
+  const firstNonSkippedStep = useMemo((): Step => {
+    for (let s = 1; s <= 8; s++) {
+      if (!skippedSteps.has(s as Step)) return s as Step
+    }
+    return 1
+  }, [skippedSteps])
+
+  const state = useTransactionWizardState(open, editing, language, prefill, !editing ? firstNonSkippedStep : undefined)
   const { data: contacts = [] } = useContacts(state.contactSearch)
+  const [contactModalInitialCnpj, setContactModalInitialCnpj] = useState('')
+  const qc = useQueryClient()
+
+  // Look up existing contact by counterpart CNPJ from import
+  const { data: cnpjContact } = useQuery({
+    queryKey: ['contacts', activeCompany?.id, prefill?.counterpartCnpj],
+    queryFn: () => getContacts(activeCompany!.id, prefill!.counterpartCnpj!),
+    enabled: !!activeCompany?.id && !!prefill?.counterpartCnpj && !prefill?.contactId,
+    select: (list) => list.find((c) => c.cnpj?.replace(/\D/g, '') === prefill?.counterpartCnpj) ?? null,
+  })
+
+  // Quick-create contact directly from import data (no modal needed)
+  const quickCreate = useMutation({
+    mutationFn: () => createContact({
+      company_id: activeCompany!.id,
+      name: state.counterpart.trim(),
+      cnpj: prefill?.counterpartCnpj,
+    }),
+    onSuccess: (contact) => {
+      state.setCounterpart(contact.name)
+      state.setContactId(contact.id)
+      qc.invalidateQueries({ queryKey: ['contacts', activeCompany?.id] })
+      const next = nextStepFrom(7)
+      if (next) state.goTo(next)
+    },
+  })
 
   const isCreating = !editing
   const isPending = create.isPending || update.isPending
@@ -78,13 +140,27 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (state.phase === 'payment-prompt' && state.skipCountdown === 0) onClose()
   }, [state.skipCountdown]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Auto-link contact when found by CNPJ lookup
+  useEffect(() => {
+    if (cnpjContact && !state.contactId) state.setContactId(cnpjContact.id)
+  }, [cnpjContact]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-select most common nature when entering step 2 with no nature set
+  useEffect(() => {
+    if (state.step === 2 && !state.nature && state.type) {
+      state.setNature(state.type === 'income' ? 'sale_service' : 'operational_expense')
+    }
+  }, [state.step]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Handlers ────────────────────────────────────────────────
 
   const handleNext = () => {
     if (state.step === 1 && !state.type) return
     if (state.step === 2 && !state.nature) return
     if (state.step === 4 && !validateAmount()) return
-    state.goTo((state.step + 1) as Step)
+    const next = nextStepFrom(state.step)
+    if (next) state.goTo(next)
+    else handleSave()
   }
 
   const validateAmount = () => {
@@ -112,7 +188,10 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   const selectCategory = (id: string | undefined) => {
     state.setCategoryId(id)
-    if (isCreating) state.goTo(7)
+    if (isCreating) {
+      const next = nextStepFrom(6)
+      if (next) state.goTo(next)
+    }
   }
 
   const handleSave = async () => {
@@ -234,7 +313,13 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (state.step === 7) return // contact — handled by combobox
 
     if (state.step === 4) {
-      if (e.key === 'Enter') { e.preventDefault(); if (validateAmount()) state.goTo(5) }
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        if (validateAmount()) {
+          const next = nextStepFrom(4)
+          if (next) state.goTo(next)
+        }
+      }
       return
     }
 
@@ -261,7 +346,11 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           : (currentIdx - 1 + options.length) % options.length
         state.setNature(options[nextIdx])
       }
-      if (e.key === 'Enter' && state.nature) { e.preventDefault(); state.goTo(3) }
+      if (e.key === 'Enter' && state.nature) {
+        e.preventDefault()
+        const next = nextStepFrom(2)
+        if (next) state.goTo(next)
+      }
       return
     }
 
@@ -285,7 +374,15 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           : (currentIdx - 1 + options.length) % options.length
         state.setCategoryId(options[nextIdx])
       }
-      if (e.key === 'Enter') { e.preventDefault(); isCreating ? state.goTo(7) : handleNext() }
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        if (isCreating) {
+          const next = nextStepFrom(6)
+          if (next) state.goTo(next)
+        } else {
+          handleNext()
+        }
+      }
       return
     }
 
@@ -666,14 +763,64 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
     // Step 7 — Contato / Contraparte
     7: (
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         <p className="text-sm text-[var(--text-muted)] text-center">
           {state.type === 'income'
             ? t('transactions_wizard_counterpartIncomeLabel')
             : t('transactions_wizard_counterpartExpenseLabel')}
         </p>
+
+        {/* Quick-create card — visible above combobox when import has counterpart CNPJ */}
+        {prefill?.counterpartCnpj && !state.contactId && (
+          <>
+            <button
+              type="button"
+              onClick={() => !quickCreate.isPending && quickCreate.mutate()}
+              disabled={quickCreate.isPending}
+              className="w-full text-left rounded-xl border-2 border-[var(--accent)]/30 bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 hover:border-[var(--accent)]/50 transition-all cursor-pointer px-4 py-3.5 group disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col min-w-0 gap-0.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--accent)] mb-0.5">
+                    {t('transactions_wizard_contact_new_for')}
+                  </span>
+                  <span className="text-sm font-medium text-[var(--text-primary)] truncate leading-tight">
+                    {state.counterpart}
+                  </span>
+                  <span className="text-xs text-[var(--text-muted)] font-mono">
+                    {maskCnpj(prefill.counterpartCnpj)}
+                  </span>
+                </div>
+                <div className={`shrink-0 flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  quickCreate.isPending
+                    ? 'bg-[var(--accent)]/20 text-[var(--accent)]'
+                    : 'bg-[var(--accent)] text-white group-hover:bg-[var(--accent)]'
+                }`}>
+                  {quickCreate.isPending ? (
+                    <span className="text-xs">…</span>
+                  ) : (
+                    <>
+                      <UserPlus className="h-3.5 w-3.5" />
+                      {t('transactions_wizard_contact_create')}
+                    </>
+                  )}
+                </div>
+              </div>
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-[var(--bg-border)]" />
+              <span className="text-xs text-[var(--text-muted)]">
+                {t('transactions_wizard_contact_or_select')}
+              </span>
+              <div className="flex-1 h-px bg-[var(--bg-border)]" />
+            </div>
+          </>
+        )}
+
         <ContactCombobox
-          value={state.counterpart}
+          value={prefill?.counterpartCnpj && !state.contactId ? '' : state.counterpart}
+          autoFocus={!(prefill?.counterpartCnpj && !state.contactId)}
           onChange={(name, contact) => {
             state.setCounterpart(name)
             state.setContactSearch(name)
@@ -681,6 +828,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
           }}
           onAddNew={(name) => {
             state.setContactModalInitialName(name)
+            setContactModalInitialCnpj('')
             state.setContactModalOpen(true)
           }}
           onConfirm={handleNext}
@@ -714,7 +862,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
   // ── Render ──────────────────────────────────────────────────
 
-  const showNext = state.step < 8 && (
+  const showNext = nextStepFrom(state.step) !== null && (
     state.step === 2 ||
     state.step === 3 ||
     state.step === 4 ||
@@ -738,7 +886,9 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
     if (state.phase === 'payment-form') return t('transactions_wizard_keyHintPaymentForm')
     if (state.step === 1 || state.step === 5 || state.step === 6) return t('transactions_wizard_keyHintCards')
     if (state.step === 2) return t('transactions_wizard_keyHintNature')
-    if (state.step === 7) return t('transactions_wizard_keyHintContact')
+    if (state.step === 7) return prefill?.counterpartCnpj && !state.contactId
+      ? t('transactions_wizard_keyHintContactImport')
+      : t('transactions_wizard_keyHintContact')
     if (state.step === 8) return t('transactions_wizard_keyHintSave')
     return t('transactions_wizard_keyHintEnter')
   })()
@@ -758,7 +908,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         {state.phase === 'wizard' && (
           <>
             <div className="flex justify-center gap-2 mb-6">
-              {([1, 2, 3, 4, 5, 6, 7, 8] as const).map((s) => (
+              {([1, 2, 3, 4, 5, 6, 7, 8] as const).filter((s) => !skippedSteps.has(s)).map((s) => (
                 <div
                   key={s}
                   className={`h-1.5 rounded-full transition-all duration-200 ${
@@ -776,12 +926,15 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
 
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--bg-border)]">
               <div>
-                {state.step === 1 ? (
+                {state.step === firstNonSkippedStep ? (
                   <Button variant="ghost" size="sm" onClick={onClose}>
                     {t('transactions_cancel')}
                   </Button>
                 ) : (
-                  <Button variant="ghost" size="sm" onClick={state.goBack}>
+                  <Button variant="ghost" size="sm" onClick={() => {
+                    const prev = prevStepFrom(state.step)
+                    if (prev) state.goTo(prev)
+                  }}>
                     <ChevronLeft className="h-4 w-4" />
                     {t('transactions_wizard_back')}
                   </Button>
@@ -845,6 +998,7 @@ export function TransactionWizard({ open, onClose, editing, language }: Props) {
         open={state.contactModalOpen}
         onClose={() => state.setContactModalOpen(false)}
         initialName={state.contactModalInitialName}
+        initialCnpj={contactModalInitialCnpj || undefined}
         onCreated={(contact) => {
           state.setCounterpart(contact.name)
           state.setContactSearch(contact.name)

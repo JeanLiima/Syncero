@@ -1,24 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog } from '@syncero/ui'
-import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown, Info } from 'lucide-react'
+import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown, Info, Upload, FileKey2, CheckCircle2, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { useAuthStore } from '@/store/auth'
 import { SEGMENTS_WITH_COST } from '@/lib/segments'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
+import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite, getSefazCredential, saveSefazCredential, deleteSefazCredential, triggerSefazSync, type SefazCredential } from '@/lib/backend'
+import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import type { MemberRole, AccountantCompany, TaxRegime } from '@/types'
 
 const companySchema = z.object({
   name:       z.string().min(2, 'Nome muito curto'),
   trade_name: z.string().optional(),
-  cnpj:       z.string().optional(),
+  cnpj:       z.string().optional().refine((v) => !v || validateCnpj(v), 'CNPJ inválido'),
   tax_regime: z.enum(['simples', 'lucro_presumido', 'lucro_real'], { required_error: 'Obrigatório' }),
   segment:    z.string().min(1, 'Obrigatório'),
 })
@@ -66,7 +67,7 @@ function CompanyTab() {
     enabled: !!activeCompany?.id,
   })
 
-  const { register, handleSubmit, reset, control, watch, formState: { errors, isSubmitting } } = useForm<CompanyForm>({
+  const { register, handleSubmit, reset, control, watch, setValue, formState: { errors, isSubmitting } } = useForm<CompanyForm>({
     resolver: zodResolver(companySchema),
   })
 
@@ -74,7 +75,7 @@ function CompanyTab() {
     if (company) reset({
       name:       company.name,
       trade_name: company.trade_name ?? '',
-      cnpj:       company.cnpj       ?? '',
+      cnpj:       company.cnpj ? maskCnpj(company.cnpj) : '',
       tax_regime: company.tax_regime  ?? undefined,
       segment:    company.segment     ?? '',
     })
@@ -84,7 +85,7 @@ function CompanyTab() {
     mutationFn: async (data: CompanyForm) => {
       const payload: Record<string, unknown> = { name: data.name }
       if (data.trade_name !== undefined) payload.trade_name = data.trade_name || null
-      if (data.cnpj       !== undefined) payload.cnpj       = data.cnpj       || null
+      if (data.cnpj       !== undefined) payload.cnpj       = stripCnpj(data.cnpj) || null
       payload.tax_regime = data.tax_regime ?? null
       payload.segment    = data.segment    || null
       return updateCompany(activeCompany!.id, payload)
@@ -122,7 +123,7 @@ function CompanyTab() {
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-[var(--text-muted)]">{t('settings_cnpj')}</span>
-            <span className="text-sm font-medium text-[var(--text-primary)]">{company?.cnpj ?? '—'}</span>
+            <span className="text-sm font-medium text-[var(--text-primary)]">{company?.cnpj ? maskCnpj(company.cnpj) : '—'}</span>
           </div>
           <div className="flex items-center justify-between px-4 py-3">
             <span className="text-sm text-[var(--text-muted)]">{t('settings_taxRegime')}</span>
@@ -139,7 +140,14 @@ function CompanyTab() {
         <form onSubmit={handleSubmit((d) => save.mutateAsync(d))} className="flex flex-col gap-4">
           <Input label={t('settings_companyName')} error={errors.name?.message} {...register('name')} />
           <Input label={t('settings_tradeName')} {...register('trade_name')} />
-          <Input label={t('settings_cnpj')} {...register('cnpj')} />
+          <Input
+            label={t('settings_cnpj')}
+            placeholder="00.000.000/0000-00"
+            {...register('cnpj')}
+            onChange={(e) => setValue('cnpj', maskCnpj(e.target.value), { shouldValidate: true })}
+            error={errors.cnpj?.message}
+            maxLength={18}
+          />
           <Controller
             control={control}
             name="tax_regime"
@@ -638,6 +646,279 @@ function AccountantTab() {
   )
 }
 
+// ── Aba Certificados ──────────────────────────────────────────
+
+const UF_OPTIONS = [
+  { value: '12', label: 'AC — Acre' }, { value: '27', label: 'AL — Alagoas' },
+  { value: '16', label: 'AP — Amapá' }, { value: '13', label: 'AM — Amazonas' },
+  { value: '29', label: 'BA — Bahia' }, { value: '23', label: 'CE — Ceará' },
+  { value: '53', label: 'DF — Distrito Federal' }, { value: '32', label: 'ES — Espírito Santo' },
+  { value: '52', label: 'GO — Goiás' }, { value: '21', label: 'MA — Maranhão' },
+  { value: '51', label: 'MT — Mato Grosso' }, { value: '50', label: 'MS — Mato Grosso do Sul' },
+  { value: '31', label: 'MG — Minas Gerais' }, { value: '15', label: 'PA — Pará' },
+  { value: '25', label: 'PB — Paraíba' }, { value: '41', label: 'PR — Paraná' },
+  { value: '26', label: 'PE — Pernambuco' }, { value: '22', label: 'PI — Piauí' },
+  { value: '33', label: 'RJ — Rio de Janeiro' }, { value: '24', label: 'RN — Rio Grande do Norte' },
+  { value: '43', label: 'RS — Rio Grande do Sul' }, { value: '11', label: 'RO — Rondônia' },
+  { value: '14', label: 'RR — Roraima' }, { value: '42', label: 'SC — Santa Catarina' },
+  { value: '35', label: 'SP — São Paulo' }, { value: '28', label: 'SE — Sergipe' },
+  { value: '17', label: 'TO — Tocantins' },
+]
+
+function CertificatesTab() {
+  const t = useT()
+  const qc = useQueryClient()
+  const { success, error: toastError } = useToast()
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+  const isAdmin = activeCompany?.role === 'admin'
+
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [modalOpen,   setModalOpen]   = useState(false)
+  const [certFile,    setCertFile]    = useState<File | null>(null)
+  const [password,    setPassword]    = useState('')
+  const [environment, setEnvironment] = useState<'production' | 'homologation'>('production')
+  const [ufCode,      setUfCode]      = useState('')
+  const [revokeOpen,  setRevokeOpen]  = useState(false)
+
+  const { data: company } = useQuery({
+    queryKey: ['company', activeCompany?.id],
+    queryFn:  () => getCompany(activeCompany!.id),
+    enabled:  !!activeCompany?.id,
+  })
+
+  const { data: credential, isLoading } = useQuery<SefazCredential | null>({
+    queryKey: ['sefaz-credential', activeCompany?.id],
+    queryFn:  () => getSefazCredential(activeCompany!.id),
+    enabled:  !!activeCompany?.id && isAdmin,
+  })
+
+  function closeModal() {
+    setModalOpen(false)
+    setCertFile(null); setPassword(''); setUfCode('')
+    setEnvironment('production')
+  }
+
+  const save = useMutation({
+    mutationFn: () => {
+      if (!certFile) throw new Error('cert required')
+      const form = new FormData()
+      form.append('company_id',  activeCompany!.id)
+      form.append('cert',        certFile)
+      form.append('password',    password)
+      form.append('environment', environment)
+      form.append('uf_code',     ufCode)
+      return saveSefazCredential(form)
+    },
+    onSuccess: () => {
+      success(t('sefaz_uploadSuccess'))
+      closeModal()
+      qc.invalidateQueries({ queryKey: ['sefaz-credential', activeCompany?.id] })
+    },
+    onError: () => toastError(t('sefaz_uploadError')),
+  })
+
+  const revoke = useMutation({
+    mutationFn: () => deleteSefazCredential(activeCompany!.id),
+    onSuccess: () => {
+      setRevokeOpen(false)
+      success(t('common_deletedSuccess'))
+      qc.invalidateQueries({ queryKey: ['sefaz-credential', activeCompany?.id] })
+      qc.invalidateQueries({ queryKey: ['sefaz-credential'] })
+    },
+    onError: () => toastError(t('common_errorGeneric')),
+  })
+
+  const sync = useMutation({
+    mutationFn: () => triggerSefazSync(activeCompany!.id),
+    onSuccess: () => {
+      success(t('sefaz_syncSuccess'))
+      qc.invalidateQueries({ queryKey: ['sefaz-credential', activeCompany?.id] })
+      qc.invalidateQueries({ queryKey: ['fiscal-documents'] })
+    },
+    onError: () => toastError(t('sefaz_syncError')),
+  })
+
+  const hasCnpj = !!company?.cnpj
+  const canSave = hasCnpj && certFile && password && ufCode && !save.isPending
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Botão topo — só quando cert ativo */}
+      {isAdmin && credential && (
+        <div className="flex items-center justify-end">
+          <Button size="sm" onClick={() => setModalOpen(true)}>
+            <FileKey2 className="h-3.5 w-3.5" />
+            {t('sefaz_addCert')}
+          </Button>
+        </div>
+      )}
+
+      {/* Card: estado do certificado ou empty state */}
+      <Card padding="sm">
+        {credential ? (
+          /* ── Certificado ativo ── */
+          <div className="flex flex-col gap-4 p-1">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{t('sefaz_active')}</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                    {credential.environment === 'production' ? t('sefaz_uploadEnvironmentProd') : t('sefaz_uploadEnvironmentHomol')}
+                    {' · '}
+                    {UF_OPTIONS.find((u) => u.value === credential.uf_code)?.label ?? credential.uf_code}
+                  </p>
+                </div>
+              </div>
+              {isAdmin && (
+                <div className="flex gap-2 shrink-0">
+                  <Button size="sm" variant="ghost" onClick={() => sync.mutate()} disabled={sync.isPending}>
+                    <RefreshCw className={`h-3.5 w-3.5 ${sync.isPending ? 'animate-spin' : ''}`} />
+                    {sync.isPending ? t('sefaz_syncing') : t('sefaz_syncNow')}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setRevokeOpen(true)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {t('sefaz_revoke')}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {credential.last_sync_at && (
+              <div className="pt-3 border-t border-[var(--bg-border)] flex gap-6 text-xs">
+                <div>
+                  <p className="text-[var(--text-muted)]">{t('sefaz_lastSync')}</p>
+                  <p className="text-[var(--text-primary)] font-medium mt-0.5">
+                    {new Date(credential.last_sync_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                  </p>
+                </div>
+                {credential.last_error && (
+                  <div>
+                    <p className="text-[var(--text-muted)]">{t('sefaz_lastError')}</p>
+                    <p className="text-red-500 font-medium mt-0.5 line-clamp-1">{credential.last_error}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ── Empty state ── */
+          <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+            <div className="h-12 w-12 rounded-xl bg-[var(--bg-elevated)] border border-[var(--bg-border)] flex items-center justify-center">
+              <FileKey2 className="h-5 w-5 text-[var(--text-muted)]" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-[var(--text-primary)]">{t('sefaz_noCertTitle')}</p>
+              <p className="text-xs text-[var(--text-muted)] mt-1 max-w-xs">{t('sefaz_noCertHint')}</p>
+            </div>
+            {isAdmin && (
+              <Button size="sm" onClick={() => setModalOpen(true)}>
+                <FileKey2 className="h-3.5 w-3.5" />
+                {t('sefaz_addCert')}
+              </Button>
+            )}
+          </div>
+        )}
+      </Card>
+
+      {/* Modal de upload */}
+      <Modal open={modalOpen} onClose={closeModal} title={t('sefaz_uploadTitle')} size="md"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" onClick={closeModal}>{t('settings_cancel')}</Button>
+            <Button onClick={() => save.mutate()} disabled={!canSave}>
+              {save.isPending ? t('sefaz_uploadSaving') : t('sefaz_uploadSave')}
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          {!hasCnpj && (
+            <div className="flex items-center gap-2 p-3 rounded-[var(--radius-md)] bg-amber-500/10 text-amber-600 text-sm">
+              <Info className="h-4 w-4 shrink-0" />
+              {t('sefaz_noCnpj')}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadCert')}</label>
+            <input ref={fileRef} type="file" accept=".pfx,.p12" className="hidden" onChange={(e) => setCertFile(e.target.files?.[0] ?? null)} />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full h-20 rounded-[var(--radius-md)] border-2 border-dashed border-[var(--bg-border)] flex flex-col items-center justify-center gap-1.5 text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors cursor-pointer"
+            >
+              {certFile ? (
+                <><FileKey2 className="h-5 w-5" /><span className="text-xs font-medium">{certFile.name}</span></>
+              ) : (
+                <><Upload className="h-5 w-5" /><span className="text-xs">{t('sefaz_clickToSelect')}</span></>
+              )}
+            </button>
+            <p className="text-xs text-[var(--text-muted)] mt-1">{t('sefaz_uploadCertHint')}</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadPassword')}</label>
+            <input
+              type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off"
+              className="w-full h-9 px-3 rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-base)] text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+            />
+          </div>
+
+          <Select
+            label={t('sefaz_uploadUf')}
+            options={UF_OPTIONS}
+            value={ufCode}
+            onChange={setUfCode}
+            placeholder="—"
+            searchable
+            searchPlaceholder="Buscar estado…"
+          />
+
+          <div>
+            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">{t('sefaz_uploadEnvironment')}</label>
+            <div className="flex gap-2">
+              {(['production', 'homologation'] as const).map((env) => (
+                <button
+                  key={env} type="button" onClick={() => setEnvironment(env)}
+                  className={`flex-1 h-9 rounded-[var(--radius-md)] border text-sm font-medium transition-colors cursor-pointer ${
+                    environment === env
+                      ? 'border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]'
+                      : 'border-[var(--bg-border)] text-[var(--text-secondary)] hover:border-[var(--accent)]'
+                  }`}
+                >
+                  {env === 'production' ? t('sefaz_uploadEnvironmentProd') : t('sefaz_uploadEnvironmentHomol')}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={revokeOpen}
+        onClose={() => setRevokeOpen(false)}
+        title={t('sefaz_revokeTitle')}
+        message={t('sefaz_revokeMessage')}
+        confirmLabel={t('sefaz_revoke')}
+        onConfirm={() => revoke.mutate()}
+        loading={revoke.isPending}
+        variant="danger"
+      />
+    </div>
+  )
+}
+
 // ── Página ────────────────────────────────────────────────────
 
 export function Component() {
@@ -651,21 +932,19 @@ export function Component() {
           <Tab id="company">{t('settings_company')}</Tab>
           <Tab id="members">{t('settings_members')}</Tab>
           <Tab id="accountant">{t('settings_accountant')}</Tab>
+          <Tab id="certificates">{t('settings_certificates')}</Tab>
         </TabList>
         <TabPanel id="company">
-          <div className="pt-6">
-            <CompanyTab />
-          </div>
+          <div className="pt-6"><CompanyTab /></div>
         </TabPanel>
         <TabPanel id="members">
-          <div className="pt-6">
-            <MembersTab />
-          </div>
+          <div className="pt-6"><MembersTab /></div>
         </TabPanel>
         <TabPanel id="accountant">
-          <div className="pt-6">
-            <AccountantTab />
-          </div>
+          <div className="pt-6"><AccountantTab /></div>
+        </TabPanel>
+        <TabPanel id="certificates">
+          <div className="pt-6"><CertificatesTab /></div>
         </TabPanel>
       </Tabs>
     </div>

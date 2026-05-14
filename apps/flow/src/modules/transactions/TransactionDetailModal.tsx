@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { Edit2, TrendingUp, TrendingDown, CheckCircle, Clock } from 'lucide-react'
+import { maskCnpj } from '@/lib/cnpj'
 
 const NATURE_KEYS: Record<string, string> = {
   sale_service:         'transactions_nature_sale_service',
@@ -239,7 +240,7 @@ export function TransactionDetailModal({ transactionId, open, onClose, onEdit, l
                 <span className="flex flex-col items-end gap-0.5">
                   <span>{tx.contacts.name}</span>
                   {tx.contacts.cpf && <span className="text-xs text-[var(--text-muted)]">CPF {tx.contacts.cpf}</span>}
-                  {tx.contacts.cnpj && <span className="text-xs text-[var(--text-muted)]">CNPJ {tx.contacts.cnpj}</span>}
+                  {tx.contacts.cnpj && <span className="text-xs text-[var(--text-muted)]">CNPJ {maskCnpj(tx.contacts.cnpj)}</span>}
                 </span>
               </Row>
             )}

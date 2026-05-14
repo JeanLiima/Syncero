@@ -6,6 +6,7 @@ import {
   CreditCard,
   BarChart2,
   Settings,
+  FileText,
 } from 'lucide-react'
 import { AppLayout, type NavItem } from '@syncero/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -23,7 +24,8 @@ export function Layout({ children }: { children: ReactNode }) {
     { to: '/transactions', label: t('nav_transactions'), icon: <ArrowUpDown     className="h-4 w-4 shrink-0" /> },
     { to: '/cash-flow',    label: t('nav_cashFlow'),     icon: <TrendingUp      className="h-4 w-4 shrink-0" /> },
     { to: '/accounts',     label: t('nav_accounts'),     icon: <CreditCard      className="h-4 w-4 shrink-0" /> },
-    { to: '/income-statement', label: t('nav_incomeStatement'),       icon: <BarChart2       className="h-4 w-4 shrink-0" /> },
+    { to: '/income-statement',  label: t('nav_incomeStatement'), icon: <BarChart2  className="h-4 w-4 shrink-0" /> },
+    { to: '/fiscal-documents',  label: t('nav_fiscalDocs'),      icon: <FileText   className="h-4 w-4 shrink-0" /> },
     {
       to: '/settings',
       label: t('nav_settings'),
@@ -33,6 +35,7 @@ export function Layout({ children }: { children: ReactNode }) {
         { to: '/settings/categories', label: t('settings_categories') },
         { to: '/settings/banks',      label: t('settings_banks') },
         { to: '/settings/contacts',   label: t('settings_contacts') },
+        { to: '/settings/integrations', label: t('settings_integrations') },
       ],
     },
   ]

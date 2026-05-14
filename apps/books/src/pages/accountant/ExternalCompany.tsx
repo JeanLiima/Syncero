@@ -6,6 +6,7 @@ import { getTransactions } from '@/lib/backend'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
 import { useT } from '@/i18n'
+import { maskCnpj } from '@/lib/cnpj'
 import type { ExternalCompany, TaxRegime } from '@/types'
 
 export function Component() {
@@ -51,9 +52,7 @@ export function Component() {
     enabled: !!extCompanyId,
   })
 
-  const formattedCnpj = company?.cnpj
-    ? company.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5')
-    : null
+  const formattedCnpj = company?.cnpj ? maskCnpj(company.cnpj) : null
 
   const items = [
     {

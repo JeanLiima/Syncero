@@ -286,7 +286,7 @@ export const pt = {
   integrations_enabled: 'Habilitado',
   integrations_disabled: 'Desabilitado',
   integrations_sefaz_noCert: 'Nenhum certificado digital configurado.',
-  integrations_sefaz_configureCert: 'Configurar em Certificados',
+  integrations_sefaz_configureCert: 'Configure em Configurações → Certificados',
   common_errorGeneric: 'Algo deu errado. Tente novamente.',
   common_deletedSuccess: 'Excluído com sucesso',
 

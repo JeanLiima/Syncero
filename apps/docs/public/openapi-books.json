@@ -712,6 +712,11 @@
             ],
             "description": "Tipo do livro: sped_fiscal, sped_contribuicoes, sped_contabil, ecf ou ecd."
           },
+          "period": {
+            "type": "string",
+            "example": "2026-01",
+            "description": "Período de referência legado (YYYY-MM). Mesmo valor de reference_period."
+          },
           "reference_period": {
             "type": "string",
             "example": "2024-01",
@@ -2871,6 +2876,11 @@
                       "transmitted"
                     ],
                     "default": "draft"
+                  },
+                  "period": {
+                    "type": "string",
+                    "example": "2026-01",
+                    "description": "Alias legado para reference_period. Preenchido automaticamente com o mesmo valor."
                   }
                 }
               }

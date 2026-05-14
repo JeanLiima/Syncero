@@ -52,7 +52,7 @@ export function Layout({ children }: { children: ReactNode }) {
     { to: basePath,                      label: t('nav_overview'),     icon: icon(LayoutDashboard), end: true },
     { to: `${basePath}/transactions`,    label: t('nav_transactions'), icon: icon(ArrowDownUp) },
     { to: `${basePath}/journal-entries`, label: t('nav_journal'),      icon: icon(BookMarked)  },
-    { to: `${basePath}/nfe`,             label: t('nav_fiscalDocs'),   icon: icon(FileText)    },
+    { to: `${basePath}/fiscal-documents`, label: t('nav_fiscalDocs'),   icon: icon(FileText)    },
     { to: `${basePath}/sped`,            label: t('nav_sped'),         icon: icon(BookOpen)    },
     { to: `${basePath}/taxes`,           label: t('nav_taxes'),        icon: icon(Calculator)  },
     {
@@ -60,9 +60,10 @@ export function Layout({ children }: { children: ReactNode }) {
       label: t('nav_settings'),
       icon: icon(Settings),
       children: [
-        { to: `${basePath}/settings`,          label: t('settings_company') },
+        { to: `${basePath}/settings`,      label: t('settings_company') },
         { to: `${basePath}/chart-of-accounts`, label: t('nav_accountPlan') },
-        { to: `${basePath}/api-keys`,          label: t('nav_apiKeys') },
+        { to: `${basePath}/api-keys`,      label: t('nav_apiKeys') },
+        { to: `${basePath}/integrations`,  label: t('settings_integrations') },
       ],
     },
   ]

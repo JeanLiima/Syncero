@@ -20,7 +20,7 @@ export function useIncomeStatement(year: number, month: number) {
     queryKey: ['incomeStatement', activeCompany?.id, year, month],
     queryFn: () =>
       apiFetch<IncomeStatementRow[]>(
-        `/api/income-statement?companyId=${activeCompany!.id}&date_from=${dateFrom}&date_to=${dateTo}`
+        `/api/income-statement?company_id=${activeCompany!.id}&date_from=${dateFrom}&date_to=${dateTo}`
       ),
     enabled: !!activeCompany?.id,
   })

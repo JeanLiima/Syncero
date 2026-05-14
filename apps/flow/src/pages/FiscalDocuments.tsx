@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, ArrowRight, CheckCircle2, ExternalLink } from 'lucide-react'
@@ -10,7 +11,12 @@ import { getFiscalDocuments, type FiscalDocument } from '@/lib/backend'
 import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 import type { WizardPrefill } from '@/modules/transactions/useTransactionWizard'
 
-type Direction = '' | 'income' | 'expense'
+type Direction  = '' | 'income' | 'expense'
+type DocStatus  = '' | 'authorized' | 'cancelled' | 'denied'
+type FiscalDocType = '' | 'nfe' | 'nfse' | 'cte' | 'cfe' | 'nfce'
+
+const DEFAULT_DATE_FROM = format(startOfMonth(new Date()), 'yyyy-MM-dd')
+const DEFAULT_DATE_TO   = format(endOfMonth(new Date()),   'yyyy-MM-dd')
 
 function formatCurrency(v: number | null) {
   if (v === null) return '—'
@@ -33,11 +39,12 @@ export function Component() {
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const qc            = useQueryClient()
 
-  const [direction, setDirection] = useState<Direction>('')
-  const [pending,   setPending]   = useState<'' | 'true'>('')
-  const [dateFrom,  setDateFrom]  = useState('')
-  const [dateTo,    setDateTo]    = useState('')
-  const [page,      setPage]      = useState(1)
+  const [filterType, setFilterType] = useState<FiscalDocType>('')
+  const [direction,  setDirection]  = useState<Direction>('')
+  const [docStatus,  setDocStatus]  = useState<DocStatus>('')
+  const [dateFrom,   setDateFrom]   = useState(DEFAULT_DATE_FROM)
+  const [dateTo,     setDateTo]     = useState(DEFAULT_DATE_TO)
+  const [page,       setPage]       = useState(1)
 
   const [wizardOpen,    setWizardOpen]    = useState(false)
   const [wizardPrefill, setWizardPrefill] = useState<WizardPrefill | null>(null)
@@ -45,11 +52,12 @@ export function Component() {
   const PAGE_SIZE = 20
 
   const { data, isLoading } = useQuery({
-    queryKey: ['fiscal-documents', activeCompany?.id, direction, pending, dateFrom, dateTo, page],
+    queryKey: ['fiscal-documents', activeCompany?.id, filterType, direction, docStatus, dateFrom, dateTo, page],
     queryFn:  () => getFiscalDocuments({
       companyId: activeCompany!.id,
+      doc_type:   filterType || undefined,
       direction:  direction  || undefined,
-      pending:    pending    || undefined,
+      status:     docStatus  || undefined,
       date_from:  dateFrom   || undefined,
       date_to:    dateTo     || undefined,
       page:       String(page),
@@ -86,13 +94,27 @@ export function Component() {
   const pages = Math.ceil(total / PAGE_SIZE)
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
+    <div className="flex flex-col gap-6">
       {/* Header */}
       <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('fiscalDocs_title')}</h1>
 
       {/* Filters */}
       <Card padding="sm">
         <div className="flex flex-wrap gap-3">
+          <Select
+            size="sm"
+            options={[
+              { value: '',      label: t('fiscalDocs_allTypes') },
+              { value: 'nfe',   label: 'NF-e'  },
+              { value: 'nfse',  label: 'NFS-e' },
+              { value: 'cte',   label: 'CT-e'  },
+              { value: 'cfe',   label: 'CF-e'  },
+              { value: 'nfce',  label: 'NFC-e' },
+            ]}
+            value={filterType}
+            onChange={(v) => { setFilterType(v as FiscalDocType); setPage(1) }}
+            className="w-36"
+          />
           <Select
             size="sm"
             options={[
@@ -107,12 +129,14 @@ export function Component() {
           <Select
             size="sm"
             options={[
-              { value: '',     label: t('fiscalDocs_allStatus') },
-              { value: 'true', label: t('fiscalDocs_pending') },
+              { value: '',           label: t('fiscalDocs_allStatus') },
+              { value: 'authorized', label: t('fiscalDocs_authorized') },
+              { value: 'cancelled',  label: t('fiscalDocs_cancelled') },
+              { value: 'denied',     label: t('fiscalDocs_denied') },
             ]}
-            value={pending}
-            onChange={(v) => { setPending(v as '' | 'true'); setPage(1) }}
-            className="w-40"
+            value={docStatus}
+            onChange={(v) => { setDocStatus(v as DocStatus); setPage(1) }}
+            className="w-36"
           />
           <DateRangePicker
             size="sm"

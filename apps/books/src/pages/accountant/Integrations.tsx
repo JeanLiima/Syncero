@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { ShieldOff, AlertCircle } from 'lucide-react'
+import { ShieldOff, AlertCircle, RefreshCw } from 'lucide-react'
 import { Card, useToast } from '@syncero/ui'
-import { useAuthStore } from '@/store/auth'
+import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { useT } from '@/i18n'
-import { getSefazCredential, toggleSefazIntegration, type SefazCredential } from '@/lib/backend'
+import { getSefazCredentialBooks, toggleSefazBooks, triggerSefazSyncBooks } from '@/lib/backend'
 
 // ── Switch ────────────────────────────────────────────────────────────────────
 
@@ -29,27 +29,41 @@ function Switch({ checked, onChange, disabled }: { checked: boolean; onChange: (
 
 // ── Card de integração SEFAZ ──────────────────────────────────────────────────
 
-function SefazIntegrationCard({ companyId, isAdmin }: { companyId: string; isAdmin: boolean }) {
+function SefazIntegrationCard({ companyId, extCompanyId }: { companyId?: string; extCompanyId?: string }) {
   const t        = useT()
   const navigate = useNavigate()
   const qc       = useQueryClient()
-  const { error: toastError } = useToast()
+  const { error: toastError, success } = useToast()
+  const basePath = companyId
+    ? `/accountant/company/${companyId}`
+    : `/accountant/external/${extCompanyId}`
 
-  const { data: credential, isLoading } = useQuery<SefazCredential | null>({
-    queryKey: ['sefaz-credential', companyId],
-    queryFn:  () => getSefazCredential(companyId),
-    enabled:  !!companyId && isAdmin,
+  const queryKey = ['sefaz-credential-books', companyId ?? extCompanyId]
+
+  const { data: credential, isLoading } = useQuery({
+    queryKey,
+    queryFn:  () => getSefazCredentialBooks({ companyId, extCompanyId }),
+    enabled:  !!(companyId || extCompanyId),
   })
 
   const toggle = useMutation({
-    mutationFn: (active: boolean) => toggleSefazIntegration(companyId, active),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sefaz-credential', companyId] }),
+    mutationFn: (active: boolean) => toggleSefazBooks({ companyId, extCompanyId }, active),
+    onSuccess: () => qc.invalidateQueries({ queryKey }),
     onError:   () => toastError(t('common_errorGeneric')),
+  })
+
+  const sync = useMutation({
+    mutationFn: () => triggerSefazSyncBooks({ companyId, extCompanyId }),
+    onSuccess: () => {
+      success(t('sefaz_syncSuccess'))
+      qc.invalidateQueries({ queryKey })
+    },
+    onError: () => toastError(t('sefaz_syncError')),
   })
 
   const hasCert   = !!credential
   const isActive  = hasCert && credential.is_active
-  const canToggle = isAdmin && hasCert && !toggle.isPending
+  const canToggle = hasCert && !toggle.isPending
 
   function formatDate(iso: string | null | undefined) {
     if (!iso) return null
@@ -82,14 +96,14 @@ function SefazIntegrationCard({ companyId, isAdmin }: { companyId: string; isAdm
           </div>
           <p className="text-xs text-[var(--text-muted)] mt-0.5">{t('integrations_sefaz_desc')}</p>
 
-          {/* Estado do certificado */}
+          {/* Sem certificado */}
           {!isLoading && !hasCert && (
             <div className="mt-3 flex items-start gap-2 rounded-lg bg-[var(--warning)]/10 border border-[var(--warning)]/25 px-3 py-2.5">
               <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[var(--warning)] mt-px" />
               <p className="text-xs text-[var(--warning)] leading-snug">
                 {t('integrations_sefaz_noCert')}{' '}
                 <button
-                  onClick={() => navigate('/settings/company')}
+                  onClick={() => navigate(`${basePath}/settings`)}
                   className="underline underline-offset-2 cursor-pointer hover:opacity-80 transition-opacity"
                 >
                   {t('integrations_sefaz_configureCert')}
@@ -101,16 +115,29 @@ function SefazIntegrationCard({ companyId, isAdmin }: { companyId: string; isAdm
           {/* Sync info */}
           {isActive && (
             <div className="mt-2 flex items-center gap-4 text-xs text-[var(--text-muted)]">
-              <span>{t('sefaz_lastSync')}: <span className="text-[var(--text-primary)] font-medium">{formatDate(credential.last_sync_at) ?? t('sefaz_neverSynced')}</span></span>
+              <span>
+                {t('sefaz_lastSync')}:{' '}
+                <span className="text-[var(--text-primary)] font-medium">
+                  {formatDate(credential.last_sync_at) ?? t('sefaz_neverSynced')}
+                </span>
+              </span>
               {credential.last_error && (
                 <span className="text-red-500 truncate max-w-xs">{credential.last_error}</span>
               )}
+              <button
+                onClick={() => sync.mutate()}
+                disabled={sync.isPending}
+                className="flex items-center gap-1 text-[var(--accent)] hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-40"
+              >
+                <RefreshCw className={`h-3 w-3 ${sync.isPending ? 'animate-spin' : ''}`} />
+                {sync.isPending ? t('sefaz_syncing') : t('sefaz_syncNow')}
+              </button>
             </div>
           )}
         </div>
 
         {/* Toggle */}
-        {isAdmin && !isLoading && (
+        {!isLoading && (
           <Switch
             checked={isActive}
             onChange={(v) => toggle.mutate(v)}
@@ -125,15 +152,13 @@ function SefazIntegrationCard({ companyId, isAdmin }: { companyId: string; isAdm
 // ── Página ────────────────────────────────────────────────────────────────────
 
 export function Component() {
-  const t             = useT()
-  const activeCompany = useAuthStore((s) => s.activeCompany)
-  const isAdmin       = activeCompany?.role === 'admin'
+  const t = useT()
+  const { companyId, extCompanyId } = useCompanyContext()
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('settings_integrations')}</h1>
-
-      <SefazIntegrationCard companyId={activeCompany?.id ?? ''} isAdmin={isAdmin} />
+      <SefazIntegrationCard companyId={companyId} extCompanyId={extCompanyId} />
     </div>
   )
 }

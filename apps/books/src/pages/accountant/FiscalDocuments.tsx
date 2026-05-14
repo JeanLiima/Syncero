@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { format } from 'date-fns'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { FileText } from 'lucide-react'
 import { Card, Table, Badge, Select, DateRangePicker } from '@syncero/ui'
@@ -28,8 +28,8 @@ export function Component() {
   const [filterType,  setFilterType]  = useState<FiscalDocType | ''>('')
   const [direction,   setDirection]   = useState<Direction>('')
   const [docStatus,   setDocStatus]   = useState<DocStatus>('')
-  const [dateFrom,    setDateFrom]    = useState('')
-  const [dateTo,      setDateTo]      = useState('')
+  const [dateFrom,    setDateFrom]    = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'))
+  const [dateTo,      setDateTo]      = useState(() => format(endOfMonth(new Date()),   'yyyy-MM-dd'))
   const [page,        setPage]        = useState(1)
 
   const { data, isLoading } = useQuery({

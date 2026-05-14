@@ -1,60 +1,116 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { format, startOfMonth, endOfMonth, subDays } from 'date-fns'
-import { ptBR, enUS } from 'date-fns/locale'
-import { TrendingUp, TrendingDown, DollarSign, Clock, Plus } from 'lucide-react'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { TrendingUp, TrendingDown, DollarSign, Plus } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Link } from 'react-router-dom'
-import { Card, Badge, Button } from '@syncero/ui'
+import { Card, Badge, Button, MonthPicker, Modal, Skeleton } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
-import { getTransactions, getPayables } from '@/lib/backend'
+import { getTransactions } from '@/lib/backend'
+import { useIncomeStatement } from '@/modules/incomeStatement/queries'
 import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-function useMonthSummary() {
+function periodToRef(period: string) {
+  const year  = Number(period.slice(0, 4))
+  const month = Number(period.slice(5, 7))
+  return new Date(year, month - 1, 1)
+}
+
+// ── Drill-down ────────────────────────────────────────────────
+
+type DrillTarget = { categoryId: string | null; categoryName: string; type: 'income' | 'expense' }
+
+function useDrillTransactions(target: DrillTarget | null, year: number, month: number) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
-  const now = new Date()
-  const dateFrom = format(startOfMonth(now), 'yyyy-MM-dd')
-  const dateTo   = format(endOfMonth(now), 'yyyy-MM-dd')
 
   return useQuery({
-    queryKey: ['dashboard-summary', activeCompany?.id],
+    queryKey: ['dre-drill', activeCompany?.id, target?.categoryId, year, month],
     queryFn: async () => {
-      if (!activeCompany?.id) return { income: 0, expense: 0, toReceive: 0 }
-
-      const [txRes, prRes] = await Promise.all([
-        getTransactions({
-          companyId: activeCompany.id,
-          date_from: dateFrom,
-          date_to: dateTo,
-          page: '1',
-          pageSize: '1000',
-        }),
-        getPayables(activeCompany.id, 'receivable'),
-      ])
-
-      const income  = txRes.data?.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0) ?? 0
-      const expense = txRes.data?.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0) ?? 0
-      const toReceive = prRes
-        .filter((t) => t.status !== 'paid' && t.status !== 'cancelled')
-        .reduce((s, t) => s + t.amount, 0)
-
-      return { income, expense, toReceive }
+      if (!activeCompany?.id || !target) return []
+      const date = new Date(year, month - 1, 1)
+      const result = await getTransactions({
+        companyId: activeCompany.id,
+        type: target.type,
+        category_id: target.categoryId ?? undefined,
+        date_from: format(startOfMonth(date), 'yyyy-MM-dd'),
+        date_to:   format(endOfMonth(date),   'yyyy-MM-dd'),
+        page: '1',
+        pageSize: '200',
+      })
+      return result.data ?? []
     },
-    enabled: !!activeCompany?.id,
+    enabled: !!activeCompany?.id && !!target,
   })
 }
 
-function useLast30Days() {
+function DrillDownModal({ target, year, month, onClose }: {
+  target: DrillTarget | null; year: number; month: number; onClose: () => void
+}) {
+  const t = useT()
+  const { data: rows = [], isLoading } = useDrillTransactions(target, year, month)
+  const title = target
+    ? `${target.categoryName} — ${format(new Date(year, month - 1, 1), 'MMMM yyyy', { locale: ptBR })}`
+    : ''
+
+  return (
+    <Modal open={!!target} onClose={onClose} title={`${t('incomeStatement_drillDownTitle')}: ${title}`} size="lg">
+      {isLoading ? (
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+        </div>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-[var(--text-muted)] text-center py-6">{t('incomeStatement_drillDownEmpty')}</p>
+      ) : (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[var(--bg-border)]">
+              <th className="py-2 text-left text-xs font-medium text-[var(--text-muted)]">Data</th>
+              <th className="py-2 text-left text-xs font-medium text-[var(--text-muted)]">Descrição</th>
+              <th className="py-2 text-right text-xs font-medium text-[var(--text-muted)]">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((tx) => (
+              <tr key={tx.id} className="border-b border-[var(--bg-border)]">
+                <td className="py-2.5 text-[var(--text-muted)] whitespace-nowrap pr-4">
+                  {format(new Date(tx.date + 'T00:00:00'), 'dd/MM/yyyy')}
+                </td>
+                <td className="py-2.5 text-[var(--text-primary)]">{tx.description}</td>
+                <td className={`py-2.5 text-right font-mono font-medium ${target?.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                  {fmt(tx.amount)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colSpan={2} className="pt-3 font-semibold text-[var(--text-primary)]">Total</td>
+              <td className={`pt-3 text-right font-mono font-semibold ${target?.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                {fmt(rows.reduce((s, r) => s + r.amount, 0))}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      )}
+    </Modal>
+  )
+}
+
+// ── Chart query ───────────────────────────────────────────────
+
+function useMonthChart(period: string) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
-  const dateFrom = format(subDays(new Date(), 29), 'yyyy-MM-dd')
-  const dateTo   = format(new Date(), 'yyyy-MM-dd')
+  const ref      = periodToRef(period)
+  const dateFrom = format(startOfMonth(ref), 'yyyy-MM-dd')
+  const dateTo   = format(endOfMonth(ref),   'yyyy-MM-dd')
 
   return useQuery({
-    queryKey: ['dashboard-chart', activeCompany?.id],
+    queryKey: ['dashboard-chart', activeCompany?.id, period],
     queryFn: async () => {
       if (!activeCompany?.id) return []
       const result = await getTransactions({
@@ -64,7 +120,6 @@ function useLast30Days() {
         page: '1',
         pageSize: '1000',
       })
-
       const map = new Map<string, { income: number; expense: number }>()
       for (const t of result.data ?? []) {
         const existing = map.get(t.date) ?? { income: 0, expense: 0 }
@@ -83,15 +138,20 @@ function useLast30Days() {
   })
 }
 
-function useRecentTransactions() {
+function useRecentTransactions(period: string) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
+  const ref      = periodToRef(period)
+  const dateFrom = format(startOfMonth(ref), 'yyyy-MM-dd')
+  const dateTo   = format(endOfMonth(ref),   'yyyy-MM-dd')
 
   return useQuery({
-    queryKey: ['dashboard-recent', activeCompany?.id],
+    queryKey: ['dashboard-recent', activeCompany?.id, period],
     queryFn: async () => {
       if (!activeCompany?.id) return []
       const result = await getTransactions({
         companyId: activeCompany.id,
+        date_from: dateFrom,
+        date_to: dateTo,
         page: '1',
         pageSize: '5',
       })
@@ -101,22 +161,23 @@ function useRecentTransactions() {
   })
 }
 
+// ── Page ──────────────────────────────────────────────────────
+
 export function Component() {
   const t = useT()
-  const { data: summary } = useMonthSummary()
-  const { data: chartData = [] } = useLast30Days()
-  const { data: recent = [] } = useRecentTransactions()
-  const activeCompany = useAuthStore((s) => s.activeCompany)
   const language = usePreferencesStore((s) => s.language)
+  const [period, setPeriod] = useState(() => format(new Date(), 'yyyy-MM'))
+  const [drill, setDrill]   = useState<DrillTarget | null>(null)
   const [wizardOpen, setWizardOpen] = useState(false)
-  const locale = language === 'en' ? enUS : ptBR
-  const monthLabel = (() => {
-    const raw = format(new Date(), 'MMMM yyyy', { locale })
-    return raw.charAt(0).toUpperCase() + raw.slice(1)
-  })()
 
-  // This case is now handled by NoCompanyShell in the router,
-  // but kept as a fallback
+  const year  = Number(period.slice(0, 4))
+  const month = Number(period.slice(5, 7))
+
+  const { data: dreData = [], isLoading: dreLoading } = useIncomeStatement(year, month)
+  const { data: chartData = [] }                       = useMonthChart(period)
+  const { data: recent = [] }                          = useRecentTransactions(period)
+  const activeCompany = useAuthStore((s) => s.activeCompany)
+
   if (!activeCompany) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
@@ -134,24 +195,30 @@ export function Component() {
     )
   }
 
-  const net = (summary?.income ?? 0) - (summary?.expense ?? 0)
+  const incomeRows   = dreData.filter((r) => r.type === 'income')
+  const expenseRows  = dreData.filter((r) => r.type === 'expense')
+  const totalIncome  = incomeRows.reduce((s, r) => s + r.total, 0)
+  const totalExpense = expenseRows.reduce((s, r) => s + r.total, 0)
+  const net          = totalIncome - totalExpense
+
+  const openDrill = (categoryId: string | null, categoryName: string, type: 'income' | 'expense') =>
+    setDrill({ categoryId, categoryName, type })
 
   const metrics = [
-    { labelKey: 'dashboard_monthIncome'  as const, value: summary?.income ?? 0,    icon: <TrendingUp  className="h-5 w-5 text-[var(--success)]" />, color: 'text-[var(--success)]' },
-    { labelKey: 'dashboard_monthExpense' as const, value: summary?.expense ?? 0,   icon: <TrendingDown className="h-5 w-5 text-[var(--danger)]" />,  color: 'text-[var(--danger)]' },
-    { labelKey: 'dashboard_netResult'    as const, value: net,                      icon: <DollarSign  className="h-5 w-5 text-[var(--accent)]" />,   color: net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]' },
-    { labelKey: 'dashboard_toReceive'    as const, value: summary?.toReceive ?? 0,  icon: <Clock       className="h-5 w-5 text-[var(--warning)]" />,   color: 'text-[var(--warning)]' },
+    { labelKey: 'dashboard_monthIncome'  as const, value: totalIncome,  icon: <TrendingUp  className="h-5 w-5 text-[var(--success)]" />, color: 'text-[var(--success)]' },
+    { labelKey: 'dashboard_monthExpense' as const, value: totalExpense, icon: <TrendingDown className="h-5 w-5 text-[var(--danger)]" />,  color: 'text-[var(--danger)]' },
+    { labelKey: 'dashboard_netResult'    as const, value: net,          icon: <DollarSign  className="h-5 w-5 text-[var(--accent)]" />,   color: net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]' },
   ]
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
+    <div className="flex flex-col gap-6 pb-24">
+      <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dashboard_title')}</h1>
-        <p className="text-sm text-[var(--text-muted)]">{monthLabel}</p>
+        <MonthPicker value={period} onChange={setPeriod} language={language} size="sm" />
       </div>
 
-      {/* Metric cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Summary cards */}
+      <div className="grid grid-cols-3 gap-4">
         {metrics.map((m) => (
           <Card key={m.labelKey}>
             <div className="flex items-start justify-between mb-3">
@@ -163,7 +230,7 @@ export function Component() {
         ))}
       </div>
 
-      {/* Chart */}
+      {/* Daily chart */}
       <Card>
         <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">{t('dashboard_cashFlowChart')}</h2>
         {chartData.length === 0 ? (
@@ -194,6 +261,115 @@ export function Component() {
               <Area type="monotone" dataKey="expense" name={t('cashFlow_expense')} stroke="#f43f5e" fill="url(#ge)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
+        )}
+      </Card>
+
+      {/* Category breakdown */}
+      <Card padding="sm">
+        {dreLoading ? (
+          <table className="w-full text-sm">
+            <tbody>
+              <tr className="bg-[var(--bg-elevated)]">
+                <td colSpan={2} className="px-4 py-2"><Skeleton className="h-3 w-20" /></td>
+              </tr>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <tr key={`inc-${i}`} className="border-b border-[var(--bg-border)]">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                  <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                </tr>
+              ))}
+              <tr className="border-b-2 border-[var(--bg-border)]">
+                <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+              </tr>
+              <tr className="bg-[var(--bg-elevated)]">
+                <td colSpan={2} className="px-4 py-2"><Skeleton className="h-3 w-20" /></td>
+              </tr>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <tr key={`exp-${i}`} className="border-b border-[var(--bg-border)]">
+                  <td className="px-4 py-3"><Skeleton className="h-4 w-36" /></td>
+                  <td className="px-4 py-3 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                </tr>
+              ))}
+              <tr className="bg-[var(--bg-elevated)]">
+                <td className="px-4 py-4"><Skeleton className="h-5 w-28" /></td>
+                <td className="px-4 py-4 text-right"><Skeleton className="h-5 w-28 ml-auto" /></td>
+              </tr>
+            </tbody>
+          </table>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[var(--bg-border)]">
+                <th className="px-4 py-3 text-left text-xs font-medium text-[var(--text-muted)] capitalize tracking-wide">
+                  {t('incomeStatement_category')}
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-[var(--text-muted)] capitalize tracking-wide">
+                  {t('incomeStatement_result')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="bg-[var(--bg-elevated)]">
+                <td colSpan={2} className="px-4 py-2 text-xs font-semibold text-[var(--success)] uppercase tracking-wide">
+                  {t('incomeStatement_income')}
+                </td>
+              </tr>
+              {incomeRows.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="px-4 py-3 text-[var(--text-muted)] italic text-xs">{t('incomeStatement_noIncome')}</td>
+                </tr>
+              ) : incomeRows.map((r) => (
+                <tr
+                  key={r.category_id ?? '__none_income'}
+                  className="border-b border-[var(--bg-border)] hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors"
+                  onClick={() => openDrill(r.category_id, r.category_id === null ? t('incomeStatement_drillDownNoCategory') : r.category_name, 'income')}
+                >
+                  <td className="px-4 py-3 text-[var(--text-primary)]">
+                    {r.category_id === null ? t('transactions_noCategory') : r.category_name}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-[var(--success)]">{fmt(r.total)}</td>
+                </tr>
+              ))}
+              <tr className="border-b-2 border-[var(--bg-border)]">
+                <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{t('incomeStatement_totalIncome')}</td>
+                <td className="px-4 py-3 text-right font-mono font-semibold text-[var(--success)]">{fmt(totalIncome)}</td>
+              </tr>
+
+              <tr className="bg-[var(--bg-elevated)]">
+                <td colSpan={2} className="px-4 py-2 text-xs font-semibold text-[var(--danger)] uppercase tracking-wide">
+                  {t('incomeStatement_expense')}
+                </td>
+              </tr>
+              {expenseRows.length === 0 ? (
+                <tr>
+                  <td colSpan={2} className="px-4 py-3 text-[var(--text-muted)] italic text-xs">{t('incomeStatement_noExpense')}</td>
+                </tr>
+              ) : expenseRows.map((r) => (
+                <tr
+                  key={r.category_id ?? '__none_expense'}
+                  className="border-b border-[var(--bg-border)] hover:bg-[var(--bg-elevated)] cursor-pointer transition-colors"
+                  onClick={() => openDrill(r.category_id, r.category_id === null ? t('incomeStatement_drillDownNoCategory') : r.category_name, 'expense')}
+                >
+                  <td className="px-4 py-3 text-[var(--text-primary)]">
+                    {r.category_id === null ? t('transactions_noCategory') : r.category_name}
+                  </td>
+                  <td className="px-4 py-3 text-right font-mono text-[var(--danger)]">{fmt(r.total)}</td>
+                </tr>
+              ))}
+              <tr className="border-b-2 border-[var(--bg-border)]">
+                <td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{t('incomeStatement_totalExpense')}</td>
+                <td className="px-4 py-3 text-right font-mono font-semibold text-[var(--danger)]">{fmt(totalExpense)}</td>
+              </tr>
+
+              <tr className="bg-[var(--bg-elevated)]">
+                <td className="px-4 py-4 font-bold text-[var(--text-primary)] text-base">{t('incomeStatement_netResult')}</td>
+                <td className={`px-4 py-4 text-right font-mono font-bold text-base ${net >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                  {fmt(net)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         )}
       </Card>
 
@@ -232,11 +408,13 @@ export function Component() {
       {/* FAB */}
       <button
         onClick={() => setWizardOpen(true)}
-        className="fixed bottom-8 right-8 z-40 flex items-center gap-2.5 h-13 px-5 rounded-full bg-[var(--accent)] text-white shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+        className="fixed bottom-8 right-8 z-40 group flex items-center h-12 pl-3.5 pr-3.5 rounded-full bg-[var(--accent)] text-white shadow-lg hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer"
         aria-label={t('dashboard_fab')}
       >
         <Plus className="h-5 w-5 shrink-0" />
-        <span className="text-sm font-medium">{t('dashboard_fab')}</span>
+        <span className="text-sm font-medium whitespace-nowrap overflow-hidden max-w-0 ml-0 group-hover:max-w-[10rem] group-hover:ml-2.5 transition-all duration-200">
+          {t('dashboard_fab')}
+        </span>
       </button>
 
       <TransactionWizard
@@ -245,6 +423,8 @@ export function Component() {
         editing={null}
         language={language}
       />
+
+      <DrillDownModal target={drill} year={year} month={month} onClose={() => setDrill(null)} />
     </div>
   )
 }

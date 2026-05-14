@@ -21,8 +21,6 @@ export type CompanySegment =
 export type MemberRole = 'admin' | 'member' | 'viewer'
 export type MemberStatus = 'pending' | 'accepted' | 'revoked'
 export type AccountantStatus = 'pending' | 'accepted' | 'rejected'
-export type PayableStatus = 'pending' | 'paid' | 'overdue' | 'cancelled'
-export type PayableType = 'payable' | 'receivable'
 export type FiscalDocType = 'nfe' | 'nfse' | 'cfe' | 'nfce'
 export type FiscalDocStatus = 'authorized' | 'cancelled' | 'denied' | 'pending'
 export type FiscalBookType = 'sped_fiscal' | 'sped_contribuicoes' | 'ecf' | 'ecd'
@@ -147,22 +145,6 @@ export interface Transaction {
 export interface TransactionDetail extends Transaction {
   creator_name: string | null
   payment_registrar_name: string | null
-}
-
-export interface PayableReceivable {
-  id: string
-  company_id: string
-  description: string
-  amount: number
-  type: PayableType
-  due_date: string
-  paid_date: string | null
-  status: PayableStatus
-  contact_name: string | null
-  notes: string | null
-  created_by: string
-  created_at: string
-  updated_at: string
 }
 
 // ── Fiscal ────────────────────────────────────────────────────

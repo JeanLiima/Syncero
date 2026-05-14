@@ -20,7 +20,7 @@ export function Component() {
   const [acting, setActing] = useState(false)
 
   const queryKey = ['api-keys', id]
-  const companyParam = isExternal ? `extCompanyId=${id}` : `companyId=${id}`
+  const companyParam = isExternal ? `ext_company_id=${id}` : `company_id=${id}`
 
   const { data: keys = [], isLoading } = useQuery({
     queryKey,

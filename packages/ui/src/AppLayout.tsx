@@ -77,6 +77,7 @@ function SidebarGroup({ item, collapsed, activeClass }: {
 }) {
   const { pathname } = useLocation()
   const isAnyActive = item.children.some((c) => pathname.startsWith(c.to))
+  const [open, setOpen] = useState(isAnyActive)
 
   if (collapsed) {
     return (
@@ -97,29 +98,41 @@ function SidebarGroup({ item, collapsed, activeClass }: {
 
   return (
     <div>
-      <div className={clsx(
-        'flex items-center gap-3 px-3 py-2.5 text-sm select-none',
-        isAnyActive ? 'text-[var(--text-primary)] font-medium' : 'text-[var(--text-muted)]',
-      )}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={clsx(
+          'flex w-full items-center gap-3 px-3 py-2.5 text-sm rounded-[var(--radius-md)] transition-colors cursor-pointer',
+          isAnyActive
+            ? 'text-[var(--text-primary)] font-medium hover:bg-[var(--bg-elevated)]'
+            : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]',
+        )}
+      >
         {item.icon}
-        <span>{item.label}</span>
-      </div>
-      <div className="ml-3 border-l border-[var(--bg-border)] pl-2.5 flex flex-col gap-0.5 mb-1">
-        {item.children.map((child) => (
-          <NavLink
-            key={child.to}
-            to={child.to}
-            className={({ isActive }) => clsx(
-              'block px-3 py-1.5 rounded-[var(--radius-md)] text-sm transition-colors',
-              isActive
-                ? `${activeClass} font-medium`
-                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]',
-            )}
-          >
-            {child.label}
-          </NavLink>
-        ))}
-      </div>
+        <span className="flex-1 text-left">{item.label}</span>
+        <ChevronDown className={clsx(
+          'h-3.5 w-3.5 shrink-0 transition-transform duration-200',
+          open ? 'rotate-180' : '',
+        )} />
+      </button>
+      {open && (
+        <div className="ml-3 border-l border-[var(--bg-border)] pl-2.5 flex flex-col gap-0.5 mb-1">
+          {item.children.map((child) => (
+            <NavLink
+              key={child.to}
+              to={child.to}
+              className={({ isActive }) => clsx(
+                'block px-3 py-1.5 rounded-[var(--radius-md)] text-sm transition-colors',
+                isActive
+                  ? `${activeClass} font-medium`
+                  : 'text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]',
+              )}
+            >
+              {child.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

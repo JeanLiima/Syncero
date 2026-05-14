@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, PayableReceivable, Bank, Contact } from '@/types'
+import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, Bank, Contact } from '@/types'
 
 export interface SefazCredential {
   id: string
@@ -209,27 +209,6 @@ export async function deleteBank(id: string) {
   return apiFetch<{ ok: true }>(`/api/banks/${id}`, { method: 'DELETE' })
 }
 
-export async function getPayables(companyId: string, type: string) {
-  return apiFetch<PayableReceivable[]>(`/api/payables${buildQuery({ companyId, type })}`)
-}
-
-export async function createPayable(data: Partial<PayableReceivable>) {
-  return apiFetch<PayableReceivable>('/api/payables', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  })
-}
-
-export async function updatePayable(id: string, data: Partial<PayableReceivable>) {
-  return apiFetch<PayableReceivable>(`/api/payables/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  })
-}
-
-export async function deletePayable(id: string) {
-  return apiFetch<{ ok: true }>(`/api/payables/${id}`, { method: 'DELETE' })
-}
 
 // ── SEFAZ Credentials ──────────────────────────────────────────
 
@@ -261,6 +240,7 @@ export async function toggleSefazIntegration(companyId: string, isActive: boolea
 export type FiscalDocumentQueryParams = {
   companyId: string
   direction?: string
+  doc_type?: string
   status?: string
   pending?: string
   date_from?: string

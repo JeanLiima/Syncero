@@ -4,7 +4,7 @@ export const en: Record<TranslationKey, string> = {
   // Nav
   nav_companies: 'Companies',
   nav_overview: 'Overview',
-  nav_fiscalDocs: 'Fiscal Docs',
+  nav_fiscalDocs: 'Fiscal Documents',
   nav_sped: 'SPED Books',
   nav_taxes: 'Taxes',
   nav_transactions: 'Transactions',
@@ -101,7 +101,6 @@ export const en: Record<TranslationKey, string> = {
 
   // API Keys
   apiKeys_title: 'API Keys',
-  apiKeys_subtitle: 'Keys for integration with external systems',
   apiKeys_new: 'New key',
   apiKeys_howTo: 'How to use',
   apiKeys_howToDesc: 'Include the key in the Authorization: Bearer <key> header when making POST requests to the entries API.',
@@ -283,6 +282,13 @@ export const en: Record<TranslationKey, string> = {
   sefaz_revokeMessage: 'The certificate will be removed and automatic sync will stop.',
   sefaz_readOnlyHint: 'This certificate is managed by the company in Syncero Flow.',
   settings_certificates: 'Certificates',
+  settings_integrations: 'Integrations',
+  integrations_sefaz_name: 'SEFAZ DF-e',
+  integrations_sefaz_desc: 'Automatic sync of NF-e, NFS-e and CT-e directly from SEFAZ.',
+  integrations_enabled: 'Enabled',
+  integrations_disabled: 'Disabled',
+  integrations_sefaz_noCert: 'No digital certificate configured.',
+  integrations_sefaz_configureCert: 'Configure in Company → Certificates',
   common_errorGeneric: 'Something went wrong. Please try again.',
   common_deletedSuccess: 'Deleted successfully',
 

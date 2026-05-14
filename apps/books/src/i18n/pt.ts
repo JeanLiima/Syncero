@@ -2,7 +2,7 @@ export const pt = {
   // Nav
   nav_companies: 'Empresas',
   nav_overview: 'Visão Geral',
-  nav_fiscalDocs: 'Doc. Fiscais',
+  nav_fiscalDocs: 'Documentos Fiscais',
   nav_sped: 'Livros SPED',
   nav_taxes: 'Impostos',
   nav_transactions: 'Lançamentos',
@@ -99,7 +99,6 @@ export const pt = {
 
   // API Keys
   apiKeys_title: 'API Keys',
-  apiKeys_subtitle: 'Chaves para integração com sistemas externos',
   apiKeys_new: 'Nova chave',
   apiKeys_howTo: 'Como usar',
   apiKeys_howToDesc: 'Inclua a chave no header Authorization: Bearer <chave> ao fazer POST para a API de lançamentos.',
@@ -231,7 +230,7 @@ export const pt = {
   nfe_title: 'Documentos Fiscais',
   nfe_allTypes: 'Todos os tipos',
   nfe_empty: 'Nenhum documento fiscal encontrado',
-  nfe_emptyHint: 'Habilite uma integração para importar notas fiscais automaticamente.',
+  nfe_emptyHint: 'Habilite uma integração para importar documentos fiscais automaticamente.',
   nfe_issueDate: 'Emissão',
   nfe_type: 'Tipo',
   nfe_number: 'Número',
@@ -253,7 +252,7 @@ export const pt = {
   sefaz_certSection: 'Certificado Digital (A1)',
   sefaz_active: 'Certificado ativo',
   sefaz_noCertTitle: 'Nenhum certificado configurado',
-  sefaz_noCertHint: 'Adicione o certificado digital A1 para sincronizar notas fiscais automaticamente.',
+  sefaz_noCertHint: 'Adicione o certificado digital A1 para sincronizar documentos fiscais automaticamente.',
   sefaz_addCert: 'Adicionar certificado',
   sefaz_uploadTitle: 'Adicionar certificado',
   sefaz_uploadCert: 'Arquivo .pfx',
@@ -281,6 +280,13 @@ export const pt = {
   sefaz_revokeMessage: 'O certificado será removido e a sincronização automática será interrompida.',
   sefaz_readOnlyHint: 'Este certificado é gerenciado pela empresa no Syncero Flow.',
   settings_certificates: 'Certificados',
+  settings_integrations: 'Integrações',
+  integrations_sefaz_name: 'SEFAZ DF-e',
+  integrations_sefaz_desc: 'Sincronização automática de NF-e, NFS-e e CT-e diretamente do SEFAZ.',
+  integrations_enabled: 'Habilitado',
+  integrations_disabled: 'Desabilitado',
+  integrations_sefaz_noCert: 'Nenhum certificado digital configurado.',
+  integrations_sefaz_configureCert: 'Configure em Empresa → Certificados',
   common_errorGeneric: 'Algo deu errado. Tente novamente.',
   common_deletedSuccess: 'Excluído com sucesso',
 

@@ -75,7 +75,7 @@ export function Component() {
       label: t('overview_nfe'),
       value: String(summary?.nfeCount ?? 0),
       icon: <FileText className="h-6 w-6 text-[var(--accent)]" />,
-      to: 'nfe',
+      to: 'fiscal-documents',
     },
     {
       label: t('overview_sped'),

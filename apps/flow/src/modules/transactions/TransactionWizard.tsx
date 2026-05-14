@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { format, addMonths, parseISO, parse, isValid } from 'date-fns'
+import { format, addMonths, addDays, parseISO, parse, isValid } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import {
-  TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat,
+  TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat, RefreshCw,
   ShoppingCart, Banknote, Users, Receipt, Package, ArrowDownLeft, ArrowUpRight, UserPlus,
 } from 'lucide-react'
-import { Button, Checkbox, DayCalendar, Input, Modal } from '@syncero/ui'
+import { Button, Checkbox, DayCalendar, Input, Modal, Select } from '@syncero/ui'
 import { useT, type TranslationKey } from '@/i18n'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from './mutations'
 import { useCategories, useBanks, useContacts } from './queries'
 import { getContacts, createContact } from '@/lib/backend'
+import type { RecurrenceFrequency } from './types'
 import { maskCnpj } from '@/lib/cnpj'
 import { useAuthStore } from '@syncero/auth'
 import { ContactModal } from './ContactModal'
@@ -54,6 +55,20 @@ const BASE_EXPENSE_NATURES: NatureOption[] = [
   { value: 'debt_payment',        labelKey: 'transactions_nature_debt_payment',        descKey: 'transactions_nature_debt_payment_desc',        icon: ArrowDownLeft  },
   { value: 'owner_withdrawal',    labelKey: 'transactions_nature_owner_withdrawal',    descKey: 'transactions_nature_owner_withdrawal_desc',    icon: ArrowUpRight   },
 ]
+
+// ── Helpers ──────────────────────────────────────────────────
+
+function addRecurrence(date: Date, freq: RecurrenceFrequency): Date {
+  switch (freq) {
+    case 'weekly':     return addDays(date, 7)
+    case 'biweekly':   return addDays(date, 14)
+    case 'monthly':    return addMonths(date, 1)
+    case 'bimonthly':  return addMonths(date, 2)
+    case 'quarterly':  return addMonths(date, 3)
+    case 'semiannual': return addMonths(date, 6)
+    case 'annual':     return addMonths(date, 12)
+  }
+}
 
 // ── Wizard ───────────────────────────────────────────────────
 
@@ -223,7 +238,24 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
       return
     }
 
-    if (state.isInstallment && state.createFutureInstallments && state.installmentCount >= 2) {
+    if (state.isRecurring && state.recurrenceCount >= 2) {
+      const groupId = crypto.randomUUID()
+      let firstId: string | null = null
+      let currentDate = parseISO(state.date)
+      for (let i = 0; i < state.recurrenceCount; i++) {
+        const result = await create.mutateAsync({
+          ...basePayload,
+          date: format(currentDate, 'yyyy-MM-dd'),
+          description: `${state.description.trim()} (${i + 1}/${state.recurrenceCount})`,
+          installment_number: i + 1,
+          installment_group_id: groupId,
+          recurrence_type: state.recurrenceFrequency,
+        })
+        if (i === 0) firstId = result?.id ?? null
+        currentDate = addRecurrence(currentDate, state.recurrenceFrequency)
+      }
+      state.setCreatedId(firstId)
+    } else if (state.isInstallment && state.createFutureInstallments && state.installmentCount >= 2) {
       const groupId = crypto.randomUUID()
       let firstId: string | null = null
       const perInstallment = Math.floor(state.amountCents / state.installmentCount)
@@ -357,7 +389,10 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
     if (state.step === 5) {
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         e.preventDefault()
-        state.setIsInstallment(!state.isInstallment)
+        const current = state.isRecurring ? 2 : state.isInstallment ? 1 : 0
+        const next = (current + (e.key === 'ArrowRight' ? 1 : -1) + 3) % 3
+        state.setIsInstallment(next === 1)
+        state.setIsRecurring(next === 2)
       }
       if (e.key === 'Enter') { e.preventDefault(); handleNext() }
       return
@@ -582,38 +617,72 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
       </div>
     ),
 
-    // Step 5 — Parcelamento
+    // Step 5 — Parcelamento / Recorrência
     5: (
       <div className="flex flex-col gap-3">
         <p className="text-sm text-[var(--text-muted)] text-center mb-1">
           {t('transactions_wizard_installmentLabel')}
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {([
-            [false, CreditCard, t('transactions_wizard_notInstallment')],
-            [true, Repeat, t('transactions_wizard_installment')],
-          ] as const).map(([v, Icon, label]) => (
-            <button
-              key={String(v)}
-              type="button"
-              onClick={() => state.setIsInstallment(v)}
-              className={`flex flex-col items-center gap-3 py-6 rounded-xl border-2 transition-all cursor-pointer ${
-                state.isInstallment === v
-                  ? 'border-[var(--accent)] bg-[var(--accent)]/10'
-                  : 'border-[var(--bg-border)] hover:bg-[var(--bg-elevated)]'
-              }`}
-            >
-              <Icon className={`h-8 w-8 ${
-                state.isInstallment === v ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'
-              }`} />
-              <span className={`text-sm font-medium ${
-                state.isInstallment === v ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
-              }`}>
-                {label}
-              </span>
-            </button>
-          ))}
+            ['none',       CreditCard, t('transactions_wizard_notInstallment')],
+            ['installment', Repeat,    t('transactions_wizard_installment')],
+            ['recurring',  RefreshCw,  t('transactions_wizard_recurring')],
+          ] as const).map(([v, Icon, label]) => {
+            const active = v === 'none'
+              ? (!state.isInstallment && !state.isRecurring)
+              : v === 'installment'
+                ? state.isInstallment
+                : state.isRecurring
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => {
+                  state.setIsInstallment(v === 'installment')
+                  state.setIsRecurring(v === 'recurring')
+                }}
+                className={`flex flex-col items-center gap-3 py-5 rounded-xl border-2 transition-all cursor-pointer ${
+                  active
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/10'
+                    : 'border-[var(--bg-border)] hover:bg-[var(--bg-elevated)]'
+                }`}
+              >
+                <Icon className={`h-7 w-7 ${active ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]'}`} />
+                <span className={`text-xs font-medium text-center ${active ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'}`}>
+                  {label}
+                </span>
+              </button>
+            )
+          })}
         </div>
+
+        {state.isRecurring && isCreating && (
+          <div className="flex flex-col gap-3 mt-2 pl-1">
+            <Select
+              label={t('transactions_wizard_recurringFrequency')}
+              value={state.recurrenceFrequency}
+              onChange={(v) => state.setRecurrenceFrequency(v as RecurrenceFrequency)}
+              options={[
+                { value: 'weekly',     label: t('transactions_recurrence_weekly') },
+                { value: 'biweekly',   label: t('transactions_recurrence_biweekly') },
+                { value: 'monthly',    label: t('transactions_recurrence_monthly') },
+                { value: 'bimonthly',  label: t('transactions_recurrence_bimonthly') },
+                { value: 'quarterly',  label: t('transactions_recurrence_quarterly') },
+                { value: 'semiannual', label: t('transactions_recurrence_semiannual') },
+                { value: 'annual',     label: t('transactions_recurrence_annual') },
+              ]}
+            />
+            <Input
+              label={t('transactions_wizard_recurringCount')}
+              type="number"
+              min="2"
+              max="120"
+              value={String(state.recurrenceCount)}
+              onChange={(e) => state.setRecurrenceCount(Math.max(2, parseInt(e.target.value) || 2))}
+            />
+          </div>
+        )}
 
         {state.isInstallment && (
           <div className="flex flex-col gap-3 mt-2 pl-1">

@@ -408,11 +408,13 @@ export function Component() {
       {/* FAB */}
       <button
         onClick={() => setWizardOpen(true)}
-        className="fixed bottom-8 right-8 z-40 flex items-center gap-2.5 h-13 px-5 rounded-full bg-[var(--accent)] text-white shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+        className="fixed bottom-8 right-8 z-40 group flex items-center h-12 pl-3.5 pr-3.5 rounded-full bg-[var(--accent)] text-white shadow-lg hover:brightness-110 active:scale-95 transition-all duration-200 cursor-pointer"
         aria-label={t('dashboard_fab')}
       >
         <Plus className="h-5 w-5 shrink-0" />
-        <span className="text-sm font-medium">{t('dashboard_fab')}</span>
+        <span className="text-sm font-medium whitespace-nowrap overflow-hidden max-w-0 ml-0 group-hover:max-w-[10rem] group-hover:ml-2.5 transition-all duration-200">
+          {t('dashboard_fab')}
+        </span>
       </button>
 
       <TransactionWizard

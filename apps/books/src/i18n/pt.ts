@@ -281,6 +281,12 @@ export const pt = {
   sefaz_readOnlyHint: 'Este certificado é gerenciado pela empresa no Syncero Flow.',
   settings_certificates: 'Certificados',
   settings_integrations: 'Integrações',
+  integrations_sefaz_name: 'SEFAZ DF-e',
+  integrations_sefaz_desc: 'Sincronização automática de NF-e, NFS-e e CT-e diretamente do SEFAZ.',
+  integrations_enabled: 'Habilitado',
+  integrations_disabled: 'Desabilitado',
+  integrations_sefaz_noCert: 'Nenhum certificado digital configurado.',
+  integrations_sefaz_configureCert: 'Configurar em Certificados',
   common_errorGeneric: 'Algo deu errado. Tente novamente.',
   common_deletedSuccess: 'Excluído com sucesso',
 

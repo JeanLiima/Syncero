@@ -283,6 +283,12 @@ export const en: Record<TranslationKey, string> = {
   sefaz_readOnlyHint: 'This certificate is managed by the company in Syncero Flow.',
   settings_certificates: 'Certificates',
   settings_integrations: 'Integrations',
+  integrations_sefaz_name: 'SEFAZ DF-e',
+  integrations_sefaz_desc: 'Automatic sync of NF-e, NFS-e and CT-e directly from SEFAZ.',
+  integrations_enabled: 'Enabled',
+  integrations_disabled: 'Disabled',
+  integrations_sefaz_noCert: 'No digital certificate configured.',
+  integrations_sefaz_configureCert: 'Configure in Certificates',
   common_errorGeneric: 'Something went wrong. Please try again.',
   common_deletedSuccess: 'Deleted successfully',
 

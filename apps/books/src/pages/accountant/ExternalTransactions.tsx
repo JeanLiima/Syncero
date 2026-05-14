@@ -303,9 +303,6 @@ export function Component() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('extTx_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('extTx_countPlural') : t('extTx_countSingular')}
-          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>

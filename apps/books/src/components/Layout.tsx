@@ -3,7 +3,7 @@ import { NavLink, useMatch } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   Building2, ArrowLeft, LayoutDashboard,
-  FileText, BookOpen, Calculator, BookMarked, ArrowDownUp, Settings, Receipt,
+  FileText, BookOpen, Calculator, BookMarked, ArrowDownUp, Settings,
 } from 'lucide-react'
 import { AppLayout, type NavItem } from '@syncero/ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -48,22 +48,30 @@ export function Layout({ children }: { children: ReactNode }) {
 
   const icon = (Icon: React.ElementType) => <Icon className="h-4 w-4 shrink-0" />
 
-  const companyNavItems: NavItem[] = [
-    { to: basePath, label: t('nav_overview'),    icon: icon(LayoutDashboard), end: true },
-    ...(companyId ? [
-      { to: `${basePath}/nfe`,          label: t('nav_fiscalDocs'),   icon: icon(FileText)    },
-      { to: `${basePath}/sped`,         label: t('nav_sped'),         icon: icon(BookOpen)    },
-      { to: `${basePath}/taxes`,        label: t('nav_taxes'),        icon: icon(Calculator)  },
-    ] : []),
-    ...(extCompanyId ? [
-      { to: `${basePath}/nfe`,          label: t('nav_fiscalDocs'),   icon: icon(FileText)    },
-      { to: `${basePath}/sped`,         label: t('nav_sped'),         icon: icon(BookOpen)    },
-    ] : []),
-    { to: `${basePath}/transactions`,   label: t('nav_transactions'), icon: icon(ArrowDownUp) },
-    { to: `${basePath}/journal-entries`, label: t('nav_journal'),     icon: icon(BookMarked) },
-    ...(extCompanyId ? [
-      { to: `${basePath}/taxes`, label: t('nav_taxes'), icon: icon(Receipt) },
-    ] : []),
+  const companyNavItems: NavItem[] = companyId ? [
+    { to: basePath,                      label: t('nav_overview'),     icon: icon(LayoutDashboard), end: true },
+    { to: `${basePath}/nfe`,             label: t('nav_fiscalDocs'),   icon: icon(FileText)    },
+    { to: `${basePath}/sped`,            label: t('nav_sped'),         icon: icon(BookOpen)    },
+    { to: `${basePath}/taxes`,           label: t('nav_taxes'),        icon: icon(Calculator)  },
+    { to: `${basePath}/transactions`,    label: t('nav_transactions'), icon: icon(ArrowDownUp) },
+    { to: `${basePath}/journal-entries`, label: t('nav_journal'),      icon: icon(BookMarked)  },
+    {
+      to: `${basePath}/settings`,
+      label: t('nav_settings'),
+      icon: icon(Settings),
+      children: [
+        { to: `${basePath}/settings`,          label: t('settings_company') },
+        { to: `${basePath}/chart-of-accounts`, label: t('nav_accountPlan') },
+        { to: `${basePath}/api-keys`,          label: t('nav_apiKeys') },
+      ],
+    },
+  ] : [
+    { to: basePath,                      label: t('nav_overview'),     icon: icon(LayoutDashboard), end: true },
+    { to: `${basePath}/transactions`,    label: t('nav_transactions'), icon: icon(ArrowDownUp) },
+    { to: `${basePath}/journal-entries`, label: t('nav_journal'),      icon: icon(BookMarked)  },
+    { to: `${basePath}/nfe`,             label: t('nav_fiscalDocs'),   icon: icon(FileText)    },
+    { to: `${basePath}/sped`,            label: t('nav_sped'),         icon: icon(BookOpen)    },
+    { to: `${basePath}/taxes`,           label: t('nav_taxes'),        icon: icon(Calculator)  },
     {
       to: `${basePath}/settings`,
       label: t('nav_settings'),

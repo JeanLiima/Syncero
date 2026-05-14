@@ -308,7 +308,6 @@ export const en: Record<TranslationKey, string> = {
   sped_tab_efd_icms: 'EFD ICMS/IPI',
   sped_coming_soon: 'Coming soon',
   sped_coming_soon_hint: 'Support for this book will be added in a future version.',
-  sped_period_label: 'Period',
   sped_generate_ecd: 'Generate ECD',
   sped_generating: 'Generating...',
   sped_generated_at: 'Generated at',

@@ -110,12 +110,6 @@ export function Component() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('lancamentos_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            {isFiltering
-              ? t('lancamentos_filterCount').replace('{count}', String(filtered.length)).replace('{total}', String(entries.length))
-              : `${entries.length} ${entries.length !== 1 ? t('lancamentos_countPlural') : t('lancamentos_countSingular')} — ${periodLabel}`
-            }
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" onClick={() => setExportOpen(true)}>

@@ -65,9 +65,6 @@ export function Component() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('transactions_title')}</h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            {data?.count ?? 0} {(data?.count ?? 0) !== 1 ? t('transactions_countPlural') : t('transactions_countSingular')}
-          </p>
         </div>
         <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>
           <Download className="h-4 w-4" /> {t('export_button')}

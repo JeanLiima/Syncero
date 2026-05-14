@@ -306,7 +306,6 @@ export const pt = {
   sped_tab_efd_icms: 'EFD ICMS/IPI',
   sped_coming_soon: 'Em breve',
   sped_coming_soon_hint: 'Suporte a este livro será adicionado em versão futura.',
-  sped_period_label: 'Período',
   sped_generate_ecd: 'Gerar ECD',
   sped_generating: 'Gerando...',
   sped_generated_at: 'Gerado em',

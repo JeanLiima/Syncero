@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { FileText, Clock, Download, CheckCircle, Send, Trash2, AlertCircle } from 'lucide-react'
-import { Badge, Button, Card, ConfirmDialog, Select, useToast } from '@syncero/ui'
+import { ptBR, enUS } from 'date-fns/locale'
+import { FileText, Clock, Download, CheckCircle, Send, Trash2, AlertCircle, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
+import { Badge, Button, Card, ConfirmDialog, useToast } from '@syncero/ui'
 import {
   getFiscalBooks, createFiscalBook, updateFiscalBookStatus, deleteFiscalBook,
   getAccountPlans, getJournalEntriesForPeriod, getCompanyInfo, getExtCompanyInfo,
@@ -18,18 +18,110 @@ import type { FiscalBook, FiscalBookStatus } from '@/types'
 
 type SpedTab = 'ecd' | 'ecf' | 'efd-contrib' | 'efd-icms'
 
-// ── Period helpers ────────────────────────────────────────────
+// ── MonthPicker ───────────────────────────────────────────────
 
-function buildPeriodOptions(): { value: string; label: string }[] {
+const MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+function MonthPicker({
+  value,
+  onChange,
+  language,
+}: {
+  value: string   // "YYYY-MM"
+  onChange: (v: string) => void
+  language: 'pt' | 'en'
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const [year, setYear] = useState(() => parseInt(value.split('-')[0]))
+  const locale = language === 'en' ? enUS : ptBR
+  const months = language === 'en' ? MONTHS_EN : MONTHS_PT
   const now = new Date()
-  const options: { value: string; label: string }[] = []
-  for (let i = 0; i < 24; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    const label = format(d, 'MMM/yyyy', { locale: ptBR })
-    options.push({ value: val, label: label.charAt(0).toUpperCase() + label.slice(1) })
+  const maxYear = now.getFullYear()
+
+  const [selYear, selMonthIdx] = value.split('-').map(Number)
+  const displayLabel = (() => {
+    const d = new Date(selYear, selMonthIdx - 1, 1)
+    const raw = format(d, 'MMM/yyyy', { locale })
+    return raw.charAt(0).toUpperCase() + raw.slice(1)
+  })()
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [])
+
+  const select = (monthIdx: number) => {
+    onChange(`${year}-${String(monthIdx + 1).padStart(2, '0')}`)
+    setOpen(false)
   }
-  return options
+
+  const isFuture = (monthIdx: number) =>
+    year > maxYear || (year === maxYear && monthIdx > now.getMonth())
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => { setYear(selYear); setOpen(o => !o) }}
+        className="flex items-center gap-2 h-8 px-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-sm text-[var(--text-primary)] hover:border-[var(--accent)] transition-colors cursor-pointer"
+      >
+        <CalendarDays className="h-3.5 w-3.5 text-[var(--text-muted)]" />
+        {displayLabel}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-10 z-50 w-56 rounded-xl border border-[var(--bg-border)] bg-[var(--bg-elevated)] shadow-xl p-3 flex flex-col gap-2">
+          {/* Year navigation */}
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setYear(y => y - 1)}
+              className="h-6 w-6 flex items-center justify-center rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] cursor-pointer transition-colors"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <span className="text-sm font-medium text-[var(--text-primary)]">{year}</span>
+            <button
+              type="button"
+              onClick={() => setYear(y => Math.min(y + 1, maxYear))}
+              disabled={year >= maxYear}
+              className="h-6 w-6 flex items-center justify-center rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] disabled:opacity-30 cursor-pointer transition-colors"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Month grid */}
+          <div className="grid grid-cols-3 gap-1">
+            {months.map((label, i) => {
+              const isSelected = year === selYear && i + 1 === selMonthIdx
+              const disabled = isFuture(i)
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => select(i)}
+                  className={`py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                    isSelected
+                      ? 'bg-[var(--accent)] text-white'
+                      : disabled
+                      ? 'text-[var(--text-muted)] opacity-30 cursor-not-allowed'
+                      : 'text-[var(--text-secondary)] hover:bg-[var(--bg-border)] hover:text-[var(--text-primary)]'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Status helpers ────────────────────────────────────────────
@@ -289,8 +381,6 @@ function EcdTab({
 
 // ── Page ──────────────────────────────────────────────────────
 
-const PERIOD_OPTIONS = buildPeriodOptions()
-
 const TABS: { id: SpedTab; labelKey: 'sped_tab_ecd' | 'sped_tab_ecf' | 'sped_tab_efd_contrib' | 'sped_tab_efd_icms' }[] = [
   { id: 'ecd',       labelKey: 'sped_tab_ecd' },
   { id: 'ecf',       labelKey: 'sped_tab_ecf' },
@@ -303,6 +393,7 @@ export function Component() {
   const { companyId, extCompanyId } = useCompanyContext()
   usePreferencesStore(s => s.language) // triggers re-render on language change for child locale
 
+  const language = usePreferencesStore(s => s.language)
   const [activeTab, setActiveTab] = useState<SpedTab>('ecd')
   const [period, setPeriod] = useState(() => {
     const now = new Date()
@@ -315,16 +406,7 @@ export function Component() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('sped_title')}</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[var(--text-muted)]">{t('sped_period_label')}</span>
-          <Select
-            size="sm"
-            options={PERIOD_OPTIONS}
-            value={period}
-            onChange={v => setPeriod(v)}
-            className="w-36"
-          />
-        </div>
+        <MonthPicker value={period} onChange={setPeriod} language={language} />
       </div>
 
       {/* Tab bar */}

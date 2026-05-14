@@ -6,7 +6,6 @@ export const en: Record<TranslationKey, string> = {
   nav_transactions: 'Transactions',
   nav_cashFlow: 'Cash Flow',
   nav_accounts: 'Accounts',
-  nav_incomeStatement: 'Income Statement',
   nav_fiscalDocs: 'Fiscal Documents',
   nav_settings: 'Settings',
   nav_preferences: 'Preferences',

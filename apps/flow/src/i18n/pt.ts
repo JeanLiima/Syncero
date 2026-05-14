@@ -4,7 +4,6 @@ export const pt = {
   nav_transactions: 'Lançamentos',
   nav_cashFlow: 'Fluxo de Caixa',
   nav_accounts: 'Contas',
-  nav_incomeStatement: 'DRE',
   nav_fiscalDocs: 'Notas Fiscais',
   nav_settings: 'Configurações',
   nav_preferences: 'Preferências',

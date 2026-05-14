@@ -500,8 +500,8 @@ export const pt = {
 
   // Fiscal Documents
   fiscalDocs_title: 'Documentos Fiscais',
-  fiscalDocs_empty: 'Nenhuma nota fiscal encontrada',
-  fiscalDocs_emptyHint: 'Habilite uma integração para importar notas fiscais automaticamente.',
+  fiscalDocs_empty: 'Nenhum documento fiscal encontrado',
+  fiscalDocs_emptyHint: 'Habilite uma integração para importar documentos fiscais automaticamente.',
   fiscalDocs_configure: 'Ver integrações',
   fiscalDocs_income: 'Receita',
   fiscalDocs_expense: 'Despesa',

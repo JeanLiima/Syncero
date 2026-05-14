@@ -230,7 +230,7 @@ export const pt = {
   nfe_title: 'Documentos Fiscais',
   nfe_allTypes: 'Todos os tipos',
   nfe_empty: 'Nenhum documento fiscal encontrado',
-  nfe_emptyHint: 'Habilite uma integração para importar notas fiscais automaticamente.',
+  nfe_emptyHint: 'Habilite uma integração para importar documentos fiscais automaticamente.',
   nfe_issueDate: 'Emissão',
   nfe_type: 'Tipo',
   nfe_number: 'Número',

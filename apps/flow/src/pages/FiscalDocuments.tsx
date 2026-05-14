@@ -94,7 +94,7 @@ export function Component() {
   const pages = Math.ceil(total / PAGE_SIZE)
 
   return (
-    <div className="flex flex-col gap-4 p-4 md:p-6">
+    <div className="flex flex-col gap-6">
       {/* Header */}
       <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('fiscalDocs_title')}</h1>
 

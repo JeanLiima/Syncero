@@ -93,6 +93,7 @@ router.post('/', async (c) => {
   const { data, error } = await db.from('fiscal_books').insert({
     ...(body.company_id ? { company_id: body.company_id } : { ext_company_id: body.ext_company_id }),
     book_type: body.book_type,
+    period: body.reference_period,
     reference_period: body.reference_period,
     status: body.status ?? 'draft',
   }).select('*').single()

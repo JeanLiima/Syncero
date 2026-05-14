@@ -6,6 +6,7 @@ import {
 } from 'recharts'
 import { Card, Select, DateRangePicker, Skeleton } from '@syncero/ui'
 import { useCashFlow } from '@/modules/cashFlow/queries'
+import { useCategories } from '@/modules/transactions/queries'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
 
@@ -32,11 +33,13 @@ function presetDates(preset: Preset): { dateFrom: string; dateTo: string } {
 export function Component() {
   const t = useT()
   const { language } = usePreferencesStore()
-  const [preset, setPreset]     = useState<Preset>('30d')
-  const [dateFrom, setDateFrom] = useState(() => presetDates('30d').dateFrom)
-  const [dateTo,   setDateTo]   = useState(() => presetDates('30d').dateTo)
+  const [preset,     setPreset]     = useState<Preset>('30d')
+  const [dateFrom,   setDateFrom]   = useState(() => presetDates('30d').dateFrom)
+  const [dateTo,     setDateTo]     = useState(() => presetDates('30d').dateTo)
+  const [categoryId, setCategoryId] = useState<string>('')
 
-  const { data = [], isLoading } = useCashFlow(dateFrom, dateTo)
+  const { data: categories = [] } = useCategories()
+  const { data = [], isLoading }  = useCashFlow(dateFrom, dateTo, categoryId || undefined)
 
   const handlePreset = (v: string) => {
     const p = v as Preset
@@ -61,11 +64,23 @@ export function Component() {
     date: format(new Date(d.date + 'T00:00:00'), 'dd/MM', { locale: ptBR }),
   }))
 
+  const categoryOptions = [
+    { value: '', label: t('transactions_allCategories') },
+    ...categories.map((c) => ({ value: c.id, label: c.name })),
+  ]
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('cashFlow_title')}</h1>
         <div className="flex items-center gap-2 flex-wrap">
+          <Select
+            size="sm"
+            options={categoryOptions}
+            value={categoryId}
+            onChange={setCategoryId}
+            className="w-44"
+          />
           <Select
             size="sm"
             options={[

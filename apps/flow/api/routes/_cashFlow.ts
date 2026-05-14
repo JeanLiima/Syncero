@@ -8,9 +8,10 @@ const router = new Hono<{ Variables: HonoVariables }>()
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const companyId = c.req.query('company_id')
-  const dateFrom  = c.req.query('date_from')
-  const dateTo    = c.req.query('date_to')
+  const companyId  = c.req.query('company_id')
+  const dateFrom   = c.req.query('date_from')
+  const dateTo     = c.req.query('date_to')
+  const categoryId = c.req.query('category_id')
 
   if (!companyId) return c.json({ error: 'company_id required' }, 400)
   if (!dateFrom || !dateTo) return c.json({ error: 'date_from and date_to required' }, 400)
@@ -25,13 +26,17 @@ router.get('/', async (c) => {
     .maybeSingle()
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const { data, error } = await db
+  let query = db
     .from('transactions')
     .select('date, type, amount')
     .eq('company_id', companyId)
     .gte('date', dateFrom)
     .lte('date', dateTo)
     .order('date')
+
+  if (categoryId) query = query.eq('category_id', categoryId)
+
+  const { data, error } = await query
 
   if (error) return c.json({ error: error.message }, 400)
 

@@ -69,7 +69,7 @@
 `id(uuid PK)`, `company_id(uuid FK:companies NN)`, `doc_type(nfe|nfse|cfe|nfce NN)`, `number(text?)`, `series(text?)`, `issue_date(date NN)`, `value(numeric?)`, `issuer_cnpj(text?)`, `issuer_name(text?)`, `recipient_cnpj(text?)`, `recipient_name(text?)`, `status(authorized|cancelled|denied|pending NN)`, `access_key(text?)`, `created_at(ts NN)`
 
 **fiscal_books**
-`id(uuid PK)`, `company_id(uuid FK:companies NN)`, `book_type(sped_fiscal|sped_contribuicoes|ecf|ecd NN)`, `reference_period(text NN)` — YYYY-MM, `status(draft|validated|transmitted NN)`, `file_url(text?)`, `transmitted_at(ts?)`, `created_at(ts NN)`
+`id(uuid PK)`, `company_id(uuid FK:companies ?)`, `ext_company_id(uuid FK:external_companies ?)`, `book_type(sped_fiscal|sped_contribuicoes|sped_contabil|ecf|ecd NN)`, `period(text NN)`, `reference_period(text NN)` — YYYY-MM, `status(draft|validated|transmitted NN)`, `file_url(text?)`, `transmitted_at(ts?)`, `created_at(ts NN)`
 
 **tax_calculations**
 `id(uuid PK)`, `company_id(uuid FK:companies NN)`, `reference_period(text NN)` — YYYY-MM, `tax_type(text NN)`, `base_value(numeric?)`, `rate(numeric?)`, `tax_value(numeric?)`, `status(draft|calculated|paid NN)`, `due_date(date?)`, `paid_date(date?)`, `created_at(ts NN)`

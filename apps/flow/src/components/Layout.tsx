@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   ArrowUpDown,
   TrendingUp,
-  CreditCard,
   BarChart2,
   Settings,
   FileText,
@@ -22,7 +21,6 @@ export function Layout({ children }: { children: ReactNode }) {
   const navItems: NavItem[] = [
     { to: '/dashboard',         label: t('nav_dashboard'),       icon: <LayoutDashboard className="h-4 w-4 shrink-0" />, end: true },
     { to: '/transactions',      label: t('nav_transactions'),    icon: <ArrowUpDown     className="h-4 w-4 shrink-0" /> },
-    { to: '/accounts',          label: t('nav_accounts'),        icon: <CreditCard      className="h-4 w-4 shrink-0" /> },
     { to: '/fiscal-documents',  label: t('nav_fiscalDocs'),      icon: <FileText        className="h-4 w-4 shrink-0" /> },
     { to: '/cash-flow',         label: t('nav_cashFlow'),        icon: <TrendingUp      className="h-4 w-4 shrink-0" /> },
     { to: '/income-statement',  label: t('nav_incomeStatement'), icon: <BarChart2       className="h-4 w-4 shrink-0" /> },

@@ -249,8 +249,6 @@ export const pt = {
   incomeStatement_netResult: 'Resultado líquido',
   incomeStatement_noIncome: 'Sem receitas no período',
   incomeStatement_noExpense: 'Sem despesas no período',
-  incomeStatement_profit: 'Lucro',
-  incomeStatement_loss: 'Prejuízo',
   incomeStatement_drillDownTitle: 'Lançamentos',
   incomeStatement_drillDownEmpty: 'Nenhum lançamento encontrado',
   incomeStatement_drillDownNoCategory: 'Sem categoria',

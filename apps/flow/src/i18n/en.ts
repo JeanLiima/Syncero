@@ -251,8 +251,6 @@ export const en: Record<TranslationKey, string> = {
   incomeStatement_netResult: 'Net result',
   incomeStatement_noIncome: 'No income in this period',
   incomeStatement_noExpense: 'No expenses in this period',
-  incomeStatement_profit: 'Profit',
-  incomeStatement_loss: 'Loss',
   incomeStatement_drillDownTitle: 'Transactions',
   incomeStatement_drillDownEmpty: 'No transactions found',
   incomeStatement_drillDownNoCategory: 'No category',

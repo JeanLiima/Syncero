@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileText, ArrowRight, CheckCircle2, ExternalLink } from 'lucide-react'
@@ -35,8 +36,8 @@ export function Component() {
 
   const [direction, setDirection] = useState<Direction>('')
   const [pending,   setPending]   = useState<'' | 'true'>('')
-  const [dateFrom,  setDateFrom]  = useState('')
-  const [dateTo,    setDateTo]    = useState('')
+  const [dateFrom,  setDateFrom]  = useState(() => format(startOfMonth(new Date()), 'yyyy-MM-dd'))
+  const [dateTo,    setDateTo]    = useState(() => format(endOfMonth(new Date()),   'yyyy-MM-dd'))
   const [page,      setPage]      = useState(1)
 
   const [wizardOpen,    setWizardOpen]    = useState(false)

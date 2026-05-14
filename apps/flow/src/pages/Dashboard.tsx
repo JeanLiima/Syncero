@@ -211,7 +211,7 @@ export function Component() {
   ]
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-24">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dashboard_title')}</h1>
         <MonthPicker value={period} onChange={setPeriod} language={language} size="sm" />

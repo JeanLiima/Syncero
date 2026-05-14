@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { useT } from '@/i18n'
 import type { Transaction, TransactionNature, TransactionType } from '@/types'
+import type { RecurrenceFrequency } from './types'
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 type Phase = 'wizard' | 'payment-prompt' | 'payment-form'
@@ -54,6 +55,12 @@ interface UseTransactionWizardState {
   setCreateFutureInstallments: (create: boolean) => void
   installmentOverrides: Record<number, { date: string; amountStr: string }>
   setInstallmentOverrides: (overrides: Record<number, { date: string; amountStr: string }>) => void
+  isRecurring: boolean
+  setIsRecurring: (v: boolean) => void
+  recurrenceFrequency: RecurrenceFrequency
+  setRecurrenceFrequency: (v: RecurrenceFrequency) => void
+  recurrenceCount: number
+  setRecurrenceCount: (v: number) => void
 
   // Validation
   amountError: string
@@ -118,6 +125,9 @@ export function useTransactionWizardState(
   const [installmentCount, setInstallmentCount] = useState(2)
   const [createFutureInstallments, setCreateFutureInstallments] = useState(false)
   const [installmentOverrides, setInstallmentOverrides] = useState<Record<number, { date: string; amountStr: string }>>({})
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<RecurrenceFrequency>('monthly')
+  const [recurrenceCount, setRecurrenceCount] = useState(12)
 
   // Validation
   const [amountError, setAmountError] = useState('')
@@ -151,6 +161,9 @@ export function useTransactionWizardState(
     setBankId(undefined)
     setMethodError('')
     setContactSearch('')
+    setIsRecurring(false)
+    setRecurrenceFrequency('monthly')
+    setRecurrenceCount(12)
     if (editing) {
       setStep(1)
       setType(editing.type)
@@ -304,6 +317,12 @@ export function useTransactionWizardState(
     setCreateFutureInstallments,
     installmentOverrides,
     setInstallmentOverrides,
+    isRecurring,
+    setIsRecurring,
+    recurrenceFrequency,
+    setRecurrenceFrequency,
+    recurrenceCount,
+    setRecurrenceCount,
 
     // Validation
     amountError,

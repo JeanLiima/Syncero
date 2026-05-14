@@ -243,6 +243,9 @@ export const en: Record<TranslationKey, string> = {
   cashFlow_result: 'Result',
   cashFlow_chartTitle: 'Cash flow evolution',
   cashFlow_noEntries: 'No entries in this period',
+  cashFlow_forecast: 'Forecast',
+  cashFlow_showForecast: 'Show forecast',
+  cashFlow_hideForecast: 'Hide forecast',
 
   // Accounts
   accounts_title: 'Accounts',

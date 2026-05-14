@@ -241,6 +241,9 @@ export const pt = {
   cashFlow_result: 'Resultado',
   cashFlow_chartTitle: 'Evolução do caixa',
   cashFlow_noEntries: 'Nenhum lançamento no período',
+  cashFlow_forecast: 'Projeção',
+  cashFlow_showForecast: 'Mostrar previsão',
+  cashFlow_hideForecast: 'Ocultar previsão',
 
   // Accounts (Contas a Pagar/Receber)
   accounts_title: 'Contas',

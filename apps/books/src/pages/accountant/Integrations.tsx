@@ -98,15 +98,18 @@ function SefazIntegrationCard({ companyId, extCompanyId }: { companyId?: string;
 
           {/* Sem certificado */}
           {!isLoading && !hasCert && (
-            <button
-              onClick={() => navigate(`${basePath}/settings`)}
-              className="mt-2 flex items-center gap-1.5 text-xs text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors cursor-pointer"
-            >
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-              {t('integrations_sefaz_noCert')}
-              {' '}
-              <span className="underline underline-offset-2">{t('integrations_sefaz_configureCert')}</span>
-            </button>
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-[var(--warning)]/10 border border-[var(--warning)]/25 px-3 py-2.5">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[var(--warning)] mt-px" />
+              <p className="text-xs text-[var(--warning)] leading-snug">
+                {t('integrations_sefaz_noCert')}{' '}
+                <button
+                  onClick={() => navigate(`${basePath}/settings`)}
+                  className="underline underline-offset-2 cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  {t('integrations_sefaz_configureCert')}
+                </button>
+              </p>
+            </div>
           )}
 
           {/* Sync info */}

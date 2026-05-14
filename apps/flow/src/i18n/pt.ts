@@ -32,7 +32,7 @@ export const pt = {
   dashboard_createCompany: 'Criar empresa',
   dashboard_recentTransactions: 'Últimos lançamentos',
   dashboard_noTransactions: 'Nenhum lançamento ainda',
-  dashboard_cashFlowChart: 'Fluxo dos últimos 30 dias',
+  dashboard_cashFlowChart: 'Receitas e despesas',
   dashboard_fab: 'Novo lançamento',
   dashboard_dueDates: 'Vencimentos',
   dashboard_dueOverdue: 'Vencidas',

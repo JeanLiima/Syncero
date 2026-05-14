@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { format, startOfMonth, endOfMonth, subDays, addDays } from 'date-fns'
-import { ptBR, enUS } from 'date-fns/locale'
+import { format, startOfMonth, endOfMonth, addDays } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import { TrendingUp, TrendingDown, DollarSign, Clock, Plus, AlertCircle, CheckCircle2, CalendarClock } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Link } from 'react-router-dom'
-import { Card, Badge, Button } from '@syncero/ui'
+import { Card, Badge, Button, MonthPicker } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
@@ -15,14 +15,14 @@ import { TransactionWizard } from '@/modules/transactions/TransactionWizard'
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-function useMonthSummary() {
+function useMonthSummary(period: string) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
-  const now = new Date()
-  const dateFrom = format(startOfMonth(now), 'yyyy-MM-dd')
-  const dateTo   = format(endOfMonth(now), 'yyyy-MM-dd')
+  const ref      = new Date(period + '-01')
+  const dateFrom = format(startOfMonth(ref), 'yyyy-MM-dd')
+  const dateTo   = format(endOfMonth(ref),   'yyyy-MM-dd')
 
   return useQuery({
-    queryKey: ['dashboard-summary', activeCompany?.id],
+    queryKey: ['dashboard-summary', activeCompany?.id, period],
     queryFn: async () => {
       if (!activeCompany?.id) return { income: 0, expense: 0, toReceive: 0 }
 
@@ -49,13 +49,14 @@ function useMonthSummary() {
   })
 }
 
-function useLast30Days() {
+function useMonthChart(period: string) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
-  const dateFrom = format(subDays(new Date(), 29), 'yyyy-MM-dd')
-  const dateTo   = format(new Date(), 'yyyy-MM-dd')
+  const ref      = new Date(period + '-01')
+  const dateFrom = format(startOfMonth(ref), 'yyyy-MM-dd')
+  const dateTo   = format(endOfMonth(ref),   'yyyy-MM-dd')
 
   return useQuery({
-    queryKey: ['dashboard-chart', activeCompany?.id],
+    queryKey: ['dashboard-chart', activeCompany?.id, period],
     queryFn: async () => {
       if (!activeCompany?.id) return []
       const result = await getTransactions({
@@ -84,15 +85,20 @@ function useLast30Days() {
   })
 }
 
-function useRecentTransactions() {
+function useRecentTransactions(period: string) {
   const activeCompany = useAuthStore((s) => s.activeCompany)
+  const ref      = new Date(period + '-01')
+  const dateFrom = format(startOfMonth(ref), 'yyyy-MM-dd')
+  const dateTo   = format(endOfMonth(ref),   'yyyy-MM-dd')
 
   return useQuery({
-    queryKey: ['dashboard-recent', activeCompany?.id],
+    queryKey: ['dashboard-recent', activeCompany?.id, period],
     queryFn: async () => {
       if (!activeCompany?.id) return []
       const result = await getTransactions({
         companyId: activeCompany.id,
+        date_from: dateFrom,
+        date_to: dateTo,
         page: '1',
         pageSize: '5',
       })
@@ -187,18 +193,14 @@ function DueSection({ group }: { group: DueGroup }) {
 
 export function Component() {
   const t = useT()
-  const { data: summary } = useMonthSummary()
-  const { data: chartData = [] } = useLast30Days()
-  const { data: recent = [] } = useRecentTransactions()
+  const language = usePreferencesStore((s) => s.language)
+  const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7))
+  const { data: summary } = useMonthSummary(period)
+  const { data: chartData = [] } = useMonthChart(period)
+  const { data: recent = [] } = useRecentTransactions(period)
   const { data: upcoming } = useUpcomingPayables()
   const activeCompany = useAuthStore((s) => s.activeCompany)
-  const language = usePreferencesStore((s) => s.language)
   const [wizardOpen, setWizardOpen] = useState(false)
-  const locale = language === 'en' ? enUS : ptBR
-  const monthLabel = (() => {
-    const raw = format(new Date(), 'MMMM yyyy', { locale })
-    return raw.charAt(0).toUpperCase() + raw.slice(1)
-  })()
 
   // This case is now handled by NoCompanyShell in the router,
   // but kept as a fallback
@@ -230,9 +232,9 @@ export function Component() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <div className="flex items-center justify-between gap-3">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('dashboard_title')}</h1>
-        <p className="text-sm text-[var(--text-muted)]">{monthLabel}</p>
+        <MonthPicker value={period} onChange={setPeriod} language={language} size="sm" />
       </div>
 
       {/* Metric cards */}

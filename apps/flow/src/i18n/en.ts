@@ -34,7 +34,7 @@ export const en: Record<TranslationKey, string> = {
   dashboard_createCompany: 'Create company',
   dashboard_recentTransactions: 'Recent transactions',
   dashboard_noTransactions: 'No transactions yet',
-  dashboard_cashFlowChart: 'Last 30 days cash flow',
+  dashboard_cashFlowChart: 'Revenue and expenses',
   dashboard_fab: 'New transaction',
   dashboard_dueDates: 'Due Dates',
   dashboard_dueOverdue: 'Overdue',

@@ -94,8 +94,6 @@ export const pt = {
   overview_taxes: 'Impostos do mês',
   overview_transactions: 'Lançamentos',
   overview_journal: 'Lançamentos Cont.',
-  overview_viewTransactions: 'Ver lançamentos',
-  overview_viewEntries: 'Ver entradas',
   overview_entryCount: 'lançamento',
   overview_entryCountPlural: 'lançamentos',
 
@@ -211,7 +209,6 @@ export const pt = {
   lancamentos_register: 'Registrar',
   lancamentos_searchPlaceholder: 'Buscar histórico ou documento...',
   lancamentos_accountFilterPlaceholder: 'Filtrar por conta (código ou nome)',
-  lancamentos_filterCount: '{count} de {total} lançamentos',
   lancamentos_export: 'Exportar',
   lancamentos_export_title: 'Exportar Lançamentos Contábeis',
   lancamentos_export_subtitle: 'Formato compatível com Domínio, Questor, Alterdata, TOTVS e outros sistemas contábeis brasileiros.',
@@ -290,16 +287,11 @@ export const pt = {
   // Livros SPED
   sped_title: 'Livros SPED',
   sped_empty: 'Nenhum livro SPED encontrado',
-  sped_period: 'Período',
-  sped_type: 'Tipo',
   sped_status: 'Status',
   sped_transmittedAt: 'Transmitido em',
-  sped_file: 'Arquivo',
-  sped_download: 'Download',
   sped_transmitted: 'Transmitido',
   sped_validated: 'Validado',
   sped_draft: 'Rascunho',
-
   sped_tab_ecd: 'ECD',
   sped_tab_ecf: 'ECF',
   sped_tab_efd_contrib: 'EFD Contribuições',
@@ -314,8 +306,6 @@ export const pt = {
   sped_delete_book: 'Excluir',
   sped_delete_confirm: 'Excluir este registro de livro fiscal?',
   sped_no_plans: 'Configure o plano de contas antes de gerar o ECD.',
-  sped_no_entries: 'Nenhum lançamento contábil encontrado para este período.',
-  sped_entries_warning: 'O ECD será gerado sem lançamentos para este período.',
   sped_ecd_description: 'Escrituração Contábil Digital gerada a partir dos lançamentos contábeis do período.',
   sped_status_error: 'Erro ao atualizar status.',
   sped_delete_error: 'Erro ao excluir.',
@@ -453,8 +443,6 @@ export const pt = {
 
   // Transactions (read-only view for accountants)
   transactions_title: 'Lançamentos',
-  transactions_countSingular: 'lançamento',
-  transactions_countPlural: 'lançamentos',
   transactions_searchPlaceholder: 'Buscar por descrição…',
   transactions_allTypes: 'Todos os tipos',
   transactions_income: 'Entrada',
@@ -533,8 +521,6 @@ export const pt = {
   extTx_edit: 'Editar',
   extTx_editTitle: 'Editar lançamento',
   extTx_empty: 'Nenhum lançamento cadastrado. Adicione o primeiro para começar a classificar.',
-  extTx_countSingular: 'lançamento',
-  extTx_countPlural: 'lançamentos',
   extTx_description: 'Descrição',
   extTx_descriptionPlaceholder: 'Ex: Aluguel de escritório, Venda de serviço…',
   extTx_amount: 'Valor',
@@ -581,9 +567,6 @@ export const pt = {
   extTx_errorNature: 'Selecione a natureza contábil.',
 
   // Overview — external company transaction counts
-  overview_txCount: 'lançamento',
-  overview_txCountPlural: 'lançamentos',
-
   // Export
   export_title: 'Exportar Lançamentos',
   export_button: 'Exportar',

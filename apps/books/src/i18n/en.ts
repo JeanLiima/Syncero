@@ -96,8 +96,6 @@ export const en: Record<TranslationKey, string> = {
   overview_taxes: 'Monthly taxes',
   overview_transactions: 'Transactions',
   overview_journal: 'Journal',
-  overview_viewTransactions: 'View transactions',
-  overview_viewEntries: 'View entries',
   overview_entryCount: 'entry',
   overview_entryCountPlural: 'entries',
 
@@ -213,7 +211,6 @@ export const en: Record<TranslationKey, string> = {
   lancamentos_register: 'Post entry',
   lancamentos_searchPlaceholder: 'Search description or document...',
   lancamentos_accountFilterPlaceholder: 'Filter by account (code or name)',
-  lancamentos_filterCount: '{count} of {total} entries',
   lancamentos_export: 'Export',
   lancamentos_export_title: 'Export Journal Entries',
   lancamentos_export_subtitle: 'Format compatible with common accounting systems (Domínio, Questor, Alterdata, TOTVS).',
@@ -292,12 +289,8 @@ export const en: Record<TranslationKey, string> = {
   // Livros SPED
   sped_title: 'SPED Books',
   sped_empty: 'No SPED books found',
-  sped_period: 'Period',
-  sped_type: 'Type',
   sped_status: 'Status',
   sped_transmittedAt: 'Transmitted at',
-  sped_file: 'File',
-  sped_download: 'Download',
   sped_transmitted: 'Transmitted',
   sped_validated: 'Validated',
   sped_draft: 'Draft',
@@ -316,8 +309,6 @@ export const en: Record<TranslationKey, string> = {
   sped_delete_book: 'Delete',
   sped_delete_confirm: 'Delete this fiscal book record?',
   sped_no_plans: 'Set up the chart of accounts before generating ECD.',
-  sped_no_entries: 'No journal entries found for this period.',
-  sped_entries_warning: 'ECD will be generated with no entries for this period.',
   sped_ecd_description: 'Digital accounting bookkeeping generated from the period\'s journal entries.',
   sped_status_error: 'Error updating status.',
   sped_delete_error: 'Error deleting record.',
@@ -455,8 +446,6 @@ export const en: Record<TranslationKey, string> = {
 
   // Transactions (read-only view for accountants)
   transactions_title: 'Transactions',
-  transactions_countSingular: 'transaction',
-  transactions_countPlural: 'transactions',
   transactions_searchPlaceholder: 'Search by description…',
   transactions_allTypes: 'All types',
   transactions_income: 'Income',
@@ -535,8 +524,6 @@ export const en: Record<TranslationKey, string> = {
   extTx_edit: 'Edit',
   extTx_editTitle: 'Edit transaction',
   extTx_empty: 'No transactions yet. Add the first one to start classifying.',
-  extTx_countSingular: 'transaction',
-  extTx_countPlural: 'transactions',
   extTx_description: 'Description',
   extTx_descriptionPlaceholder: 'E.g. Office rent, Service revenue…',
   extTx_amount: 'Amount',
@@ -581,10 +568,6 @@ export const en: Record<TranslationKey, string> = {
   extTx_errorAmount: 'Please enter a positive amount.',
   extTx_errorDate: 'Please enter a date.',
   extTx_errorNature: 'Please select the accounting nature.',
-
-  // Overview — external company transaction counts
-  overview_txCount: 'transaction',
-  overview_txCountPlural: 'transactions',
 
   // Export
   export_title: 'Export Transactions',

@@ -373,14 +373,6 @@ export function Component() {
         )}
       </Card>
 
-      {!dreLoading && (
-        <div className="flex justify-end">
-          <Badge variant={net >= 0 ? 'success' : 'danger'} className="text-sm px-3 py-1">
-            {net >= 0 ? t('incomeStatement_profit') : t('incomeStatement_loss')}: {fmt(Math.abs(net))}
-          </Badge>
-        </div>
-      )}
-
       {/* Recent transactions */}
       <Card>
         <h2 className="text-sm font-medium text-[var(--text-secondary)] mb-4">{t('dashboard_recentTransactions')}</h2>

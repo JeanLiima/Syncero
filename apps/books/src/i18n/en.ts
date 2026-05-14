@@ -142,7 +142,7 @@ export const en: Record<TranslationKey, string> = {
   apiKeys_errorCreate: 'Error creating key. Please try again.',
 
   // Impostos
-  impostos_title: 'Tax Calculation',
+  impostos_title: 'Taxes',
   impostos_empty: 'No tax calculations found for this company.',
   impostos_noJournalData: 'No journal entries for this period. Post entries before calculating taxes.',
   impostos_calculate: 'Calculate',

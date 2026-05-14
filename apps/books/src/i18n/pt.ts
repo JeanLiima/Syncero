@@ -140,7 +140,7 @@ export const pt = {
   apiKeys_errorCreate: 'Erro ao criar chave. Tente novamente.',
 
   // Impostos
-  impostos_title: 'Apuração de Impostos',
+  impostos_title: 'Impostos',
   impostos_empty: 'Nenhuma apuração encontrada para esta empresa.',
   impostos_noJournalData: 'Sem lançamentos contábeis neste período. Registre os lançamentos antes de apurar.',
   impostos_calculate: 'Apurar',

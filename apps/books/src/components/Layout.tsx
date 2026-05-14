@@ -57,6 +57,7 @@ export function Layout({ children }: { children: ReactNode }) {
     ] : []),
     ...(extCompanyId ? [
       { to: `${basePath}/nfe`,          label: t('nav_fiscalDocs'),   icon: icon(FileText)    },
+      { to: `${basePath}/sped`,         label: t('nav_sped'),         icon: icon(BookOpen)    },
     ] : []),
     { to: `${basePath}/transactions`,   label: t('nav_transactions'), icon: icon(ArrowDownUp) },
     { to: `${basePath}/journal-entries`, label: t('nav_journal'),     icon: icon(BookMarked) },

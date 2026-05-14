@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { AccountPlan, Category, CompanySegment, FiscalBook, FiscalDocument, TaxCalculation, Transaction, TransactionDetail } from '@/types'
+import type { AccountPlan, Category, CompanySegment, ExternalCompany, FiscalBook, FiscalBookStatus, FiscalDocument, JournalEntry, TaxCalculation, Transaction, TransactionDetail } from '@/types'
 
 function toSnake(key: string): string {
   return key.replace(/([A-Z])/g, '_$1').toLowerCase()
@@ -14,8 +14,37 @@ function buildQuery(params: Record<string, string | undefined>) {
   return queryString ? `?${queryString}` : ''
 }
 
-export async function getFiscalBooks(companyId: string) {
-  return apiFetch<FiscalBook[]>(`/api/fiscal-books${buildQuery({ companyId })}`)
+export async function getFiscalBooks(params: { companyId?: string; extCompanyId?: string }) {
+  return apiFetch<FiscalBook[]>(`/api/fiscal-books${buildQuery(params)}`)
+}
+
+export async function createFiscalBook(body: {
+  company_id?: string; ext_company_id?: string
+  book_type: string; reference_period: string; status?: FiscalBookStatus
+}) {
+  return apiFetch<FiscalBook>('/api/fiscal-books', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export async function updateFiscalBookStatus(id: string, status: FiscalBookStatus) {
+  return apiFetch<FiscalBook>(`/api/fiscal-books/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) })
+}
+
+export async function deleteFiscalBook(id: string) {
+  return apiFetch<{ ok: boolean }>(`/api/fiscal-books/${id}`, { method: 'DELETE' })
+}
+
+export async function getCompanyInfo(companyId: string): Promise<{ name: string; cnpj: string | null }> {
+  return apiFetch<{ name: string; cnpj: string | null }>(`/api/companies/${companyId}`)
+}
+
+export async function getExtCompanyInfo(extCompanyId: string): Promise<ExternalCompany> {
+  return apiFetch<ExternalCompany>(`/api/external-companies/${extCompanyId}`)
+}
+
+export async function getJournalEntriesForPeriod(params: {
+  companyId?: string; extCompanyId?: string; period: string
+}): Promise<JournalEntry[]> {
+  return apiFetch<JournalEntry[]>(`/api/journal-entries${buildQuery(params)}`)
 }
 
 export type FiscalDocumentParams = {

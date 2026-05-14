@@ -588,6 +588,28 @@ export const pt = {
   export_col_installment: 'Parcela',
   export_col_notes: 'Observações',
   common_cnpjInvalid: 'CNPJ inválido',
+
+  // Import
+  transactions_import: 'Importar',
+  transactions_import_title: 'Importar lançamentos',
+  transactions_import_dropzone: 'Arraste um arquivo XML (NFe) ou OFX aqui',
+  transactions_import_dropzone_hint: 'ou clique para selecionar',
+  transactions_import_accept: 'Formatos aceitos: .xml (NFe), .ofx, .qfx',
+  transactions_import_nfe_preview_title: 'Nota fiscal detectada',
+  transactions_import_nfe_counterpart: 'Contraparte',
+  transactions_import_nfe_date: 'Data de emissão',
+  transactions_import_nfe_amount: 'Valor total',
+  transactions_import_nfe_type_income: 'Receita — empresa emitente',
+  transactions_import_nfe_type_expense: 'Despesa — empresa destinatária',
+  transactions_import_nfe_type_unknown: 'CNPJ não identificado',
+  transactions_import_nfe_cnpj_warning: 'Seu CNPJ não foi encontrado neste arquivo. O documento pode não pertencer à sua empresa.',
+  transactions_import_nfe_proceed_anyway: 'Prosseguir mesmo assim',
+  transactions_import_nfe_continue: 'Criar lançamento',
+  transactions_import_ofx_found: '{count} transações encontradas',
+  transactions_import_ofx_defaultNature: 'Natureza padrão',
+  transactions_import_ofx_confirm: 'Importar {count} lançamento(s)',
+  transactions_import_ofx_noneSelected: 'Nenhum selecionado',
+  transactions_import_error_parse: 'Não foi possível ler o arquivo. Verifique se é um XML de NFe ou OFX válido.',
 } as const
 
 export type TranslationKey = keyof typeof pt

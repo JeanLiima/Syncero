@@ -240,6 +240,7 @@ export async function toggleSefazIntegration(companyId: string, isActive: boolea
 export type FiscalDocumentQueryParams = {
   companyId: string
   direction?: string
+  doc_type?: string
   status?: string
   pending?: string
   date_from?: string

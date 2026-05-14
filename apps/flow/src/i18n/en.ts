@@ -509,8 +509,11 @@ export const en: Record<TranslationKey, string> = {
   fiscalDocs_expense: 'Expense',
   fiscalDocs_allDirections: 'All',
   fiscalDocs_pending: 'No transaction',
-  fiscalDocs_allStatus: 'All',
+  fiscalDocs_allTypes: 'All types',
+  fiscalDocs_allStatus: 'All statuses',
+  fiscalDocs_authorized: 'Authorized',
   fiscalDocs_cancelled: 'Cancelled',
+  fiscalDocs_denied: 'Denied',
   fiscalDocs_createTransaction: 'Create transaction',
 
   // Common

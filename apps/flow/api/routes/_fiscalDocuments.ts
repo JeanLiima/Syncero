@@ -24,6 +24,7 @@ router.get('/', async (c) => {
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
   const direction  = c.req.query('direction')
+  const docType    = c.req.query('doc_type')
   const docStatus  = c.req.query('status')
   const pending    = c.req.query('pending')
   const dateFrom   = c.req.query('date_from')
@@ -37,6 +38,7 @@ router.get('/', async (c) => {
     .order('issue_date', { ascending: false })
 
   if (direction) query = query.eq('doc_direction', direction)
+  if (docType)   query = query.eq('doc_type', docType)
   if (docStatus) query = query.eq('doc_status', docStatus)
   if (pending === 'true') query = query.is('transaction_id', null)
   if (dateFrom) query = query.gte('issue_date', dateFrom)

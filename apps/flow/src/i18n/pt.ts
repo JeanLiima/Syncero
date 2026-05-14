@@ -507,8 +507,11 @@ export const pt = {
   fiscalDocs_expense: 'Despesa',
   fiscalDocs_allDirections: 'Todas',
   fiscalDocs_pending: 'Sem lançamento',
-  fiscalDocs_allStatus: 'Todos',
+  fiscalDocs_allTypes: 'Todos os tipos',
+  fiscalDocs_allStatus: 'Todos os status',
+  fiscalDocs_authorized: 'Autorizada',
   fiscalDocs_cancelled: 'Cancelada',
+  fiscalDocs_denied: 'Denegada',
   fiscalDocs_createTransaction: 'Criar lançamento',
 
   // Common

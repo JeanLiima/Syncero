@@ -1,6 +1,10 @@
 import { useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowDownUp, BookMarked, FileText, BookOpen, Calculator, ArrowRight } from 'lucide-react'
+
+function fmt(v: number) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
 import { apiFetch } from '@/lib/api'
 import { Card } from '@syncero/ui'
 import { CompanyTypeBadge } from '@/components/accountant/CompanyTypeBadge'
@@ -13,6 +17,7 @@ interface ExtSummary {
   entryCount: number
   nfeCount: number
   booksCount: number
+  taxTotal: number
 }
 
 export function Component() {
@@ -80,7 +85,7 @@ export function Component() {
     },
     {
       label: t('overview_taxes'),
-      value: t('overview_viewTransactions'),
+      value: fmt(summary?.taxTotal ?? 0),
       icon: <Calculator className="h-6 w-6 text-[var(--success)]" />,
       to: 'taxes',
     },

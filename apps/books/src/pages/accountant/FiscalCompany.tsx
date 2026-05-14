@@ -46,6 +46,18 @@ export function Component() {
 
   const items = [
     {
+      label: t('overview_transactions'),
+      value: String(summary?.txCount ?? 0),
+      icon: <ArrowDownUp className="h-6 w-6 text-sky-400" />,
+      to: 'transactions',
+    },
+    {
+      label: t('overview_journal'),
+      value: String(summary?.entryCount ?? 0),
+      icon: <BookMarked className="h-6 w-6 text-[var(--warning)]" />,
+      to: 'journal-entries',
+    },
+    {
       label: t('overview_nfe'),
       value: String(summary?.nfeCount ?? 0),
       icon: <FileText className="h-6 w-6 text-[var(--accent)]" />,
@@ -62,18 +74,6 @@ export function Component() {
       value: fmt(summary?.taxTotal ?? 0),
       icon: <Calculator className="h-6 w-6 text-[var(--success)]" />,
       to: 'taxes',
-    },
-    {
-      label: t('overview_transactions'),
-      value: String(summary?.txCount ?? 0),
-      icon: <ArrowDownUp className="h-6 w-6 text-sky-400" />,
-      to: 'transactions',
-    },
-    {
-      label: t('overview_journal'),
-      value: String(summary?.entryCount ?? 0),
-      icon: <BookMarked className="h-6 w-6 text-[var(--warning)]" />,
-      to: 'journal-entries',
     },
   ]
 

@@ -706,10 +706,11 @@
             "enum": [
               "sped_fiscal",
               "sped_contribuicoes",
+              "sped_contabil",
               "ecf",
               "ecd"
             ],
-            "description": "Tipo do livro: sped_fiscal, sped_contribuicoes, ecf ou ecd."
+            "description": "Tipo do livro: sped_fiscal, sped_contribuicoes, sped_contabil, ecf ou ecd."
           },
           "reference_period": {
             "type": "string",
@@ -2851,6 +2852,7 @@
                     "enum": [
                       "sped_fiscal",
                       "sped_contribuicoes",
+                      "sped_contabil",
                       "ecf",
                       "ecd"
                     ],

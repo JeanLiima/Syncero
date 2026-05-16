@@ -18,7 +18,7 @@ import { ContactModal } from './ContactModal'
 import { ContactCombobox } from './ContactCombobox'
 import { useTransactionWizardState, type WizardPrefill } from './useTransactionWizard'
 import { PaymentPromptStep } from './PaymentPromptStep'
-import { PaymentFormStep } from './PaymentFormStep'
+import { PaymentFormStep, type PaymentForm } from './PaymentFormStep'
 import { SEGMENTS_WITH_COST } from '@/lib/segments'
 import type { Transaction, TransactionNature } from '@/types'
 
@@ -70,6 +70,103 @@ function addRecurrence(date: Date, freq: RecurrenceFrequency): Date {
   }
 }
 
+// ── InstallmentPreview ───────────────────────────────────────
+
+interface InstallmentPreviewProps {
+  preview: Array<{ number: number; rawDate: string; cents: number }>
+  installmentCount: number
+  type: 'income' | 'expense' | null
+  createFutureInstallments: boolean
+  overrides: Record<number, { date: string; amountStr: string }>
+  onOverride: (num: number, field: 'date' | 'amountStr', value: string) => void
+  formatCents: (cents: number) => string
+  totalChanged: boolean
+  editedTotal: number
+  originalCents: number
+}
+
+function InstallmentPreview({
+  preview, installmentCount, type, createFutureInstallments,
+  overrides, onOverride, formatCents, totalChanged, editedTotal, originalCents,
+}: InstallmentPreviewProps) {
+  const getDate = (num: number, rawDate: string) => overrides[num]?.date ?? rawDate
+  const getAmountStr = (num: number, cents: number) =>
+    overrides[num]?.amountStr ?? (cents / 100).toFixed(2).replace('.', ',')
+
+  return (
+    <div className="flex flex-col gap-1 rounded-lg border border-[var(--bg-border)] overflow-hidden">
+      <div className="grid grid-cols-[2rem_1fr_6.5rem] gap-2 px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--bg-border)]">
+        <span className="text-xs text-[var(--text-muted)]">#</span>
+        <span className="text-xs text-[var(--text-muted)]">Data</span>
+        <span className="text-xs text-[var(--text-muted)] text-right">Valor</span>
+      </div>
+
+      <div className="max-h-44 overflow-y-auto divide-y divide-[var(--bg-border)]">
+        {preview.map((p) =>
+          createFutureInstallments ? (
+            <div key={p.number} className="grid grid-cols-[2rem_1fr_6.5rem] items-center gap-2 px-3 py-1.5 hover:bg-[var(--bg-elevated)]">
+              <span className="text-xs font-mono text-[var(--text-muted)] text-center">
+                {p.number}/{installmentCount}
+              </span>
+              <input
+                type="date"
+                value={getDate(p.number, p.rawDate)}
+                onChange={(e) => onOverride(p.number, 'date', e.target.value)}
+                className="h-7 px-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors w-full"
+              />
+              <div className="flex items-center gap-1 h-7 px-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] focus-within:border-[var(--accent)] transition-colors">
+                <span className="text-xs text-[var(--text-muted)] shrink-0">R$</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={getAmountStr(p.number, p.cents)}
+                  onChange={(e) => onOverride(p.number, 'amountStr', e.target.value)}
+                  className="flex-1 bg-transparent text-xs text-right text-[var(--text-primary)] font-mono outline-none min-w-0"
+                />
+              </div>
+            </div>
+          ) : (
+            <div key={p.number} className="grid grid-cols-[2rem_1fr_6.5rem] items-center gap-2 px-3 py-2">
+              <span className="text-xs font-mono text-[var(--text-muted)] text-center">
+                {p.number}/{installmentCount}
+              </span>
+              <span className="text-xs text-[var(--text-secondary)]">
+                {format(parseISO(p.rawDate), 'dd/MM/yyyy')}
+              </span>
+              <span className={`text-xs font-medium tabular-nums text-right ${
+                type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
+              }`}>
+                R$ {formatCents(p.cents)}
+              </span>
+            </div>
+          )
+        )}
+      </div>
+
+      <div className="grid grid-cols-[2rem_1fr_auto] items-center gap-2 px-3 py-1.5 bg-[var(--bg-elevated)] border-t border-[var(--bg-border)]">
+        <span />
+        <span className="text-xs text-[var(--text-muted)]">Total</span>
+        <div className="flex items-center gap-2 text-xs font-mono">
+          {totalChanged ? (
+            <>
+              <span className="text-[var(--text-muted)] line-through">
+                {(originalCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
+              <span className="text-[var(--warning)] font-medium">
+                {editedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </span>
+            </>
+          ) : (
+            <span className="text-[var(--text-secondary)]">
+              {(originalCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Wizard ───────────────────────────────────────────────────
 
 export function TransactionWizard({ open, onClose, editing, language, prefill }: Props) {
@@ -119,6 +216,14 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
   }, [skippedSteps])
 
   const state = useTransactionWizardState(open, editing, language, prefill, !editing ? firstNonSkippedStep : undefined)
+
+  const setPaymentForm = (patch: Partial<PaymentForm>) => {
+    if ('paidAt' in patch && patch.paidAt !== undefined) state.setPaidAt(patch.paidAt)
+    if ('paymentMethod' in patch) state.setPaymentMethod(patch.paymentMethod ?? null)
+    if ('bankId' in patch) state.setBankId(patch.bankId)
+    if ('methodError' in patch && patch.methodError !== undefined) state.setMethodError(patch.methodError)
+  }
+
   const { data: contacts = [] } = useContacts(state.contactSearch)
   const [contactModalInitialCnpj, setContactModalInitialCnpj] = useState('')
   const qc = useQueryClient()
@@ -451,10 +556,6 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
     }))
   })()
 
-  const getOverrideDate = (num: number, rawDate: string) => state.installmentOverrides[num]?.date ?? rawDate
-  const getOverrideAmountStr = (num: number, cents: number) =>
-    state.installmentOverrides[num]?.amountStr ?? (cents / 100).toFixed(2).replace('.', ',')
-
   const updateInstallmentOverride = (num: number, field: 'date' | 'amountStr', value: string) => {
     const base = installmentPreview?.find((p) => p.number === num)
     const current = state.installmentOverrides[num] ?? {
@@ -702,76 +803,18 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
               />
             )}
             {installmentPreview && (
-              <div className="flex flex-col gap-1 rounded-lg border border-[var(--bg-border)] overflow-hidden">
-                <div className="grid grid-cols-[2rem_1fr_6.5rem] gap-2 px-3 py-1.5 bg-[var(--bg-elevated)] border-b border-[var(--bg-border)]">
-                  <span className="text-xs text-[var(--text-muted)]">#</span>
-                  <span className="text-xs text-[var(--text-muted)]">{t('transactions_date')}</span>
-                  <span className="text-xs text-[var(--text-muted)] text-right">{t('transactions_amount')}</span>
-                </div>
-
-                <div className="max-h-44 overflow-y-auto divide-y divide-[var(--bg-border)]">
-                  {installmentPreview.map((p) =>
-                    state.createFutureInstallments ? (
-                      <div key={p.number} className="grid grid-cols-[2rem_1fr_6.5rem] items-center gap-2 px-3 py-1.5 hover:bg-[var(--bg-elevated)]">
-                        <span className="text-xs font-mono text-[var(--text-muted)] text-center">
-                          {p.number}/{state.installmentCount}
-                        </span>
-                        <input
-                          type="date"
-                          value={getOverrideDate(p.number, p.rawDate)}
-                          onChange={(e) => updateInstallmentOverride(p.number, 'date', e.target.value)}
-                          className="h-7 px-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-colors w-full"
-                        />
-                        <div className="flex items-center gap-1 h-7 px-2 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)] focus-within:border-[var(--accent)] transition-colors">
-                          <span className="text-xs text-[var(--text-muted)] shrink-0">R$</span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={getOverrideAmountStr(p.number, p.cents)}
-                            onChange={(e) => updateInstallmentOverride(p.number, 'amountStr', e.target.value)}
-                            className="flex-1 bg-transparent text-xs text-right text-[var(--text-primary)] font-mono outline-none min-w-0"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div key={p.number} className="grid grid-cols-[2rem_1fr_6.5rem] items-center gap-2 px-3 py-2">
-                        <span className="text-xs font-mono text-[var(--text-muted)] text-center">
-                          {p.number}/{state.installmentCount}
-                        </span>
-                        <span className="text-xs text-[var(--text-secondary)]">
-                          {format(parseISO(p.rawDate), 'dd/MM/yyyy')}
-                        </span>
-                        <span className={`text-xs font-medium tabular-nums text-right ${
-                          state.type === 'income' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
-                        }`}>
-                          R$ {state.formatCents(p.cents)}
-                        </span>
-                      </div>
-                    )
-                  )}
-                </div>
-
-                <div className="grid grid-cols-[2rem_1fr_auto] items-center gap-2 px-3 py-1.5 bg-[var(--bg-elevated)] border-t border-[var(--bg-border)]">
-                  <span />
-                  <span className="text-xs text-[var(--text-muted)]">{t('transactions_installment_total')}</span>
-                  <div className="flex items-center gap-2 text-xs font-mono">
-                    {installmentTotalChanged ? (
-                      <>
-                        <span className="text-[var(--text-muted)] line-through">
-                          {(state.amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </span>
-                        <span className="text-[var(--warning)] font-medium">
-                          {installmentEditedTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-[var(--text-secondary)]">
-                        {(state.amountCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <InstallmentPreview
+                preview={installmentPreview}
+                installmentCount={state.installmentCount}
+                type={state.type}
+                createFutureInstallments={state.createFutureInstallments}
+                overrides={state.installmentOverrides}
+                onOverride={updateInstallmentOverride}
+                formatCents={state.formatCents}
+                totalChanged={installmentTotalChanged}
+                editedTotal={installmentEditedTotal}
+                originalCents={state.amountCents}
+              />
             )}
           </div>
         )}
@@ -1044,14 +1087,8 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
         {state.phase === 'payment-form' && (
           <PaymentFormStep
             type={state.type ?? 'expense'}
-            paidAt={state.paidAt}
-            setPaidAt={state.setPaidAt}
-            paymentMethod={state.paymentMethod}
-            setPaymentMethod={state.setPaymentMethod}
-            bankId={state.bankId}
-            setBankId={state.setBankId}
-            methodError={state.methodError}
-            setMethodError={state.setMethodError}
+            form={{ paidAt: state.paidAt, paymentMethod: state.paymentMethod, bankId: state.bankId, methodError: state.methodError }}
+            onFormChange={setPaymentForm}
             banks={banks}
             language={language}
             onBack={() => state.setPhase('payment-prompt')}

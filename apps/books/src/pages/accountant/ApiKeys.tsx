@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, ShieldOff, Trash2 } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, ConfirmDialog, SkeletonRows, useToast } from '@syncero/ui'
+import { Button, Card, ConfirmDialog, SkeletonRows, useToast, IconButton } from '@syncero/ui'
 import { ApiKeyCreateModal } from '@/components/accountant/ApiKeyCreateModal'
 import { useT } from '@/i18n'
 import type { ApiKey } from '@/types'
@@ -134,31 +134,19 @@ export function Component() {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       {key.is_active ? (
-                        /* Revogar — ShieldOff (desativar) */
-                        <div className="relative group/tip">
-                          <button
-                            onClick={() => setRevokeTarget(key)}
-                            className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--warning)] transition-colors"
-                          >
-                            <ShieldOff className="h-3.5 w-3.5" />
-                          </button>
-                          <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/tip:opacity-100 transition-opacity z-10">
-                            {t('apiKeys_revokeHint')}
-                          </span>
-                        </div>
+                        <IconButton
+                          icon={<ShieldOff className="h-3.5 w-3.5" />}
+                          tooltip={t('apiKeys_revokeHint')}
+                          variant="warning"
+                          onClick={() => setRevokeTarget(key)}
+                        />
                       ) : (
-                        /* Excluir — Trash2 (remoção permanente) */
-                        <div className="relative group/tip">
-                          <button
-                            onClick={() => setDeleteTarget(key)}
-                            className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                          <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/tip:opacity-100 transition-opacity z-10">
-                            {t('apiKeys_deleteHint')}
-                          </span>
-                        </div>
+                        <IconButton
+                          icon={<Trash2 className="h-3.5 w-3.5" />}
+                          tooltip={t('apiKeys_deleteHint')}
+                          variant="danger"
+                          onClick={() => setDeleteTarget(key)}
+                        />
                       )}
                     </div>
                   </td>

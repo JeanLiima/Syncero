@@ -3,7 +3,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { RefreshCw, X, UserMinus, UserPlus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Input, Modal, Table, Badge, Avatar, ConfirmDialog, useToast } from '@syncero/ui'
+import { Button, Card, Input, Modal, Table, Badge, Avatar, ConfirmDialog, useToast, IconButton } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
@@ -159,46 +159,30 @@ export function Component() {
               render: (r) => {
                 if (r.status === 'pending') return (
                   <div className="flex items-center justify-end gap-1">
-                    <div className="relative group">
-                      <button
-                        onClick={() => resend.mutate(r.id)}
-                        disabled={resend.isPending && resend.variables === r.id}
-                        className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors disabled:opacity-50"
-                      >
-                        <RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        {t('settings_resend')}
-                      </span>
-                    </div>
-                    <div className="relative group">
-                      <button
-                        onClick={() => cancel.mutate(r.id)}
-                        disabled={cancel.isPending && cancel.variables === r.id}
-                        className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        {t('settings_cancel')}
-                      </span>
-                    </div>
+                    <IconButton
+                      icon={<RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />}
+                      tooltip={t('settings_resend')}
+                      onClick={() => resend.mutate(r.id)}
+                      disabled={resend.isPending && resend.variables === r.id}
+                    />
+                    <IconButton
+                      icon={<X className="h-3.5 w-3.5" />}
+                      tooltip={t('settings_cancel')}
+                      variant="danger"
+                      onClick={() => cancel.mutate(r.id)}
+                      disabled={cancel.isPending && cancel.variables === r.id}
+                    />
                   </div>
                 )
 
                 if (r.status === 'accepted') return (
-                  <div className="relative group">
-                    <button
-                      onClick={() => setUnlinkId(r.id)}
-                      disabled={unlink.isPending && unlink.variables === r.id}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
-                    >
-                      <UserMinus className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('settings_unlink')}
-                    </span>
-                  </div>
+                  <IconButton
+                    icon={<UserMinus className="h-3.5 w-3.5" />}
+                    tooltip={t('settings_unlink')}
+                    variant="danger"
+                    onClick={() => setUnlinkId(r.id)}
+                    disabled={unlink.isPending && unlink.variables === r.id}
+                  />
                 )
 
                 return null

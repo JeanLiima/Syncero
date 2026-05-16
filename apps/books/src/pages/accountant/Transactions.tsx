@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Search, BookOpen, Download } from 'lucide-react'
-import { Badge, Button, Card, Input, Select, Table, DateRangePicker } from '@syncero/ui'
+import { Badge, Button, Card, Input, Select, Table, DateRangePicker, IconButton } from '@syncero/ui'
 import { getTransactions } from '@/lib/backend'
 import { TransactionDetailModal } from '@/components/accountant/TransactionDetailModal'
 import { ClassifyModal } from '@/components/accountant/ClassifyModal'
@@ -175,16 +175,12 @@ export function Component() {
                   </div>
                 )
                 return (
-                  <div className="relative group flex justify-end">
-                    <button
+                  <div className="flex justify-end">
+                    <IconButton
+                      icon={<BookOpen className="h-4 w-4" />}
+                      tooltip={t('classify_action')}
                       onClick={(e) => { e.stopPropagation(); setClassifyTx(r) }}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-                    >
-                      <BookOpen className="h-4 w-4" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('classify_action')}
-                    </span>
+                    />
                   </div>
                 )
               },

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle, Search, Download, Upload, ChevronDown } from 'lucide-react'
-import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
+import { Button, Card, Table, Badge, Input, Select, DateRangePicker, IconButton } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useAuthStore } from '@/store/auth'
 import { useTransactions, useCategories } from '@/modules/transactions/queries'
@@ -228,16 +228,13 @@ export function Component() {
               align: 'right' as const,
               render: (r: Transaction) =>
                 !r.is_paid ? (
-                  <div className="relative group flex justify-end">
-                    <button
+                  <div className="flex justify-end">
+                    <IconButton
+                      icon={<CheckCircle className="h-4 w-4" />}
+                      tooltip={r.type === 'income' ? t('transactions_markAsReceived') : t('transactions_markAsPaid')}
+                      variant="success"
                       onClick={(e) => { e.stopPropagation(); setPaymentTarget({ id: r.id, type: r.type }) }}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {r.type === 'income' ? t('transactions_markAsReceived') : t('transactions_markAsPaid')}
-                    </span>
+                    />
                   </div>
                 ) : null,
             }] : []),

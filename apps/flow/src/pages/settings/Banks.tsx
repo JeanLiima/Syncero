@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Pencil, Trash2, Plus } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Table, ConfirmDialog, useToast } from '@syncero/ui'
+import { Button, Card, Table, ConfirmDialog, useToast, IconButton } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
 import { getBanks, deleteBank } from '@/lib/backend'
@@ -88,28 +88,8 @@ export function Component() {
               className: 'w-px !px-2',
               render: (r: Bank) => (
                 <div className="flex items-center justify-end gap-1">
-                  <div className="relative group">
-                    <button
-                      onClick={() => openEdit(r)}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('categories_edit')}
-                    </span>
-                  </div>
-                  <div className="relative group">
-                    <button
-                      onClick={() => setDeleteId(r.id)}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('categories_delete')}
-                    </span>
-                  </div>
+                  <IconButton icon={<Pencil className="h-3.5 w-3.5" />} tooltip={t('categories_edit')} onClick={() => openEdit(r)} />
+                  <IconButton icon={<Trash2 className="h-3.5 w-3.5" />} tooltip={t('categories_delete')} variant="danger" onClick={() => setDeleteId(r.id)} />
                 </div>
               ),
             }] : []),

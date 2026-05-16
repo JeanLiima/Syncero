@@ -77,6 +77,17 @@ export function useAuth() {
       options: { redirectTo: redirectTo ?? window.location.origin },
     })
 
+  const signInWithEmail = (email: string, password: string) =>
+    supabase.auth.signInWithPassword({ email, password })
+
+  const signUpWithEmail = (email: string, password: string) =>
+    supabase.auth.signUp({ email, password })
+
+  const resetPassword = (email: string) =>
+    supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+
   const createProfile = async (userType: 'company_user' | 'accountant') => {
     if (!user) return { error: new Error('Usuário não autenticado') }
     try {
@@ -104,6 +115,9 @@ export function useAuth() {
     isAccountant: profile?.user_type === 'accountant',
     needsOnboarding: !!user && !loading && profile === null,
     signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    resetPassword,
     createProfile,
     signOut,
   }

@@ -5,7 +5,7 @@ import {
   TrendingUp, TrendingDown, ChevronLeft, CreditCard, Repeat, RefreshCw,
   ShoppingCart, Banknote, Users, Receipt, Package, ArrowDownLeft, ArrowUpRight, UserPlus,
 } from 'lucide-react'
-import { Button, Checkbox, DayCalendar, Input, Modal, Select } from '@syncero/ui'
+import { Button, Checkbox, DayCalendar, Input, Modal, Select, useToast } from '@syncero/ui'
 import { useT, type TranslationKey } from '@/i18n'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction } from './mutations'
@@ -179,6 +179,7 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
   const create = useCreateTransaction()
   const update = useUpdateTransaction()
   const deleteT = useDeleteTransaction()
+  const { error: toastError } = useToast()
   const user = useAuthStore((s) => s.user)
   const { data: categories = [] } = useCategories()
   const { data: banks = [] } = useBanks()
@@ -250,6 +251,7 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
       const next = nextStepFrom(7)
       if (next) state.goTo(next)
     },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const isCreating = !editing
@@ -321,6 +323,7 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
     if (!state.description.trim()) { state.setDescError(t('transactions_errorDescription')); return }
     if (state.amountCents <= 0) { state.setAmountError(t('transactions_errorAmount')); state.goTo(4); return }
     if (!state.counterpart.trim()) { state.goTo(7); return }
+    try {
 
     const basePayload = {
       type: state.type,
@@ -397,6 +400,9 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
     }
 
     state.setPhase('payment-prompt')
+    } catch {
+      toastError(t('common_errorGeneric'))
+    }
   }
 
   const validatePayment = () => {
@@ -409,23 +415,31 @@ export function TransactionWizard({ open, onClose, editing, language, prefill }:
 
   const handleRegisterPayment = async () => {
     if (!state.createdId || !state.paidAt || !validatePayment()) return
-    await update.mutateAsync({
-      id: state.createdId,
-      data: {
-        is_paid: true,
-        paid_at: state.paidAt,
-        payment_method: state.paymentMethod ?? undefined,
-        bank_id: state.paymentMethod === 'bank' ? state.bankId ?? undefined : undefined,
-        payment_registered_at: new Date().toISOString(),
-        payment_registered_by: user?.id ?? undefined,
-      },
-    })
-    onClose()
+    try {
+      await update.mutateAsync({
+        id: state.createdId,
+        data: {
+          is_paid: true,
+          paid_at: state.paidAt,
+          payment_method: state.paymentMethod ?? undefined,
+          bank_id: state.paymentMethod === 'bank' ? state.bankId ?? undefined : undefined,
+          payment_registered_at: new Date().toISOString(),
+          payment_registered_by: user?.id ?? undefined,
+        },
+      })
+      onClose()
+    } catch {
+      toastError(t('common_errorGeneric'))
+    }
   }
 
   const handleDelete = async () => {
-    await deleteT.mutateAsync(editing!.id)
-    onClose()
+    try {
+      await deleteT.mutateAsync(editing!.id)
+      onClose()
+    } catch {
+      toastError(t('common_errorGeneric'))
+    }
   }
 
   // ── Global keyboard handler ──────────────────────────────────

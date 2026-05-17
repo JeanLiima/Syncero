@@ -63,9 +63,9 @@ export function CreateExternalCompanyModal({ open, onClose }: Props) {
     if (!name.trim()) { setError(t('external_errorName')); return }
     if (!user?.id) return
 
+    if (cnpj && !validateCnpj(cnpj)) { setCnpjError(t('common_cnpjInvalid')); return }
     setSubmitting(true)
     try {
-      if (cnpj && !validateCnpj(cnpj)) { setCnpjError(t('common_cnpjInvalid')); return }
       const rawCnpj = stripCnpj(cnpj)
       const company = await apiFetch<{ id: string }>('/api/external-companies', {
         method: 'POST',

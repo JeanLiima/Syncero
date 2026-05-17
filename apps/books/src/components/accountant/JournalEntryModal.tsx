@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
-import { Modal, Button, Input, Select, DatePicker } from '@syncero/ui'
+import { Modal, Button, Input, Select, DatePicker, useToast } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 import type { AccountPlan, JournalSide } from '@/types'
@@ -34,6 +34,7 @@ function parseBrAmount(raw: string): number {
 
 export function JournalEntryModal({ open, onClose, onSubmit, accounts }: JournalEntryModalProps) {
   const t = useT()
+  const { success } = useToast()
   const language = usePreferencesStore(s => s.language)
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
   const [description, setDescription] = useState('')
@@ -70,6 +71,7 @@ export function JournalEntryModal({ open, onClose, onSubmit, accounts }: Journal
         external_ref: externalRef.trim(),
         lines: lines.map(l => ({ account_plan_id: l.account_plan_id, side: l.side, amount: parseBrAmount(l.amount), memo: l.memo.trim() })),
       })
+      success(t('lancamentos_success'))
       setDate(new Date().toISOString().slice(0, 10))
       setDescription('')
       setExternalRef('')

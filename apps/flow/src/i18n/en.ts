@@ -431,6 +431,7 @@ export const en: Record<TranslationKey, string> = {
   export_cancel: 'Cancel',
   export_confirm: 'Export',
   export_limitNote: 'Exports up to {n} records with the current filters applied.',
+  export_success: 'File exported successfully.',
   export_fetchError: 'Error fetching transactions. Please try again.',
   export_col_date: 'Date',
   export_col_paidAt: 'Payment date',

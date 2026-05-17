@@ -430,6 +430,7 @@ export const pt = {
   export_cancel: 'Cancelar',
   export_confirm: 'Exportar',
   export_limitNote: 'Exporta até {n} registros com os filtros aplicados.',
+  export_success: 'Arquivo exportado com sucesso.',
   export_fetchError: 'Erro ao buscar lançamentos. Tente novamente.',
   export_col_date: 'Data',
   export_col_paidAt: 'Data de pagamento',

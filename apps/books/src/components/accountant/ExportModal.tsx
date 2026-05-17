@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Modal, Button, Checkbox } from '@syncero/ui'
+import { Modal, Button, Checkbox, useToast } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { usePreferencesStore } from '@/store/preferences'
 import { getTransactions } from '@/lib/backend'
@@ -26,6 +26,7 @@ interface Props {
 
 export function ExportModal({ open, onClose, filters, companyId, extCompanyId }: Props) {
   const t = useT()
+  const { success } = useToast()
   const { language } = usePreferencesStore()
 
   const allColumns = useMemo(() => buildColumns(t as (k: string) => string, language), [t, language])
@@ -75,6 +76,7 @@ export function ExportModal({ open, onClose, filters, companyId, extCompanyId }:
       if (format === 'xlsx') await exportXLSX(rows, activeCols, `${base}.xlsx`)
       if (format === 'pdf')  await exportPDF(rows,  activeCols, `${base}.pdf`, title)
 
+      success(t('export_success'))
       onClose()
     } catch {
       setError(t('export_fetchError'))

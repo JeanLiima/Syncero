@@ -90,6 +90,7 @@ export const en: Record<TranslationKey, string> = {
   pwa_subtitle: 'Quick access, notifications and offline use',
   pwa_install: 'Install',
   pwa_ios: 'Tap Share → Add to Home Screen',
+  pwa_close: 'Close',
 
   // Preferences
   preferences_title: 'Preferences',

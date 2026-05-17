@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Upload, FileText, TrendingDown, TrendingUp, AlertCircle } from 'lucide-react'
 import { format, parse, isValid } from 'date-fns'
 import { useQuery } from '@tanstack/react-query'
-import { Button, Modal, Select } from '@syncero/ui'
+import { AlertBox, Button, Modal, Select } from '@syncero/ui'
 import { apiFetch } from '@/lib/api'
 import { createExtTransaction } from '@/lib/backend'
 import { useT } from '@/i18n'
@@ -301,12 +301,9 @@ export function ImportModal({ open, onClose, extCompanyId, onNfePrefill, onOFXIm
           </div>
 
           {nfeParsed.type === null && (
-            <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg bg-[var(--warning)]/10 border border-[var(--warning)]/30">
-              <AlertCircle className="h-4 w-4 shrink-0 text-[var(--warning)] mt-0.5" />
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                {t('transactions_import_nfe_cnpj_warning')}
-              </p>
-            </div>
+            <AlertBox variant="warning">
+              {t('transactions_import_nfe_cnpj_warning')}
+            </AlertBox>
           )}
 
           <div className="flex items-center justify-between pt-2 border-t border-[var(--bg-border)]">

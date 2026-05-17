@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog, IconButton } from '@syncero/ui'
+import { AlertBox, Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog, IconButton } from '@syncero/ui'
 import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown, Info, Upload, FileKey2, CheckCircle2, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
@@ -184,10 +184,7 @@ function CompanyTab() {
               )}
             />
             {SEGMENTS_WITH_COST.has(watch('segment') ?? '') ? (
-              <div className="flex items-start gap-1.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2.5 py-2">
-                <Info className="h-3.5 w-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
-                <p className="text-xs text-[var(--text-secondary)]">{t('settings_segmentCostHint')}</p>
-              </div>
+              <AlertBox variant="info">{t('settings_segmentCostHint')}</AlertBox>
             ) : (
               <p className="text-xs text-[var(--text-muted)]">{t('settings_segmentHint')}</p>
             )}

@@ -12,10 +12,16 @@ export type TransactionNature =
   | 'debt_payment'
   | 'owner_withdrawal'
 export type PaymentMethod = 'cash' | 'bank'
+export type BankAccountType = 'checking' | 'savings'
 export type TaxRegime = 'simples' | 'lucro_presumido' | 'lucro_real'
-export type MemberRole = 'admin' | 'member' | 'viewer'
-export type MemberStatus = 'active' | 'invited' | 'inactive'
-export type AccountantStatus = 'pending' | 'accepted' | 'rejected'
+export type TaxType = 'IRPJ' | 'CSLL' | 'PIS' | 'COFINS' | 'ISS' | 'ICMS'
+export type CompanySegment =
+  | 'retail' | 'services' | 'manufacturing' | 'construction'
+  | 'agribusiness' | 'healthcare' | 'education' | 'technology'
+  | 'financial' | 'other'
+export type MemberRole = 'admin' | 'member' | 'viewer' | 'manager' | 'collaborator' | 'accountant_readonly'
+export type MemberStatus = 'pending' | 'accepted' | 'revoked'
+export type AccountantStatus = 'pending' | 'accepted' | 'revoked'
 export type PayableStatus = 'pending' | 'paid' | 'overdue' | 'cancelled'
 export type PayableType = 'payable' | 'receivable'
 export type FiscalDocType = 'nfe' | 'nfse' | 'cfe' | 'nfce' | 'cte'
@@ -86,7 +92,7 @@ export interface Bank {
   id: string
   company_id: string
   name: string
-  account_type: string
+  account_type: BankAccountType
   created_at: string
 }
 
@@ -193,7 +199,7 @@ export interface TaxCalculation {
   company_id: string | null
   ext_company_id: string | null
   period: string
-  tax_type: string
+  tax_type: TaxType
   base_amount: number
   rate: number
   tax_amount: number
@@ -213,11 +219,6 @@ export type EntrySource = 'manual' | 'api' | 'syncero_import'
 export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense' | 'cost'
 export type AccountNature = 'debit' | 'credit'
 export type JournalSide = 'debit' | 'credit'
-
-export type CompanySegment =
-  | 'retail' | 'services' | 'manufacturing' | 'construction'
-  | 'agribusiness' | 'healthcare' | 'education' | 'technology'
-  | 'financial' | 'other'
 
 export interface ExternalCompany {
   id: string

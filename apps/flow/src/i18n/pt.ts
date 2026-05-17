@@ -305,7 +305,7 @@ export const pt = {
   settings_noAccountants: 'Nenhum contador vinculado',
   settings_active: 'Ativo',
   settings_waiting: 'Aguardando',
-  settings_rejected: 'Rejeitado',
+  settings_revoked: 'Revogado',
   settings_invitedAt: 'Convidado em',
   settings_inviteError: 'Erro ao enviar o convite. Tente novamente.',
   settings_resend: 'Reenviar',

@@ -306,7 +306,7 @@ export const en: Record<TranslationKey, string> = {
   settings_noAccountants: 'No accountant linked',
   settings_active: 'Active',
   settings_waiting: 'Waiting',
-  settings_rejected: 'Rejected',
+  settings_revoked: 'Revoked',
   settings_invitedAt: 'Invited at',
   settings_inviteError: 'Failed to send the invite. Please try again.',
   settings_resend: 'Resend',

@@ -263,7 +263,7 @@ function MembersTab() {
   })
 
   const changeRole = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: string }) => updateMemberRole(id, role),
+    mutationFn: ({ id, role }: { id: string; role: MemberRole }) => updateMemberRole(id, role),
     onSuccess: () => { setEditRoleId(null); invalidate(); success(t('common_savedSuccess')) },
     onError: () => toastError(t('common_errorGeneric')),
   })
@@ -364,7 +364,7 @@ function MembersTab() {
               render: (r) =>
                 r.user_id === company?.owner_id ? null : (
                   <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'default'}>
-                    {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_rejected')}
+                    {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_revoked')}
                   </Badge>
                 ),
             },
@@ -566,7 +566,7 @@ function AccountantTab() {
               header: t('accountant_status'),
               render: (r) => (
                 <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'danger'}>
-                  {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_rejected')}
+                  {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_revoked')}
                 </Badge>
               ),
             },

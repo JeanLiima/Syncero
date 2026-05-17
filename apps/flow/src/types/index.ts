@@ -18,9 +18,10 @@ export type CompanySegment =
   | 'retail' | 'services' | 'manufacturing' | 'construction'
   | 'agribusiness' | 'healthcare' | 'education' | 'technology'
   | 'financial' | 'other'
-export type MemberRole = 'admin' | 'member' | 'viewer'
+export type MemberRole = 'admin' | 'member' | 'viewer' | 'manager' | 'collaborator' | 'accountant_readonly'
 export type MemberStatus = 'pending' | 'accepted' | 'revoked'
-export type AccountantStatus = 'pending' | 'accepted' | 'rejected'
+export type AccountantStatus = 'pending' | 'accepted' | 'revoked'
+export type TaxType = 'IRPJ' | 'CSLL' | 'PIS' | 'COFINS' | 'ISS' | 'ICMS'
 export type FiscalDocType = 'nfe' | 'nfse' | 'cfe' | 'nfce'
 export type FiscalDocStatus = 'authorized' | 'cancelled' | 'denied' | 'pending'
 export type FiscalBookType = 'sped_fiscal' | 'sped_contribuicoes' | 'ecf' | 'ecd'
@@ -183,7 +184,7 @@ export interface TaxCalculation {
   id: string
   company_id: string
   reference_period: string
-  tax_type: string
+  tax_type: TaxType
   base_value: number
   rate: number
   tax_value: number

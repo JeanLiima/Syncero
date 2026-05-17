@@ -29,7 +29,7 @@ export interface TransactionFormData {
   installment_count?: number | null
   installment_number?: number | null
   installment_group_id?: string | null
-  recurrence_type?: string | null
+  recurrence_type?: RecurrenceFrequency | null
 }
 
 export type RecurrenceFrequency = 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'semiannual' | 'annual'

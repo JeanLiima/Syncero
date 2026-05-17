@@ -1,5 +1,5 @@
 import { apiFetch } from './api'
-import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, Bank, Contact } from '@/types'
+import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, Bank, Contact, MemberRole } from '@/types'
 
 export interface SefazCredential {
   id: string
@@ -74,7 +74,7 @@ export async function resendMemberInvite(id: string) {
   return apiFetch(`/api/company-members/${id}/resend`, { method: 'POST', body: '{}' })
 }
 
-export async function updateMemberRole(id: string, role: string) {
+export async function updateMemberRole(id: string, role: MemberRole) {
   return apiFetch(`/api/company-members/${id}/role`, {
     method: 'PATCH',
     body: JSON.stringify({ role }),

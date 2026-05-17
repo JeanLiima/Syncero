@@ -142,7 +142,7 @@ export function Component() {
               header: t('accountant_status'),
               render: (r) => (
                 <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'danger'}>
-                  {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_rejected')}
+                  {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_revoked')}
                 </Badge>
               ),
             },

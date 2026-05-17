@@ -1,11 +1,15 @@
+import { sharedEn } from '@syncero/i18n'
 import type { TranslationKey } from './pt'
 
 export const en: Record<TranslationKey, string> = {
+  ...sharedEn,
+
   // Nav
   nav_dashboard: 'Dashboard',
   nav_transactions: 'Transactions',
   nav_cashFlow: 'Cash Flow',
-  nav_fiscalDocs: 'Fiscal Documents',  nav_settings: 'Settings',
+  nav_fiscalDocs: 'Fiscal Documents',
+  nav_settings: 'Settings',
   nav_preferences: 'Preferences',
   nav_signOut: 'Sign Out',
 
@@ -13,10 +17,8 @@ export const en: Record<TranslationKey, string> = {
   layout_activeCompany: 'Active company',
   layout_userFallback: 'User',
 
-  // Router
+  // Router (app-specific)
   router_books: 'Access Syncero Books',
-  router_signOut: 'Sign out',
-  router_accessing: 'Accessing...',
   router_title: 'Syncero Flow is for business',
   router_wrongApp: 'Your account does not have a business profile. If you are an accountant, please access Syncero Books.',
 
@@ -164,13 +166,9 @@ export const en: Record<TranslationKey, string> = {
   transactions_wizard_keyHintSave: '↵ save',
   transactions_wizard_keyHintPaymentPrompt: '↵ register · Esc close without registering',
   transactions_wizard_keyHintPaymentForm: '↵ confirm',
-
-  // Wizard step 1 — Entry / Exit
   transactions_wizard_entrada: 'Entry',
   transactions_wizard_saida: 'Exit',
   transactions_wizard_step1Label: 'Is this transaction an entry or an exit?',
-
-  // Wizard step 2 — Accounting nature
   transactions_wizard_step2Label: 'What is the nature of this operation?',
   transactions_nature_common: 'most common',
   transactions_nature_sale_service: 'Sale or service',
@@ -189,13 +187,9 @@ export const en: Record<TranslationKey, string> = {
   transactions_nature_debt_payment_desc: 'Repayment of loan or financing',
   transactions_nature_owner_withdrawal: 'Owner withdrawal',
   transactions_nature_owner_withdrawal_desc: 'Pro-labore, dividends or withdrawal',
-
-  // Income-specific status labels
   transactions_received: 'Received',
   transactions_toReceive: 'To receive',
   transactions_markAsReceived: 'Mark as received',
-
-  // Income-specific payment labels
   transactions_payment_registerIncome: 'Register receipt',
   transactions_payment_formTitleIncome: 'Register receipt',
   transactions_payment_confirmIncome: 'Confirm receipt',
@@ -204,7 +198,6 @@ export const en: Record<TranslationKey, string> = {
   transactions_detail_histReceivedAt: 'Date received',
   transactions_detail_histRegisteredIncome: 'Receipt registered',
   transactions_paymentReceivedToast: 'Receipt registered',
-
   transactions_installmentCount: 'Number of installments',
   transactions_createFutureInstallments: 'Auto-create future installment records',
 
@@ -268,20 +261,6 @@ export const en: Record<TranslationKey, string> = {
   settings_segment: 'Segment',
   settings_segmentHint: 'The company segment may enable additional options in transactions.',
   settings_segmentCostHint: 'With this segment, the "Product/service cost" nature will be available in transactions.',
-  settings_simplesNacional: 'Simples Nacional',
-  settings_lucroPresumido: 'Lucro Presumido',
-  settings_lucroReal: 'Lucro Real',
-  settings_segmentUndefined: '— Not set —',
-  settings_segmentComercio: 'Retail / Commerce',
-  settings_segmentServicos: 'Services',
-  settings_segmentIndustria: 'Manufacturing',
-  settings_segmentConstrucao: 'Construction',
-  settings_segmentAgronegocio: 'Agribusiness',
-  settings_segmentSaude: 'Healthcare',
-  settings_segmentEducacao: 'Education',
-  settings_segmentTecnologia: 'Technology',
-  settings_segmentFinanceiro: 'Financial',
-  settings_segmentOutros: 'Other',
   settings_save: 'Save changes',
   settings_inviteMember: 'Invite member',
   settings_inviteAccountant: 'Invite accountant',
@@ -310,7 +289,6 @@ export const en: Record<TranslationKey, string> = {
   settings_invitedAt: 'Invited at',
   settings_inviteError: 'Failed to send the invite. Please try again.',
   settings_resend: 'Resend',
-  settings_cancel: 'Cancel',
   settings_unlink: 'Unlink',
   settings_unlinkTitle: 'Unlink accountant',
   settings_unlinkMessage: 'By unlinking, the accountant will immediately lose access to this company and data will no longer be synced. Do you want to continue?',
@@ -356,96 +334,19 @@ export const en: Record<TranslationKey, string> = {
   noCompany_submit: 'Create company',
   noCompany_success: 'Company created successfully!',
 
-  // Preferences
-  preferences_title: 'Preferences',
-  preferences_language: 'Language',
-  preferences_languageHint: 'Choose the interface language',
-
   // Accountant management
   accountant_status: 'Status',
 
-  // Login
+  // Login (app-specific)
   login_title: 'Welcome to Syncero Flow',
   login_subtitle: 'Business financial control',
-  login_google: 'Sign in with Google',
-  login_error: 'Could not connect with Google. Please try again.',
-  login_terms: 'By signing in, you agree to the terms of use.',
-  login_tabSignIn: 'Sign in',
-  login_tabSignUp: 'Create account',
-  login_email: 'Email',
-  login_emailPlaceholder: 'you@email.com',
-  login_password: 'Password',
-  login_passwordPlaceholder: 'Minimum 6 characters',
-  login_passwordConfirm: 'Confirm password',
-  login_passwordMismatch: 'Passwords do not match.',
-  login_passwordTooShort: 'Password must be at least 6 characters.',
-  login_signIn: 'Sign in',
-  login_signUp: 'Create account',
-  login_forgotPassword: 'Forgot password?',
-  login_sendReset: 'Send reset link',
-  login_resetSent: 'Check your email to reset your password.',
-  login_backToLogin: 'Back to login',
-  login_or: 'or',
-  login_emailError: 'Incorrect email or password. Please try again.',
-  login_emailSignUpError: 'Could not create account. Please try again.',
-  login_confirmTitle: 'Check your email',
-  login_confirmSent: 'We sent a confirmation link to',
-  login_confirmAction: 'Click the link to activate your account.',
 
-  // Onboarding
-  onboarding_loading: 'Setting up your account...',
-
-  // Accept Invite
-  invite_verifying: 'Verifying invite…',
-  invite_received: 'Invite received',
+  // Invite (Flow-specific)
   invite_asMember: 'join',
   invite_company: 'from company',
-  invite_loginRequired: 'You need to be logged in to accept the invite.',
-  invite_accept: 'Accept invite',
-  invite_loginToAccept: 'Log in to accept',
-  invite_invalid: 'Invalid invite',
-  invite_gotoHome: 'Go to home',
-  invite_success: 'Invite accepted!',
-  invite_accessGranted: 'You now have access to',
-  invite_gotoDashboard: 'Go to dashboard',
-  invite_errorInvalid: 'Invalid invite token.',
-  invite_errorNotFound: 'Invite not found.',
-  invite_errorExpired: 'This invite has already been used or has expired.',
-  invite_errorVerify: 'Error verifying invite.',
-  invite_errorAccept: 'Error accepting invite. Please try again.',
 
-  // PWA Banner
+  // PWA (app-specific)
   pwa_title: 'Install Syncero Flow',
-  pwa_subtitle: 'Quick access, notifications and offline use',
-  pwa_install: 'Install',
-  pwa_ios: 'Tap Share → Add to Home Screen',
-  pwa_close: 'Close',
-
-  // Export
-  export_title: 'Export Transactions',
-  export_button: 'Export',
-  export_format: 'Format',
-  export_columns: 'Columns',
-  export_selectAll: 'Select all',
-  export_deselectAll: 'Deselect all',
-  export_cancel: 'Cancel',
-  export_confirm: 'Export',
-  export_limitNote: 'Exports up to {n} records with the current filters applied.',
-  export_success: 'File exported successfully.',
-  export_fetchError: 'Error fetching transactions. Please try again.',
-  export_col_date: 'Date',
-  export_col_paidAt: 'Payment date',
-  export_col_description: 'Description',
-  export_col_type: 'Type',
-  export_col_amount: 'Amount',
-  export_col_status: 'Status',
-  export_col_category: 'Category',
-  export_col_contact: 'Contact',
-  export_col_nature: 'Nature',
-  export_col_paymentMethod: 'Payment method',
-  export_col_bank: 'Bank account',
-  export_col_installment: 'Installment',
-  export_col_notes: 'Notes',
 
   // Import
   transactions_import: 'Import',
@@ -475,11 +376,7 @@ export const en: Record<TranslationKey, string> = {
   transactions_wizard_contact_or_select: 'or select another contact',
   transactions_import_error_parse: 'Could not read the file. Make sure it is a valid NFe XML or OFX file.',
 
-  // Settings — Integrations
-  settings_integrations: 'Integrations',
-  settings_certificates: 'Certificates',
-
-  // Integrations page
+  // Integrations
   integrations_sefaz_name: 'SEFAZ DF-e',
   integrations_sefaz_desc: 'Automatic sync of NF-e, NFS-e and CT-e directly from SEFAZ.',
   integrations_sefaz_noCert: 'No digital certificate configured.',
@@ -487,7 +384,7 @@ export const en: Record<TranslationKey, string> = {
   integrations_enabled: 'Enabled',
   integrations_disabled: 'Disabled',
 
-  // SEFAZ Integration
+  // SEFAZ
   sefaz_title: 'SEFAZ Integration',
   sefaz_certSection: 'Digital Certificate (A1)',
   sefaz_noCertTitle: 'No certificate configured',
@@ -536,12 +433,9 @@ export const en: Record<TranslationKey, string> = {
   fiscalDocs_denied: 'Denied',
   fiscalDocs_createTransaction: 'Create transaction',
 
-  // Common
-  common_cnpjInvalid: 'Invalid CNPJ',
+  // Common (Flow-specific)
   common_select: 'Select',
   common_savedSuccess: 'Saved successfully',
-  common_deletedSuccess: 'Deleted successfully',
-  common_errorGeneric: 'Something went wrong. Please try again.',
   common_inviteSent: 'Invite sent!',
   transactions_paymentRegistered: 'Payment registered',
 }

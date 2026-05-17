@@ -203,7 +203,7 @@ export function Component() {
           </div>
           {save.isError && (
             <p className="text-xs text-[var(--danger)]">
-              {(save.error as Error)?.message ?? t('categories_saveError')}
+              {t('categories_saveError')}
             </p>
           )}
           <div className="flex justify-end gap-2 pt-1">
@@ -246,7 +246,7 @@ export function Component() {
             )}
             {remove.isError && (
               <p className="text-xs text-[var(--danger)]">
-                {(remove.error as Error)?.message ?? t('categories_deleteError')}
+                {t('categories_deleteError')}
               </p>
             )}
             <div className="flex justify-end gap-2">

@@ -224,7 +224,7 @@ export function Component() {
 
           {save.isError && (
             <p className="text-xs text-[var(--danger)]">
-              {(save.error as Error)?.message ?? t('common_errorGeneric')}
+              {t('common_errorGeneric')}
             </p>
           )}
 

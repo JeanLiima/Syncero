@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Input, Modal, Table, Badge, Avatar, ConfirmDialog, useToast, IconButton } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { usePreferencesStore } from '@/store/preferences'
-import { useT } from '@/i18n'
+import { useT, apiError } from '@/i18n'
 import { getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite } from '@/lib/backend'
 import type { AccountantCompany } from '@/types'
 
@@ -90,7 +90,7 @@ export function Component() {
           />
           {invite.isError && (
             <p className="text-xs text-[var(--danger)]">
-              {(invite.error as Error)?.message ?? t('settings_inviteError')}
+              {apiError(invite.error, t, 'settings_inviteError')}
             </p>
           )}
           <div className="flex justify-end gap-2">

@@ -115,10 +115,10 @@ router.post('/', async (c) => {
 
   if (existing) {
     if (existing.status === 'accepted') {
-      return c.json({ error: 'This company already has an accountant.' }, 409)
+      return c.json({ error: 'accountant_already_linked' }, 409)
     }
     if (existing.status === 'pending') {
-      return c.json({ error: 'An invite is already pending for this company.' }, 409)
+      return c.json({ error: 'accountant_invite_pending' }, 409)
     }
   }
 

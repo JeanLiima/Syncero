@@ -11,7 +11,7 @@ import { ptBR, enUS } from 'date-fns/locale'
 import { useAuthStore } from '@/store/auth'
 import { SEGMENTS_WITH_COST } from '@/lib/segments'
 import { usePreferencesStore } from '@/store/preferences'
-import { useT } from '@/i18n'
+import { useT, apiError } from '@/i18n'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite, getSefazCredential, saveSefazCredential, deleteSefazCredential, triggerSefazSync, type SefazCredential } from '@/lib/backend'
 import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import type { MemberRole, AccountantCompany, TaxRegime } from '@/types'
@@ -431,7 +431,7 @@ function MembersTab() {
         <div className="flex flex-col gap-4">
           <Input label={t('settings_email')} placeholder="email@exemplo.com" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} autoFocus />
           <Select label={t('settings_role')} options={roleOptions} value={inviteRole} onChange={(v) => setInviteRole(v as MemberRole)} />
-          {invite.isError && <p className="text-xs text-[var(--danger)]">{(invite.error as Error)?.message ?? t('settings_inviteError')}</p>}
+          {invite.isError && <p className="text-xs text-[var(--danger)]">{apiError(invite.error, t, 'settings_inviteError')}</p>}
         </div>
         <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
           <Button variant="ghost" size="sm" onClick={() => { setInviteOpen(false); setInviteEmail('') }}>{t('settings_cancel')}</Button>
@@ -617,7 +617,7 @@ function AccountantTab() {
       <Modal open={modalOpen} onClose={() => { setModalOpen(false); setInviteEmail('') }} title={t('settings_inviteAccountant')} size="sm">
         <div className="flex flex-col gap-4">
           <Input label="Email" placeholder="contador@escritorio.com" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} autoFocus />
-          {invite.isError && <p className="text-xs text-[var(--danger)]">{(invite.error as Error)?.message ?? t('settings_inviteError')}</p>}
+          {invite.isError && <p className="text-xs text-[var(--danger)]">{apiError(invite.error, t, 'settings_inviteError')}</p>}
         </div>
         <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
           <Button variant="ghost" size="sm" onClick={() => { setModalOpen(false); setInviteEmail('') }}>{t('settings_cancel')}</Button>

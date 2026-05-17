@@ -66,8 +66,8 @@ router.post('/', async (c) => {
 
   if (existing) {
     const msg = existing.status === 'accepted'
-      ? 'Este usuário já é membro da empresa.'
-      : 'Já existe um convite pendente para este e-mail.'
+      ? 'member_already_exists'
+      : 'invite_pending_for_email'
     return c.json({ error: msg }, 409)
   }
 
@@ -133,7 +133,7 @@ router.patch('/:id/role', async (c) => {
         .eq('company_id', row.data.company_id)
         .eq('role', 'admin')
         .eq('status', 'accepted')
-      if ((count ?? 0) <= 1) return c.json({ error: 'Cannot demote the last admin of a company' }, 400)
+      if ((count ?? 0) <= 1) return c.json({ error: 'last_admin_demotion' }, 400)
     }
   }
 

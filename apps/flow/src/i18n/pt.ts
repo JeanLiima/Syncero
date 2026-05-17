@@ -1,4 +1,8 @@
+import { sharedPt } from '@syncero/i18n'
+
 export const pt = {
+  ...sharedPt,
+
   // Nav
   nav_dashboard: 'Dashboard',
   nav_transactions: 'Lançamentos',
@@ -14,8 +18,6 @@ export const pt = {
 
   // Router
   router_books: 'Acessar Syncero Books',
-  router_signOut: 'Sair',
-  router_accessing: 'Acessando...',
   router_title: 'Syncero Flow é para empresas',
   router_wrongApp: 'Sua conta não possui perfil de empresa. Se você é contador, acesse o Syncero Books.',
 
@@ -32,7 +34,7 @@ export const pt = {
   dashboard_cashFlowChart: 'Receitas e despesas',
   dashboard_fab: 'Novo lançamento',
 
-  // Transactions (Lançamentos)
+  // Transactions
   transactions_title: 'Lançamentos',
   transactions_empty: 'Nenhum lançamento encontrado',
   transactions_searchPlaceholder: 'Buscar por descrição…',
@@ -163,13 +165,9 @@ export const pt = {
   transactions_wizard_keyHintSave: '↵ salvar',
   transactions_wizard_keyHintPaymentPrompt: '↵ registrar · Esc fechar sem registrar',
   transactions_wizard_keyHintPaymentForm: '↵ confirmar',
-
-  // Wizard step 1 — Entrada / Saída
   transactions_wizard_entrada: 'Entrada',
   transactions_wizard_saida: 'Saída',
   transactions_wizard_step1Label: 'O lançamento é uma entrada ou saída?',
-
-  // Wizard step 2 — Natureza contábil
   transactions_wizard_step2Label: 'Qual a natureza da operação?',
   transactions_nature_common: 'mais comum',
   transactions_nature_sale_service: 'Venda ou serviço',
@@ -188,13 +186,9 @@ export const pt = {
   transactions_nature_debt_payment_desc: 'Quitação de empréstimo ou financiamento',
   transactions_nature_owner_withdrawal: 'Retirada de sócio',
   transactions_nature_owner_withdrawal_desc: 'Pró-labore, dividendos ou retirada',
-
-  // Income-specific status labels
   transactions_received: 'Recebido',
   transactions_toReceive: 'A receber',
   transactions_markAsReceived: 'Marcar como recebido',
-
-  // Income-specific payment labels
   transactions_payment_registerIncome: 'Registrar recebimento',
   transactions_payment_formTitleIncome: 'Registrar recebimento',
   transactions_payment_confirmIncome: 'Confirmar recebimento',
@@ -203,7 +197,6 @@ export const pt = {
   transactions_detail_histReceivedAt: 'Data de recebimento',
   transactions_detail_histRegisteredIncome: 'Recebimento registrado',
   transactions_paymentReceivedToast: 'Recebimento registrado',
-
   transactions_installmentCount: 'Número de parcelas',
   transactions_createFutureInstallments: 'Criar lançamentos futuros automaticamente',
 
@@ -267,20 +260,6 @@ export const pt = {
   settings_segment: 'Segmento',
   settings_segmentHint: 'O segmento da empresa pode habilitar opções adicionais nos lançamentos.',
   settings_segmentCostHint: 'Com este segmento, a natureza "Custo de produto/serviço" ficará disponível nos lançamentos.',
-  settings_simplesNacional: 'Simples Nacional',
-  settings_lucroPresumido: 'Lucro Presumido',
-  settings_lucroReal: 'Lucro Real',
-  settings_segmentUndefined: '— Não definido —',
-  settings_segmentComercio: 'Comércio',
-  settings_segmentServicos: 'Serviços',
-  settings_segmentIndustria: 'Indústria',
-  settings_segmentConstrucao: 'Construção Civil',
-  settings_segmentAgronegocio: 'Agronegócio',
-  settings_segmentSaude: 'Saúde',
-  settings_segmentEducacao: 'Educação',
-  settings_segmentTecnologia: 'Tecnologia',
-  settings_segmentFinanceiro: 'Financeiro',
-  settings_segmentOutros: 'Outros',
   settings_save: 'Salvar alterações',
   settings_inviteMember: 'Convidar membro',
   settings_inviteAccountant: 'Convidar contador',
@@ -309,7 +288,6 @@ export const pt = {
   settings_invitedAt: 'Convidado em',
   settings_inviteError: 'Erro ao enviar o convite. Tente novamente.',
   settings_resend: 'Reenviar',
-  settings_cancel: 'Cancelar',
   settings_unlink: 'Desvincular',
   settings_unlinkTitle: 'Desvincular contador',
   settings_unlinkMessage: 'Ao desvincular, o contador perderá acesso imediato à empresa e os dados deixarão de ser sincronizados. Deseja continuar?',
@@ -355,96 +333,19 @@ export const pt = {
   noCompany_submit: 'Criar empresa',
   noCompany_success: 'Empresa criada com sucesso!',
 
-  // Preferences
-  preferences_title: 'Preferências',
-  preferences_language: 'Idioma',
-  preferences_languageHint: 'Escolha o idioma da interface',
-
-  // Accountant management (company user inviting accountants)
+  // Accountant management
   accountant_status: 'Status',
 
-  // Login
+  // Login (app-specific)
   login_title: 'Bem-vindo ao Syncero Flow',
   login_subtitle: 'Controle financeiro empresarial',
-  login_google: 'Entrar com Google',
-  login_error: 'Não foi possível conectar com o Google. Tente novamente.',
-  login_terms: 'Ao entrar, você concorda com os termos de uso.',
-  login_tabSignIn: 'Entrar',
-  login_tabSignUp: 'Criar conta',
-  login_email: 'E-mail',
-  login_emailPlaceholder: 'seu@email.com',
-  login_password: 'Senha',
-  login_passwordPlaceholder: 'Mínimo 6 caracteres',
-  login_passwordConfirm: 'Confirmar senha',
-  login_passwordMismatch: 'As senhas não coincidem.',
-  login_passwordTooShort: 'A senha deve ter pelo menos 6 caracteres.',
-  login_signIn: 'Entrar',
-  login_signUp: 'Criar conta',
-  login_forgotPassword: 'Esqueceu a senha?',
-  login_sendReset: 'Enviar link de redefinição',
-  login_resetSent: 'Verifique seu e-mail para redefinir a senha.',
-  login_backToLogin: 'Voltar ao login',
-  login_or: 'ou',
-  login_emailError: 'E-mail ou senha incorretos. Tente novamente.',
-  login_emailSignUpError: 'Não foi possível criar a conta. Tente novamente.',
-  login_confirmTitle: 'Verifique seu e-mail',
-  login_confirmSent: 'Enviamos um link de confirmação para',
-  login_confirmAction: 'Clique no link para ativar sua conta.',
 
-  // Onboarding
-  onboarding_loading: 'Configurando sua conta...',
-
-  // Accept Invite
-  invite_verifying: 'Verificando convite…',
-  invite_received: 'Convite recebido',
+  // Invite (Flow-specific)
   invite_asMember: 'participar',
   invite_company: 'da empresa',
-  invite_loginRequired: 'Você precisa estar logado para aceitar o convite.',
-  invite_accept: 'Aceitar convite',
-  invite_loginToAccept: 'Fazer login para aceitar',
-  invite_invalid: 'Convite inválido',
-  invite_gotoHome: 'Ir para o início',
-  invite_success: 'Convite aceito!',
-  invite_accessGranted: 'Você agora tem acesso à empresa',
-  invite_gotoDashboard: 'Acessar painel',
-  invite_errorInvalid: 'Token de convite inválido.',
-  invite_errorNotFound: 'Convite não encontrado.',
-  invite_errorExpired: 'Este convite já foi utilizado ou expirou.',
-  invite_errorVerify: 'Erro ao verificar convite.',
-  invite_errorAccept: 'Erro ao aceitar convite. Tente novamente.',
 
-  // PWA Banner
+  // PWA (app-specific title)
   pwa_title: 'Instale o Syncero Flow',
-  pwa_subtitle: 'Acesso rápido, notificações e uso offline',
-  pwa_install: 'Instalar',
-  pwa_ios: 'Toque em Compartilhar → Tela de Início',
-  pwa_close: 'Fechar',
-
-  // Export
-  export_title: 'Exportar Lançamentos',
-  export_button: 'Exportar',
-  export_format: 'Formato',
-  export_columns: 'Colunas',
-  export_selectAll: 'Selecionar tudo',
-  export_deselectAll: 'Desmarcar tudo',
-  export_cancel: 'Cancelar',
-  export_confirm: 'Exportar',
-  export_limitNote: 'Exporta até {n} registros com os filtros aplicados.',
-  export_success: 'Arquivo exportado com sucesso.',
-  export_fetchError: 'Erro ao buscar lançamentos. Tente novamente.',
-  export_col_date: 'Data',
-  export_col_paidAt: 'Data de pagamento',
-  export_col_description: 'Descrição',
-  export_col_type: 'Tipo',
-  export_col_amount: 'Valor',
-  export_col_status: 'Status',
-  export_col_category: 'Categoria',
-  export_col_contact: 'Contato',
-  export_col_nature: 'Natureza',
-  export_col_paymentMethod: 'Forma de pagamento',
-  export_col_bank: 'Conta bancária',
-  export_col_installment: 'Parcela',
-  export_col_notes: 'Observações',
 
   // Import
   transactions_import: 'Importar',
@@ -474,11 +375,7 @@ export const pt = {
   transactions_wizard_contact_or_select: 'ou selecionar outro contato',
   transactions_import_error_parse: 'Não foi possível ler o arquivo. Verifique se é um XML de NFe ou OFX válido.',
 
-  // Settings — Integrations
-  settings_integrations: 'Integrações',
-  settings_certificates: 'Certificados',
-
-  // Integrations page
+  // Integrations
   integrations_sefaz_name: 'SEFAZ DF-e',
   integrations_sefaz_desc: 'Sincronização automática de NF-e, NFS-e e CT-e diretamente do SEFAZ.',
   integrations_sefaz_noCert: 'Nenhum certificado digital configurado.',
@@ -486,7 +383,7 @@ export const pt = {
   integrations_enabled: 'Habilitado',
   integrations_disabled: 'Desabilitado',
 
-  // SEFAZ Integration
+  // SEFAZ
   sefaz_title: 'Integração SEFAZ',
   sefaz_certSection: 'Certificado Digital (A1)',
   sefaz_noCertTitle: 'Nenhum certificado configurado',
@@ -535,12 +432,9 @@ export const pt = {
   fiscalDocs_denied: 'Denegada',
   fiscalDocs_createTransaction: 'Criar lançamento',
 
-  // Common
-  common_cnpjInvalid: 'CNPJ inválido',
+  // Common (Flow-specific)
   common_select: 'Selecionar',
   common_savedSuccess: 'Salvo com sucesso',
-  common_deletedSuccess: 'Excluído com sucesso',
-  common_errorGeneric: 'Algo deu errado. Tente novamente.',
   common_inviteSent: 'Convite enviado!',
   transactions_paymentRegistered: 'Pagamento registrado',
 } as const

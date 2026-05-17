@@ -1,4 +1,6 @@
-import type { TransactionNature, TransactionType } from '@/types'
+import type { TransactionNature, TransactionType, RecurrenceFrequency } from '@/types'
+
+export type { RecurrenceFrequency }
 
 export interface TransactionFilters {
   type?: TransactionType
@@ -31,5 +33,3 @@ export interface TransactionFormData {
   installment_group_id?: string | null
   recurrence_type?: RecurrenceFrequency | null
 }
-
-export type RecurrenceFrequency = 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'semiannual' | 'annual'

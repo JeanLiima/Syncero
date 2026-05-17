@@ -1,35 +1,42 @@
-// ── Enums ────────────────────────────────────────────────────
+// ── Shared enum types (single source of truth) ───────────────
+export type {
+  UserType,
+  TaxRegime,
+  CompanySegment,
+  MemberRole,
+  MemberStatus,
+  AccountantStatus,
+  TransactionType,
+  TransactionNature,
+  PaymentMethod,
+  RecurrenceFrequency,
+  BankAccountType,
+  TaxType,
+  FiscalDocType,
+  FiscalDocStatus,
+  FiscalBookType,
+  FiscalBookStatus,
+  EntrySource,
+  AccountType,
+  AccountNature,
+  JournalSide,
+} from '@syncero/types'
 
-export type UserType = 'company_user' | 'accountant'
-export type TransactionType = 'income' | 'expense'
-export type TransactionNature =
-  | 'sale_service'
-  | 'loan_received'
-  | 'capital_contribution'
-  | 'operational_expense'
-  | 'product_cost'
-  | 'asset_purchase'
-  | 'debt_payment'
-  | 'owner_withdrawal'
-export type PaymentMethod = 'cash' | 'bank'
-export type BankAccountType = 'checking' | 'savings'
-export type TaxRegime = 'simples' | 'lucro_presumido' | 'lucro_real'
-export type TaxType = 'IRPJ' | 'CSLL' | 'PIS' | 'COFINS' | 'ISS' | 'ICMS'
-export type CompanySegment =
-  | 'retail' | 'services' | 'manufacturing' | 'construction'
-  | 'agribusiness' | 'healthcare' | 'education' | 'technology'
-  | 'financial' | 'other'
-export type MemberRole = 'admin' | 'member' | 'viewer' | 'manager' | 'collaborator' | 'accountant_readonly'
-export type MemberStatus = 'pending' | 'accepted' | 'revoked'
-export type AccountantStatus = 'pending' | 'accepted' | 'revoked'
+// ── Books-specific interfaces ─────────────────────────────────
+
+import type {
+  UserType, TaxRegime, CompanySegment, MemberRole, MemberStatus,
+  AccountantStatus, TransactionType, TransactionNature, PaymentMethod,
+  BankAccountType, TaxType, FiscalDocType,
+  FiscalBookType, FiscalBookStatus,
+  EntrySource, AccountType, AccountNature, JournalSide,
+} from '@syncero/types'
+
+// ── Books-only enum types ──────────────────────────────────────
 export type PayableStatus = 'pending' | 'paid' | 'overdue' | 'cancelled'
 export type PayableType = 'payable' | 'receivable'
-export type FiscalDocType = 'nfe' | 'nfse' | 'cfe' | 'nfce' | 'cte'
-export type FiscalDocStatus = 'authorized' | 'cancelled' | 'denied' | 'pending'
-export type FiscalBookType = 'sped_fiscal' | 'sped_contribuicoes' | 'ecf' | 'ecd'
-export type FiscalBookStatus = 'draft' | 'validated' | 'transmitted'
 
-// ── Core entities ─────────────────────────────────────────────
+// ── Core entities ──────────────────────────────────────────────
 
 export interface Profile {
   id: string
@@ -213,12 +220,7 @@ export interface TaxCalculation {
   updated_at: string
 }
 
-// ── External companies & accounting ──────────────────────────
-
-export type EntrySource = 'manual' | 'api' | 'syncero_import'
-export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense' | 'cost'
-export type AccountNature = 'debit' | 'credit'
-export type JournalSide = 'debit' | 'credit'
+// ── External companies & accounting ───────────────────────────
 
 export interface ExternalCompany {
   id: string

@@ -1,37 +1,12 @@
 import { useState } from 'react'
 import { Pencil, Trash2, Plus, Search } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Input, Modal, Select, Table, Badge, useToast, IconButton } from '@syncero/ui'
+import { Button, Card, ColorPicker, COLORS, Input, Modal, Select, Table, Badge, useToast, IconButton } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
 import { getCategories, getCategoryUsage, createCategory, updateCategory, deleteCategory } from '@/lib/backend'
 import type { Category, TransactionType } from '@/types'
 
-const COLORS = [
-  '#10b981', '#3b82f6', '#f43f5e', '#f59e0b',
-  '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6',
-  '#ef4444', '#fb923c', '#94a3b8', '#a78bfa',
-]
-
-function ColorPicker({ value, onChange }: { value: string | null; onChange: (c: string) => void }) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {COLORS.map((c) => (
-        <button
-          key={c}
-          type="button"
-          onClick={() => onChange(c)}
-          className="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 cursor-pointer"
-          style={{
-            backgroundColor: c,
-            borderColor: value === c ? 'white' : 'transparent',
-            boxShadow: value === c ? `0 0 0 2px ${c}` : undefined,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
 
 type CategoryForm = { name: string; type: TransactionType; color: string }
 type EditModal = { editing: Category | null; form: CategoryForm }

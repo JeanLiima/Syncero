@@ -116,6 +116,47 @@ flow/books → lê hash manualmente → supabase.auth.setSession()
 - Fonte de verdade das chaves: `pt.ts` — adicione a chave lá primeiro, depois em `en.ts`
 - Ao remover texto da UI: remover a chave de ambos `pt.ts` e `en.ts`
 
+### Traduções compartilhadas → `@syncero/i18n` (OBRIGATÓRIO)
+
+Chaves que existem com o mesmo valor em Flow **e** Books pertencem ao pacote compartilhado.
+
+**Onde fica:** `packages/i18n/src/pt.ts` e `packages/i18n/src/en.ts`  
+**Como usar:** Cada app faz `...sharedPt` / `...sharedEn` no início do seu dicionário.  
+**Nunca** duplique uma chave igual nos dois apps — adicione ao pacote e remova das cópias.
+
+> Execute `/check-i18n` para detectar duplicatas candidatas ao pacote compartilhado.
+
+### Erros do backend → traduzir via `api_error_*` (OBRIGATÓRIO)
+
+Rotas backend **nunca** retornam mensagens em linguagem natural. Retornam **códigos** `lowercase_underscore`:
+
+```ts
+// ✓ correto
+return c.json({ error: 'accountant_already_linked' }, 409)
+
+// ✗ errado — mensagem hardcoded em inglês ou português
+return c.json({ error: 'This company already has an accountant.' }, 409)
+return c.json({ error: 'Esta empresa já possui um contador.' }, 409)
+```
+
+**Para cada código de erro** que pode aparecer na UI, adicionar a chave correspondente em `packages/i18n/src/pt.ts` e `packages/i18n/src/en.ts`:
+
+```ts
+api_error_accountant_already_linked: 'Esta empresa já possui um contador vinculado.',
+```
+
+**No frontend**, usar o helper `apiError()` de `@/i18n` em vez de exibir `error.message` direto:
+
+```tsx
+// ✓ correto — traduz o código, usa fallback se não reconhecido
+{apiError(invite.error, t, 'settings_inviteError')}
+
+// ✗ errado — exibe mensagem em inglês do backend
+{(invite.error as Error)?.message ?? t('settings_inviteError')}
+```
+
+> Execute `/check-i18n` para detectar erros do backend sem tradução correspondente.
+
 ### Docs — `apps/docs/*.html`
 - Cada HTML tem um objeto `T = { pt: {...}, en: {...} }` inline
 - Ao adicionar texto: criar a chave em `T.pt` e `T.en`

@@ -13,7 +13,7 @@ router.get('/', async (c) => {
     .eq('accountant_id', userId)
     .eq('status', 'accepted')
     .order('accepted_at', { ascending: false })
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data ?? [])
 })
 

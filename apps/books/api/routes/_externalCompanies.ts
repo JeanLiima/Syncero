@@ -14,7 +14,7 @@ router.get('/', async (c) => {
     .eq('accountant_id', userId)
     .eq('is_active', true)
     .order('created_at', { ascending: false })
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data ?? [])
 })
 
@@ -28,7 +28,7 @@ router.post('/', async (c) => {
     notes?: string | null; seed_plan?: boolean
   }>()
 
-  if (!body.name?.trim()) return c.json({ error: 'Nome é obrigatório' }, 400)
+  if (!body.name?.trim()) return c.json({ error: 'name_required' }, 400)
 
   const { data: company, error: insertErr } = await db.from('external_companies')
     .insert({
@@ -43,7 +43,7 @@ router.post('/', async (c) => {
     })
     .select('id')
     .single()
-  if (insertErr) return c.json({ error: insertErr.message }, 400)
+  if (insertErr) return c.json({ error: 'internal_error' }, 500)
 
   if (body.seed_plan && company) {
     const codeToId = new Map<string, string>()
@@ -102,11 +102,11 @@ router.patch('/:id', async (c) => {
   if (body.segment     !== undefined) updates.segment     = body.segment
   if (body.iss_rate    !== undefined) updates.iss_rate    = body.iss_rate
 
-  if (Object.keys(updates).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+  if (Object.keys(updates).length === 0) return c.json({ error: 'no_changes' }, 400)
 
   const { data, error } = await db.from('external_companies')
     .update(updates).eq('id', id).select('*').single()
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 

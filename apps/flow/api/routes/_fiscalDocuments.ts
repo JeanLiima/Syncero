@@ -1,24 +1,14 @@
 import { Hono } from 'hono'
-import { createServiceClient, type HonoVariables } from '../_shared'
+import { createServiceClient, ensureCompanyMember, type HonoVariables } from '../_shared'
 
 const router = new Hono<{ Variables: HonoVariables }>()
-
-async function ensureCompanyMember(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string) {
-  const { data } = await db.from('company_members')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('company_id', companyId)
-    .eq('status', 'accepted')
-    .maybeSingle()
-  return data
-}
 
 // GET /api/fiscal-documents?company_id=...&direction=...&status=...&pending=true&date_from=...&date_to=...&page=1&page_size=20
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const companyId = c.req.query('company_id')
-  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
+  if (!companyId) return c.json({ error: 'company_id_required' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -47,7 +37,7 @@ router.get('/', async (c) => {
   query = query.range((page - 1) * pageSize, page * pageSize - 1)
 
   const { data, error, count } = await query
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ data, count })
 })
 
@@ -58,13 +48,13 @@ router.patch('/:id', async (c) => {
   const docId = c.req.param('id')
 
   const { data: doc } = await db.from('fiscal_documents').select('company_id').eq('id', docId).maybeSingle()
-  if (!doc) return c.json({ error: 'not found' }, 404)
+  if (!doc) return c.json({ error: 'not_found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, doc.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
   const body = await c.req.json<{ transaction_id?: string | null }>()
-  if (!('transaction_id' in body)) return c.json({ error: 'transaction_id obrigatório' }, 400)
+  if (!('transaction_id' in body)) return c.json({ error: 'validation_error' }, 400)
 
   const { data, error } = await db.from('fiscal_documents')
     .update({ transaction_id: body.transaction_id ?? null })
@@ -72,7 +62,7 @@ router.patch('/:id', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 

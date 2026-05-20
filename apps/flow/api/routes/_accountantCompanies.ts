@@ -72,13 +72,13 @@ router.get('/', async (c) => {
 
   if (companyId) {
     const member = await checkCompanyAccess(db, userId, companyId, false)
-    if (!member) return c.json({ error: 'Forbidden: not a company member' }, 403)
+    if (!member) return c.json({ error: 'forbidden' }, 403)
 
     const { data, error } = await db.from('accountant_companies')
       .select('*, profiles!accountant_id(id, full_name, email, avatar_url)')
       .eq('company_id', companyId)
       .order('invited_at', { ascending: false })
-    if (error) return c.json({ error: 'Database error' }, 500)
+    if (error) return c.json({ error: 'internal_error' }, 500)
     return c.json(data)
   }
 
@@ -100,11 +100,11 @@ router.post('/', async (c) => {
   const { company_id: companyId, email, invite_token, language } = body
 
   if (!companyId || !email || !invite_token) {
-    return c.json({ error: 'company_id, email and invite_token are required' }, 400)
+    return c.json({ error: 'validation_error' }, 400)
   }
 
   const admin = await checkCompanyAccess(db, userId, companyId, true)
-  if (!admin) return c.json({ error: 'Forbidden: not a company admin' }, 403)
+  if (!admin) return c.json({ error: 'forbidden' }, 403)
 
   // Rule: each company may have at most one accountant (accepted or pending).
   const { data: existing } = await db.from('accountant_companies')
@@ -129,7 +129,7 @@ router.post('/', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: 'Failed to create invite' }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   const resendKey = process.env.RESEND_API_KEY
   if (resendKey) {
@@ -162,11 +162,11 @@ router.post('/:id/resend', async (c) => {
     .eq('id', id)
     .maybeSingle()
 
-  if (!invite) return c.json({ error: 'Invite not found.' }, 404)
-  if (invite.status !== 'pending') return c.json({ error: 'Only pending invites can be resent.' }, 400)
+  if (!invite) return c.json({ error: 'not_found' }, 404)
+  if (invite.status !== 'pending') return c.json({ error: 'invite_not_pending' }, 400)
 
   const admin = await checkCompanyAccess(db, userId, invite.company_id, true)
-  if (!admin) return c.json({ error: 'Forbidden: not a company admin' }, 403)
+  if (!admin) return c.json({ error: 'forbidden' }, 403)
 
   // Rotate the token so the old link is invalidated
   const new_token = crypto.randomUUID()
@@ -174,7 +174,7 @@ router.post('/:id/resend', async (c) => {
     .update({ invite_token: new_token, invited_at: new Date().toISOString() })
     .eq('id', id)
 
-  if (updateError) return c.json({ error: 'Failed to update invite' }, 500)
+  if (updateError) return c.json({ error: 'internal_error' }, 500)
 
   const { companyName, inviterName } = await getCompanyAndInviter(db, invite.company_id, userId)
 
@@ -206,14 +206,14 @@ router.delete('/:id', async (c) => {
     .eq('id', id)
     .maybeSingle()
 
-  if (!invite) return c.json({ error: 'Invite not found.' }, 404)
-  if (invite.status === 'revoked') return c.json({ error: 'Already revoked.' }, 400)
+  if (!invite) return c.json({ error: 'not_found' }, 404)
+  if (invite.status === 'revoked') return c.json({ error: 'already_revoked' }, 400)
 
   const admin = await checkCompanyAccess(db, userId, invite.company_id, true)
-  if (!admin) return c.json({ error: 'Forbidden: not a company admin' }, 403)
+  if (!admin) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('accountant_companies').delete().eq('id', id)
-  if (error) return c.json({ error: 'Failed to delete invite' }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   return c.json({ ok: true })
 })

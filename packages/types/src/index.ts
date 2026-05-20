@@ -52,3 +52,16 @@ export type EntrySource = 'manual' | 'api' | 'syncero_import'
 export type AccountType = 'asset' | 'liability' | 'equity' | 'revenue' | 'expense' | 'cost'
 export type AccountNature = 'debit' | 'credit'
 export type JournalSide = 'debit' | 'credit'
+
+// ── SEFAZ ─────────────────────────────────────────────────────
+export interface SefazCredential {
+  id: string
+  environment: 'production' | 'homologation'
+  uf_code: string
+  is_active: boolean
+  last_nsu: string
+  last_sync_at: string | null
+  last_error: string | null
+  created_at: string
+  updated_at: string
+}

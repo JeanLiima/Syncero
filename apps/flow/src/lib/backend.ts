@@ -1,17 +1,8 @@
-import { apiFetch } from './api'
+import { apiFetch, buildQuery } from './api'
+import type { SefazCredential } from '@syncero/types'
 import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, Bank, Contact, MemberRole } from '@/types'
 
-export interface SefazCredential {
-  id: string
-  environment: 'production' | 'homologation'
-  uf_code: string
-  is_active: boolean
-  last_nsu: string
-  last_sync_at: string | null
-  last_error: string | null
-  created_at: string
-  updated_at: string
-}
+export type { SefazCredential }
 
 export interface FiscalDocument {
   id: string
@@ -33,19 +24,6 @@ export interface FiscalDocument {
   source: 'upload' | 'sefaz_sync'
   transaction_id: string | null
   created_at: string
-}
-
-function toSnake(key: string): string {
-  return key.replace(/([A-Z])/g, '_$1').toLowerCase()
-}
-
-function buildQuery(params: Record<string, string | undefined>) {
-  const query = new URLSearchParams()
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== '') query.set(toSnake(key), value)
-  })
-  const queryString = query.toString()
-  return queryString ? `?${queryString}` : ''
 }
 
 export async function getCompany(companyId: string) {

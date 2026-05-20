@@ -142,6 +142,7 @@ export const en: Record<TranslationKey, string> = {
   impostos_infoSimplesComercio: 'Calculation by Simples Nacional (Annex I — Retail/Industry). Verify the current table with your client.',
   impostos_infoPresumido: 'IRPJ and CSLL are quarterly and appear only in quarter-end months (March, June, September, December).',
   impostos_infoReal: 'Monthly calculation based on the period\'s journal entries.',
+  impostos_calculateSuccess: '{period} tax calculation completed.',
 
   // Lançamentos contábeis
   lancamentos_title: 'Journal Entries',

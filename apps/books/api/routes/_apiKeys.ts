@@ -24,7 +24,7 @@ router.get('/', async (c) => {
   const { data, error } = companyId
     ? await q.eq('company_id', companyId)
     : await q.eq('ext_company_id', extCompanyId!)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data ?? [])
 })
 
@@ -43,11 +43,11 @@ router.post('/', async (c) => {
   if (body.company_id) {
     const { data: acct } = await db.from('accountant_companies')
       .select('id').eq('accountant_id', userId).eq('company_id', body.company_id).eq('status', 'accepted').maybeSingle()
-    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
+    if (!acct) return c.json({ error: 'forbidden' }, 403)
   } else {
     const { data: ec } = await db.from('external_companies')
       .select('id').eq('id', body.ext_company_id!).eq('accountant_id', userId).maybeSingle()
-    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
+    if (!ec) return c.json({ error: 'forbidden' }, 403)
   }
 
   const rawKey = generateRawKey()
@@ -84,7 +84,7 @@ router.patch('/:id/revoke', async (c) => {
   if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('api_keys').update({ is_active: false }).eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 
@@ -98,10 +98,10 @@ router.delete('/:id', async (c) => {
   const { data: existing } = await db.from('api_keys')
     .select('accountant_id, is_active').eq('id', id).maybeSingle()
   if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
-  if (existing.is_active) return c.json({ error: 'Revoke the key before deleting it' }, 400)
+  if (existing.is_active) return c.json({ error: 'key_not_revoked' }, 400)
 
   const { error } = await db.from('api_keys').delete().eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 

@@ -65,7 +65,7 @@ export function NoCompanyShell() {
       setActiveCompany({ id: company.id, name: company.name, role: 'admin', segment: data.segment ?? null })
       success(t('noCompany_success'))
     } catch (err) {
-      toastError(err instanceof Error ? err.message : 'Erro ao criar empresa.')
+      toastError(t('common_errorGeneric'))
     }
   }
 

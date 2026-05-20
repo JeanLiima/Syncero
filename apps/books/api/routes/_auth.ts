@@ -22,7 +22,7 @@ router.post('/', async (c) => {
 
   const VALID_USER_TYPES = ['company_user', 'accountant'] as const
   if (!VALID_USER_TYPES.includes(user_type as typeof VALID_USER_TYPES[number])) {
-    return c.json({ error: 'user_type must be company_user or accountant' }, 400)
+    return c.json({ error: 'validation_error' }, 400)
   }
 
   const { data: { user } } = await db.auth.admin.getUserById(userId)
@@ -33,7 +33,7 @@ router.post('/', async (c) => {
     { id: userId, full_name: fullName, email: user?.email ?? '', user_type, avatar_url: avatarUrl },
     { onConflict: 'id' }
   )
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   const { data: profile } = await db.from('profiles')
     .select('id, full_name, email, user_type, avatar_url')

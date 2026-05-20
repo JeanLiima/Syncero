@@ -30,7 +30,7 @@ router.get('/', async (c) => {
   const companyId    = c.req.query('company_id')    ?? null
   const extCompanyId = c.req.query('ext_company_id') ?? null
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id_required' }, 400)
 
   const ok = await ensureAccess(db, userId, companyId, extCompanyId)
   if (!ok) return c.json({ error: 'forbidden' }, 403)
@@ -61,7 +61,7 @@ router.get('/', async (c) => {
   query = query.range((page - 1) * pageSize, page * pageSize - 1)
 
   const { data, error, count } = await query
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ data, count })
 })
 

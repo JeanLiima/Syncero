@@ -26,7 +26,7 @@ router.get('/', async (c) => {
   const { data, error } = companyId
     ? await q.eq('company_id', companyId)
     : await q.eq('ext_company_id', extCompanyId!)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data ?? [])
 })
 
@@ -91,7 +91,7 @@ router.post('/seed', async (c) => {
   }
 
   if (!accounts || accounts.length === 0) {
-    return c.json({ error: 'No accounts to seed' }, 400)
+    return c.json({ error: 'validation_error' }, 400)
   }
 
   // Pre-generate UUIDs so parent_id references can be resolved without sequential inserts
@@ -111,7 +111,7 @@ router.post('/seed', async (c) => {
   }))
 
   const { error } = await db.from('account_plans').insert(rows)
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   return c.json({ seeded: rows.length }, 201)
 })
@@ -131,7 +131,7 @@ router.patch('/:id', async (c) => {
   if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
 
   const { data, error } = await db.from('account_plans').update(body).eq('id', id).select('*').single()
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -163,7 +163,7 @@ router.delete('/:id', async (c) => {
   if (!existing || existing.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('account_plans').update({ is_active: false }).eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 
@@ -175,7 +175,7 @@ router.post('/:id/transfer', async (c) => {
   const { id } = c.req.param()
   const { target_id: targetId } = await c.req.json<{ target_id: string }>()
 
-  if (!targetId) return c.json({ error: 'target_id required' }, 400)
+  if (!targetId) return c.json({ error: 'validation_error' }, 400)
 
   const { data: existing } = await db.from('account_plans')
     .select('accountant_id').eq('id', id).maybeSingle()
@@ -183,16 +183,16 @@ router.post('/:id/transfer', async (c) => {
 
   const { data: target } = await db.from('account_plans')
     .select('accountant_id, is_analytic').eq('id', targetId).maybeSingle()
-  if (!target || target.accountant_id !== userId) return c.json({ error: 'target forbidden' }, 403)
-  if (!target.is_analytic) return c.json({ error: 'target must be analytic' }, 400)
+  if (!target || target.accountant_id !== userId) return c.json({ error: 'forbidden' }, 403)
+  if (!target.is_analytic) return c.json({ error: 'validation_error' }, 400)
 
   const { error: updateErr } = await db.from('journal_entry_lines')
     .update({ account_plan_id: targetId })
     .eq('account_plan_id', id)
-  if (updateErr) return c.json({ error: updateErr.message }, 500)
+  if (updateErr) return c.json({ error: 'internal_error' }, 500)
 
   const { error: deleteErr } = await db.from('account_plans').update({ is_active: false }).eq('id', id)
-  if (deleteErr) return c.json({ error: deleteErr.message }, 500)
+  if (deleteErr) return c.json({ error: 'internal_error' }, 500)
 
   return c.json({ ok: true })
 })

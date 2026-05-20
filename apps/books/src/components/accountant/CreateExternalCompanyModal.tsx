@@ -83,7 +83,7 @@ export function CreateExternalCompanyModal({ open, onClose }: Props) {
       onClose()
       navigate(`/accountant/external/${company.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('external_errorCreate'))
+      setError(t('external_errorCreate'))
       setSubmitting(false)
     }
   }

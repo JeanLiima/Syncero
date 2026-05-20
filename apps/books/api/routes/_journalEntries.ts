@@ -14,11 +14,11 @@ router.get('/', async (c) => {
   if (companyId) {
     const { data: acct } = await db.from('accountant_companies')
       .select('id').eq('accountant_id', userId).eq('company_id', companyId).eq('status', 'accepted').maybeSingle()
-    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
+    if (!acct) return c.json({ error: 'forbidden' }, 403)
   } else {
     const { data: ec } = await db.from('external_companies')
       .select('id').eq('id', extCompanyId!).eq('accountant_id', userId).maybeSingle()
-    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
+    if (!ec) return c.json({ error: 'forbidden' }, 403)
   }
 
   let dateFrom: string | undefined
@@ -38,7 +38,7 @@ router.get('/', async (c) => {
   if (dateFrom) q = q.gte('entry_date', dateFrom).lte('entry_date', dateTo!)
 
   const { data, error } = await q
-  if (error) return c.json({ error: 'Failed to fetch journal entries' }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data ?? [])
 })
 
@@ -59,11 +59,11 @@ router.post('/', async (c) => {
   if (body.company_id) {
     const { data: acct } = await db.from('accountant_companies')
       .select('id').eq('accountant_id', userId).eq('company_id', body.company_id).eq('status', 'accepted').maybeSingle()
-    if (!acct) return c.json({ error: 'Forbidden: not authorized for this company' }, 403)
+    if (!acct) return c.json({ error: 'forbidden' }, 403)
   } else {
     const { data: ec } = await db.from('external_companies')
       .select('id').eq('id', body.ext_company_id!).eq('accountant_id', userId).maybeSingle()
-    if (!ec) return c.json({ error: 'Forbidden: not authorized for this external company' }, 403)
+    if (!ec) return c.json({ error: 'forbidden' }, 403)
   }
 
   // Validar que flow_transaction_id pertence à empresa autorizada
@@ -85,7 +85,7 @@ router.post('/', async (c) => {
     flow_transaction_id: body.flow_transaction_id || null,
     source: body.flow_transaction_id ? 'syncero_import' : 'manual',
   }).select('id').single()
-  if (error) return c.json({ error: 'Failed to create journal entry' }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   const { error: linesErr } = await db.from('journal_entry_lines').insert(
     body.lines.map(l => ({
@@ -96,7 +96,7 @@ router.post('/', async (c) => {
       memo: l.memo || null,
     }))
   )
-  if (linesErr) return c.json({ error: 'Failed to create journal entry lines' }, 500)
+  if (linesErr) return c.json({ error: 'internal_error' }, 500)
   return c.json({ id: entry.id }, 201)
 })
 

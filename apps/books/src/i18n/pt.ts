@@ -141,6 +141,7 @@ export const pt = {
   impostos_infoSimplesComercio: 'Apuração pelo Simples Nacional (Anexo I — Comércio/Indústria). Verifique a tabela vigente com seu cliente.',
   impostos_infoPresumido: 'IRPJ e CSLL são trimestrais e aparecem apenas nos meses de encerramento do trimestre (março, junho, setembro, dezembro).',
   impostos_infoReal: 'Apuração mensal com base nos lançamentos contábeis do período.',
+  impostos_calculateSuccess: 'Apuração de {period} concluída.',
 
   // Lançamentos contábeis
   lancamentos_title: 'Lançamentos Contábeis',

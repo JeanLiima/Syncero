@@ -1,16 +1,27 @@
 import { Hono } from 'hono'
-import { createServiceClient, type HonoVariables } from '../_shared'
+import { createServiceClient, ensureCompanyMember, type HonoVariables } from '../_shared'
 
 const router = new Hono<{ Variables: HonoVariables }>()
 
-async function ensureCompanyMember(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string) {
-  const { data } = await db.from('company_members')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('company_id', companyId)
-    .eq('status', 'accepted')
-    .maybeSingle()
-  return data
+type TransactionBody = {
+  company_id?: string
+  description?: string
+  amount?: number
+  type?: string
+  date?: string
+  is_paid?: boolean
+  paid_at?: string | null
+  nature?: string | null
+  counterpart?: string | null
+  notes?: string | null
+  category_id?: string | null
+  contact_id?: string | null
+  bank_id?: string | null
+  payment_method?: string | null
+  is_installment?: boolean
+  installment_count?: number | null
+  installment_number?: number | null
+  installment_group_id?: string | null
 }
 
 router.get('/:id', async (c) => {
@@ -23,7 +34,7 @@ router.get('/:id', async (c) => {
     .eq('id', transactionId)
     .single()
 
-  if (error || !tx) return c.json({ error: 'not found' }, 404)
+  if (error || !tx) return c.json({ error: 'not_found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, tx.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -46,7 +57,7 @@ router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const companyId = c.req.query('company_id')
-  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
+  if (!companyId) return c.json({ error: 'company_id_required' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -56,15 +67,14 @@ router.get('/', async (c) => {
     .eq('company_id', companyId)
     .order('date', { ascending: false })
 
-  const type = c.req.query('type')
-  const categoryId = c.req.query('category_id')
-  const isPaid = c.req.query('is_paid')
-  const dateFrom = c.req.query('date_from')
-  const dateTo = c.req.query('date_to')
-  const search = c.req.query('search')
-  const page = Number(c.req.query('page') ?? '1')
-  const pageSize = Math.min(Number(c.req.query('page_size') ?? '20'), 1000)
-
+  const type              = c.req.query('type')
+  const categoryId        = c.req.query('category_id')
+  const isPaid            = c.req.query('is_paid')
+  const dateFrom          = c.req.query('date_from')
+  const dateTo            = c.req.query('date_to')
+  const search            = c.req.query('search')
+  const page              = Number(c.req.query('page') ?? '1')
+  const pageSize          = Math.min(Number(c.req.query('page_size') ?? '20'), 1000)
   const installmentGroupId = c.req.query('installment_group_id')
 
   if (type) query = query.eq('type', type)
@@ -80,7 +90,7 @@ router.get('/', async (c) => {
   query = query.range((page - 1) * pageSize, page * pageSize - 1)
 
   const { data, error, count } = await query
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   return c.json({ data, count })
 })
@@ -88,40 +98,40 @@ router.get('/', async (c) => {
 router.post('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
-  const body = await c.req.json<Record<string, unknown>>()
-  const companyId = body.company_id as string | undefined
+  const body = await c.req.json<TransactionBody>()
+  const { company_id: companyId, ...txData } = body
 
-  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
+  if (!companyId) return c.json({ error: 'company_id_required' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const b = body as Record<string, unknown>
-  if (!b.counterpart?.toString().trim()) return c.json({ error: 'counterpart required' }, 400)
-  if (!b.nature?.toString().trim()) return c.json({ error: 'nature required' }, 400)
-  if (b.is_paid && !b.paid_at) return c.json({ error: 'paid_at required when is_paid is true' }, 400)
+  if (!txData.counterpart?.trim()) return c.json({ error: 'counterpart required' }, 400)
+  if (!txData.nature?.trim()) return c.json({ error: 'nature required' }, 400)
+  if (txData.is_paid && !txData.paid_at) return c.json({ error: 'paid_at required when is_paid is true' }, 400)
+
   const { data, error } = await db.from('transactions').insert({
     company_id:           companyId,
     created_by:           userId,
-    description:          b.description as string,
-    amount:               b.amount as number,
-    type:                 b.type as string,
-    date:                 b.date as string,
-    is_paid:              (b.is_paid as boolean) ?? false,
-    paid_at:              (b.paid_at as string | null) ?? null,
-    nature:               (b.nature as string | null) ?? null,
-    counterpart:          (b.counterpart as string | null) ?? null,
-    notes:                (b.notes as string | null) ?? null,
-    category_id:          (b.category_id as string | null) ?? null,
-    contact_id:           (b.contact_id as string | null) ?? null,
-    bank_id:              (b.bank_id as string | null) ?? null,
-    payment_method:       (b.payment_method as string | null) ?? null,
-    is_installment:       (b.is_installment as boolean) ?? false,
-    installment_count:    (b.installment_count as number | null) ?? null,
-    installment_number:   (b.installment_number as number | null) ?? null,
-    installment_group_id: (b.installment_group_id as string | null) ?? null,
+    description:          txData.description ?? '',
+    amount:               txData.amount ?? 0,
+    type:                 txData.type ?? '',
+    date:                 txData.date ?? '',
+    is_paid:              txData.is_paid ?? false,
+    paid_at:              txData.paid_at ?? null,
+    nature:               txData.nature ?? null,
+    counterpart:          txData.counterpart ?? null,
+    notes:                txData.notes ?? null,
+    category_id:          txData.category_id ?? null,
+    contact_id:           txData.contact_id ?? null,
+    bank_id:              txData.bank_id ?? null,
+    payment_method:       txData.payment_method ?? null,
+    is_installment:       txData.is_installment ?? false,
+    installment_count:    txData.installment_count ?? null,
+    installment_number:   txData.installment_number ?? null,
+    installment_group_id: txData.installment_group_id ?? null,
   }).select().single()
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data, 201)
 })
 
@@ -136,7 +146,7 @@ router.patch('/group/:groupId', async (c) => {
     .limit(1)
     .maybeSingle()
 
-  if (!sample?.company_id) return c.json({ error: 'not found' }, 404)
+  if (!sample?.company_id) return c.json({ error: 'not_found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, sample.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -145,13 +155,13 @@ router.patch('/group/:groupId', async (c) => {
   const patch: Record<string, unknown> = {}
   if ('nature' in body) patch.nature = body.nature
 
-  if (Object.keys(patch).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+  if (Object.keys(patch).length === 0) return c.json({ error: 'no_changes' }, 400)
 
   const { error } = await db.from('transactions')
     .update(patch)
     .eq('installment_group_id', groupId)
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 
@@ -162,18 +172,17 @@ router.patch('/:id', async (c) => {
   const payload = await c.req.json<Record<string, unknown>>()
 
   const row = await db.from('transactions').select('company_id').eq('id', transactionId).single()
-  if (!row.data) return c.json({ error: 'not found' }, 404)
+  if (!row.data) return c.json({ error: 'not_found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, row.data.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  const p = payload as Record<string, unknown>
   const allowed: Record<string, unknown> = {}
   const editableFields = ['description','amount','type','date','is_paid','paid_at','nature','counterpart','notes',
     'category_id','contact_id','bank_id','payment_method','is_installment','installment_count',
     'installment_number','payment_registered_at','payment_registered_by']
-  for (const f of editableFields) if (f in p) allowed[f] = p[f]
-  if (Object.keys(allowed).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+  for (const f of editableFields) if (f in payload) allowed[f] = payload[f]
+  if (Object.keys(allowed).length === 0) return c.json({ error: 'no_changes' }, 400)
   if ('counterpart' in allowed && !allowed.counterpart?.toString().trim()) {
     return c.json({ error: 'counterpart required' }, 400)
   }
@@ -185,7 +194,7 @@ router.patch('/:id', async (c) => {
   }
 
   const { data, error } = await db.from('transactions').update(allowed).eq('id', transactionId).select().single()
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -195,13 +204,13 @@ router.delete('/:id', async (c) => {
   const transactionId = c.req.param('id')
 
   const row = await db.from('transactions').select('company_id').eq('id', transactionId).single()
-  if (!row.data) return c.json({ error: 'not found' }, 404)
+  if (!row.data) return c.json({ error: 'not_found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, row.data.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('transactions').delete().eq('id', transactionId)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 

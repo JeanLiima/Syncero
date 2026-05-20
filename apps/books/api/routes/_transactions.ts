@@ -23,12 +23,12 @@ router.get('/', async (c) => {
   const db = createServiceClient()
   const { company_id: companyId, ext_company_id: extCompanyId, type, is_paid, date_from, date_to, search, page = '1', page_size: pageSize = '20' } = c.req.query()
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'company_id or ext_company_id required' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id_required' }, 400)
 
   if (companyId) {
-    if (!(await authorizeFlow(db, userId, companyId))) return c.json({ error: 'Forbidden' }, 403)
+    if (!(await authorizeFlow(db, userId, companyId))) return c.json({ error: 'forbidden' }, 403)
   } else {
-    if (!(await authorizeExt(db, userId, extCompanyId!))) return c.json({ error: 'Forbidden' }, 403)
+    if (!(await authorizeExt(db, userId, extCompanyId!))) return c.json({ error: 'forbidden' }, 403)
   }
 
   const pageNum = Math.max(1, parseInt(page))
@@ -52,7 +52,7 @@ router.get('/', async (c) => {
   if (search)       q = q.ilike('description', `%${search}%`)
 
   const { data: txs, count, error } = await q
-  if (error) return c.json({ error: 'Failed to fetch transactions' }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   if (!txs?.length) return c.json({ data: [], count: 0 })
 
   // Fetch classification status
@@ -95,14 +95,14 @@ router.get('/:id', async (c) => {
     .eq('id', id)
     .single()
 
-  if (error || !tx) return c.json({ error: 'Not found' }, 404)
+  if (error || !tx) return c.json({ error: 'not_found' }, 404)
 
   if (tx.company_id) {
-    if (!(await authorizeFlow(db, userId, tx.company_id))) return c.json({ error: 'Not found' }, 404)
+    if (!(await authorizeFlow(db, userId, tx.company_id))) return c.json({ error: 'not_found' }, 404)
   } else if (tx.ext_company_id) {
-    if (!(await authorizeExt(db, userId, tx.ext_company_id))) return c.json({ error: 'Not found' }, 404)
+    if (!(await authorizeExt(db, userId, tx.ext_company_id))) return c.json({ error: 'not_found' }, 404)
   } else {
-    return c.json({ error: 'Not found' }, 404)
+    return c.json({ error: 'not_found' }, 404)
   }
 
   return c.json({
@@ -118,8 +118,8 @@ router.get('/counterparts', async (c) => {
   const db = createServiceClient()
   const { ext_company_id: extCompanyId } = c.req.query()
 
-  if (!extCompanyId) return c.json({ error: 'ext_company_id required' }, 400)
-  if (!(await authorizeExt(db, userId, extCompanyId))) return c.json({ error: 'Forbidden' }, 403)
+  if (!extCompanyId) return c.json({ error: 'company_id_required' }, 400)
+  if (!(await authorizeExt(db, userId, extCompanyId))) return c.json({ error: 'forbidden' }, 403)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (db.from('transactions') as any)
@@ -127,7 +127,7 @@ router.get('/counterparts', async (c) => {
     .eq('ext_company_id', extCompanyId)
     .not('counterpart', 'is', null)
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   const unique = [...new Set((data ?? []).map((r: { counterpart: string }) => r.counterpart).filter(Boolean))] as string[]
   return c.json(unique.sort())
 })
@@ -159,7 +159,7 @@ router.post('/', async (c) => {
   if (!body.type) return c.json({ error: 'type required' }, 400)
   if (body.is_paid && !body.paid_at) return c.json({ error: 'paid_at required when is_paid is true' }, 400)
 
-  if (!(await authorizeExt(db, userId, body.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
+  if (!(await authorizeExt(db, userId, body.ext_company_id))) return c.json({ error: 'forbidden' }, 403)
 
   const { data, error } = await db.from('transactions').insert({
     ext_company_id: body.ext_company_id,
@@ -175,7 +175,7 @@ router.post('/', async (c) => {
     notes:          body.notes || null,
   }).select('*').single()
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data, 201)
 })
 
@@ -188,8 +188,8 @@ router.patch('/:id', async (c) => {
   const { data: existing } = await db.from('transactions')
     .select('ext_company_id').eq('id', id).maybeSingle()
 
-  if (!existing?.ext_company_id) return c.json({ error: 'Not found or not editable' }, 404)
-  if (!(await authorizeExt(db, userId, existing.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
+  if (!existing?.ext_company_id) return c.json({ error: 'not_found' }, 404)
+  if (!(await authorizeExt(db, userId, existing.ext_company_id))) return c.json({ error: 'forbidden' }, 403)
 
   const body = await c.req.json<{
     description?: string
@@ -216,7 +216,7 @@ router.patch('/:id', async (c) => {
   if (body.is_paid === false) patch.paid_at = null
   else if (body.paid_at !== undefined) patch.paid_at = body.paid_at
 
-  if (Object.keys(patch).length === 0) return c.json({ error: 'No valid fields to update' }, 400)
+  if (Object.keys(patch).length === 0) return c.json({ error: 'no_changes' }, 400)
   if ('counterpart' in patch && !patch.counterpart?.toString().trim()) {
     return c.json({ error: 'counterpart required' }, 400)
   }
@@ -230,7 +230,7 @@ router.patch('/:id', async (c) => {
   const { data, error } = await db.from('transactions')
     .update(patch).eq('id', id).select('*').single()
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -243,11 +243,11 @@ router.delete('/:id', async (c) => {
   const { data: existing } = await db.from('transactions')
     .select('ext_company_id').eq('id', id).maybeSingle()
 
-  if (!existing?.ext_company_id) return c.json({ error: 'Not found or not deletable' }, 404)
-  if (!(await authorizeExt(db, userId, existing.ext_company_id))) return c.json({ error: 'Forbidden' }, 403)
+  if (!existing?.ext_company_id) return c.json({ error: 'not_found' }, 404)
+  if (!(await authorizeExt(db, userId, existing.ext_company_id))) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('transactions').delete().eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 

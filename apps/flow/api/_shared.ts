@@ -30,12 +30,18 @@ export const authMiddleware: MiddlewareHandler<{ Variables: HonoVariables }> = a
 function getAllowedOrigins(): string[] {
   const env = process.env.ALLOWED_ORIGINS
   if (env) return env.split(',').map(o => o.trim())
-  return [
+
+  const origins = [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
     'http://localhost:5176',
   ]
+  // VERCEL_URL é injetado automaticamente em todos os deploys (produção e preview)
+  // Garante que o próprio app sempre pode chamar sua API sem precisar de ALLOWED_ORIGINS
+  const vercelUrl = process.env.VERCEL_URL
+  if (vercelUrl) origins.push(`https://${vercelUrl}`)
+  return origins
 }
 
 export const originGuard: MiddlewareHandler<{ Variables: HonoVariables }> = async (c, next) => {

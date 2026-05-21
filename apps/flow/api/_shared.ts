@@ -28,18 +28,17 @@ export const authMiddleware: MiddlewareHandler<{ Variables: HonoVariables }> = a
 // em ALLOWED_ORIGINS. Em desenvolvimento, apenas loga um aviso.
 
 function getAllowedOrigins(requestHost?: string): string[] {
-  const env = process.env.ALLOWED_ORIGINS
-  if (env) return env.split(',').map(o => o.trim())
-
-  const origins = [
+  const origins: string[] = [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
     'http://localhost:5176',
   ]
-  // Host é o domínio real que o usuário acessa (alias estável, preview URL ou
-  // domínio customizado). Sempre correto — diferente de VERCEL_URL que aponta
-  // para a URL de deploy específica, não o alias.
+  // ALLOWED_ORIGINS permite origens cruzadas explícitas (ex: Landing chamando Flow API)
+  const env = process.env.ALLOWED_ORIGINS
+  if (env) origins.push(...env.split(',').map(o => o.trim()))
+  // Host é sempre incluído: garante que o próprio app pode chamar sua API
+  // independente de ser alias ou URL de deploy específica do Vercel
   if (requestHost) origins.push(`https://${requestHost}`)
   return origins
 }

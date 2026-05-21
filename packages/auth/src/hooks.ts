@@ -9,9 +9,9 @@ export function useAuth() {
   const lastFetchRequestRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    // bootstrapAuth garante que uma sessão já existente (persistida ou do hash
-    // OAuth implícito) seja detectada via getSession(), que resolve depois que
-    // o client já processou o hash — evitando race com o evento INITIAL_SESSION.
+    // bootstrapAuth garante que sessões existentes (persistidas) e callbacks
+    // OAuth (PKCE: ?code=...) sejam detectados via getSession(), que aguarda
+    // _initializePromise — incluindo a troca do código PKCE — antes de resolver.
     const bootstrapAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {

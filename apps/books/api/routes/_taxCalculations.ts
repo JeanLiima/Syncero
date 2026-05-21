@@ -228,7 +228,7 @@ router.patch('/:id', async (c) => {
 
   const { data: existing } = await db.from('tax_calculations')
     .select('company_id, ext_company_id').eq('id', id).maybeSingle()
-  if (!existing) return c.json({ error: 'not found' }, 404)
+  if (!existing) return c.json({ error: 'not_found' }, 404)
 
   if (existing.company_id) {
     if (!await ensureAccessLinked(db, userId, existing.company_id)) return c.json({ error: 'forbidden' }, 403)

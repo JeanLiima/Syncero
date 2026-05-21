@@ -126,4 +126,32 @@ export const sharedEn: Record<SharedTranslationKey, string> = {
   api_error_invite_pending_for_email: 'An invite is already pending for this email.',
   api_error_last_admin_demotion: 'Cannot demote the only admin of the company.',
 
+  // Import (shared — Flow and Books use the same OFX/NFe import modal)
+  transactions_import: 'Import',
+  transactions_import_title: 'Import transactions',
+  transactions_import_dropzone: 'Drop an XML (NFe) or OFX file here',
+  transactions_import_dropzone_hint: 'or click to select',
+  transactions_import_accept: 'Accepted formats: .xml (NFe), .ofx, .qfx',
+  transactions_import_nfe_preview_title: 'Fiscal note detected',
+  transactions_import_nfe_counterpart: 'Counterpart',
+  transactions_import_nfe_date: 'Issue date',
+  transactions_import_nfe_amount: 'Total amount',
+  transactions_import_nfe_type_income: 'Income — company is issuer',
+  transactions_import_nfe_type_expense: 'Expense — company is recipient',
+  transactions_import_nfe_type_unknown: 'Tax ID not identified',
+  transactions_import_nfe_cnpj_warning: 'Your tax ID was not found in this file. This document may not belong to your company.',
+  transactions_import_nfe_proceed_anyway: 'Proceed anyway',
+  transactions_import_nfe_continue: 'Create transaction',
+  transactions_import_ofx_found: '{count} transactions found',
+  transactions_import_ofx_defaultNature: 'Default nature',
+  transactions_import_ofx_confirm: 'Import {count} transaction(s)',
+  transactions_import_ofx_noneSelected: 'None selected',
+  transactions_import_error_parse: 'Could not read the file. Make sure it is a valid NFe XML or OFX file.',
+
+  // Integrations SEFAZ (shared)
+  integrations_sefaz_name: 'SEFAZ DF-e',
+  integrations_sefaz_desc: 'Automatic sync of NF-e, NFS-e and CT-e directly from SEFAZ.',
+  integrations_sefaz_noCert: 'No digital certificate configured.',
+  integrations_sefaz_configureCert: 'Configure in Company → Certificates',
+
 }

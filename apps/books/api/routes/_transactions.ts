@@ -150,14 +150,14 @@ router.post('/', async (c) => {
     notes?: string | null
   }>()
 
-  if (!body.ext_company_id) return c.json({ error: 'ext_company_id required' }, 400)
-  if (!body.description?.trim()) return c.json({ error: 'description required' }, 400)
-  if (!body.amount || body.amount <= 0) return c.json({ error: 'amount must be positive' }, 400)
-  if (!body.date) return c.json({ error: 'date required' }, 400)
-  if (!body.counterpart?.trim()) return c.json({ error: 'counterpart required' }, 400)
-  if (!body.nature?.trim()) return c.json({ error: 'nature required' }, 400)
-  if (!body.type) return c.json({ error: 'type required' }, 400)
-  if (body.is_paid && !body.paid_at) return c.json({ error: 'paid_at required when is_paid is true' }, 400)
+  if (!body.ext_company_id) return c.json({ error: 'company_id_required' }, 400)
+  if (!body.description?.trim()) return c.json({ error: 'description_required' }, 400)
+  if (!body.amount || body.amount <= 0) return c.json({ error: 'amount_must_be_positive' }, 400)
+  if (!body.date) return c.json({ error: 'date_required' }, 400)
+  if (!body.counterpart?.trim()) return c.json({ error: 'counterpart_required' }, 400)
+  if (!body.nature?.trim()) return c.json({ error: 'nature_required' }, 400)
+  if (!body.type) return c.json({ error: 'type_required' }, 400)
+  if (body.is_paid && !body.paid_at) return c.json({ error: 'paid_at_required' }, 400)
 
   if (!(await authorizeExt(db, userId, body.ext_company_id))) return c.json({ error: 'forbidden' }, 403)
 
@@ -218,13 +218,13 @@ router.patch('/:id', async (c) => {
 
   if (Object.keys(patch).length === 0) return c.json({ error: 'no_changes' }, 400)
   if ('counterpart' in patch && !patch.counterpart?.toString().trim()) {
-    return c.json({ error: 'counterpart required' }, 400)
+    return c.json({ error: 'counterpart_required' }, 400)
   }
   if ('nature' in patch && !patch.nature?.toString().trim()) {
-    return c.json({ error: 'nature required' }, 400)
+    return c.json({ error: 'nature_required' }, 400)
   }
   if (patch.is_paid === true && !patch.paid_at) {
-    return c.json({ error: 'paid_at required when is_paid is true' }, 400)
+    return c.json({ error: 'paid_at_required' }, 400)
   }
 
   const { data, error } = await db.from('transactions')

@@ -217,6 +217,22 @@ export const pt = {
   banks_editTitle: 'Editar conta bancária',
   banks_deleteTitle: 'Excluir conta bancária',
   banks_deleteConfirm: 'Tem certeza que deseja excluir esta conta bancária?',
+  banks_connect: 'Conectar banco',
+  banks_connected: 'Conectado',
+  banks_disconnect: 'Desconectar',
+  banks_disconnectTitle: 'Desconectar banco',
+  banks_disconnectConfirm: 'Ao desconectar, a sincronização automática será pausada. As transações já importadas não serão removidas.',
+  banks_sync: 'Resincronizar',
+  banks_syncing: 'Sincronizando...',
+  banks_syncSuccess: 'Sincronizado! {{count}} novas transações importadas.',
+  banks_syncNone: 'Nenhuma transação nova encontrada.',
+  banks_lastSync: 'Última sync: {{date}}',
+  banks_connectSuccess: 'Banco conectado com sucesso!',
+  banks_disconnectSuccess: 'Banco desconectado.',
+  api_error_bank_not_connected: 'Esta conta não está conectada.',
+  api_error_pluggy_auth_failed: 'Não foi possível autenticar no Pluggy. Tente novamente.',
+  api_error_pluggy_connect_token_failed: 'Não foi possível iniciar a conexão com o banco. Tente novamente.',
+  api_error_pluggy_not_configured: 'Integração bancária não configurada.',
 
   // Cash Flow
   cashFlow_title: 'Fluxo de Caixa',
@@ -347,41 +363,15 @@ export const pt = {
   // PWA (app-specific title)
   pwa_title: 'Instale o Syncero Flow',
 
-  // Import
-  transactions_import: 'Importar',
-  transactions_import_title: 'Importar lançamentos',
-  transactions_import_dropzone: 'Arraste um arquivo XML (NFe) ou OFX aqui',
-  transactions_import_dropzone_hint: 'ou clique para selecionar',
-  transactions_import_accept: 'Formatos aceitos: .xml (NFe), .ofx, .qfx',
-  transactions_import_nfe_preview_title: 'Nota fiscal detectada',
-  transactions_import_nfe_counterpart: 'Contraparte',
-  transactions_import_nfe_date: 'Data de emissão',
-  transactions_import_nfe_amount: 'Valor total',
-  transactions_import_nfe_type_income: 'Receita — empresa emitente',
-  transactions_import_nfe_type_expense: 'Despesa — empresa destinatária',
-  transactions_import_nfe_type_unknown: 'CNPJ não identificado',
-  transactions_import_nfe_cnpj_warning: 'Seu CNPJ não foi encontrado neste arquivo. O documento pode não pertencer à sua empresa.',
-  transactions_import_nfe_proceed_anyway: 'Prosseguir mesmo assim',
-  transactions_import_nfe_continue: 'Criar lançamento',
-  transactions_import_ofx_found: '{count} transações encontradas',
-  transactions_import_ofx_defaultNature: 'Natureza padrão',
+  // Import (keys compartilhadas estão em @syncero/i18n — apenas as específicas do Flow ficam aqui)
   transactions_import_ofx_defaultCategory: 'Categoria padrão',
-  transactions_import_ofx_confirm: 'Importar {count} lançamento(s)',
-  transactions_import_ofx_noneSelected: 'Nenhum selecionado',
   transactions_import_contact_notfound: 'Nenhum contato para este CNPJ',
   transactions_import_contact_create: 'Criar contato',
   transactions_wizard_contact_new_for: 'Novo contato identificado na importação',
   transactions_wizard_contact_create: 'Criar',
   transactions_wizard_contact_or_select: 'ou selecionar outro contato',
-  transactions_import_error_parse: 'Não foi possível ler o arquivo. Verifique se é um XML de NFe ou OFX válido.',
 
-  // Integrations
-  integrations_sefaz_name: 'SEFAZ DF-e',
-  integrations_sefaz_desc: 'Sincronização automática de NF-e, NFS-e e CT-e diretamente do SEFAZ.',
-  integrations_sefaz_noCert: 'Nenhum certificado digital configurado.',
-  integrations_sefaz_configureCert: 'Configure em Empresa → Certificados',
-  integrations_enabled: 'Habilitado',
-  integrations_disabled: 'Desabilitado',
+  // Integrations (keys compartilhadas estão em @syncero/i18n)
 
   // SEFAZ
   sefaz_title: 'Integração SEFAZ',

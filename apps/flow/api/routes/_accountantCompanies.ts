@@ -88,7 +88,7 @@ router.get('/', async (c) => {
     .eq('status', 'accepted')
     .order('accepted_at', { ascending: false })
 
-  if (error) return c.json({ error: 'Database error' }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 

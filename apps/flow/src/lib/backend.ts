@@ -187,6 +187,26 @@ export async function deleteBank(id: string) {
   return apiFetch<{ ok: true }>(`/api/banks/${id}`, { method: 'DELETE' })
 }
 
+// ── Pluggy Integration ─────────────────────────────────────────
+
+export async function getPluggyConnectToken() {
+  return apiFetch<{ accessToken: string }>('/api/pluggy/connect-token', { method: 'POST', body: '{}' })
+}
+
+export async function connectPluggyBank(bankId: string, itemId: string) {
+  return apiFetch<Bank>('/api/pluggy/connect', {
+    method: 'POST',
+    body: JSON.stringify({ bank_id: bankId, item_id: itemId }),
+  })
+}
+
+export async function disconnectPluggyBank(bankId: string) {
+  return apiFetch<{ ok: true }>(`/api/pluggy/disconnect/${bankId}`, { method: 'DELETE' })
+}
+
+export async function syncPluggyBank(bankId: string) {
+  return apiFetch<{ imported: number }>(`/api/pluggy/sync/${bankId}`, { method: 'POST', body: '{}' })
+}
 
 // ── SEFAZ Credentials ──────────────────────────────────────────
 

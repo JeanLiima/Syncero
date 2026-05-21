@@ -255,11 +255,7 @@ export const en: Record<TranslationKey, string> = {
   sefaz_revokeMessage: 'The certificate will be removed and automatic sync will stop.',
   sefaz_readOnlyHint: 'This certificate is managed by the company in Syncero Flow.',
 
-  // Integrations (Books-specific)
-  integrations_sefaz_name: 'SEFAZ DF-e',
-  integrations_sefaz_desc: 'Automatic sync of NF-e, NFS-e and CT-e directly from SEFAZ.',
-  integrations_sefaz_noCert: 'No digital certificate configured.',
-  integrations_sefaz_configureCert: 'Configure in Company → Certificates',
+  // Integrations (shared keys in @syncero/i18n)
 
   // Livros SPED
   sped_title: 'SPED Books',
@@ -531,25 +527,5 @@ export const en: Record<TranslationKey, string> = {
   // Export (Books-specific extra column)
   export_col_classification: 'Classification',
 
-  // Import
-  transactions_import: 'Import',
-  transactions_import_title: 'Import transactions',
-  transactions_import_dropzone: 'Drag an XML (NFe) or OFX file here',
-  transactions_import_dropzone_hint: 'or click to select',
-  transactions_import_accept: 'Accepted formats: .xml (NFe), .ofx, .qfx',
-  transactions_import_nfe_preview_title: 'Fiscal document detected',
-  transactions_import_nfe_counterpart: 'Counterpart',
-  transactions_import_nfe_date: 'Issue date',
-  transactions_import_nfe_amount: 'Total amount',
-  transactions_import_nfe_type_income: 'Income — issuing company',
-  transactions_import_nfe_type_expense: 'Expense — recipient company',
-  transactions_import_nfe_type_unknown: 'CNPJ not identified',
-  transactions_import_nfe_cnpj_warning: 'Your CNPJ was not found in this file. The document may not belong to your company.',
-  transactions_import_nfe_proceed_anyway: 'Proceed anyway',
-  transactions_import_nfe_continue: 'Create transaction',
-  transactions_import_ofx_found: '{count} transactions found',
-  transactions_import_ofx_defaultNature: 'Default nature',
-  transactions_import_ofx_confirm: 'Import {count} transaction(s)',
-  transactions_import_ofx_noneSelected: 'None selected',
-  transactions_import_error_parse: 'Could not read the file. Make sure it is a valid NFe XML or OFX file.',
+  // Import (shared keys in @syncero/i18n)
 }

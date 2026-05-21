@@ -254,11 +254,7 @@ export const pt = {
   sefaz_revokeMessage: 'O certificado será removido e a sincronização automática será interrompida.',
   sefaz_readOnlyHint: 'Este certificado é gerenciado pela empresa no Syncero Flow.',
 
-  // Integrations (Books-specific)
-  integrations_sefaz_name: 'SEFAZ DF-e',
-  integrations_sefaz_desc: 'Sincronização automática de NF-e, NFS-e e CT-e diretamente do SEFAZ.',
-  integrations_sefaz_noCert: 'Nenhum certificado digital configurado.',
-  integrations_sefaz_configureCert: 'Configure em Empresa → Certificados',
+  // Integrations (keys compartilhadas estão em @syncero/i18n)
 
   // Livros SPED
   sped_title: 'Livros SPED',
@@ -530,27 +526,7 @@ export const pt = {
   // Export (Books-specific extra column)
   export_col_classification: 'Classificação',
 
-  // Import
-  transactions_import: 'Importar',
-  transactions_import_title: 'Importar lançamentos',
-  transactions_import_dropzone: 'Arraste um arquivo XML (NFe) ou OFX aqui',
-  transactions_import_dropzone_hint: 'ou clique para selecionar',
-  transactions_import_accept: 'Formatos aceitos: .xml (NFe), .ofx, .qfx',
-  transactions_import_nfe_preview_title: 'Nota fiscal detectada',
-  transactions_import_nfe_counterpart: 'Contraparte',
-  transactions_import_nfe_date: 'Data de emissão',
-  transactions_import_nfe_amount: 'Valor total',
-  transactions_import_nfe_type_income: 'Receita — empresa emitente',
-  transactions_import_nfe_type_expense: 'Despesa — empresa destinatária',
-  transactions_import_nfe_type_unknown: 'CNPJ não identificado',
-  transactions_import_nfe_cnpj_warning: 'Seu CNPJ não foi encontrado neste arquivo. O documento pode não pertencer à sua empresa.',
-  transactions_import_nfe_proceed_anyway: 'Prosseguir mesmo assim',
-  transactions_import_nfe_continue: 'Criar lançamento',
-  transactions_import_ofx_found: '{count} transações encontradas',
-  transactions_import_ofx_defaultNature: 'Natureza padrão',
-  transactions_import_ofx_confirm: 'Importar {count} lançamento(s)',
-  transactions_import_ofx_noneSelected: 'Nenhum selecionado',
-  transactions_import_error_parse: 'Não foi possível ler o arquivo. Verifique se é um XML de NFe ou OFX válido.',
+  // Import (keys compartilhadas estão em @syncero/i18n)
 } as const
 
 export type TranslationKey = keyof typeof pt

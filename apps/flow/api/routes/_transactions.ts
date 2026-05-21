@@ -106,9 +106,9 @@ router.post('/', async (c) => {
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
-  if (!txData.counterpart?.trim()) return c.json({ error: 'counterpart required' }, 400)
-  if (!txData.nature?.trim()) return c.json({ error: 'nature required' }, 400)
-  if (txData.is_paid && !txData.paid_at) return c.json({ error: 'paid_at required when is_paid is true' }, 400)
+  if (!txData.counterpart?.trim()) return c.json({ error: 'counterpart_required' }, 400)
+  if (!txData.nature?.trim()) return c.json({ error: 'nature_required' }, 400)
+  if (txData.is_paid && !txData.paid_at) return c.json({ error: 'paid_at_required' }, 400)
 
   const { data, error } = await db.from('transactions').insert({
     company_id:           companyId,
@@ -184,13 +184,13 @@ router.patch('/:id', async (c) => {
   for (const f of editableFields) if (f in payload) allowed[f] = payload[f]
   if (Object.keys(allowed).length === 0) return c.json({ error: 'no_changes' }, 400)
   if ('counterpart' in allowed && !allowed.counterpart?.toString().trim()) {
-    return c.json({ error: 'counterpart required' }, 400)
+    return c.json({ error: 'counterpart_required' }, 400)
   }
   if ('nature' in allowed && !allowed.nature?.toString().trim()) {
-    return c.json({ error: 'nature required' }, 400)
+    return c.json({ error: 'nature_required' }, 400)
   }
   if (allowed.is_paid === true && !allowed.paid_at) {
-    return c.json({ error: 'paid_at required when is_paid is true' }, 400)
+    return c.json({ error: 'paid_at_required' }, 400)
   }
 
   const { data, error } = await db.from('transactions').update(allowed).eq('id', transactionId).select().single()

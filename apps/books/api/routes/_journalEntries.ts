@@ -9,7 +9,7 @@ router.get('/', async (c) => {
   const db = createServiceClient()
   const { company_id: companyId, ext_company_id: extCompanyId, period } = c.req.query()
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'company_id or ext_company_id required' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id_required' }, 400)
 
   if (companyId) {
     const { data: acct } = await db.from('accountant_companies')
@@ -53,7 +53,7 @@ router.post('/', async (c) => {
     company_id?: string; ext_company_id?: string
   }>()
 
-  if (!body.company_id && !body.ext_company_id) return c.json({ error: 'company_id or ext_company_id required' }, 400)
+  if (!body.company_id && !body.ext_company_id) return c.json({ error: 'company_id_required' }, 400)
 
   // Verify authorization
   if (body.company_id) {
@@ -70,10 +70,10 @@ router.post('/', async (c) => {
   if (body.flow_transaction_id) {
     const { data: tx } = await db.from('transactions')
       .select('company_id, ext_company_id').eq('id', body.flow_transaction_id).maybeSingle()
-    if (!tx) return c.json({ error: 'flow_transaction_id not found' }, 404)
+    if (!tx) return c.json({ error: 'not_found' }, 404)
     const expectedId = body.company_id ?? body.ext_company_id
     const txCompany  = body.company_id ? tx.company_id : tx.ext_company_id
-    if (txCompany !== expectedId) return c.json({ error: 'flow_transaction_id does not belong to the authorized company' }, 403)
+    if (txCompany !== expectedId) return c.json({ error: 'forbidden' }, 403)
   }
 
   const { data: entry, error } = await db.from('journal_entries').insert({

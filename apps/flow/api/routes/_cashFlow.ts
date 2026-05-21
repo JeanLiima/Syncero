@@ -13,8 +13,8 @@ router.get('/', async (c) => {
   const dateTo     = c.req.query('date_to')
   const categoryId = c.req.query('category_id')
 
-  if (!companyId) return c.json({ error: 'company_id required' }, 400)
-  if (!dateFrom || !dateTo) return c.json({ error: 'date_from and date_to required' }, 400)
+  if (!companyId) return c.json({ error: 'company_id_required' }, 400)
+  if (!dateFrom || !dateTo) return c.json({ error: 'validation_error' }, 400)
 
   // Verify membership
   const { data: member } = await db

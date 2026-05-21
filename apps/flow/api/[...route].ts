@@ -14,6 +14,7 @@ import cashFlowRouter from './routes/_cashFlow'
 import contactsRouter from './routes/_contacts'
 import sefazCredentialsRouter from './routes/_sefazCredentials'
 import fiscalDocumentsRouter from './routes/_fiscalDocuments'
+import pluggyRouter from './routes/_pluggy'
 
 export const config = { runtime: 'edge' }
 
@@ -25,7 +26,11 @@ app.onError((err, c) => {
 })
 
 // ── Origin Guard — Flow é 100% interno, sem APIs públicas ─────
-app.use('/*', originGuard)
+// /pluggy/webhook é chamado pelo Pluggy (sem Origin header) — excluir do guard
+app.use('/*', (c, next) => {
+  if (c.req.path === '/api/pluggy/webhook') return next()
+  return originGuard(c, next)
+})
 
 // ── Auth middleware ───────────────────────────────────────────
 app.use('/me', authMiddleware)
@@ -49,6 +54,11 @@ app.use('/sefaz-credentials', authMiddleware)
 app.use('/sefaz-credentials/*', authMiddleware)
 app.use('/fiscal-documents', authMiddleware)
 app.use('/fiscal-documents/*', authMiddleware)
+// /pluggy/webhook é público (autenticado via HMAC) — os demais exigem JWT
+app.use('/pluggy/connect-token', authMiddleware)
+app.use('/pluggy/connect', authMiddleware)
+app.use('/pluggy/disconnect/*', authMiddleware)
+app.use('/pluggy/sync/*', authMiddleware)
 app.use('/invites/:token/accept', authMiddleware)
 
 // ── Route registrations ────────────────────────────────────────
@@ -66,5 +76,6 @@ app.route('/cash-flow', cashFlowRouter)
 app.route('/contacts', contactsRouter)
 app.route('/sefaz-credentials', sefazCredentialsRouter)
 app.route('/fiscal-documents', fiscalDocumentsRouter)
+app.route('/pluggy', pluggyRouter)
 
 export default handle(app)

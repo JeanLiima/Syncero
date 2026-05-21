@@ -101,6 +101,9 @@ export interface Bank {
   account_number: string | null
   account_type: BankAccountType
   pix_key: string | null
+  pluggy_item_id: string | null
+  sync_enabled: boolean
+  last_synced_at: string | null
   created_at: string
 }
 

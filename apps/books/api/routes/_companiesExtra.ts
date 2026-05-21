@@ -64,7 +64,7 @@ router.patch('/:id/tax-settings', async (c) => {
     .update(updates)
     .eq('accountant_id', userId)
     .eq('company_id', id)
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   return c.json({ iss_rate: body.iss_rate ?? null, segment: body.segment ?? null })
 })

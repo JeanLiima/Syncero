@@ -3,5 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Shared i18n dictionaries (PT/EN) for Syncero apps — to be extracted from apps/flow in a future sprint"
+  "exports": {
+    ".": "./src/index.ts"
+  }
 }

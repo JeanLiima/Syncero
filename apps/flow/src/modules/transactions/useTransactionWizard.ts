@@ -17,7 +17,7 @@ export interface WizardPrefill {
   counterpartCnpj?: string
 }
 
-interface UseTransactionWizardState {
+export interface UseTransactionWizardState {
   // Phase management
   phase: Phase
   setPhase: (phase: Phase) => void
@@ -96,6 +96,115 @@ interface UseTransactionWizardState {
   reset: () => void
 }
 
+// ── Grouped state types ────────────────────────────────────────
+
+type WizardForm = {
+  type: TransactionType | null
+  nature: TransactionNature | null
+  amountCents: number
+  date: string
+  categoryId: string | undefined
+  description: string
+  notes: string
+  counterpart: string
+  contactId: string | undefined
+  isInstallment: boolean
+  installmentCount: number
+  createFutureInstallments: boolean
+  installmentOverrides: Record<number, { date: string; amountStr: string }>
+  isRecurring: boolean
+  recurrenceFrequency: RecurrenceFrequency
+  recurrenceCount: number
+}
+
+type PhaseState = {
+  phase: Phase
+  step: Step
+  createdId: string | null
+  skipCountdown: number
+}
+
+type PaymentState = {
+  paidAt: string
+  paymentMethod: 'cash' | 'bank' | null
+  bankId: string | undefined
+  methodError: string
+}
+
+type ContactState = {
+  contactSearch: string
+  contactModalOpen: boolean
+  contactModalInitialName: string
+}
+
+// ── Initial state factories ────────────────────────────────────
+
+function initForm(editing: Transaction | null, prefill?: WizardPrefill): WizardForm {
+  if (editing) {
+    return {
+      type: editing.type,
+      nature: editing.nature ?? (editing.type === 'income' ? 'sale_service' : 'operational_expense'),
+      amountCents: Math.round(editing.amount * 100),
+      date: editing.date,
+      categoryId: editing.category_id ?? undefined,
+      description: editing.description ?? '',
+      notes: editing.notes ?? '',
+      counterpart: editing.counterpart ?? '',
+      contactId: editing.contact_id ?? undefined,
+      isInstallment: editing.is_installment,
+      installmentCount: editing.installment_count ?? 2,
+      createFutureInstallments: false,
+      installmentOverrides: {},
+      isRecurring: false,
+      recurrenceFrequency: 'monthly',
+      recurrenceCount: 12,
+    }
+  }
+  if (prefill) {
+    return {
+      type: prefill.type ?? null,
+      nature: prefill.type === 'income' ? 'sale_service' : prefill.type === 'expense' ? 'operational_expense' : null,
+      amountCents: prefill.amountCents ?? 0,
+      date: prefill.date ?? format(new Date(), 'yyyy-MM-dd'),
+      categoryId: undefined,
+      description: prefill.description ?? '',
+      notes: '',
+      counterpart: prefill.counterpart ?? '',
+      contactId: prefill.contactId,
+      isInstallment: false,
+      installmentCount: 2,
+      createFutureInstallments: true,
+      installmentOverrides: {},
+      isRecurring: false,
+      recurrenceFrequency: 'monthly',
+      recurrenceCount: 12,
+    }
+  }
+  return {
+    type: null,
+    nature: null,
+    amountCents: 0,
+    date: format(new Date(), 'yyyy-MM-dd'),
+    categoryId: undefined,
+    description: '',
+    notes: '',
+    counterpart: '',
+    contactId: undefined,
+    isInstallment: false,
+    installmentCount: 2,
+    createFutureInstallments: true,
+    installmentOverrides: {},
+    isRecurring: false,
+    recurrenceFrequency: 'monthly',
+    recurrenceCount: 12,
+  }
+}
+
+const initPayment = (): PaymentState => ({ paidAt: '', paymentMethod: null, bankId: undefined, methodError: '' })
+const initContact = (): ContactState => ({ contactSearch: '', contactModalOpen: false, contactModalInitialName: '' })
+
+// ── Hook ───────────────────────────────────────────────────────
+
 export function useTransactionWizardState(
   open: boolean,
   editing: Transaction | null,
@@ -105,46 +214,46 @@ export function useTransactionWizardState(
 ): UseTransactionWizardState {
   const t = useT()
 
-  // Phase management
-  const [phase, setPhase] = useState<Phase>('wizard')
-  const [createdId, setCreatedId] = useState<string | null>(null)
-  const [skipCountdown, setSkipCountdown] = useState(0)
-
-  // Wizard state
-  const [step, setStep] = useState<Step>(1)
-  const [type, setType] = useState<TransactionType | null>(null)
-  const [nature, setNature] = useState<TransactionNature | null>(null)
-  const [amountCents, setAmountCents] = useState(0)
-  const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [categoryId, setCategoryId] = useState<string | undefined>()
-  const [description, setDescription] = useState('')
-  const [notes, setNotes] = useState('')
-  const [counterpart, setCounterpart] = useState('')
-  const [contactId, setContactId] = useState<string | undefined>()
-  const [isInstallment, setIsInstallment] = useState(false)
-  const [installmentCount, setInstallmentCount] = useState(2)
-  const [createFutureInstallments, setCreateFutureInstallments] = useState(false)
-  const [installmentOverrides, setInstallmentOverrides] = useState<Record<number, { date: string; amountStr: string }>>({})
-  const [isRecurring, setIsRecurring] = useState(false)
-  const [recurrenceFrequency, setRecurrenceFrequency] = useState<RecurrenceFrequency>('monthly')
-  const [recurrenceCount, setRecurrenceCount] = useState(12)
-
-  // Validation
+  const [form, setForm] = useState<WizardForm>(() => initForm(editing, prefill))
+  const [phaseState, setPhaseState] = useState<PhaseState>({ phase: 'wizard', step: initialStep ?? 1, createdId: null, skipCountdown: 0 })
+  const [payment, setPayment] = useState<PaymentState>(initPayment)
+  const [contact, setContact] = useState<ContactState>(initContact)
   const [amountError, setAmountError] = useState('')
   const [descError, setDescError] = useState('')
 
-  // Contact management
-  const [contactSearch, setContactSearch] = useState('')
-  const [contactModalOpen, setContactModalOpen] = useState(false)
-  const [contactModalInitialName, setContactModalInitialName] = useState('')
-
-  // Payment phase
-  const [paidAt, setPaidAt] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank' | null>(null)
-  const [bankId, setBankId] = useState<string | undefined>()
-  const [methodError, setMethodError] = useState('')
-
   const amountRef = useRef<HTMLInputElement>(null)
+
+  // Individual setters — thin wrappers that maintain the external interface
+  const setType = (v: TransactionType | null) => setForm((f) => ({ ...f, type: v }))
+  const setNature = (v: TransactionNature | null) => setForm((f) => ({ ...f, nature: v }))
+  const setAmountCents = (v: number) => setForm((f) => ({ ...f, amountCents: v }))
+  const setDate = (v: string) => setForm((f) => ({ ...f, date: v }))
+  const setCategoryId = (v: string | undefined) => setForm((f) => ({ ...f, categoryId: v }))
+  const setDescription = (v: string) => setForm((f) => ({ ...f, description: v }))
+  const setNotes = (v: string) => setForm((f) => ({ ...f, notes: v }))
+  const setCounterpart = (v: string) => setForm((f) => ({ ...f, counterpart: v }))
+  const setContactId = (v: string | undefined) => setForm((f) => ({ ...f, contactId: v }))
+  const setIsInstallment = (v: boolean) => setForm((f) => ({ ...f, isInstallment: v }))
+  const setInstallmentCount = (v: number) => setForm((f) => ({ ...f, installmentCount: v }))
+  const setCreateFutureInstallments = (v: boolean) => setForm((f) => ({ ...f, createFutureInstallments: v }))
+  const setInstallmentOverrides = (v: Record<number, { date: string; amountStr: string }>) => setForm((f) => ({ ...f, installmentOverrides: v }))
+  const setIsRecurring = (v: boolean) => setForm((f) => ({ ...f, isRecurring: v }))
+  const setRecurrenceFrequency = (v: RecurrenceFrequency) => setForm((f) => ({ ...f, recurrenceFrequency: v }))
+  const setRecurrenceCount = (v: number) => setForm((f) => ({ ...f, recurrenceCount: v }))
+
+  const setPhase = (v: Phase) => setPhaseState((p) => ({ ...p, phase: v }))
+  const setStep = (v: Step) => setPhaseState((p) => ({ ...p, step: v }))
+  const setCreatedId = (v: string | null) => setPhaseState((p) => ({ ...p, createdId: v }))
+  const setSkipCountdown = (v: number) => setPhaseState((p) => ({ ...p, skipCountdown: v }))
+
+  const setPaidAt = (v: string) => setPayment((p) => ({ ...p, paidAt: v }))
+  const setPaymentMethod = (v: 'cash' | 'bank' | null) => setPayment((p) => ({ ...p, paymentMethod: v }))
+  const setBankId = (v: string | undefined) => setPayment((p) => ({ ...p, bankId: v }))
+  const setMethodError = (v: string) => setPayment((p) => ({ ...p, methodError: v }))
+
+  const setContactSearch = (v: string) => setContact((c) => ({ ...c, contactSearch: v }))
+  const setContactModalOpen = (v: boolean) => setContact((c) => ({ ...c, contactModalOpen: v }))
+  const setContactModalInitialName = (v: string) => setContact((c) => ({ ...c, contactModalInitialName: v }))
 
   const formatCents = (cents: number) => {
     const padded = String(cents).padStart(3, '0')
@@ -152,66 +261,12 @@ export function useTransactionWizardState(
   }
 
   const reset = () => {
-    setPhase('wizard')
-    setCreatedId(null)
+    setForm(initForm(editing, prefill))
+    setPhaseState({ phase: 'wizard', step: editing ? 1 : (initialStep ?? 1), createdId: null, skipCountdown: 0 })
+    setPayment(initPayment())
+    setContact(initContact())
     setAmountError('')
     setDescError('')
-    setPaidAt('')
-    setPaymentMethod(null)
-    setBankId(undefined)
-    setMethodError('')
-    setContactSearch('')
-    setIsRecurring(false)
-    setRecurrenceFrequency('monthly')
-    setRecurrenceCount(12)
-    if (editing) {
-      setStep(1)
-      setType(editing.type)
-      setNature(editing.nature ?? (editing.type === 'income' ? 'sale_service' : 'operational_expense'))
-      setAmountCents(Math.round(editing.amount * 100))
-      setDate(editing.date)
-      setCategoryId(editing.category_id ?? undefined)
-      setDescription(editing.description ?? '')
-      setNotes(editing.notes ?? '')
-      setCounterpart(editing.counterpart ?? '')
-      setContactId(editing.contact_id ?? undefined)
-      setIsInstallment(editing.is_installment)
-      setInstallmentCount(editing.installment_count ?? 2)
-      setCreateFutureInstallments(false)
-    } else if (prefill) {
-      setStep(initialStep ?? 1)
-      setType(prefill.type ?? null)
-      setNature(
-        prefill.type === 'income'  ? 'sale_service' :
-        prefill.type === 'expense' ? 'operational_expense' :
-        null
-      )
-      setAmountCents(prefill.amountCents ?? 0)
-      setDate(prefill.date ?? format(new Date(), 'yyyy-MM-dd'))
-      setCategoryId(undefined)
-      setDescription(prefill.description ?? '')
-      setNotes('')
-      setCounterpart(prefill.counterpart ?? '')
-      setContactId(prefill.contactId)
-      setIsInstallment(false)
-      setInstallmentCount(2)
-      setCreateFutureInstallments(true)
-    } else {
-      setStep(1)
-      setType(null)
-      setNature(null)
-      setAmountCents(0)
-      setDate(format(new Date(), 'yyyy-MM-dd'))
-      setCategoryId(undefined)
-      setDescription('')
-      setNotes('')
-      setCounterpart('')
-      setContactId(undefined)
-      setIsInstallment(false)
-      setInstallmentCount(2)
-      setCreateFutureInstallments(true)
-    }
-    setInstallmentOverrides({})
   }
 
   // Reset state when modal opens/closes
@@ -220,34 +275,38 @@ export function useTransactionWizardState(
   }, [open])
 
   // Reset overrides when base values change
-  useEffect(() => { setInstallmentOverrides({}) }, [installmentCount, amountCents, date])
+  const { installmentCount, amountCents, date } = form
+  useEffect(() => {
+    setForm((f) => ({ ...f, installmentOverrides: {} }))
+  }, [installmentCount, amountCents, date])
 
   // Auto-focus amount input
+  const { step } = phaseState
   useEffect(() => {
     if (step === 4) setTimeout(() => amountRef.current?.focus(), 50)
   }, [step])
 
   // Auto-generate description
+  const { type, counterpart, description } = form
   useEffect(() => {
     if (step === 7 && !description.trim() && type) {
       const name = counterpart.trim()
-      if (name) {
-        setDescription(
-          type === 'income'
+      setForm((f) => ({
+        ...f,
+        description: name
+          ? type === 'income'
             ? `${t('transactions_wizard_descPrefixIncomeWith')} ${name}`
             : `${t('transactions_wizard_descPrefixExpenseWith')} ${name}`
-        )
-      } else {
-        setDescription(
-          type === 'income'
+          : type === 'income'
             ? t('transactions_wizard_descPrefixIncome')
-            : t('transactions_wizard_descPrefixExpense')
-        )
-      }
+            : t('transactions_wizard_descPrefixExpense'),
+      }))
     }
   }, [step, type, counterpart, description, t])
 
   // Set default payment date
+  const { phase } = phaseState
+  const { paidAt } = payment
   useEffect(() => {
     if (phase === 'payment-form' && !paidAt) setPaidAt(format(new Date(), 'yyyy-MM-dd'))
   }, [phase, paidAt])
@@ -258,70 +317,67 @@ export function useTransactionWizardState(
     if (phase !== 'payment-prompt') { setSkipCountdown(0); return }
     setSkipCountdown(SKIP_DURATION)
     const id = setInterval(() => {
-      setSkipCountdown((v) => {
-        if (v <= 1) { clearInterval(id); return 0 }
-        return v - 1
+      setPhaseState((p) => {
+        if (p.skipCountdown <= 1) { clearInterval(id); return { ...p, skipCountdown: 0 } }
+        return { ...p, skipCountdown: p.skipCountdown - 1 }
       })
     }, 1000)
     return () => clearInterval(id)
   }, [phase])
 
-  const goTo = (s: Step) => setStep(s)
-  const goBack = () => setStep((s) => Math.max(s - 1, 1) as Step)
+  const goTo = (s: Step) => setPhaseState((p) => ({ ...p, step: s }))
+  const goBack = () => setPhaseState((p) => ({ ...p, step: Math.max(p.step - 1, 1) as Step }))
 
   const selectType = (v: TransactionType) => {
-    setType(v)
-    setNature(v === 'income' ? 'sale_service' : 'operational_expense')
+    setForm((f) => ({ ...f, type: v, nature: v === 'income' ? 'sale_service' : 'operational_expense' }))
     goTo(2)
   }
 
-  const selectNature = (v: TransactionNature) => {
-    setNature(v)
-  }
+  const selectNature = (v: TransactionNature) => setNature(v)
 
   return {
     // Phase management
-    phase,
+    phase: phaseState.phase,
     setPhase,
-    createdId,
+    createdId: phaseState.createdId,
     setCreatedId,
-    skipCountdown,
+    skipCountdown: phaseState.skipCountdown,
     setSkipCountdown,
 
     // Wizard state
-    step,
+    step: phaseState.step,
     setStep,
-    type,
+    type: form.type,
     setType,
-    nature,
+    nature: form.nature,
     setNature,
-    amountCents,
+    amountCents: form.amountCents,
     setAmountCents,
-    date,
+    date: form.date,
     setDate,
-    categoryId,
+    categoryId: form.categoryId,
     setCategoryId,
-    description,
+    description: form.description,
     setDescription,
-    notes,
+    notes: form.notes,
     setNotes,
-    counterpart,
+    counterpart: form.counterpart,
     setCounterpart,
-    contactId,
+    contactId: form.contactId,
     setContactId,
-    isInstallment,
+    isInstallment: form.isInstallment,
     setIsInstallment,
-    installmentCount,
+    installmentCount: form.installmentCount,
     setInstallmentCount,
-    createFutureInstallments,
+    createFutureInstallments: form.createFutureInstallments,
     setCreateFutureInstallments,
-    installmentOverrides,
+    installmentOverrides: form.installmentOverrides,
     setInstallmentOverrides,
-    isRecurring,
+    isRecurring: form.isRecurring,
     setIsRecurring,
-    recurrenceFrequency,
+    recurrenceFrequency: form.recurrenceFrequency,
     setRecurrenceFrequency,
-    recurrenceCount,
+    recurrenceCount: form.recurrenceCount,
     setRecurrenceCount,
 
     // Validation
@@ -331,21 +387,21 @@ export function useTransactionWizardState(
     setDescError,
 
     // Contact management
-    contactSearch,
+    contactSearch: contact.contactSearch,
     setContactSearch,
-    contactModalOpen,
+    contactModalOpen: contact.contactModalOpen,
     setContactModalOpen,
-    contactModalInitialName,
+    contactModalInitialName: contact.contactModalInitialName,
     setContactModalInitialName,
 
     // Payment phase
-    paidAt,
+    paidAt: payment.paidAt,
     setPaidAt,
-    paymentMethod,
+    paymentMethod: payment.paymentMethod,
     setPaymentMethod,
-    bankId,
+    bankId: payment.bankId,
     setBankId,
-    methodError,
+    methodError: payment.methodError,
     setMethodError,
 
     // Utilities

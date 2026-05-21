@@ -4,14 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog } from '@syncero/ui'
+import { AlertBox, Button, Input, Select, Modal, useToast, Tabs, TabList, Tab, TabPanel, Card, Badge, Table, Avatar, ConfirmDialog, IconButton } from '@syncero/ui'
 import { Pencil, RefreshCw, X, UserMinus, UserPlus, ChevronDown, Info, Upload, FileKey2, CheckCircle2, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
 import { useAuthStore } from '@/store/auth'
 import { SEGMENTS_WITH_COST } from '@/lib/segments'
 import { usePreferencesStore } from '@/store/preferences'
-import { useT } from '@/i18n'
+import { useT, apiError } from '@/i18n'
 import { getCompany, updateCompany, getCompanyMembers, inviteCompanyMember, resendMemberInvite, updateMemberRole, removeCompanyMember, getAccountantCompanies, inviteAccountant, resendAccountantInvite, cancelAccountantInvite, getSefazCredential, saveSefazCredential, deleteSefazCredential, triggerSefazSync, type SefazCredential } from '@/lib/backend'
 import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
 import type { MemberRole, AccountantCompany, TaxRegime } from '@/types'
@@ -184,10 +184,7 @@ function CompanyTab() {
               )}
             />
             {SEGMENTS_WITH_COST.has(watch('segment') ?? '') ? (
-              <div className="flex items-start gap-1.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2.5 py-2">
-                <Info className="h-3.5 w-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
-                <p className="text-xs text-[var(--text-secondary)]">{t('settings_segmentCostHint')}</p>
-              </div>
+              <AlertBox variant="info">{t('settings_segmentCostHint')}</AlertBox>
             ) : (
               <p className="text-xs text-[var(--text-muted)]">{t('settings_segmentHint')}</p>
             )}
@@ -205,29 +202,6 @@ function CompanyTab() {
 }
 
 // ── Aba Membros ───────────────────────────────────────────────
-
-function IconBtn({ onClick, disabled, tooltip, danger, children }: {
-  onClick: () => void
-  disabled?: boolean
-  tooltip: string
-  danger?: boolean
-  children: React.ReactNode
-}) {
-  return (
-    <div className="relative group">
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        className={`cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] transition-colors disabled:opacity-50 ${danger ? 'hover:text-[var(--danger)]' : 'hover:text-[var(--accent)]'}`}
-      >
-        {children}
-      </button>
-      <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-        {tooltip}
-      </span>
-    </div>
-  )
-}
 
 function MembersTab() {
   const t = useT()
@@ -289,7 +263,7 @@ function MembersTab() {
   })
 
   const changeRole = useMutation({
-    mutationFn: ({ id, role }: { id: string; role: string }) => updateMemberRole(id, role),
+    mutationFn: ({ id, role }: { id: string; role: MemberRole }) => updateMemberRole(id, role),
     onSuccess: () => { setEditRoleId(null); invalidate(); success(t('common_savedSuccess')) },
     onError: () => toastError(t('common_errorGeneric')),
   })
@@ -390,7 +364,7 @@ function MembersTab() {
               render: (r) =>
                 r.user_id === company?.owner_id ? null : (
                   <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'default'}>
-                    {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_rejected')}
+                    {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_revoked')}
                   </Badge>
                 ),
             },
@@ -414,26 +388,34 @@ function MembersTab() {
 
                 if (r.status === 'pending') return (
                   <div className="flex items-center justify-end gap-1">
-                    <IconBtn onClick={() => resend.mutate(r.id)} disabled={resend.isPending && resend.variables === r.id} tooltip={t('settings_resend')}>
-                      <RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />
-                    </IconBtn>
-                    <IconBtn onClick={() => setRemoveId(r.id)} tooltip={t('settings_cancel')} danger>
-                      <X className="h-3.5 w-3.5" />
-                    </IconBtn>
+                    <IconButton
+                      icon={<RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />}
+                      tooltip={t('settings_resend')}
+                      onClick={() => resend.mutate(r.id)}
+                      disabled={resend.isPending && resend.variables === r.id}
+                    />
+                    <IconButton
+                      icon={<X className="h-3.5 w-3.5" />}
+                      tooltip={t('settings_cancel')}
+                      variant="danger"
+                      onClick={() => setRemoveId(r.id)}
+                    />
                   </div>
                 )
 
                 if (r.status === 'accepted') return (
                   <div className="flex items-center justify-end gap-1">
-                    <IconBtn
-                      onClick={() => { setEditRoleId(r.id); setEditRole(r.role as MemberRole) }}
+                    <IconButton
+                      icon={<Pencil className="h-3.5 w-3.5" />}
                       tooltip={t('settings_editRole')}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </IconBtn>
-                    <IconBtn onClick={() => setRemoveId(r.id)} tooltip={t('settings_unlink')} danger>
-                      <UserMinus className="h-3.5 w-3.5" />
-                    </IconBtn>
+                      onClick={() => { setEditRoleId(r.id); setEditRole(r.role as MemberRole) }}
+                    />
+                    <IconButton
+                      icon={<UserMinus className="h-3.5 w-3.5" />}
+                      tooltip={t('settings_unlink')}
+                      variant="danger"
+                      onClick={() => setRemoveId(r.id)}
+                    />
                   </div>
                 )
 
@@ -449,7 +431,7 @@ function MembersTab() {
         <div className="flex flex-col gap-4">
           <Input label={t('settings_email')} placeholder="email@exemplo.com" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} autoFocus />
           <Select label={t('settings_role')} options={roleOptions} value={inviteRole} onChange={(v) => setInviteRole(v as MemberRole)} />
-          {invite.isError && <p className="text-xs text-[var(--danger)]">{(invite.error as Error)?.message ?? t('settings_inviteError')}</p>}
+          {invite.isError && <p className="text-xs text-[var(--danger)]">{apiError(invite.error, t, 'settings_inviteError')}</p>}
         </div>
         <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
           <Button variant="ghost" size="sm" onClick={() => { setInviteOpen(false); setInviteEmail('') }}>{t('settings_cancel')}</Button>
@@ -584,7 +566,7 @@ function AccountantTab() {
               header: t('accountant_status'),
               render: (r) => (
                 <Badge variant={r.status === 'accepted' ? 'success' : r.status === 'pending' ? 'warning' : 'danger'}>
-                  {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_rejected')}
+                  {r.status === 'accepted' ? t('settings_active') : r.status === 'pending' ? t('settings_waiting') : t('settings_revoked')}
                 </Badge>
               ),
             },
@@ -602,18 +584,28 @@ function AccountantTab() {
                 if (!isAdmin) return null
                 if (r.status === 'pending') return (
                   <div className="flex items-center justify-end gap-1">
-                    <IconBtn onClick={() => resend.mutate(r.id)} disabled={resend.isPending && resend.variables === r.id} tooltip={t('settings_resend')}>
-                      <RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />
-                    </IconBtn>
-                    <IconBtn onClick={() => cancel.mutate(r.id)} disabled={cancel.isPending && cancel.variables === r.id} tooltip={t('settings_cancel')} danger>
-                      <X className="h-3.5 w-3.5" />
-                    </IconBtn>
+                    <IconButton
+                      icon={<RefreshCw className={`h-3.5 w-3.5 ${resend.isPending && resend.variables === r.id ? 'animate-spin' : ''}`} />}
+                      tooltip={t('settings_resend')}
+                      onClick={() => resend.mutate(r.id)}
+                      disabled={resend.isPending && resend.variables === r.id}
+                    />
+                    <IconButton
+                      icon={<X className="h-3.5 w-3.5" />}
+                      tooltip={t('settings_cancel')}
+                      variant="danger"
+                      onClick={() => cancel.mutate(r.id)}
+                      disabled={cancel.isPending && cancel.variables === r.id}
+                    />
                   </div>
                 )
                 if (r.status === 'accepted') return (
-                  <IconBtn onClick={() => setUnlinkId(r.id)} tooltip={t('settings_unlink')} danger>
-                    <UserMinus className="h-3.5 w-3.5" />
-                  </IconBtn>
+                  <IconButton
+                    icon={<UserMinus className="h-3.5 w-3.5" />}
+                    tooltip={t('settings_unlink')}
+                    variant="danger"
+                    onClick={() => setUnlinkId(r.id)}
+                  />
                 )
                 return null
               },
@@ -625,7 +617,7 @@ function AccountantTab() {
       <Modal open={modalOpen} onClose={() => { setModalOpen(false); setInviteEmail('') }} title={t('settings_inviteAccountant')} size="sm">
         <div className="flex flex-col gap-4">
           <Input label="Email" placeholder="contador@escritorio.com" type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} autoFocus />
-          {invite.isError && <p className="text-xs text-[var(--danger)]">{(invite.error as Error)?.message ?? t('settings_inviteError')}</p>}
+          {invite.isError && <p className="text-xs text-[var(--danger)]">{apiError(invite.error, t, 'settings_inviteError')}</p>}
         </div>
         <div className="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-[var(--bg-border)]">
           <Button variant="ghost" size="sm" onClick={() => { setModalOpen(false); setInviteEmail('') }}>{t('settings_cancel')}</Button>

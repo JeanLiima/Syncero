@@ -46,7 +46,7 @@ router.get('/', async (c) => {
   const db = createServiceClient()
   const { company_id, ext_company_id } = c.req.query()
 
-  if (!company_id && !ext_company_id) return c.json({ error: 'company_id or ext_company_id required' }, 400)
+  if (!company_id && !ext_company_id) return c.json({ error: 'company_id_required' }, 400)
 
   if (company_id) {
     const ok = await canAccessCompany(db, userId, company_id)
@@ -61,7 +61,7 @@ router.get('/', async (c) => {
     ? await q.eq('company_id', company_id)
     : await q.eq('ext_company_id', ext_company_id!)
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -78,9 +78,9 @@ router.post('/', async (c) => {
     status?: string
   }>()
 
-  if (!body.company_id && !body.ext_company_id) return c.json({ error: 'company_id or ext_company_id required' }, 400)
-  if (!body.book_type) return c.json({ error: 'book_type required' }, 400)
-  if (!body.reference_period) return c.json({ error: 'reference_period required' }, 400)
+  if (!body.company_id && !body.ext_company_id) return c.json({ error: 'company_id_required' }, 400)
+  if (!body.book_type) return c.json({ error: 'validation_error' }, 400)
+  if (!body.reference_period) return c.json({ error: 'validation_error' }, 400)
 
   if (body.company_id) {
     const ok = await canAccessCompany(db, userId, body.company_id)
@@ -98,7 +98,7 @@ router.post('/', async (c) => {
     status: body.status ?? 'draft',
   }).select('*').single()
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data, 201)
 })
 
@@ -119,7 +119,7 @@ router.patch('/:id', async (c) => {
     .select('*')
     .single()
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -134,7 +134,7 @@ router.delete('/:id', async (c) => {
   if (!ok) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('fiscal_books').delete().eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 

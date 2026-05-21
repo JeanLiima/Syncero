@@ -1,6 +1,6 @@
 # check-i18n
 
-Valida se todas as traduções estão em sincronia em PT e EN — tanto nos apps (Flow/Books) quanto nos HTMLs do docs.
+Valida se todas as traduções estão em sincronia em PT e EN — tanto nos apps (Flow/Books) quanto nos HTMLs do docs. Também detecta candidatos ao pacote compartilhado e erros do backend sem tradução.
 
 ## O que este comando faz
 
@@ -23,7 +23,78 @@ Para cada app em `apps/flow` e `apps/books`:
 **d) Valores vazios**
 - Reporta chaves com string vazia `''` em PT ou EN
 
-### 2. Docs — `apps/docs/*.html`
+### 2. Traduções duplicadas — candidatos ao `@syncero/i18n`
+
+**O que verificar:** Chaves que aparecem em ambos `apps/flow/src/i18n/pt.ts` E `apps/books/src/i18n/pt.ts` com valores idênticos, mas que NÃO estão em `packages/i18n/src/pt.ts`.
+
+**Como detectar:**
+- Extrair chaves explícitas de `apps/flow/src/i18n/pt.ts` (ignorar o `...sharedPt`)
+- Extrair chaves explícitas de `apps/books/src/i18n/pt.ts` (ignorar o `...sharedPt`)
+- Ler `packages/i18n/src/pt.ts` para saber o que já está compartilhado
+- Para cada chave que aparece nos dois apps com mesmo valor PT E mesmo valor EN: reportar como candidata ao pacote compartilhado
+
+**Ação esperada:** Mover a chave para `packages/i18n/src/pt.ts` e `en.ts`, e remover das cópias dos apps.
+
+### 3. Erros do backend sem tradução (`api_error_*`)
+
+**O que verificar:** Rotas do backend que retornam `c.json({ error: '...' })` onde o valor parece ser uma mensagem em linguagem natural (começa com maiúscula, contém espaços ou está em português/inglês) ao invés de um código `lowercase_underscore`.
+
+**Arquivos a verificar:**
+- `apps/flow/api/routes/*.ts`
+- `apps/books/api/routes/*.ts`
+
+**Padrão problemático:**
+```ts
+// ✗ mensagem hardcoded — não tem tradução
+c.json({ error: 'This company already has an accountant.' }, 409)
+c.json({ error: 'Usuário não encontrado.' }, 404)
+```
+
+**Padrão correto:**
+```ts
+// ✓ código — tem correspondência api_error_* no i18n
+c.json({ error: 'accountant_already_linked' }, 409)
+```
+
+**Regra de detecção:** O valor de `error` é problemático se:
+- Contém espaços, ou
+- Começa com letra maiúscula, ou
+- Termina com ponto final, ou
+- Está em português (contém acentos ou palavras PT)
+
+**Para cada erro problemático encontrado:**
+- Reportar arquivo, linha e a mensagem atual
+- Sugerir um código `lowercase_underscore` equivalente
+- Verificar se já existe a chave `api_error_{código}` em `packages/i18n/src/pt.ts`
+
+**Também verificar no sentido inverso:**
+- Para cada `api_error_*` em `packages/i18n/src/pt.ts`, verificar se existe ao menos um `c.json({ error: 'código' })` correspondente no backend
+- Reportar `api_error_*` orphans (chave de tradução sem erro de backend correspondente)
+
+### 4. Uso de `error.message` direto no frontend
+
+**O que verificar:** Procurar em `apps/flow/src/**` e `apps/books/src/**` por padrões como:
+- `(error as Error)?.message`
+- `err.message`
+- `e.message`
+
+quando usados em JSX para exibição direta ao usuário (dentro de `<p>`, `<span>`, ou em `toastError()`).
+
+**Padrão problemático:**
+```tsx
+{(invite.error as Error)?.message ?? t('settings_inviteError')}
+toastError(err instanceof Error ? err.message : t('common_errorGeneric'))
+```
+
+**Padrão correto:**
+```tsx
+{apiError(invite.error, t, 'settings_inviteError')}
+toastError(t('common_errorGeneric'))
+```
+
+Reportar cada ocorrência com arquivo e linha.
+
+### 5. Docs — `apps/docs/*.html`
 
 Para cada HTML que tenha um objeto `T = { pt: {...}, en: {...} }`:
 
@@ -44,12 +115,16 @@ Use as ferramentas Read e Grep para inspecionar os arquivos. Não use Bash com g
 
 ### Fluxo de execução
 
-1. Ler `apps/flow/src/i18n/pt.ts` → extrair todas as chaves
-2. Ler `apps/flow/src/i18n/en.ts` → comparar chaves
-3. Grep por cada chave em `apps/flow/src/**` para checar uso
-4. Repetir para `apps/books/src/i18n/`
-5. Para cada HTML em `apps/docs/`: ler o arquivo, extrair `T.pt`, `T.en` e todos os `data-i18n`
-6. Reportar todas as inconsistências encontradas
+1. Ler `packages/i18n/src/pt.ts` → extrair chaves do pacote compartilhado
+2. Ler `apps/flow/src/i18n/pt.ts` e `en.ts` → chaves explícitas do app
+3. Ler `apps/books/src/i18n/pt.ts` e `en.ts` → chaves explícitas do app
+4. Verificar sincronia PT ↔ EN em cada app (checks a/b/c/d)
+5. Detectar chaves duplicadas entre os apps não presentes no shared (check 2)
+6. Grep `c.json.*error` em todos os routes do backend (check 3)
+7. Comparar códigos de backend com chaves `api_error_*` existentes (check 3 reverso)
+8. Grep `error.*message` em JSX frontend (check 4)
+9. Processar HTMLs do docs (check 5)
+10. Reportar tudo
 
 ## Formato do relatório
 
@@ -65,29 +140,56 @@ Use as ferramentas Read e Grep para inspecionar os arquivos. Não use Bash com g
 ## Books i18n
 (mesmo formato)
 
+## Traduções duplicadas → candidatas ao @syncero/i18n
+
+⚠ Chaves idênticas em Flow e Books, mas não no shared:
+  - chave_x: 'valor PT' / 'EN value'
+  - chave_y: ...
+
+## Erros do backend sem tradução
+
+⚠ Mensagens hardcoded encontradas (não são códigos):
+  apps/flow/api/routes/_companies.ts:23
+    atual:    'Failed to create company'
+    sugerido: 'company_create_failed'
+    api_error_*: ✗ não existe
+
+⚠ Chaves api_error_* sem erro de backend correspondente:
+  - api_error_xyz (definida em shared/pt.ts, sem c.json({ error: 'xyz' }))
+
+## Uso de error.message no frontend
+
+⚠ error.message exibido diretamente ao usuário:
+  apps/flow/src/pages/settings/Company.tsx:434
+    {(save.error as Error)?.message}
+    → usar: apiError(save.error, t, 'common_errorGeneric')
+
 ## Docs HTML
 
 ### index.html
 ✓ PT ↔ EN em sincronia
 ⚠ Chaves em PT sem EN: [lista]
-⚠ Chaves em EN sem PT: [lista]
-⚠ Chaves definidas mas sem data-i18n: [lista]
-⚠ data-i18n sem chave no dicionário: [lista]
-
-(repetir para flow-external.html, books-external.html)
+...
 ```
 
 ## Após o relatório
 
 Se houver problemas, pergunte ao usuário se deseja corrigir automaticamente. Se sim:
-- Adicionar chaves faltantes (PT como base para sugerir EN)
-- Remover chaves órfãs
-- Não alterar valores existentes sem confirmação
+- Mover chaves duplicadas para `packages/i18n/src/`
+- Substituir mensagens de backend por códigos
+- Adicionar chaves `api_error_*` faltantes
+- Substituir `error.message` direto por `apiError()`
+- Não alterar valores de tradução existentes sem confirmação
 
 ## Arquivos relevantes
 
 | Tipo | Caminho |
 |------|---------|
+| Shared PT | `packages/i18n/src/pt.ts` |
+| Shared EN | `packages/i18n/src/en.ts` |
 | App PT (fonte) | `apps/flow/src/i18n/pt.ts`, `apps/books/src/i18n/pt.ts` |
 | App EN | `apps/flow/src/i18n/en.ts`, `apps/books/src/i18n/en.ts` |
+| apiError helper | `apps/flow/src/i18n/apiError.ts` |
+| Backend routes (Flow) | `apps/flow/api/routes/*.ts` |
+| Backend routes (Books) | `apps/books/api/routes/*.ts` |
 | Docs HTML | `apps/docs/index.html`, `apps/docs/flow-external.html`, `apps/docs/books-external.html` |

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Pencil, Check, ChevronDown, ChevronRight, Info, Plus } from 'lucide-react'
-import { Button, Checkbox, Modal } from '@syncero/ui'
+import { Button, Checkbox, Modal, IconButton } from '@syncero/ui'
 import { useT } from '@/i18n'
 import type { CompanySegment } from '@/types'
 import type { PlanEntry } from '@/lib/backend'
@@ -170,17 +170,13 @@ function PlanRow({
           }`}>
             {entry.is_analytic ? t('plano_analytic') : t('plano_synthetic')}
           </span>
-          <div className="relative group/add">
-            <button
-              onClick={() => onAddChild(entry._key)}
-              className="cursor-pointer p-1 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--success)] transition-colors opacity-0 group-hover/row:opacity-100"
-            >
-              <Plus className="h-3 w-3" />
-            </button>
-            <span className="pointer-events-none absolute -top-7 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/add:opacity-100 transition-opacity z-50">
-              {t('plano_addChildTooltip')}
-            </span>
-          </div>
+          <IconButton
+            icon={<Plus className="h-3 w-3" />}
+            tooltip={t('plano_addChildTooltip')}
+            variant="success"
+            wrapperClassName="opacity-0 group-hover/row:opacity-100"
+            onClick={() => onAddChild(entry._key)}
+          />
         </div>
       </td>
     </tr>

@@ -4,7 +4,7 @@ import { Plus, Pencil, Trash2, ChevronRight, ChevronDown, Search, X, LayoutList,
 import { apiFetch } from '@/lib/api'
 import { seedAccountPlan } from '@/lib/backend'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
-import { Button, Card, ConfirmDialog, Input, Modal, Select, useToast } from '@syncero/ui'
+import { Button, Card, ConfirmDialog, Input, Modal, Select, useToast, IconButton } from '@syncero/ui'
 import { AccountPlanModal, type AccountPlanModalProps } from '@/components/accountant/AccountPlanModal'
 import { CfcPreviewModal } from '@/components/accountant/CfcPreviewModal'
 import { useT } from '@/i18n'
@@ -129,39 +129,9 @@ function AccountRow({ plan, plans, collapsed, onToggle, onEdit, onAddChild, onDe
       {canWrite && (
         <td className="px-2 py-2 w-20">
           <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="relative group/tip">
-              <button
-                onClick={() => onAddChild(plan)}
-                className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-              <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/tip:opacity-100 transition-opacity z-10">
-                {t('plano_addChild')}
-              </span>
-            </div>
-            <div className="relative group/edit">
-              <button
-                onClick={() => onEdit(plan)}
-                className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
-              <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/edit:opacity-100 transition-opacity z-10">
-                {t('plano_edit')}
-              </span>
-            </div>
-            <div className="relative group/del">
-              <button
-                onClick={() => onDelete(plan)}
-                className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-              <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover/del:opacity-100 transition-opacity z-10">
-                {t('plano_delete')}
-              </span>
-            </div>
+            <IconButton icon={<Plus className="h-3.5 w-3.5" />} tooltip={t('plano_addChild')} variant="success" onClick={() => onAddChild(plan)} />
+            <IconButton icon={<Pencil className="h-3.5 w-3.5" />} tooltip={t('plano_edit')} onClick={() => onEdit(plan)} />
+            <IconButton icon={<Trash2 className="h-3.5 w-3.5" />} tooltip={t('plano_delete')} variant="danger" onClick={() => onDelete(plan)} />
           </div>
         </td>
       )}
@@ -366,7 +336,7 @@ export function Component() {
       await qc.refetchQueries({ queryKey })
       setPreviewOpen(false)
     } catch (e) {
-      toastError(e instanceof Error ? e.message : t('plano_seedError'))
+      toastError(t('plano_seedError'))
     } finally {
       setSeeding(false)
     }

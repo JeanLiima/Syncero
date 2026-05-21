@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Plus, CheckCircle, Search, Download, Upload, ChevronDown } from 'lucide-react'
-import { Button, Card, Table, Badge, Input, Select, DateRangePicker } from '@syncero/ui'
+import { Button, Card, Table, Badge, Input, Select, DateRangePicker, IconButton } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useAuthStore } from '@/store/auth'
 import { useTransactions, useCategories } from '@/modules/transactions/queries'
@@ -17,55 +17,121 @@ import type { Transaction, TransactionType } from '@/types'
 import type { TransactionFilters } from '@/modules/transactions/types'
 import type { WizardPrefill } from '@/modules/transactions/useTransactionWizard'
 
+// ── Page state ─────────────────────────────────────────────────
+
+function defaultFilters(): TransactionFilters {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const last = new Date(y, now.getMonth() + 1, 0).getDate()
+  return { date_from: `${y}-${m}-01`, date_to: `${y}-${m}-${String(last).padStart(2, '0')}` }
+}
+
+type PageState = {
+  filters: TransactionFilters
+  page: number
+  detail: string | null
+  payment: { id: string; type: TransactionType } | null
+  wizard: boolean
+  wizardPrefill: WizardPrefill | null
+  editing: Transaction | null
+  exportOpen: boolean
+  importOpen: boolean
+  splitOpen: boolean
+}
+
+type Action =
+  | { type: 'SET_FILTER'; payload: Partial<TransactionFilters>; resetPage: boolean }
+  | { type: 'SET_PAGE'; page: number }
+  | { type: 'OPEN_DETAIL'; id: string }
+  | { type: 'CLOSE_DETAIL' }
+  | { type: 'OPEN_PAYMENT'; target: { id: string; type: TransactionType } }
+  | { type: 'CLOSE_PAYMENT' }
+  | { type: 'OPEN_WIZARD'; prefill?: WizardPrefill }
+  | { type: 'CLOSE_WIZARD' }
+  | { type: 'SET_EDITING'; tx: Transaction | null }
+  | { type: 'OPEN_EXPORT' }
+  | { type: 'CLOSE_EXPORT' }
+  | { type: 'OPEN_IMPORT' }
+  | { type: 'CLOSE_IMPORT' }
+  | { type: 'IMPORT_NFE'; prefill: WizardPrefill }
+  | { type: 'TOGGLE_SPLIT' }
+  | { type: 'CLOSE_SPLIT' }
+
+const initialState: PageState = {
+  filters: defaultFilters(),
+  page: 1,
+  detail: null,
+  payment: null,
+  wizard: false,
+  wizardPrefill: null,
+  editing: null,
+  exportOpen: false,
+  importOpen: false,
+  splitOpen: false,
+}
+
+function reducer(state: PageState, action: Action): PageState {
+  switch (action.type) {
+    case 'SET_FILTER':
+      return { ...state, filters: { ...state.filters, ...action.payload }, page: action.resetPage ? 1 : state.page }
+    case 'SET_PAGE':
+      return { ...state, page: action.page }
+    case 'OPEN_DETAIL':
+      return { ...state, detail: action.id }
+    case 'CLOSE_DETAIL':
+      return { ...state, detail: null }
+    case 'OPEN_PAYMENT':
+      return { ...state, payment: action.target }
+    case 'CLOSE_PAYMENT':
+      return { ...state, payment: null }
+    case 'OPEN_WIZARD':
+      return { ...state, wizard: true, wizardPrefill: action.prefill ?? null }
+    case 'CLOSE_WIZARD':
+      return { ...state, wizard: false, wizardPrefill: null }
+    case 'SET_EDITING':
+      return { ...state, editing: action.tx }
+    case 'OPEN_EXPORT':
+      return { ...state, exportOpen: true }
+    case 'CLOSE_EXPORT':
+      return { ...state, exportOpen: false }
+    case 'OPEN_IMPORT':
+      return { ...state, importOpen: true }
+    case 'CLOSE_IMPORT':
+      return { ...state, importOpen: false }
+    case 'IMPORT_NFE':
+      return { ...state, importOpen: false, wizard: true, wizardPrefill: action.prefill }
+    case 'TOGGLE_SPLIT':
+      return { ...state, splitOpen: !state.splitOpen }
+    case 'CLOSE_SPLIT':
+      return { ...state, splitOpen: false }
+  }
+}
+
+// ── Component ──────────────────────────────────────────────────
+
 export function Component() {
   const t = useT()
   const { language } = usePreferencesStore()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const canWrite = activeCompany?.role !== 'viewer'
-
-  const [filters, setFilters] = useState<TransactionFilters>(() => {
-    const now = new Date()
-    const y = now.getFullYear()
-    const m = String(now.getMonth() + 1).padStart(2, '0')
-    const last = new Date(y, now.getMonth() + 1, 0).getDate()
-    return { date_from: `${y}-${m}-01`, date_to: `${y}-${m}-${String(last).padStart(2, '0')}` }
-  })
-  const [page, setPage] = useState(1)
-  const [detailId, setDetailId] = useState<string | null>(null)
-  const [paymentTarget, setPaymentTarget] = useState<{ id: string; type: TransactionType } | null>(null)
-  const [wizardOpen, setWizardOpen] = useState(false)
-  const [editing, setEditing] = useState<Transaction | null>(null)
-  const [exportOpen, setExportOpen] = useState(false)
-  const [importOpen, setImportOpen] = useState(false)
-  const [nfePrefill, setNfePrefill] = useState<WizardPrefill | null>(null)
-  const [splitOpen, setSplitOpen] = useState(false)
+  const [state, dispatch] = useReducer(reducer, initialState)
   const splitRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!splitOpen) return
+    if (!state.splitOpen) return
     const handler = (e: MouseEvent) => {
-      if (!splitRef.current?.contains(e.target as Node)) setSplitOpen(false)
+      if (!splitRef.current?.contains(e.target as Node)) dispatch({ type: 'CLOSE_SPLIT' })
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
-  }, [splitOpen])
+  }, [state.splitOpen])
 
-  const { data, isLoading } = useTransactions(filters, page)
+  const { data, isLoading } = useTransactions(state.filters, state.page)
   const { data: categories = [] } = useCategories()
-  const filteredCategories = filters.type
-    ? categories.filter((c) => c.type === filters.type)
+  const filteredCategories = state.filters.type
+    ? categories.filter((c) => c.type === state.filters.type)
     : categories
-
-  const openCreate = () => {
-    setEditing(null)
-    setWizardOpen(true)
-  }
-
-  const openDetail = (row: Transaction) => setDetailId(row.id)
-
-  const openEdit = (tx: Transaction) => {
-    setEditing(tx)
-  }
 
   const totalPages = Math.ceil((data?.count ?? 0) / 20)
 
@@ -75,7 +141,7 @@ export function Component() {
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold text-[var(--text-primary)]">{t('transactions_title')}</h1>
         <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>
+          <Button variant="ghost" size="sm" onClick={() => dispatch({ type: 'OPEN_EXPORT' })}>
             <Download className="h-4 w-4" /> {t('export_button')}
           </Button>
           {canWrite && (
@@ -83,7 +149,7 @@ export function Component() {
               <div className="flex rounded-[var(--radius-md)] overflow-hidden shadow-sm">
                 <button
                   type="button"
-                  onClick={openCreate}
+                  onClick={() => dispatch({ type: 'OPEN_WIZARD' })}
                   className="flex items-center gap-1.5 h-8 pl-3 pr-3 bg-[var(--accent)] text-white text-sm font-medium hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer"
                 >
                   <Plus className="h-4 w-4 shrink-0" />
@@ -92,19 +158,19 @@ export function Component() {
                 <div className="w-px bg-white/25 shrink-0" />
                 <button
                   type="button"
-                  onClick={() => setSplitOpen((v) => !v)}
+                  onClick={() => dispatch({ type: 'TOGGLE_SPLIT' })}
                   className="flex items-center justify-center w-8 bg-[var(--accent)] text-white hover:opacity-90 active:opacity-80 transition-opacity cursor-pointer"
                   aria-label="Mais opções"
                 >
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${splitOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-150 ${state.splitOpen ? 'rotate-180' : ''}`} />
                 </button>
               </div>
 
-              {splitOpen && (
+              {state.splitOpen && (
                 <div className="absolute right-0 top-full mt-1.5 w-52 rounded-[var(--radius-lg)] border border-[var(--bg-border)] bg-[var(--bg-surface)] shadow-lg overflow-hidden z-20">
                   <button
                     type="button"
-                    onClick={() => { setSplitOpen(false); setImportOpen(true) }}
+                    onClick={() => { dispatch({ type: 'CLOSE_SPLIT' }); dispatch({ type: 'OPEN_IMPORT' }) }}
                     className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-sm text-[var(--text-primary)] hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer"
                   >
                     <Upload className="h-4 w-4 shrink-0 text-[var(--text-muted)]" />
@@ -128,8 +194,8 @@ export function Component() {
             <Input
               size="sm"
               placeholder={t('transactions_searchPlaceholder')}
-              value={filters.search ?? ''}
-              onChange={(e) => { setPage(1); setFilters((f) => ({ ...f, search: e.target.value || undefined })) }}
+              value={state.filters.search ?? ''}
+              onChange={(e) => dispatch({ type: 'SET_FILTER', payload: { search: e.target.value || undefined }, resetPage: true })}
               className="pl-8"
             />
           </div>
@@ -140,8 +206,8 @@ export function Component() {
               { value: 'income', label: t('transactions_income') },
               { value: 'expense', label: t('transactions_expense') },
             ]}
-            value={filters.type ?? ''}
-            onChange={(v) => { setPage(1); setFilters((f) => ({ ...f, type: v as TransactionFilters['type'] || undefined, category_id: undefined })) }}
+            value={state.filters.type ?? ''}
+            onChange={(v) => dispatch({ type: 'SET_FILTER', payload: { type: v as TransactionFilters['type'] || undefined, category_id: undefined }, resetPage: true })}
             className="w-40"
           />
           <Select
@@ -151,8 +217,8 @@ export function Component() {
               { value: 'true', label: t('transactions_paid') },
               { value: 'false', label: t('transactions_pending') },
             ]}
-            value={filters.is_paid === undefined ? '' : String(filters.is_paid)}
-            onChange={(v) => setFilters((f) => ({ ...f, is_paid: v === '' ? undefined : v === 'true' }))}
+            value={state.filters.is_paid === undefined ? '' : String(state.filters.is_paid)}
+            onChange={(v) => dispatch({ type: 'SET_FILTER', payload: { is_paid: v === '' ? undefined : v === 'true' }, resetPage: false })}
             className="w-44"
           />
           <Select
@@ -162,15 +228,15 @@ export function Component() {
               { value: 'none', label: t('transactions_filterNoCategory') },
               ...filteredCategories.map((c) => ({ value: c.id, label: c.name })),
             ]}
-            value={filters.category_id ?? ''}
-            onChange={(v) => { setPage(1); setFilters((f) => ({ ...f, category_id: v || undefined })) }}
+            value={state.filters.category_id ?? ''}
+            onChange={(v) => dispatch({ type: 'SET_FILTER', payload: { category_id: v || undefined }, resetPage: true })}
             className="w-44"
           />
           <DateRangePicker
             size="sm"
-            from={filters.date_from ?? ''}
-            to={filters.date_to ?? ''}
-            onChange={(from, to) => { setPage(1); setFilters((f) => ({ ...f, date_from: from || undefined, date_to: to || undefined })) }}
+            from={state.filters.date_from ?? ''}
+            to={state.filters.date_to ?? ''}
+            onChange={(from, to) => dispatch({ type: 'SET_FILTER', payload: { date_from: from || undefined, date_to: to || undefined }, resetPage: true })}
             language={language}
           />
         </div>
@@ -182,7 +248,7 @@ export function Component() {
           loading={isLoading}
           data={data?.data ?? []}
           rowKey={(r) => r.id}
-          onRowClick={openDetail}
+          onRowClick={(r) => dispatch({ type: 'OPEN_DETAIL', id: r.id })}
           emptyMessage={t('transactions_empty')}
           columns={[
             {
@@ -228,16 +294,13 @@ export function Component() {
               align: 'right' as const,
               render: (r: Transaction) =>
                 !r.is_paid ? (
-                  <div className="relative group flex justify-end">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setPaymentTarget({ id: r.id, type: r.type }) }}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--success)] transition-colors"
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {r.type === 'income' ? t('transactions_markAsReceived') : t('transactions_markAsPaid')}
-                    </span>
+                  <div className="flex justify-end">
+                    <IconButton
+                      icon={<CheckCircle className="h-4 w-4" />}
+                      tooltip={r.type === 'income' ? t('transactions_markAsReceived') : t('transactions_markAsPaid')}
+                      variant="success"
+                      onClick={(e) => { e.stopPropagation(); dispatch({ type: 'OPEN_PAYMENT', target: { id: r.id, type: r.type } }) }}
+                    />
                   </div>
                 ) : null,
             }] : []),
@@ -248,13 +311,13 @@ export function Component() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--bg-border)]">
             <span className="text-xs text-[var(--text-muted)]">
-              {t('incomeStatement_period')} {page} / {totalPages}
+              {t('incomeStatement_period')} {state.page} / {totalPages}
             </span>
             <div className="flex gap-2">
-              <Button variant="ghost" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+              <Button variant="ghost" size="sm" disabled={state.page === 1} onClick={() => dispatch({ type: 'SET_PAGE', page: state.page - 1 })}>
                 {t('transactions_previous')}
               </Button>
-              <Button variant="ghost" size="sm" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
+              <Button variant="ghost" size="sm" disabled={state.page === totalPages} onClick={() => dispatch({ type: 'SET_PAGE', page: state.page + 1 })}>
                 {t('transactions_next')}
               </Button>
             </div>
@@ -263,46 +326,46 @@ export function Component() {
       </Card>
 
       <PaymentModal
-        transactionId={paymentTarget?.id ?? null}
-        transactionType={paymentTarget?.type}
-        open={!!paymentTarget}
-        onClose={() => setPaymentTarget(null)}
+        transactionId={state.payment?.id ?? null}
+        transactionType={state.payment?.type}
+        open={!!state.payment}
+        onClose={() => dispatch({ type: 'CLOSE_PAYMENT' })}
         language={language}
       />
 
       <TransactionDetailModal
-        transactionId={detailId}
-        open={!!detailId}
-        onClose={() => setDetailId(null)}
-        onEdit={canWrite ? openEdit : undefined}
+        transactionId={state.detail}
+        open={!!state.detail}
+        onClose={() => dispatch({ type: 'CLOSE_DETAIL' })}
+        onEdit={canWrite ? (tx) => dispatch({ type: 'SET_EDITING', tx }) : undefined}
         language={language}
       />
 
       <TransactionWizard
-        open={wizardOpen}
-        onClose={() => { setWizardOpen(false); setNfePrefill(null) }}
+        open={state.wizard}
+        onClose={() => dispatch({ type: 'CLOSE_WIZARD' })}
         editing={null}
         language={language}
-        prefill={nfePrefill ?? undefined}
+        prefill={state.wizardPrefill ?? undefined}
       />
 
       <ImportModal
-        open={importOpen}
-        onClose={() => setImportOpen(false)}
-        onNfePrefill={(p) => { setImportOpen(false); setNfePrefill(p); setWizardOpen(true) }}
+        open={state.importOpen}
+        onClose={() => dispatch({ type: 'CLOSE_IMPORT' })}
+        onNfePrefill={(p) => dispatch({ type: 'IMPORT_NFE', prefill: p })}
       />
 
       <TransactionEditModal
-        transaction={editing}
-        open={!!editing}
-        onClose={() => setEditing(null)}
+        transaction={state.editing}
+        open={!!state.editing}
+        onClose={() => dispatch({ type: 'SET_EDITING', tx: null })}
         language={language}
       />
 
       <ExportModal
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        filters={filters}
+        open={state.exportOpen}
+        onClose={() => dispatch({ type: 'CLOSE_EXPORT' })}
+        filters={state.filters}
         companyId={activeCompany?.id ?? ''}
       />
     </div>

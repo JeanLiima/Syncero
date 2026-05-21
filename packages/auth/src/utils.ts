@@ -17,6 +17,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 export const LANDING_URL = import.meta.env.VITE_LANDING_URL
 
+export function toSnake(key: string): string {
+  return key.replace(/([A-Z])/g, '_$1').toLowerCase()
+}
+
+export function buildQuery(params: Record<string, string | undefined>): string {
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') query.set(toSnake(key), value)
+  })
+  const queryString = query.toString()
+  return queryString ? `?${queryString}` : ''
+}
+
 // Simple fetch wrapper for API calls
 export async function apiFetch<T = any>(
   endpoint: string,

@@ -33,7 +33,8 @@
       "Bash(npx vite *)",
       "Bash(Get-ChildItem -Path \"J:\\\\Users\\\\Jean\\\\Projetos\\\\Syncero\" -Directory)",
       "Bash(Select-Object Name)",
-      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(git checkout *)"
     ]
   },
   "hooks": {

@@ -16,7 +16,7 @@ router.get('/:token', async (c) => {
     return c.json({ type: 'member', companyName: company?.name ?? '', status: member.status })
   }
 
-  return c.json({ error: 'Invite not found' }, 404)
+  return c.json({ error: 'invite_not_found' }, 404)
 })
 
 // ── POST /api/invites/:token/accept (with auth) ────────────────
@@ -28,18 +28,18 @@ router.post('/:token/accept', async (c) => {
   const { data: member } = await db.from('company_members')
     .select('id, status, email').eq('invite_token', token).maybeSingle()
 
-  if (!member) return c.json({ error: 'Invite not found' }, 404)
-  if (member.status !== 'pending') return c.json({ error: 'This invite has already been used or has expired' }, 400)
+  if (!member) return c.json({ error: 'invite_not_found' }, 404)
+  if (member.status !== 'pending') return c.json({ error: 'invite_expired' }, 400)
 
   // Garantir que o convite pertence ao e-mail do usuário autenticado
   const { data: profile } = await db.from('profiles').select('email').eq('id', userId).maybeSingle()
   if (!profile || profile.email.toLowerCase() !== (member.email ?? '').toLowerCase()) {
-    return c.json({ error: 'This invite was sent to a different email address' }, 403)
+    return c.json({ error: 'invite_wrong_email' }, 403)
   }
 
   const { error } = await db.from('company_members')
     .update({ status: 'accepted', user_id: userId }).eq('invite_token', token)
-  if (error) return c.json({ error: 'Failed to accept invite' }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   return c.json({ ok: true })
 })

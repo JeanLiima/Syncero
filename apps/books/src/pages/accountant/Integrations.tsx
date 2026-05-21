@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { ShieldOff, AlertCircle, RefreshCw } from 'lucide-react'
-import { Card, useToast } from '@syncero/ui'
+import { ShieldOff, RefreshCw } from 'lucide-react'
+import { AlertBox, Card, useToast } from '@syncero/ui'
 import { useCompanyContext } from '@/hooks/useCompanyContext'
 import { useT } from '@/i18n'
 import { getSefazCredentialBooks, toggleSefazBooks, triggerSefazSyncBooks } from '@/lib/backend'
@@ -98,9 +98,8 @@ function SefazIntegrationCard({ companyId, extCompanyId }: { companyId?: string;
 
           {/* Sem certificado */}
           {!isLoading && !hasCert && (
-            <div className="mt-3 flex items-start gap-2 rounded-lg bg-[var(--warning)]/10 border border-[var(--warning)]/25 px-3 py-2.5">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[var(--warning)] mt-px" />
-              <p className="text-xs text-[var(--warning)] leading-snug">
+            <AlertBox variant="warning" className="mt-3">
+              <span className="text-[var(--warning)] leading-snug">
                 {t('integrations_sefaz_noCert')}{' '}
                 <button
                   onClick={() => navigate(`${basePath}/settings`)}
@@ -108,8 +107,8 @@ function SefazIntegrationCard({ companyId, extCompanyId }: { companyId?: string;
                 >
                   {t('integrations_sefaz_configureCert')}
                 </button>
-              </p>
-            </div>
+              </span>
+            </AlertBox>
           )}
 
           {/* Sync info */}

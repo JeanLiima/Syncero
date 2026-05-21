@@ -1,4 +1,8 @@
+import { sharedPt } from '@syncero/i18n'
+
 export const pt = {
+  ...sharedPt,
+
   // Nav
   nav_companies: 'Empresas',
   nav_overview: 'Visão Geral',
@@ -14,7 +18,7 @@ export const pt = {
   nav_preferences: 'Preferências',
   nav_signOut: 'Sair',
 
-  // Settings
+  // Settings (Books-specific — differs from Flow)
   settings_company: 'Empresa',
   settings_companyInfo: 'Informações da empresa',
   settings_name: 'Razão social',
@@ -24,75 +28,25 @@ export const pt = {
   settings_segment: 'Segmento',
   settings_edit: 'Editar',
   settings_editCompany: 'Editar empresa',
-  settings_cancel: 'Cancelar',
   settings_save: 'Salvar',
   settings_saved: 'Salvo com sucesso!',
   settings_errorSave: 'Erro ao salvar.',
   settings_readOnly: 'Esses dados são gerenciados pela empresa no Syncero Flow.',
-  settings_simplesNacional: 'Simples Nacional',
-  settings_lucroPresumido: 'Lucro Presumido',
-  settings_lucroReal: 'Lucro Real',
   settings_taxRegimeUndefined: '— Não definido —',
-  settings_segmentUndefined: '— Não definido —',
-  settings_segmentComercio: 'Comércio',
-  settings_segmentServicos: 'Serviços',
-  settings_segmentIndustria: 'Indústria',
-  settings_segmentConstrucao: 'Construção Civil',
-  settings_segmentAgronegocio: 'Agronegócio',
-  settings_segmentSaude: 'Saúde',
-  settings_segmentEducacao: 'Educação',
-  settings_segmentTecnologia: 'Tecnologia',
-  settings_segmentFinanceiro: 'Financeiro',
-  settings_segmentOutros: 'Outros',
+  settings_issRate: 'Alíquota ISS',
+  settings_issRatePlaceholder: '0,00% – 5,00%',
 
-  // Router
+  // Router (Books-specific)
   router_flow: 'Acessar Syncero Flow',
-  router_signOut: 'Sair',
-  router_accessing: 'Acessando...',
   router_title: 'Syncero Books é para contadores',
   router_wrongApp: 'Sua conta não possui perfil de contador. Se você é empresário, acesse o Syncero Flow.',
 
-  // Login
+  // Login (Books-specific titles)
   login_title: 'Bem-vindo ao Syncero Books',
   login_subtitle: 'Plataforma para contadores',
-  login_google: 'Entrar com Google',
-  login_error: 'Não foi possível conectar com o Google. Tente novamente.',
-  login_terms: 'Ao entrar, você concorda com os termos de uso.',
-  login_tabSignIn: 'Entrar',
-  login_tabSignUp: 'Criar conta',
-  login_email: 'E-mail',
-  login_emailPlaceholder: 'seu@email.com',
-  login_password: 'Senha',
-  login_passwordPlaceholder: 'Mínimo 6 caracteres',
-  login_passwordConfirm: 'Confirmar senha',
-  login_passwordMismatch: 'As senhas não coincidem.',
-  login_passwordTooShort: 'A senha deve ter pelo menos 6 caracteres.',
-  login_signIn: 'Entrar',
-  login_signUp: 'Criar conta',
-  login_forgotPassword: 'Esqueceu a senha?',
-  login_sendReset: 'Enviar link de redefinição',
-  login_resetSent: 'Verifique seu e-mail para redefinir a senha.',
-  login_backToLogin: 'Voltar ao login',
-  login_or: 'ou',
-  login_emailError: 'E-mail ou senha incorretos. Tente novamente.',
-  login_emailSignUpError: 'Não foi possível criar a conta. Tente novamente.',
-  login_confirmTitle: 'Verifique seu e-mail',
-  login_confirmSent: 'Enviamos um link de confirmação para',
-  login_confirmAction: 'Clique no link para ativar sua conta.',
 
-  // Onboarding
-  onboarding_loading: 'Configurando sua conta...',
-
-  // PWA Banner
+  // PWA (Books-specific title)
   pwa_title: 'Instale o Syncero Books',
-  pwa_subtitle: 'Acesso rápido, notificações e uso offline',
-  pwa_install: 'Instalar',
-  pwa_ios: 'Toque em Compartilhar → Tela de Início',
-
-  // Preferences
-  preferences_title: 'Preferências',
-  preferences_language: 'Idioma',
-  preferences_languageHint: 'Escolha o idioma da interface',
 
   // Dashboard (accountant)
   dashboard_companies: 'Empresas',
@@ -106,7 +60,7 @@ export const pt = {
   dashboard_managed: 'empresa gerenciada',
   dashboard_managedPlural: 'empresas gerenciadas',
 
-  // Overview (EmpresaFiscal / EmpresaExterna)
+  // Overview
   overview_company: 'Empresa',
   overview_externalCompany: 'Empresa externa',
   overview_nfe: 'NF-e / NFS-e',
@@ -187,8 +141,7 @@ export const pt = {
   impostos_infoSimplesComercio: 'Apuração pelo Simples Nacional (Anexo I — Comércio/Indústria). Verifique a tabela vigente com seu cliente.',
   impostos_infoPresumido: 'IRPJ e CSLL são trimestrais e aparecem apenas nos meses de encerramento do trimestre (março, junho, setembro, dezembro).',
   impostos_infoReal: 'Apuração mensal com base nos lançamentos contábeis do período.',
-  settings_issRate: 'Alíquota ISS',
-  settings_issRatePlaceholder: '0,00% – 5,00%',
+  impostos_calculateSuccess: 'Apuração de {period} concluída.',
 
   // Lançamentos contábeis
   lancamentos_title: 'Lançamentos Contábeis',
@@ -211,6 +164,7 @@ export const pt = {
   lancamentos_errLines: 'Todas as linhas precisam ter conta e valor.',
   lancamentos_errBalance: 'Débitos e créditos devem ser iguais.',
   lancamentos_errSave: 'Erro ao salvar lançamento.',
+  lancamentos_success: 'Lançamento criado com sucesso.',
   lancamentos_fieldDate: 'Data',
   lancamentos_fieldHistory: 'Histórico',
   lancamentos_historyPlaceholder: 'Descrição do lançamento',
@@ -267,7 +221,7 @@ export const pt = {
   nfe_cancelled: 'Cancelada',
   nfe_denied: 'Denegada',
 
-  // SEFAZ — Certificados (Books)
+  // SEFAZ — Certificados (Books-specific wording)
   sefaz_title: 'Integração SEFAZ',
   sefaz_certSection: 'Certificado Digital (A1)',
   sefaz_active: 'Certificado ativo',
@@ -299,16 +253,8 @@ export const pt = {
   sefaz_revokeTitle: 'Revogar certificado',
   sefaz_revokeMessage: 'O certificado será removido e a sincronização automática será interrompida.',
   sefaz_readOnlyHint: 'Este certificado é gerenciado pela empresa no Syncero Flow.',
-  settings_certificates: 'Certificados',
-  settings_integrations: 'Integrações',
-  integrations_sefaz_name: 'SEFAZ DF-e',
-  integrations_sefaz_desc: 'Sincronização automática de NF-e, NFS-e e CT-e diretamente do SEFAZ.',
-  integrations_enabled: 'Habilitado',
-  integrations_disabled: 'Desabilitado',
-  integrations_sefaz_noCert: 'Nenhum certificado digital configurado.',
-  integrations_sefaz_configureCert: 'Configure em Empresa → Certificados',
-  common_errorGeneric: 'Algo deu errado. Tente novamente.',
-  common_deletedSuccess: 'Excluído com sucesso',
+
+  // Integrations (keys compartilhadas estão em @syncero/i18n)
 
   // Livros SPED
   sped_title: 'Livros SPED',
@@ -507,23 +453,8 @@ export const pt = {
   transactions_detail_histRegistered: 'Pagamento registrado',
   transactions_detail_histRegisteredIncome: 'Recebimento registrado',
 
-  // Accept Invite
-  invite_verifying: 'Verificando convite…',
-  invite_received: 'Convite recebido',
+  // Accept Invite (Books-specific context key)
   invite_asAccountant_of: 'Você foi convidado para acessar como contador a empresa',
-  invite_loginRequired: 'Você precisa estar logado para aceitar o convite.',
-  invite_accept: 'Aceitar convite',
-  invite_loginToAccept: 'Fazer login para aceitar',
-  invite_invalid: 'Convite inválido',
-  invite_gotoHome: 'Ir para o início',
-  invite_success: 'Convite aceito!',
-  invite_accessGranted: 'Você agora tem acesso à empresa',
-  invite_gotoDashboard: 'Acessar painel',
-  invite_errorInvalid: 'Token de convite inválido.',
-  invite_errorNotFound: 'Convite não encontrado.',
-  invite_errorExpired: 'Este convite já foi utilizado ou expirou.',
-  invite_errorVerify: 'Erro ao verificar convite.',
-  invite_errorAccept: 'Erro ao aceitar convite. Tente novamente.',
 
   // Empresa Externa
   external_title: 'Nova empresa externa',
@@ -592,55 +523,10 @@ export const pt = {
   extTx_errorDate: 'Informe a data.',
   extTx_errorNature: 'Selecione a natureza contábil.',
 
-  // Overview — external company transaction counts
-  // Export
-  export_title: 'Exportar Lançamentos',
-  export_button: 'Exportar',
-  export_format: 'Formato',
-  export_columns: 'Colunas',
-  export_selectAll: 'Selecionar tudo',
-  export_deselectAll: 'Desmarcar tudo',
-  export_cancel: 'Cancelar',
-  export_confirm: 'Exportar',
-  export_limitNote: 'Exporta até {n} registros com os filtros aplicados.',
-  export_fetchError: 'Erro ao buscar lançamentos. Tente novamente.',
-  export_col_date: 'Data',
-  export_col_paidAt: 'Data de pagamento',
-  export_col_description: 'Descrição',
-  export_col_type: 'Tipo',
-  export_col_amount: 'Valor',
-  export_col_status: 'Status',
+  // Export (Books-specific extra column)
   export_col_classification: 'Classificação',
-  export_col_category: 'Categoria',
-  export_col_contact: 'Contato',
-  export_col_nature: 'Natureza',
-  export_col_paymentMethod: 'Forma de pagamento',
-  export_col_bank: 'Conta bancária',
-  export_col_installment: 'Parcela',
-  export_col_notes: 'Observações',
-  common_cnpjInvalid: 'CNPJ inválido',
 
-  // Import
-  transactions_import: 'Importar',
-  transactions_import_title: 'Importar lançamentos',
-  transactions_import_dropzone: 'Arraste um arquivo XML (NFe) ou OFX aqui',
-  transactions_import_dropzone_hint: 'ou clique para selecionar',
-  transactions_import_accept: 'Formatos aceitos: .xml (NFe), .ofx, .qfx',
-  transactions_import_nfe_preview_title: 'Nota fiscal detectada',
-  transactions_import_nfe_counterpart: 'Contraparte',
-  transactions_import_nfe_date: 'Data de emissão',
-  transactions_import_nfe_amount: 'Valor total',
-  transactions_import_nfe_type_income: 'Receita — empresa emitente',
-  transactions_import_nfe_type_expense: 'Despesa — empresa destinatária',
-  transactions_import_nfe_type_unknown: 'CNPJ não identificado',
-  transactions_import_nfe_cnpj_warning: 'Seu CNPJ não foi encontrado neste arquivo. O documento pode não pertencer à sua empresa.',
-  transactions_import_nfe_proceed_anyway: 'Prosseguir mesmo assim',
-  transactions_import_nfe_continue: 'Criar lançamento',
-  transactions_import_ofx_found: '{count} transações encontradas',
-  transactions_import_ofx_defaultNature: 'Natureza padrão',
-  transactions_import_ofx_confirm: 'Importar {count} lançamento(s)',
-  transactions_import_ofx_noneSelected: 'Nenhum selecionado',
-  transactions_import_error_parse: 'Não foi possível ler o arquivo. Verifique se é um XML de NFe ou OFX válido.',
+  // Import (keys compartilhadas estão em @syncero/i18n)
 } as const
 
 export type TranslationKey = keyof typeof pt

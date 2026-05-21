@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Select } from '@syncero/ui'
+import { Button, Select, useToast } from '@syncero/ui'
 import { TrendingDown, TrendingUp } from 'lucide-react'
 import { format, parse, isValid } from 'date-fns'
 import { useT } from '@/i18n'
@@ -45,6 +45,7 @@ function fmtAmount(cents: number) {
 
 export function OFXReviewTable({ transactions, onConfirm, onCancel }: Props) {
   const t = useT()
+  const { error: toastError } = useToast()
   const { data: categories = [] } = useCategories()
   const create = useCreateTransaction()
 
@@ -78,23 +79,27 @@ export function OFXReviewTable({ transactions, onConfirm, onCancel }: Props) {
   const selectedCount = rows.filter((r) => r.selected).length
 
   const handleConfirm = async () => {
-    for (let i = 0; i < transactions.length; i++) {
-      if (!rows[i].selected) continue
-      const tx = transactions[i]
-      await create.mutateAsync({
-        type: tx.type,
-        nature: rows[i].nature,
-        amount: tx.amountCents / 100,
-        date: tx.date,
-        description: tx.description || tx.counterpart,
-        counterpart: tx.counterpart,
-        category_id: rows[i].categoryId ?? null,
-        is_paid: true,
-        paid_at: tx.date,
-        is_installment: false,
-      })
+    try {
+      for (let i = 0; i < transactions.length; i++) {
+        if (!rows[i].selected) continue
+        const tx = transactions[i]
+        await create.mutateAsync({
+          type: tx.type,
+          nature: rows[i].nature,
+          amount: tx.amountCents / 100,
+          date: tx.date,
+          description: tx.description || tx.counterpart,
+          counterpart: tx.counterpart,
+          category_id: rows[i].categoryId ?? null,
+          is_paid: true,
+          paid_at: tx.date,
+          is_installment: false,
+        })
+      }
+      onConfirm()
+    } catch {
+      toastError(t('common_errorGeneric'))
     }
-    onConfirm()
   }
 
   const incomeNatureOptions = NATURE_OPTIONS_INCOME.map((n) => ({ value: n.value, label: t(n.labelKey as Parameters<typeof t>[0]) }))

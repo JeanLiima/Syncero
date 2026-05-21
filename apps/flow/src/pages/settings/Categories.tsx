@@ -1,39 +1,16 @@
 import { useState } from 'react'
 import { Pencil, Trash2, Plus, Search } from 'lucide-react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Input, Modal, Select, Table, Badge, useToast } from '@syncero/ui'
+import { Button, Card, ColorPicker, COLORS, Input, Modal, Select, Table, Badge, useToast, IconButton } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
 import { useT } from '@/i18n'
 import { getCategories, getCategoryUsage, createCategory, updateCategory, deleteCategory } from '@/lib/backend'
 import type { Category, TransactionType } from '@/types'
 
-const COLORS = [
-  '#10b981', '#3b82f6', '#f43f5e', '#f59e0b',
-  '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6',
-  '#ef4444', '#fb923c', '#94a3b8', '#a78bfa',
-]
-
-function ColorPicker({ value, onChange }: { value: string | null; onChange: (c: string) => void }) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {COLORS.map((c) => (
-        <button
-          key={c}
-          type="button"
-          onClick={() => onChange(c)}
-          className="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 cursor-pointer"
-          style={{
-            backgroundColor: c,
-            borderColor: value === c ? 'white' : 'transparent',
-            boxShadow: value === c ? `0 0 0 2px ${c}` : undefined,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
 
 type CategoryForm = { name: string; type: TransactionType; color: string }
+type EditModal = { editing: Category | null; form: CategoryForm }
+type DeleteModal = { category: Category; usageCount: number | null; transferTo: string }
 
 export function Component() {
   const t = useT()
@@ -42,15 +19,13 @@ export function Component() {
   const canWrite = activeCompany?.role !== 'viewer'
   const qc = useQueryClient()
 
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editing, setEditing] = useState<Category | null>(null)
-  const [form, setForm] = useState<CategoryForm>({ name: '', type: 'income', color: COLORS[0] })
-  const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all')
   const [nameFilter, setNameFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all')
+  const [editModal, setEditModal] = useState<EditModal | null>(null)
+  const [deleteModal, setDeleteModal] = useState<DeleteModal | null>(null)
 
-  const [deleting, setDeleting] = useState<Category | null>(null)
-  const [usageCount, setUsageCount] = useState<number | null>(null)
-  const [transferTo, setTransferTo] = useState<string>('')
+  const setForm = (updater: (f: CategoryForm) => CategoryForm) =>
+    setEditModal((m) => m && { ...m, form: updater(m.form) })
 
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ['categories', activeCompany?.id],
@@ -64,33 +39,26 @@ export function Component() {
     return true
   })
 
-  const openCreate = () => {
-    setEditing(null)
-    setForm({ name: '', type: 'income', color: COLORS[0] })
-    setModalOpen(true)
-  }
+  const openCreate = () =>
+    setEditModal({ editing: null, form: { name: '', type: 'income', color: COLORS[0] } })
 
-  const openEdit = (cat: Category) => {
-    setEditing(cat)
-    setForm({ name: cat.name, type: cat.type, color: cat.color ?? COLORS[0] })
-    setModalOpen(true)
-  }
+  const openEdit = (cat: Category) =>
+    setEditModal({ editing: cat, form: { name: cat.name, type: cat.type, color: cat.color ?? COLORS[0] } })
 
   const openDelete = async (cat: Category) => {
-    setDeleting(cat)
-    setUsageCount(null)
-    setTransferTo('')
+    setDeleteModal({ category: cat, usageCount: null, transferTo: '' })
     const { count } = await getCategoryUsage(cat.id)
-    setUsageCount(count)
+    setDeleteModal((prev) => prev && { ...prev, usageCount: count })
   }
 
   const save = useMutation({
     mutationFn: async () => {
+      const { editing, form } = editModal!
       if (editing) return updateCategory(editing.id, form)
       return createCategory({ company_id: activeCompany!.id, ...form })
     },
     onSuccess: () => {
-      setModalOpen(false)
+      setEditModal(null)
       qc.invalidateQueries({ queryKey: ['categories', activeCompany?.id] })
       success(t('common_savedSuccess'))
     },
@@ -98,12 +66,10 @@ export function Component() {
   })
 
   const remove = useMutation({
-    mutationFn: async () => {
-      const to = transferTo || null
-      return deleteCategory(deleting!.id, to)
-    },
+    mutationFn: async () =>
+      deleteCategory(deleteModal!.category.id, deleteModal!.transferTo || null),
     onSuccess: () => {
-      setDeleting(null)
+      setDeleteModal(null)
       qc.invalidateQueries({ queryKey: ['categories', activeCompany?.id] })
       success(t('common_deletedSuccess'))
     },
@@ -111,7 +77,7 @@ export function Component() {
   })
 
   const otherCategories = categories.filter(
-    (c) => c.id !== deleting?.id && c.type === deleting?.type,
+    (c) => c.id !== deleteModal?.category.id && c.type === deleteModal?.category.type,
   )
 
   return (
@@ -188,28 +154,8 @@ export function Component() {
               className: 'w-px !px-2',
               render: (r: Category) => (
                 <div className="flex items-center justify-end gap-1">
-                  <div className="relative group">
-                    <button
-                      onClick={() => openEdit(r)}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('categories_edit')}
-                    </span>
-                  </div>
-                  <div className="relative group">
-                    <button
-                      onClick={() => openDelete(r)}
-                      className="cursor-pointer p-1.5 rounded hover:bg-[var(--bg-border)] text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                    <span className="pointer-events-none absolute -top-8 right-0 whitespace-nowrap rounded px-2 py-1 text-xs bg-[var(--bg-elevated)] border border-[var(--bg-border)] text-[var(--text-secondary)] opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      {t('categories_delete')}
-                    </span>
-                  </div>
+                  <IconButton icon={<Pencil className="h-3.5 w-3.5" />} tooltip={t('categories_edit')} onClick={() => openEdit(r)} />
+                  <IconButton icon={<Trash2 className="h-3.5 w-3.5" />} tooltip={t('categories_delete')} variant="danger" onClick={() => openDelete(r)} />
                 </div>
               ),
             }] : []),
@@ -219,15 +165,15 @@ export function Component() {
 
       {/* Create / Edit modal */}
       <Modal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        title={editing ? t('categories_editTitle') : t('categories_createTitle')}
+        open={!!editModal}
+        onClose={() => setEditModal(null)}
+        title={editModal?.editing ? t('categories_editTitle') : t('categories_createTitle')}
         size="sm"
       >
         <div className="flex flex-col gap-4">
           <Input
             label={t('categories_name')}
-            value={form.name}
+            value={editModal?.form.name ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
           <div>
@@ -239,7 +185,7 @@ export function Component() {
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, type: t_ }))}
                   className={`flex-1 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${
-                    form.type === t_
+                    editModal?.form.type === t_
                       ? t_ === 'income'
                         ? 'bg-[var(--success)] text-white'
                         : 'bg-[var(--danger)] text-white'
@@ -253,16 +199,16 @@ export function Component() {
           </div>
           <div>
             <label className="block text-xs font-medium text-[var(--text-muted)] mb-2">{t('categories_color')}</label>
-            <ColorPicker value={form.color} onChange={(c) => setForm((f) => ({ ...f, color: c }))} />
+            <ColorPicker value={editModal?.form.color ?? null} onChange={(c) => setForm((f) => ({ ...f, color: c }))} />
           </div>
           {save.isError && (
             <p className="text-xs text-[var(--danger)]">
-              {(save.error as Error)?.message ?? t('categories_saveError')}
+              {t('categories_saveError')}
             </p>
           )}
           <div className="flex justify-end gap-2 pt-1">
-            <Button variant="ghost" onClick={() => setModalOpen(false)}>{t('settings_cancel')}</Button>
-            <Button onClick={() => save.mutate()} loading={save.isPending} disabled={!form.name.trim()}>
+            <Button variant="ghost" onClick={() => setEditModal(null)}>{t('settings_cancel')}</Button>
+            <Button onClick={() => save.mutate()} loading={save.isPending} disabled={!editModal?.form.name.trim()}>
               {t('categories_save')}
             </Button>
           </div>
@@ -271,27 +217,27 @@ export function Component() {
 
       {/* Delete confirm dialog */}
       <Modal
-        open={!!deleting}
-        onClose={() => setDeleting(null)}
+        open={!!deleteModal}
+        onClose={() => setDeleteModal(null)}
         title={t('categories_deleteTitle')}
         size="sm"
       >
-        {usageCount === null ? (
+        {deleteModal?.usageCount === null ? (
           <div className="flex justify-center py-4">
             <div className="h-5 w-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {usageCount > 0 ? (
+            {(deleteModal?.usageCount ?? 0) > 0 ? (
               <>
                 <p className="text-sm text-[var(--text-secondary)]">
-                  {t('categories_deleteUsed').replace('{count}', String(usageCount))}
+                  {t('categories_deleteUsed').replace('{count}', String(deleteModal?.usageCount))}
                 </p>
                 <Select
                   label={t('categories_transferTo')}
                   placeholder={t('categories_transferNone')}
-                  value={transferTo}
-                  onChange={setTransferTo}
+                  value={deleteModal?.transferTo ?? ''}
+                  onChange={(v) => setDeleteModal((m) => m && { ...m, transferTo: v })}
                   options={otherCategories.map((c) => ({ value: c.id, label: c.name }))}
                 />
               </>
@@ -300,11 +246,11 @@ export function Component() {
             )}
             {remove.isError && (
               <p className="text-xs text-[var(--danger)]">
-                {(remove.error as Error)?.message ?? t('categories_deleteError')}
+                {t('categories_deleteError')}
               </p>
             )}
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setDeleting(null)}>{t('settings_cancel')}</Button>
+              <Button variant="ghost" onClick={() => setDeleteModal(null)}>{t('settings_cancel')}</Button>
               <Button variant="danger" onClick={() => remove.mutate()} loading={remove.isPending}>
                 {t('categories_delete')}
               </Button>

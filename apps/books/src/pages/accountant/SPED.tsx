@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { ptBR, enUS } from 'date-fns/locale'
-import { FileText, Clock, Download, CheckCircle, Send, Trash2, AlertCircle, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
-import { Badge, Button, Card, ConfirmDialog, useToast } from '@syncero/ui'
+import { FileText, Clock, Download, CheckCircle, Send, Trash2, ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
+import { AlertBox, Badge, Button, Card, ConfirmDialog, useToast } from '@syncero/ui'
 import {
   getFiscalBooks, createFiscalBook, updateFiscalBookStatus, deleteFiscalBook,
   getAccountPlans, getJournalEntriesForPeriod, getCompanyInfo, getExtCompanyInfo,
@@ -286,10 +286,7 @@ function EcdTab({
         </div>
 
         {!hasPlans && (
-          <div className="flex items-center gap-2 mt-4 px-3 py-2.5 rounded-lg bg-[var(--warning)]/10 border border-[var(--warning)]/30">
-            <AlertCircle className="h-4 w-4 text-[var(--warning)] shrink-0" />
-            <p className="text-xs text-[var(--text-secondary)]">{t('sped_no_plans')}</p>
-          </div>
+          <AlertBox variant="warning" className="mt-4">{t('sped_no_plans')}</AlertBox>
         )}
       </Card>
 

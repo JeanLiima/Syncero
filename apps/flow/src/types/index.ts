@@ -1,32 +1,35 @@
-// ── Enums ────────────────────────────────────────────────────
+// ── Shared enum types (single source of truth) ───────────────
+export type {
+  UserType,
+  TaxRegime,
+  CompanySegment,
+  MemberRole,
+  MemberStatus,
+  AccountantStatus,
+  TransactionType,
+  TransactionNature,
+  PaymentMethod,
+  RecurrenceFrequency,
+  BankAccountType,
+  TaxType,
+  FiscalDocType,
+  FiscalDocStatus,
+  FiscalBookType,
+  FiscalBookStatus,
+  EntrySource,
+  AccountType,
+  AccountNature,
+  JournalSide,
+} from '@syncero/types'
 
-export type UserType = 'company_user' | 'accountant'
-export type TransactionType = 'income' | 'expense'
-export type TransactionNature =
-  | 'sale_service'
-  | 'loan_received'
-  | 'capital_contribution'
-  | 'operational_expense'
-  | 'product_cost'
-  | 'asset_purchase'
-  | 'debt_payment'
-  | 'owner_withdrawal'
-export type PaymentMethod = 'cash' | 'bank'
-export type BankAccountType = 'checking' | 'savings'
-export type TaxRegime = 'simples' | 'lucro_presumido' | 'lucro_real'
-export type CompanySegment =
-  | 'retail' | 'services' | 'manufacturing' | 'construction'
-  | 'agribusiness' | 'healthcare' | 'education' | 'technology'
-  | 'financial' | 'other'
-export type MemberRole = 'admin' | 'member' | 'viewer'
-export type MemberStatus = 'pending' | 'accepted' | 'revoked'
-export type AccountantStatus = 'pending' | 'accepted' | 'rejected'
-export type FiscalDocType = 'nfe' | 'nfse' | 'cfe' | 'nfce'
-export type FiscalDocStatus = 'authorized' | 'cancelled' | 'denied' | 'pending'
-export type FiscalBookType = 'sped_fiscal' | 'sped_contribuicoes' | 'ecf' | 'ecd'
-export type FiscalBookStatus = 'draft' | 'validated' | 'transmitted'
+// ── Flow-specific interfaces ──────────────────────────────────
 
-// ── Core entities ─────────────────────────────────────────────
+import type {
+  UserType, TaxRegime, CompanySegment, MemberRole, MemberStatus,
+  AccountantStatus, TransactionType, TransactionNature, PaymentMethod,
+  BankAccountType, TaxType, FiscalDocType, FiscalDocStatus,
+  FiscalBookType, FiscalBookStatus,
+} from '@syncero/types'
 
 export interface Profile {
   id: string
@@ -81,8 +84,6 @@ export interface AccountantCompany {
   profiles?: Pick<Profile, 'id' | 'full_name' | 'email' | 'avatar_url'>
 }
 
-// ── Financial ─────────────────────────────────────────────────
-
 export interface Contact {
   id: string
   company_id: string
@@ -100,6 +101,9 @@ export interface Bank {
   account_number: string | null
   account_type: BankAccountType
   pix_key: string | null
+  pluggy_item_id: string | null
+  sync_enabled: boolean
+  last_synced_at: string | null
   created_at: string
 }
 
@@ -147,8 +151,6 @@ export interface TransactionDetail extends Transaction {
   payment_registrar_name: string | null
 }
 
-// ── Fiscal ────────────────────────────────────────────────────
-
 export interface FiscalDocument {
   id: string
   company_id: string
@@ -183,7 +185,7 @@ export interface TaxCalculation {
   id: string
   company_id: string
   reference_period: string
-  tax_type: string
+  tax_type: TaxType
   base_value: number
   rate: number
   tax_value: number

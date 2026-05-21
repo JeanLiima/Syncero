@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button, Card, Input, Select, Table, Badge, useToast } from '@syncero/ui'
 import { useAuthStore } from '@/store/auth'
-import { useT } from '@/i18n'
+import { useT, apiError } from '@/i18n'
 import { getCompanyMembers, inviteCompanyMember, removeCompanyMember } from '@/lib/backend'
 import type { MemberRole } from '@/types'
 
@@ -75,7 +75,7 @@ export function Component() {
         </div>
         {invite.isError && (
           <p className="text-xs text-[var(--danger)] mt-2">
-            {(invite.error as Error)?.message ?? t('settings_inviteError')}
+            {apiError(invite.error, t, 'settings_inviteError')}
           </p>
         )}
       </Card>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { format, parseISO } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ptBR, enUS } from 'date-fns/locale'
 import { CheckCircle2, ClipboardCheck, Info, RefreshCw, RotateCcw } from 'lucide-react'
 import { Badge, Button, Card, Modal, MonthPicker, useToast } from '@syncero/ui'
 import { getTaxCalculations, calculateTaxes, updateTaxStatus } from '@/lib/backend'
@@ -91,6 +91,7 @@ export function Component() {
   const t = useT()
   const { id, isExternal } = useCompanyContext()
   const language = usePreferencesStore(s => s.language)
+  const dateLocale = language === 'en' ? enUS : ptBR
   const qc = useQueryClient()
   const { success: toastSuccess, error: toastError, warning: toastWarning } = useToast()
 
@@ -100,7 +101,7 @@ export function Component() {
   const [updatingId, setUpdatingId]   = useState<string | null>(null)
 
   const periodLabel = (() => {
-    const raw = format(parseISO(`${period}-01`), 'MMMM yyyy', { locale: ptBR })
+    const raw = format(parseISO(`${period}-01`), 'MMMM yyyy', { locale: dateLocale })
     return raw.charAt(0).toUpperCase() + raw.slice(1)
   })()
 
@@ -139,13 +140,13 @@ export function Component() {
       })
       qc.invalidateQueries({ queryKey: qKey })
       qc.invalidateQueries({ queryKey: ['fiscal-summary', id] })
-      toastSuccess(`Apuração de ${periodLabel} concluída.`)
+      toastSuccess(t('impostos_calculateSuccess').replace('{period}', periodLabel))
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : ''
       if (msg === 'no_journal_data')   toastWarning(t('impostos_noJournalData'))
       else if (msg === 'no_segment')   toastError(t('impostos_noSegment'))
       else if (msg === 'no_tax_regime')toastError(t('impostos_noRegime'))
-      else toastError(msg || 'Erro ao apurar.')
+      else toastError(t('common_errorGeneric'))
     } finally {
       setCalculating(false)
     }
@@ -219,7 +220,7 @@ export function Component() {
             const total  = rows.reduce((s, r) => s + r.tax_amount, 0)
             const calcAt = rows[0]?.calculated_at
             const pLabel = (() => {
-              const raw = format(parseISO(`${p}-01`), 'MMMM yyyy', { locale: ptBR })
+              const raw = format(parseISO(`${p}-01`), 'MMMM yyyy', { locale: dateLocale })
               return raw.charAt(0).toUpperCase() + raw.slice(1)
             })()
 
@@ -263,7 +264,7 @@ export function Component() {
                           </td>
                           <td className="px-4 py-3 text-right font-mono font-medium text-[var(--danger)]">{fmt(r.tax_amount)}</td>
                           <td className="px-4 py-3 text-right text-xs text-[var(--text-muted)]">
-                            {r.due_date ? format(new Date(r.due_date + 'T00:00:00'), 'dd/MM/yyyy', { locale: ptBR }) : '—'}
+                            {r.due_date ? format(new Date(r.due_date + 'T00:00:00'), 'dd/MM/yyyy', { locale: dateLocale }) : '—'}
                           </td>
                           <td className="px-4 py-3">
                             <Badge variant={statusVariant(r.status)} className="text-xs">

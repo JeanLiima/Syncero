@@ -78,8 +78,9 @@ async function aggregate(db: DB, filter: Record<string, string>, dateFrom: strin
     .lte('entry_date', dateTo)
 
   let revenue = 0, expenses = 0
-  for (const e of data ?? []) {
-    for (const l of (e as any).journal_entry_lines ?? []) {
+  type EntryRow = { journal_entry_lines: Array<{ side: string; amount: number; account_plans: { account_type: string } | null }> | null }
+  for (const e of (data ?? []) as unknown as EntryRow[]) {
+    for (const l of e.journal_entry_lines ?? []) {
       const t = l.account_plans?.account_type
       const a = Number(l.amount)
       if (t === 'revenue' && l.side === 'credit') revenue  += a
@@ -109,7 +110,7 @@ router.get('/', async (c) => {
   else                q = q.eq('ext_company_id', ext_company_id!)
 
   const { data, error } = await q
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data ?? [])
 })
 
@@ -123,8 +124,8 @@ router.post('/calculate', async (c) => {
   }>()
 
   const { company_id, ext_company_id, period, revenue_12m } = body
-  if (!company_id && !ext_company_id) return c.json({ error: 'company_id or ext_company_id required' }, 400)
-  if (!period) return c.json({ error: 'period required' }, 400)
+  if (!company_id && !ext_company_id) return c.json({ error: 'company_id_required' }, 400)
+  if (!period) return c.json({ error: 'validation_error' }, 400)
 
   let taxRegime: string | null = null
   let segment: string | null   = null
@@ -135,7 +136,7 @@ router.post('/calculate', async (c) => {
     const link = await ensureAccessLinked(db, userId, company_id)
     if (!link) return c.json({ error: 'forbidden' }, 403)
     const { data: co } = await db.from('companies').select('tax_regime, segment').eq('id', company_id).maybeSingle()
-    if (!co) return c.json({ error: 'company not found' }, 404)
+    if (!co) return c.json({ error: 'not_found' }, 404)
     taxRegime = co.tax_regime
     segment   = (co as any).segment   // segment comes from Flow
     issRate   = Number(link.iss_rate ?? 0)
@@ -215,7 +216,7 @@ router.post('/calculate', async (c) => {
     .eq('period', period)
 
   const { data: inserted, error } = await db.from('tax_calculations').insert(taxes).select('*')
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(inserted, 201)
 })
 
@@ -227,7 +228,7 @@ router.patch('/:id', async (c) => {
 
   const { data: existing } = await db.from('tax_calculations')
     .select('company_id, ext_company_id').eq('id', id).maybeSingle()
-  if (!existing) return c.json({ error: 'not found' }, 404)
+  if (!existing) return c.json({ error: 'not_found' }, 404)
 
   if (existing.company_id) {
     if (!await ensureAccessLinked(db, userId, existing.company_id)) return c.json({ error: 'forbidden' }, 403)
@@ -243,7 +244,7 @@ router.patch('/:id', async (c) => {
   if (body.status === 'paid' && !body.paid_date) updates.paid_date = new Date().toISOString().slice(0, 10)
 
   const { data, error } = await db.from('tax_calculations').update(updates).eq('id', id).select('*').single()
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 

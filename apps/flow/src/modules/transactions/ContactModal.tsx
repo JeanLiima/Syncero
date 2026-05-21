@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Modal, Input, Button } from '@syncero/ui'
+import { Modal, Input, Button, useToast } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { createContact } from '@/lib/backend'
 import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
@@ -18,6 +18,7 @@ interface ContactModalProps {
 export function ContactModal({ open, onClose, onCreated, initialName, initialCnpj }: ContactModalProps) {
   const t = useT()
   const qc = useQueryClient()
+  const { error: toastError } = useToast()
   const activeCompany = useAuthStore((s) => s.activeCompany)
   const [name, setName] = useState(initialName)
   const [cpf, setCpf] = useState('')
@@ -44,6 +45,7 @@ export function ContactModal({ open, onClose, onCreated, initialName, initialCnp
       qc.invalidateQueries({ queryKey: ['contacts', activeCompany?.id] })
       onCreated(contact)
     },
+    onError: () => toastError(t('common_errorGeneric')),
   })
 
   const canSave = name.trim().length > 0 && !cnpjError

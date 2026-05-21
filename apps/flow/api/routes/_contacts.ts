@@ -17,7 +17,7 @@ router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const companyId = c.req.query('company_id')
-  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
+  if (!companyId) return c.json({ error: 'company_id_required' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -36,7 +36,7 @@ router.get('/', async (c) => {
   }
 
   const { data, error } = await query
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -45,8 +45,8 @@ router.post('/', async (c) => {
   const db = createServiceClient()
   const body = await c.req.json<{ company_id: string; name: string; cpf?: string; cnpj?: string }>()
 
-  if (!body.company_id) return c.json({ error: 'company_id é obrigatório' }, 400)
-  if (!body.name?.trim()) return c.json({ error: 'name é obrigatório' }, 400)
+  if (!body.company_id) return c.json({ error: 'company_id_required' }, 400)
+  if (!body.name?.trim()) return c.json({ error: 'name_required' }, 400)
 
   const member = await ensureCompanyMember(db, userId, body.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -58,7 +58,7 @@ router.post('/', async (c) => {
     cnpj: body.cnpj?.trim() || null,
   }).select().single()
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data, 201)
 })
 
@@ -69,7 +69,7 @@ router.patch('/:id', async (c) => {
   const body = await c.req.json<{ name?: string; cpf?: string | null; cnpj?: string | null }>()
 
   const { data: contact } = await db.from('contacts').select('company_id').eq('id', id).maybeSingle()
-  if (!contact) return c.json({ error: 'not found' }, 404)
+  if (!contact) return c.json({ error: 'not_found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, contact.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -80,7 +80,7 @@ router.patch('/:id', async (c) => {
   if ('cnpj' in body) patch.cnpj = body.cnpj?.trim() || null
 
   const { data, error } = await db.from('contacts').update(patch).eq('id', id).select().single()
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -90,13 +90,13 @@ router.delete('/:id', async (c) => {
   const id = c.req.param('id')
 
   const { data: contact } = await db.from('contacts').select('company_id').eq('id', id).maybeSingle()
-  if (!contact) return c.json({ error: 'not found' }, 404)
+  if (!contact) return c.json({ error: 'not_found' }, 404)
 
   const member = await ensureCompanyMember(db, userId, contact.company_id)
   if (!member) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('contacts').delete().eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 

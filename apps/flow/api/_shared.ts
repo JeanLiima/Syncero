@@ -55,3 +55,18 @@ export const originGuard: MiddlewareHandler<{ Variables: HonoVariables }> = asyn
 
   await next()
 }
+
+// ── Authorization helpers ─────────────────────────────────────
+type DB = ReturnType<typeof createServiceClient>
+
+export async function ensureCompanyMember(db: DB, userId: string, companyId: string) {
+  const { data } = await db.from('company_members')
+    .select('id').eq('user_id', userId).eq('company_id', companyId).eq('status', 'accepted').maybeSingle()
+  return data
+}
+
+export async function ensureCompanyAdmin(db: DB, userId: string, companyId: string) {
+  const { data } = await db.from('company_members')
+    .select('id').eq('user_id', userId).eq('company_id', companyId).eq('status', 'accepted').eq('role', 'admin').maybeSingle()
+  return data
+}

@@ -225,7 +225,7 @@ export function BankFormModal({ open, onClose, onSaved, editing }: Props) {
 
         {save.isError && (
           <p className="text-xs text-[var(--danger)]">
-            {(save.error as Error)?.message}
+            {t('common_errorGeneric')}
           </p>
         )}
 

@@ -1,6 +1,9 @@
+import { sharedEn } from '@syncero/i18n'
 import type { TranslationKey } from './pt'
 
 export const en: Record<TranslationKey, string> = {
+  ...sharedEn,
+
   // Nav
   nav_companies: 'Companies',
   nav_overview: 'Overview',
@@ -16,7 +19,7 @@ export const en: Record<TranslationKey, string> = {
   nav_preferences: 'Preferences',
   nav_signOut: 'Sign Out',
 
-  // Settings
+  // Settings (Books-specific)
   settings_company: 'Company',
   settings_companyInfo: 'Company information',
   settings_name: 'Legal name',
@@ -26,75 +29,25 @@ export const en: Record<TranslationKey, string> = {
   settings_segment: 'Segment',
   settings_edit: 'Edit',
   settings_editCompany: 'Edit company',
-  settings_cancel: 'Cancel',
   settings_save: 'Save',
   settings_saved: 'Saved successfully!',
   settings_errorSave: 'Error saving changes.',
   settings_readOnly: 'This data is managed by the company in Syncero Flow.',
-  settings_simplesNacional: 'Simples Nacional',
-  settings_lucroPresumido: 'Lucro Presumido',
-  settings_lucroReal: 'Lucro Real',
   settings_taxRegimeUndefined: '— Not set —',
-  settings_segmentUndefined: '— Not set —',
-  settings_segmentComercio: 'Retail / Commerce',
-  settings_segmentServicos: 'Services',
-  settings_segmentIndustria: 'Manufacturing',
-  settings_segmentConstrucao: 'Construction',
-  settings_segmentAgronegocio: 'Agribusiness',
-  settings_segmentSaude: 'Healthcare',
-  settings_segmentEducacao: 'Education',
-  settings_segmentTecnologia: 'Technology',
-  settings_segmentFinanceiro: 'Financial',
-  settings_segmentOutros: 'Other',
+  settings_issRate: 'ISS rate',
+  settings_issRatePlaceholder: '0.00% – 5.00%',
 
-  // Router
+  // Router (Books-specific)
   router_flow: 'Access Syncero Flow',
-  router_signOut: 'Sign out',
-  router_accessing: 'Accessing...',
   router_title: 'Syncero Books is for accountants',
   router_wrongApp: 'Your account does not have an accountant profile. If you are a business owner, please access Syncero Flow.',
 
-  // Login
+  // Login (Books-specific titles)
   login_title: 'Welcome to Syncero Books',
   login_subtitle: 'Accounting platform',
-  login_google: 'Sign in with Google',
-  login_error: 'Could not connect with Google. Please try again.',
-  login_terms: 'By signing in, you agree to the terms of use.',
-  login_tabSignIn: 'Sign in',
-  login_tabSignUp: 'Create account',
-  login_email: 'Email',
-  login_emailPlaceholder: 'you@email.com',
-  login_password: 'Password',
-  login_passwordPlaceholder: 'Minimum 6 characters',
-  login_passwordConfirm: 'Confirm password',
-  login_passwordMismatch: 'Passwords do not match.',
-  login_passwordTooShort: 'Password must be at least 6 characters.',
-  login_signIn: 'Sign in',
-  login_signUp: 'Create account',
-  login_forgotPassword: 'Forgot password?',
-  login_sendReset: 'Send reset link',
-  login_resetSent: 'Check your email to reset your password.',
-  login_backToLogin: 'Back to login',
-  login_or: 'or',
-  login_emailError: 'Incorrect email or password. Please try again.',
-  login_emailSignUpError: 'Could not create account. Please try again.',
-  login_confirmTitle: 'Check your email',
-  login_confirmSent: 'We sent a confirmation link to',
-  login_confirmAction: 'Click the link to activate your account.',
 
-  // Onboarding
-  onboarding_loading: 'Setting up your account...',
-
-  // PWA Banner
+  // PWA (Books-specific title)
   pwa_title: 'Install Syncero Books',
-  pwa_subtitle: 'Quick access, notifications and offline use',
-  pwa_install: 'Install',
-  pwa_ios: 'Tap Share → Add to Home Screen',
-
-  // Preferences
-  preferences_title: 'Preferences',
-  preferences_language: 'Language',
-  preferences_languageHint: 'Choose the interface language',
 
   // Dashboard (accountant)
   dashboard_companies: 'Companies',
@@ -108,7 +61,7 @@ export const en: Record<TranslationKey, string> = {
   dashboard_managed: 'managed company',
   dashboard_managedPlural: 'managed companies',
 
-  // Overview (EmpresaFiscal / EmpresaExterna)
+  // Overview
   overview_company: 'Company',
   overview_externalCompany: 'External company',
   overview_nfe: 'NF-e / NFS-e',
@@ -189,8 +142,7 @@ export const en: Record<TranslationKey, string> = {
   impostos_infoSimplesComercio: 'Calculation by Simples Nacional (Annex I — Retail/Industry). Verify the current table with your client.',
   impostos_infoPresumido: 'IRPJ and CSLL are quarterly and appear only in quarter-end months (March, June, September, December).',
   impostos_infoReal: 'Monthly calculation based on the period\'s journal entries.',
-  settings_issRate: 'ISS rate',
-  settings_issRatePlaceholder: '0.00% – 5.00%',
+  impostos_calculateSuccess: '{period} tax calculation completed.',
 
   // Lançamentos contábeis
   lancamentos_title: 'Journal Entries',
@@ -213,6 +165,7 @@ export const en: Record<TranslationKey, string> = {
   lancamentos_errLines: 'All lines must have an account and amount.',
   lancamentos_errBalance: 'Debits and credits must be equal.',
   lancamentos_errSave: 'Error saving entry.',
+  lancamentos_success: 'Entry created successfully.',
   lancamentos_fieldDate: 'Date',
   lancamentos_fieldHistory: 'Description',
   lancamentos_historyPlaceholder: 'Entry description',
@@ -269,7 +222,7 @@ export const en: Record<TranslationKey, string> = {
   nfe_cancelled: 'Cancelled',
   nfe_denied: 'Denied',
 
-  // SEFAZ — Certificates (Books)
+  // SEFAZ — Certificates (Books-specific wording)
   sefaz_title: 'SEFAZ Integration',
   sefaz_certSection: 'Digital Certificate (A1)',
   sefaz_active: 'Certificate active',
@@ -301,16 +254,8 @@ export const en: Record<TranslationKey, string> = {
   sefaz_revokeTitle: 'Revoke certificate',
   sefaz_revokeMessage: 'The certificate will be removed and automatic sync will stop.',
   sefaz_readOnlyHint: 'This certificate is managed by the company in Syncero Flow.',
-  settings_certificates: 'Certificates',
-  settings_integrations: 'Integrations',
-  integrations_sefaz_name: 'SEFAZ DF-e',
-  integrations_sefaz_desc: 'Automatic sync of NF-e, NFS-e and CT-e directly from SEFAZ.',
-  integrations_enabled: 'Enabled',
-  integrations_disabled: 'Disabled',
-  integrations_sefaz_noCert: 'No digital certificate configured.',
-  integrations_sefaz_configureCert: 'Configure in Company → Certificates',
-  common_errorGeneric: 'Something went wrong. Please try again.',
-  common_deletedSuccess: 'Deleted successfully',
+
+  // Integrations (shared keys in @syncero/i18n)
 
   // Livros SPED
   sped_title: 'SPED Books',
@@ -320,7 +265,6 @@ export const en: Record<TranslationKey, string> = {
   sped_transmitted: 'Transmitted',
   sped_validated: 'Validated',
   sped_draft: 'Draft',
-
   sped_tab_ecd: 'ECD',
   sped_tab_ecf: 'ECF',
   sped_tab_efd_contrib: 'EFD Contributions',
@@ -510,23 +454,8 @@ export const en: Record<TranslationKey, string> = {
   transactions_detail_histRegistered: 'Payment registered',
   transactions_detail_histRegisteredIncome: 'Receipt registered',
 
-  // Accept Invite
-  invite_verifying: 'Verifying invite…',
-  invite_received: 'Invite received',
+  // Accept Invite (Books-specific)
   invite_asAccountant_of: "You've been invited to access as accountant the company",
-  invite_loginRequired: 'You need to be logged in to accept the invite.',
-  invite_accept: 'Accept invite',
-  invite_loginToAccept: 'Log in to accept',
-  invite_invalid: 'Invalid invite',
-  invite_gotoHome: 'Go to home',
-  invite_success: 'Invite accepted!',
-  invite_accessGranted: 'You now have access to',
-  invite_gotoDashboard: 'Go to dashboard',
-  invite_errorInvalid: 'Invalid invite token.',
-  invite_errorNotFound: 'Invite not found.',
-  invite_errorExpired: 'This invite has already been used or has expired.',
-  invite_errorVerify: 'Error verifying invite.',
-  invite_errorAccept: 'Error accepting invite. Please try again.',
 
   // Empresa Externa
   external_title: 'New external company',
@@ -595,52 +524,8 @@ export const en: Record<TranslationKey, string> = {
   extTx_errorDate: 'Please enter a date.',
   extTx_errorNature: 'Please select the accounting nature.',
 
-  // Export
-  export_title: 'Export Transactions',
-  export_button: 'Export',
-  export_format: 'Format',
-  export_columns: 'Columns',
-  export_selectAll: 'Select all',
-  export_deselectAll: 'Deselect all',
-  export_cancel: 'Cancel',
-  export_confirm: 'Export',
-  export_limitNote: 'Exports up to {n} records with the current filters applied.',
-  export_fetchError: 'Error fetching transactions. Please try again.',
-  export_col_date: 'Date',
-  export_col_paidAt: 'Payment date',
-  export_col_description: 'Description',
-  export_col_type: 'Type',
-  export_col_amount: 'Amount',
-  export_col_status: 'Status',
+  // Export (Books-specific extra column)
   export_col_classification: 'Classification',
-  export_col_category: 'Category',
-  export_col_contact: 'Contact',
-  export_col_nature: 'Nature',
-  export_col_paymentMethod: 'Payment method',
-  export_col_bank: 'Bank account',
-  export_col_installment: 'Installment',
-  export_col_notes: 'Notes',
-  common_cnpjInvalid: 'Invalid CNPJ',
 
-  // Import
-  transactions_import: 'Import',
-  transactions_import_title: 'Import transactions',
-  transactions_import_dropzone: 'Drag an XML (NFe) or OFX file here',
-  transactions_import_dropzone_hint: 'or click to select',
-  transactions_import_accept: 'Accepted formats: .xml (NFe), .ofx, .qfx',
-  transactions_import_nfe_preview_title: 'Fiscal document detected',
-  transactions_import_nfe_counterpart: 'Counterpart',
-  transactions_import_nfe_date: 'Issue date',
-  transactions_import_nfe_amount: 'Total amount',
-  transactions_import_nfe_type_income: 'Income — issuing company',
-  transactions_import_nfe_type_expense: 'Expense — recipient company',
-  transactions_import_nfe_type_unknown: 'CNPJ not identified',
-  transactions_import_nfe_cnpj_warning: 'Your CNPJ was not found in this file. The document may not belong to your company.',
-  transactions_import_nfe_proceed_anyway: 'Proceed anyway',
-  transactions_import_nfe_continue: 'Create transaction',
-  transactions_import_ofx_found: '{count} transactions found',
-  transactions_import_ofx_defaultNature: 'Default nature',
-  transactions_import_ofx_confirm: 'Import {count} transaction(s)',
-  transactions_import_ofx_noneSelected: 'None selected',
-  transactions_import_error_parse: 'Could not read the file. Make sure it is a valid NFe XML or OFX file.',
+  // Import (shared keys in @syncero/i18n)
 }

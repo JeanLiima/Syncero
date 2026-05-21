@@ -1,36 +1,15 @@
 import { Hono } from 'hono'
 import { Resend } from 'resend'
-import { createServiceClient, type HonoVariables } from '../_shared'
+import { createServiceClient, ensureCompanyMember, ensureCompanyAdmin, type HonoVariables } from '../_shared'
 import { memberInviteEmail } from '../emails/_memberInvite'
 
 const router = new Hono<{ Variables: HonoVariables }>()
-
-async function ensureCompanyMember(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string) {
-  const { data } = await db.from('company_members')
-    .select('id, role, status')
-    .eq('user_id', userId)
-    .eq('company_id', companyId)
-    .eq('status', 'accepted')
-    .maybeSingle()
-  return data
-}
-
-async function ensureCompanyAdmin(db: ReturnType<typeof createServiceClient>, userId: string, companyId: string) {
-  const { data } = await db.from('company_members')
-    .select('id, role')
-    .eq('user_id', userId)
-    .eq('company_id', companyId)
-    .eq('status', 'accepted')
-    .eq('role', 'admin')
-    .maybeSingle()
-  return data
-}
 
 router.get('/', async (c) => {
   const userId = c.get('userId')
   const db = createServiceClient()
   const companyId = c.req.query('company_id')
-  if (!companyId) return c.json({ error: 'company_id é obrigatório' }, 400)
+  if (!companyId) return c.json({ error: 'company_id_required' }, 400)
 
   const member = await ensureCompanyMember(db, userId, companyId)
   if (!member) return c.json({ error: 'forbidden' }, 403)
@@ -39,7 +18,7 @@ router.get('/', async (c) => {
     .select('*, profiles!company_members_user_id_fkey(id, full_name, email, avatar_url)')
     .eq('company_id', companyId)
     .order('invited_at', { ascending: false })
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -50,13 +29,12 @@ router.post('/', async (c) => {
   const { company_id: companyId, email, role, invite_token, language } = body
 
   if (!companyId || !email || !invite_token) {
-    return c.json({ error: 'company_id, email e invite_token são obrigatórios' }, 400)
+    return c.json({ error: 'validation_error' }, 400)
   }
 
   const admin = await ensureCompanyAdmin(db, userId, companyId)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
-  // Verificar se já existe convite pendente para este email nesta empresa
   const { data: existing } = await db.from('company_members')
     .select('id, status')
     .eq('company_id', companyId)
@@ -66,8 +44,8 @@ router.post('/', async (c) => {
 
   if (existing) {
     const msg = existing.status === 'accepted'
-      ? 'Este usuário já é membro da empresa.'
-      : 'Já existe um convite pendente para este e-mail.'
+      ? 'member_already_exists'
+      : 'invite_pending_for_email'
     return c.json({ error: msg }, 409)
   }
 
@@ -83,7 +61,7 @@ router.post('/', async (c) => {
     .select()
     .single()
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   const resendKey = process.env.RESEND_API_KEY
   if (resendKey) {
@@ -116,15 +94,14 @@ router.patch('/:id/role', async (c) => {
   const id = c.req.param('id')
   const { role } = await c.req.json<{ role: string }>()
 
-  if (!role) return c.json({ error: 'role is required' }, 400)
+  if (!role) return c.json({ error: 'validation_error' }, 400)
 
   const row = await db.from('company_members').select('company_id, user_id').eq('id', id).single()
-  if (!row.data) return c.json({ error: 'not found' }, 404)
+  if (!row.data) return c.json({ error: 'not_found' }, 404)
 
   const admin = await ensureCompanyAdmin(db, userId, row.data.company_id)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
-  // Proteger contra rebaixamento do último admin
   if (role !== 'admin') {
     const { data: target } = await db.from('company_members').select('role').eq('id', id).maybeSingle()
     if (target?.role === 'admin') {
@@ -133,12 +110,12 @@ router.patch('/:id/role', async (c) => {
         .eq('company_id', row.data.company_id)
         .eq('role', 'admin')
         .eq('status', 'accepted')
-      if ((count ?? 0) <= 1) return c.json({ error: 'Cannot demote the last admin of a company' }, 400)
+      if ((count ?? 0) <= 1) return c.json({ error: 'last_admin_demotion' }, 400)
     }
   }
 
   const { error } = await db.from('company_members').update({ role }).eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 
@@ -153,8 +130,8 @@ router.post('/:id/resend', async (c) => {
     .eq('id', id)
     .maybeSingle()
 
-  if (!invite) return c.json({ error: 'Invite not found' }, 404)
-  if (invite.status !== 'pending') return c.json({ error: 'Only pending invites can be resent' }, 400)
+  if (!invite) return c.json({ error: 'not_found' }, 404)
+  if (invite.status !== 'pending') return c.json({ error: 'invite_not_pending' }, 400)
 
   const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
@@ -163,7 +140,7 @@ router.post('/:id/resend', async (c) => {
   const { error: updateError } = await db.from('company_members')
     .update({ invite_token: new_token, invited_at: new Date().toISOString() })
     .eq('id', id)
-  if (updateError) return c.json({ error: 'Failed to update invite' }, 500)
+  if (updateError) return c.json({ error: 'internal_error' }, 500)
 
   const [companyRes, inviterRes] = await Promise.all([
     db.from('companies').select('name').eq('id', invite.company_id).single(),
@@ -197,13 +174,13 @@ router.delete('/:id', async (c) => {
     .eq('id', id)
     .maybeSingle()
 
-  if (!invite) return c.json({ error: 'not found' }, 404)
+  if (!invite) return c.json({ error: 'not_found' }, 404)
 
   const admin = await ensureCompanyAdmin(db, userId, invite.company_id)
   if (!admin) return c.json({ error: 'forbidden' }, 403)
 
   const { error } = await db.from('company_members').delete().eq('id', id)
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json({ ok: true })
 })
 

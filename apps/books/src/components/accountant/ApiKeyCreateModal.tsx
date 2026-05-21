@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Copy, Check, Eye } from 'lucide-react'
-import { Modal, Button, Input, DatePicker } from '@syncero/ui'
+import { AlertBox, Modal, Button, Input, DatePicker } from '@syncero/ui'
 import { usePreferencesStore } from '@/store/preferences'
 import { useT } from '@/i18n'
 
@@ -54,10 +54,9 @@ export function ApiKeyCreateModal({ open, onClose, onCreate }: ApiKeyCreateModal
     <Modal open={open} onClose={handleClose} title={t('apiKeys_new')} size="md">
       {rawKey ? (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 p-3 rounded-[var(--radius-md)] bg-[var(--success)]/10 border border-[var(--success)]/30">
-            <Eye className="h-4 w-4 text-[var(--success)] flex-shrink-0" />
-            <p className="text-xs text-[var(--success)]">{t('apiKeys_warningOnce')}</p>
-          </div>
+          <AlertBox variant="success" icon={<Eye className="h-4 w-4" />}>
+            <span className="text-[var(--success)]">{t('apiKeys_warningOnce')}</span>
+          </AlertBox>
           <div className="flex items-center gap-2 p-3 rounded-[var(--radius-md)] bg-[var(--bg-elevated)] border border-[var(--bg-border)]">
             <code className="flex-1 text-xs font-mono text-[var(--text-primary)] break-all">{rawKey}</code>
             <button

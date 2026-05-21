@@ -12,8 +12,8 @@ router.get('/', async (c) => {
   const dateFrom  = c.req.query('date_from')
   const dateTo    = c.req.query('date_to')
 
-  if (!companyId) return c.json({ error: 'company_id required' }, 400)
-  if (!dateFrom || !dateTo) return c.json({ error: 'date_from and date_to required' }, 400)
+  if (!companyId) return c.json({ error: 'company_id_required' }, 400)
+  if (!dateFrom || !dateTo) return c.json({ error: 'validation_error' }, 400)
 
   // Verify membership
   const { data: member } = await db
@@ -32,7 +32,7 @@ router.get('/', async (c) => {
     .gte('date', dateFrom)
     .lte('date', dateTo)
 
-  if (error) return c.json({ error: error.message }, 400)
+  if (error) return c.json({ error: 'internal_error' }, 500)
 
   // Aggregate server-side
   type Row = { category_id: string | null; category_name: string; type: string; total: number }

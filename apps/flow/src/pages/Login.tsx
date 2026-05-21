@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Mail } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useT } from '@/i18n'
-import { Button, Card, useToast } from '@syncero/ui'
+import { Button, Card, Input, useToast } from '@syncero/ui'
 
 function GoogleIcon() {
   return (
@@ -134,13 +134,12 @@ export function Component() {
           {mode === 'reset' ? (
             <form onSubmit={handleReset} className="flex flex-col gap-3">
               <p className="text-sm text-[var(--text-secondary)] text-center mb-2">{t('login_forgotPassword')}</p>
-              <input
+              <Input
                 type="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder={t('login_emailPlaceholder')}
-                className="w-full h-10 px-3 text-sm rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
               />
               <Button type="submit" loading={loading} className="w-full h-10 text-sm">
                 {t('login_sendReset')}
@@ -156,18 +155,15 @@ export function Component() {
           ) : (
             <>
               <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3 mb-4">
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-[var(--text-secondary)]">{t('login_email')}</label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    placeholder={t('login_emailPlaceholder')}
-                    className="w-full h-10 px-3 text-sm rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
+                <Input
+                  label={t('login_email')}
+                  type="email"
+                  required
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder={t('login_emailPlaceholder')}
+                />
+                <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-[var(--text-secondary)]">{t('login_password')}</label>
                     {mode === 'signin' && (
@@ -180,27 +176,23 @@ export function Component() {
                       </button>
                     )}
                   </div>
-                  <input
+                  <Input
                     type="password"
                     required
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder={t('login_passwordPlaceholder')}
-                    className="w-full h-10 px-3 text-sm rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
                   />
                 </div>
                 {mode === 'signup' && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-[var(--text-secondary)]">{t('login_passwordConfirm')}</label>
-                    <input
-                      type="password"
-                      required
-                      value={passwordConfirm}
-                      onChange={e => setPasswordConfirm(e.target.value)}
-                      placeholder={t('login_passwordPlaceholder')}
-                      className="w-full h-10 px-3 text-sm rounded-[var(--radius-md)] border border-[var(--bg-border)] bg-[var(--bg-elevated)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
-                    />
-                  </div>
+                  <Input
+                    label={t('login_passwordConfirm')}
+                    type="password"
+                    required
+                    value={passwordConfirm}
+                    onChange={e => setPasswordConfirm(e.target.value)}
+                    placeholder={t('login_passwordPlaceholder')}
+                  />
                 )}
                 <Button type="submit" loading={loading} className="w-full h-10 text-sm mt-1">
                   {mode === 'signin' ? t('login_signIn') : t('login_signUp')}

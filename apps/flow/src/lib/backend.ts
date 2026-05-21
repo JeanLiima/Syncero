@@ -1,17 +1,8 @@
-import { apiFetch } from './api'
-import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, Bank, Contact } from '@/types'
+import { apiFetch, buildQuery } from './api'
+import type { SefazCredential } from '@syncero/types'
+import type { Company, CompanyMember, AccountantCompany, Transaction, TransactionDetail, Category, Bank, Contact, MemberRole } from '@/types'
 
-export interface SefazCredential {
-  id: string
-  environment: 'production' | 'homologation'
-  uf_code: string
-  is_active: boolean
-  last_nsu: string
-  last_sync_at: string | null
-  last_error: string | null
-  created_at: string
-  updated_at: string
-}
+export type { SefazCredential }
 
 export interface FiscalDocument {
   id: string
@@ -33,19 +24,6 @@ export interface FiscalDocument {
   source: 'upload' | 'sefaz_sync'
   transaction_id: string | null
   created_at: string
-}
-
-function toSnake(key: string): string {
-  return key.replace(/([A-Z])/g, '_$1').toLowerCase()
-}
-
-function buildQuery(params: Record<string, string | undefined>) {
-  const query = new URLSearchParams()
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== '') query.set(toSnake(key), value)
-  })
-  const queryString = query.toString()
-  return queryString ? `?${queryString}` : ''
 }
 
 export async function getCompany(companyId: string) {
@@ -74,7 +52,7 @@ export async function resendMemberInvite(id: string) {
   return apiFetch(`/api/company-members/${id}/resend`, { method: 'POST', body: '{}' })
 }
 
-export async function updateMemberRole(id: string, role: string) {
+export async function updateMemberRole(id: string, role: MemberRole) {
   return apiFetch(`/api/company-members/${id}/role`, {
     method: 'PATCH',
     body: JSON.stringify({ role }),
@@ -209,6 +187,26 @@ export async function deleteBank(id: string) {
   return apiFetch<{ ok: true }>(`/api/banks/${id}`, { method: 'DELETE' })
 }
 
+// ── Pluggy Integration ─────────────────────────────────────────
+
+export async function getPluggyConnectToken() {
+  return apiFetch<{ accessToken: string }>('/api/pluggy/connect-token', { method: 'POST', body: '{}' })
+}
+
+export async function connectPluggyBank(bankId: string, itemId: string) {
+  return apiFetch<Bank>('/api/pluggy/connect', {
+    method: 'POST',
+    body: JSON.stringify({ bank_id: bankId, item_id: itemId }),
+  })
+}
+
+export async function disconnectPluggyBank(bankId: string) {
+  return apiFetch<{ ok: true }>(`/api/pluggy/disconnect/${bankId}`, { method: 'DELETE' })
+}
+
+export async function syncPluggyBank(bankId: string) {
+  return apiFetch<{ imported: number }>(`/api/pluggy/sync/${bankId}`, { method: 'POST', body: '{}' })
+}
 
 // ── SEFAZ Credentials ──────────────────────────────────────────
 

@@ -60,7 +60,7 @@ router.get('/', async (c) => {
   const companyId    = c.req.query('company_id')
   const extCompanyId = c.req.query('ext_company_id')
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id_required' }, 400)
 
   if (companyId) {
     const ok = await ensureAccountantOfCompany(db, userId, companyId)
@@ -83,11 +83,11 @@ router.post('/', async (c) => {
   const db     = createServiceClient()
 
   const encKey = process.env.SEFAZ_CERT_KEY
-  if (!encKey) return c.json({ error: 'SEFAZ_CERT_KEY não configurado' }, 500)
+  if (!encKey) return c.json({ error: 'internal_error' }, 500)
 
   let form: FormData
   try { form = await c.req.formData() }
-  catch { return c.json({ error: 'Esperado multipart/form-data' }, 400) }
+  catch { return c.json({ error: 'invalid_content_type' }, 400) }
 
   const companyId    = form.get('company_id')    as string | null
   const extCompanyId = form.get('ext_company_id') as string | null
@@ -96,11 +96,11 @@ router.post('/', async (c) => {
   const ufCode       = form.get('uf_code')        as string | null
   const certFile     = form.get('cert')           as File | null
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
-  if (!password)  return c.json({ error: 'password obrigatório' }, 400)
-  if (!ufCode)    return c.json({ error: 'uf_code obrigatório' }, 400)
-  if (!certFile)  return c.json({ error: 'cert obrigatório' }, 400)
-  if (!['production', 'homologation'].includes(environment)) return c.json({ error: 'environment inválido' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id_required' }, 400)
+  if (!password)  return c.json({ error: 'validation_error' }, 400)
+  if (!ufCode)    return c.json({ error: 'validation_error' }, 400)
+  if (!certFile)  return c.json({ error: 'validation_error' }, 400)
+  if (!['production', 'homologation'].includes(environment)) return c.json({ error: 'validation_error' }, 400)
 
   if (companyId) {
     const ok = await ensureAccountantOfCompany(db, userId, companyId)
@@ -136,7 +136,7 @@ router.post('/', async (c) => {
     .select(SELECT_FIELDS)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data, 201)
 })
 
@@ -147,18 +147,18 @@ router.delete('/', async (c) => {
   const companyId    = c.req.query('company_id')
   const extCompanyId = c.req.query('ext_company_id')
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id_required' }, 400)
 
   if (companyId) {
     const ok = await ensureAccountantOfCompany(db, userId, companyId)
     if (!ok) return c.json({ error: 'forbidden' }, 403)
     const { error } = await db.from('company_sefaz_credentials').delete().eq('company_id', companyId)
-    if (error) return c.json({ error: error.message }, 500)
+    if (error) return c.json({ error: 'internal_error' }, 500)
   } else {
     const ok = await ensureOwnsExtCompany(db, userId, extCompanyId!)
     if (!ok) return c.json({ error: 'forbidden' }, 403)
     const { error } = await db.from('company_sefaz_credentials').delete().eq('ext_company_id', extCompanyId!)
-    if (error) return c.json({ error: error.message }, 500)
+    if (error) return c.json({ error: 'internal_error' }, 500)
   }
 
   return c.json({ ok: true })
@@ -171,7 +171,7 @@ router.patch('/toggle', async (c) => {
   const companyId    = c.req.query('company_id')
   const extCompanyId = c.req.query('ext_company_id')
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id_required' }, 400)
 
   if (companyId) {
     const ok = await ensureAccountantOfCompany(db, userId, companyId)
@@ -182,7 +182,7 @@ router.patch('/toggle', async (c) => {
   }
 
   const { is_active } = await c.req.json<{ is_active: boolean }>()
-  if (typeof is_active !== 'boolean') return c.json({ error: 'is_active deve ser boolean' }, 400)
+  if (typeof is_active !== 'boolean') return c.json({ error: 'validation_error' }, 400)
 
   const col = companyId ? 'company_id' : 'ext_company_id'
   const val = companyId ? companyId    : extCompanyId!
@@ -193,7 +193,7 @@ router.patch('/toggle', async (c) => {
     .select(SELECT_FIELDS)
     .single()
 
-  if (error) return c.json({ error: error.message }, 500)
+  if (error) return c.json({ error: 'internal_error' }, 500)
   return c.json(data)
 })
 
@@ -204,7 +204,7 @@ router.post('/sync', async (c) => {
   const companyId    = c.req.query('company_id')
   const extCompanyId = c.req.query('ext_company_id')
 
-  if (!companyId && !extCompanyId) return c.json({ error: 'company_id ou ext_company_id obrigatório' }, 400)
+  if (!companyId && !extCompanyId) return c.json({ error: 'company_id_required' }, 400)
 
   if (companyId) {
     const ok = await ensureAccountantOfCompany(db, userId, companyId)
@@ -216,7 +216,7 @@ router.post('/sync', async (c) => {
 
   const supabaseUrl = process.env.SUPABASE_URL
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !serviceKey) return c.json({ error: 'Supabase não configurado' }, 500)
+  if (!supabaseUrl || !serviceKey) return c.json({ error: 'internal_error' }, 500)
 
   try {
     const res = await fetch(`${supabaseUrl}/functions/v1/sefaz-sync`, {
@@ -225,10 +225,10 @@ router.post('/sync', async (c) => {
       body: JSON.stringify(companyId ? { company_id: companyId } : { ext_company_id: extCompanyId }),
     })
     const body = await res.json().catch(() => ({}))
-    if (!res.ok) return c.json({ error: (body as Record<string, unknown>).error ?? 'Sync falhou' }, 502)
+    if (!res.ok) return c.json({ error: (body as Record<string, unknown>).error ?? 'sync_failed' }, 502)
     return c.json(body)
-  } catch (err) {
-    return c.json({ error: String(err) }, 502)
+  } catch {
+    return c.json({ error: 'sync_failed' }, 502)
   }
 })
 

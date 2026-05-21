@@ -2,11 +2,11 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { maskCnpj, stripCnpj, validateCnpj } from '@/lib/cnpj'
-import { LogOut, Info } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { apiFetch } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { useAuth } from '@/hooks/useAuth'
-import { useToast, Button, Card, Input, Select, Avatar } from '@syncero/ui'
+import { AlertBox, useToast, Button, Card, Input, Select, Avatar } from '@syncero/ui'
 import { useT } from '@/i18n'
 import { SEGMENTS_WITH_COST } from '@/lib/segments'
 
@@ -65,7 +65,7 @@ export function NoCompanyShell() {
       setActiveCompany({ id: company.id, name: company.name, role: 'admin', segment: data.segment ?? null })
       success(t('noCompany_success'))
     } catch (err) {
-      toastError(err instanceof Error ? err.message : 'Erro ao criar empresa.')
+      toastError(t('common_errorGeneric'))
     }
   }
 
@@ -156,10 +156,7 @@ export function NoCompanyShell() {
                 )}
               />
               {SEGMENTS_WITH_COST.has(watch('segment') ?? '') ? (
-                <div className="flex items-start gap-1.5 rounded-md bg-[var(--accent)]/10 border border-[var(--accent)]/20 px-2.5 py-2">
-                  <Info className="h-3.5 w-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
-                  <p className="text-xs text-[var(--text-secondary)]">{t('noCompany_segmentCostHint')}</p>
-                </div>
+                <AlertBox variant="info">{t('noCompany_segmentCostHint')}</AlertBox>
               ) : (
                 <p className="text-xs text-[var(--text-muted)]">{t('noCompany_segmentHint')}</p>
               )}

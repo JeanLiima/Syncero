@@ -55,10 +55,7 @@ export function useAuth() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return
-      // Garante que profile nunca fique undefined após erro — sem isso o
-      // RequireAuth fica em loop eterno no <Loader /> (profile===undefined).
       console.error('Profile fetch failed:', err)
-      setProfile(null)
       lastFetchedUserId.current = null
     } finally {
       setLoading(false)

@@ -58,7 +58,12 @@ export function useAuth() {
       console.error('Profile fetch failed:', err)
       lastFetchedUserId.current = null
     } finally {
-      setLoading(false)
+      // Não finaliza o loading se esta chamada foi substituída por uma mais recente.
+      // Sem essa guarda, o finally de uma chamada abortada seta loading=false com
+      // profile=undefined enquanto a chamada mais nova ainda está em voo.
+      if (lastFetchRequestRef.current === controller) {
+        setLoading(false)
+      }
     }
   }
 

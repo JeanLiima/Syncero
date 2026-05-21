@@ -59,7 +59,7 @@ export const apiKeyOrJwtMiddleware: MiddlewareHandler<{ Variables: HonoVariables
 }
 
 // ── Origin Guard — restringe acesso a origens Syncero autorizadas ──
-function getAllowedOrigins(): string[] {
+function getAllowedOrigins(requestHost?: string): string[] {
   const env = process.env.ALLOWED_ORIGINS
   if (env) return env.split(',').map(o => o.trim())
 
@@ -69,17 +69,17 @@ function getAllowedOrigins(): string[] {
     'http://localhost:5175',
     'http://localhost:5176',
   ]
-  // VERCEL_URL é injetado automaticamente em todos os deploys (produção e preview)
-  // Garante que o próprio app sempre pode chamar sua API sem precisar de ALLOWED_ORIGINS
-  const vercelUrl = process.env.VERCEL_URL
-  if (vercelUrl) origins.push(`https://${vercelUrl}`)
+  // Host é o domínio real que o usuário acessa (alias estável, preview URL ou
+  // domínio customizado). Sempre correto — diferente de VERCEL_URL que aponta
+  // para a URL de deploy específica, não o alias.
+  if (requestHost) origins.push(`https://${requestHost}`)
   return origins
 }
 
 export const originGuard: MiddlewareHandler<{ Variables: HonoVariables }> = async (c, next) => {
   const isProduction = process.env.VERCEL_ENV === 'production'
   const origin = c.req.header('Origin') ?? c.req.header('Referer')
-  const allowed = getAllowedOrigins()
+  const allowed = getAllowedOrigins(c.req.header('Host') ?? '')
 
   if (isProduction) {
     if (!origin) return c.json({ error: 'Forbidden: origin required' }, 403)

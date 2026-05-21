@@ -9,28 +9,21 @@ export function useAuth() {
   const lastFetchRequestRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    const bootstrapAuth = async () => {
-      // detectSessionInUrl: true + flowType: 'implicit' processam o hash
-      // automaticamente ao inicializar o client — leitura manual criava race
-      // condition com duplo SIGNED_IN e fetchProfile preso no dedup.
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        setUser(session.user)
-        fetchProfile(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    }
-
-    bootstrapAuth()
-
-    // INITIAL_SESSION é descartado — bootstrapAuth + getSession() já cobrem.
+    // INITIAL_SESSION cobre o hash implícito (redirect do Landing) e sessões
+    // persistidas. SIGNED_IN cobre logins manuais (email/senha, OAuth popup).
+    // Ambos disparam fetchProfile para evitar que o hash processado
+    // assincronamente passe despercebido se getSession() retornar null.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION') return
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          fetchProfile(session.user.id)
+        } else {
+          setLoading(false)
+        }
+        return
+      }
+      if (event === 'SIGNED_OUT') {
         lastFetchedUserId.current = null
         clear()
         setLoading(false)
@@ -44,7 +37,6 @@ export function useAuth() {
   }, [])
 
   const fetchProfile = async (_userId: string) => {
-    // Usar AbortController ao invés de ref-based dedup
     if (lastFetchRequestRef.current) {
       lastFetchRequestRef.current.abort()
     }
@@ -62,10 +54,12 @@ export function useAuth() {
         setActiveCompany(data.activeCompany)
       }
     } catch (err) {
-      if (!(err instanceof DOMException && err.name === 'AbortError')) {
-        console.error('Profile fetch failed:', err)
-        lastFetchedUserId.current = null
-      }
+      if (err instanceof DOMException && err.name === 'AbortError') return
+      // Garante que profile nunca fique undefined após erro — sem isso o
+      // RequireAuth fica em loop eterno no <Loader /> (profile===undefined).
+      console.error('Profile fetch failed:', err)
+      setProfile(null)
+      lastFetchedUserId.current = null
     } finally {
       setLoading(false)
     }

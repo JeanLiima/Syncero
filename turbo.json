@@ -4,7 +4,23 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "env": [
+        "VERCEL_ENV",
+        "VITE_SUPABASE_URL",
+        "VITE_SUPABASE_ANON_KEY",
+        "VITE_LANDING_URL",
+        "VITE_FLOW_URL",
+        "VITE_BOOKS_URL",
+        "VITE_API_URL",
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "RESEND_API_KEY",
+        "ALLOWED_ORIGINS",
+        "PLUGGY_CLIENT_ID",
+        "PLUGGY_CLIENT_SECRET",
+        "SEFAZ_CERT_KEY"
+      ]
     },
     "dev": {
       "cache": false,

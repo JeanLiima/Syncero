@@ -35,7 +35,8 @@
       "Bash(Select-Object Name)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
       "Bash(git checkout *)",
-      "mcp__claude_ai_Supabase__execute_sql"
+      "mcp__claude_ai_Supabase__execute_sql",
+      "mcp__claude_ai_Supabase__get_project"
     ]
   },
   "hooks": {

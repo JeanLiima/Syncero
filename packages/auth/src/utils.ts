@@ -10,7 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     flowType: 'implicit',
-    detectSessionInUrl: false, // bootstrapAuth processa hash manualmente; evita race com SDK
+    detectSessionInUrl: true,
     persistSession: true,
   },
 })

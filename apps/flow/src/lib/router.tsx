@@ -89,9 +89,6 @@ function RequireAuth() {
     return <Navigate to={returnTo} replace />
   }
 
-  // profile===undefined após loading=false significa que GET /api/me falhou.
-  // Redireciona ao login para forçar nova tentativa em vez de loader infinito.
-  if (profile === undefined) return <Navigate to="/login" replace />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (isAccountant) return <WrongApp />
   if (!activeCompany) return <NoCompanyShell />

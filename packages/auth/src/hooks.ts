@@ -10,27 +10,8 @@ export function useAuth() {
 
   useEffect(() => {
     const bootstrapAuth = async () => {
-      // Implicit flow: tokens chegam em #access_token= após OAuth ou via Landing →
-      // window.location.replace(url + '#access_token=...'). detectSessionInUrl=false
-      // impede o SDK de competir com este código pelo hash.
-      const hash = window.location.hash.substring(1)
-      const params = new URLSearchParams(hash)
-      const accessToken = params.get('access_token')
-      const refreshToken = params.get('refresh_token')
-
-      if (accessToken && refreshToken) {
-        history.replaceState(null, '', window.location.pathname + window.location.search)
-        const { data, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-        if (!error && data.session?.user) {
-          setUser(data.session.user)
-          fetchProfile(data.session.user.id)
-        } else {
-          setLoading(false)
-        }
-        return
-      }
-
-      // Sessão existente (localStorage) ou callback PKCE (?code=)
+      // detectSessionInUrl: true — o SDK já processou #access_token= ou ?code= ao inicializar.
+      // getSession() retorna a sessão resultante (OAuth recém-chegado ou localStorage).
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser(session.user)

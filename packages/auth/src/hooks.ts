@@ -10,9 +10,9 @@ export function useAuth() {
 
   useEffect(() => {
     const bootstrapAuth = async () => {
-      // Callback implícito do Google OAuth: tokens chegam no hash da URL.
-      // Processamos explicitamente antes de chamar getSession() para eliminar
-      // a race condition onde o SDK ainda não leu o hash quando getSession() resolve.
+      // Path Landing → Flow/Books: tokens chegam no hash da URL via window.location.replace.
+      // Processamos antes de getSession() para que setSession() persista a sessão
+      // antes que o PKCE _initializePromise resolva sem encontrar nada.
       const hash = window.location.hash.substring(1)
       const params = new URLSearchParams(hash)
       const accessToken = params.get('access_token')

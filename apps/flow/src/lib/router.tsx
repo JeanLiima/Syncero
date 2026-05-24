@@ -73,7 +73,7 @@ function WrongApp() {
 const BOOKS_URL = import.meta.env.VITE_BOOKS_URL;
 
 function RequireAuth() {
-  const { user, loading, needsOnboarding, isAccountant, activeCompany, profile } = useAuth()
+  const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
   const location = useLocation()
 
   if (loading) return <Loader />

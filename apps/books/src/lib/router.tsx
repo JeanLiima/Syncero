@@ -72,7 +72,7 @@ function WrongApp() {
 const FLOW_URL = import.meta.env.VITE_FLOW_URL;
 
 function RequireAuth() {
-  const { user, loading, isAccountant, needsOnboarding, profile } = useAuth()
+  const { user, loading, isAccountant, needsOnboarding } = useAuth()
   const location = useLocation()
 
   if (loading) return <Loader />

@@ -9,10 +9,28 @@ export function useAuth() {
   const lastFetchRequestRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    // bootstrapAuth garante que sessões existentes (persistidas) e callbacks
-    // OAuth (PKCE: ?code=...) sejam detectados via getSession(), que aguarda
-    // _initializePromise — incluindo a troca do código PKCE — antes de resolver.
     const bootstrapAuth = async () => {
+      // Callback implícito do Google OAuth: tokens chegam no hash da URL.
+      // Processamos explicitamente antes de chamar getSession() para eliminar
+      // a race condition onde o SDK ainda não leu o hash quando getSession() resolve.
+      const hash = window.location.hash.substring(1)
+      const params = new URLSearchParams(hash)
+      const accessToken = params.get('access_token')
+      const refreshToken = params.get('refresh_token')
+
+      if (accessToken && refreshToken) {
+        history.replaceState(null, '', window.location.pathname + window.location.search)
+        const { data, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+        if (!error && data.session?.user) {
+          setUser(data.session.user)
+          fetchProfile(data.session.user.id)
+        } else {
+          setLoading(false)
+        }
+        return
+      }
+
+      // Sessão existente (localStorage) ou callback PKCE (?code=)
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser(session.user)

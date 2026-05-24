@@ -10,9 +10,9 @@ export function useAuth() {
 
   useEffect(() => {
     const bootstrapAuth = async () => {
-      // Path Landing → Flow/Books: tokens chegam no hash da URL via window.location.replace.
-      // Processamos antes de getSession() para que setSession() persista a sessão
-      // antes que o PKCE _initializePromise resolva sem encontrar nada.
+      // Implicit flow: tokens chegam em #access_token= após OAuth ou via Landing →
+      // window.location.replace(url + '#access_token=...'). detectSessionInUrl=false
+      // impede o SDK de competir com este código pelo hash.
       const hash = window.location.hash.substring(1)
       const params = new URLSearchParams(hash)
       const accessToken = params.get('access_token')

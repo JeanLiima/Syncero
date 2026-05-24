@@ -34,7 +34,8 @@
       "Bash(Get-ChildItem -Path \"J:\\\\Users\\\\Jean\\\\Projetos\\\\Syncero\" -Directory)",
       "Bash(Select-Object Name)",
       "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "mcp__claude_ai_Supabase__execute_sql"
     ]
   },
   "hooks": {

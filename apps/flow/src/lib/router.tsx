@@ -73,7 +73,7 @@ function WrongApp() {
 const BOOKS_URL = import.meta.env.VITE_BOOKS_URL;
 
 function RequireAuth() {
-  const { user, loading, needsOnboarding, isAccountant, activeCompany } = useAuth()
+  const { user, loading, needsOnboarding, isAccountant, activeCompany, profile } = useAuth()
   const location = useLocation()
 
   if (loading) return <Loader />
@@ -89,6 +89,9 @@ function RequireAuth() {
     return <Navigate to={returnTo} replace />
   }
 
+  // profile===undefined significa que fetchProfile ainda não terminou ou falhou.
+  // Mostra loader para não confundir com WrongApp (que exige profile carregado).
+  if (profile === undefined) return <Loader />
   if (needsOnboarding) return <Navigate to="/onboarding" replace />
   if (isAccountant) return <WrongApp />
   if (!activeCompany) return <NoCompanyShell />

@@ -46,7 +46,7 @@ export function useAuth() {
     }
   }, [])
 
-  const fetchProfile = async (_userId: string) => {
+  const fetchProfile = async (_userId: string, attempt = 0) => {
     if (lastFetchRequestRef.current) {
       lastFetchRequestRef.current.abort()
     }
@@ -67,10 +67,19 @@ export function useAuth() {
       if (err instanceof DOMException && err.name === 'AbortError') return
       console.error('Profile fetch failed:', err)
       lastFetchedUserId.current = null
+      // Tenta mais uma vez após 2s antes de desistir — cobre erros transitórios de rede.
+      // O finally ainda roda (loading=false, profile=undefined), mas o router mostra
+      // <Loader /> enquanto o retry não resolve (graças ao check profile===undefined).
+      if (attempt < 1 && lastFetchRequestRef.current === controller) {
+        setTimeout(() => {
+          // Só faz retry se nenhuma outra chamada assumiu o controle.
+          if (lastFetchRequestRef.current === controller) {
+            fetchProfile(_userId, attempt + 1)
+          }
+        }, 2000)
+      }
     } finally {
       // Não finaliza o loading se esta chamada foi substituída por uma mais recente.
-      // Sem essa guarda, o finally de uma chamada abortada seta loading=false com
-      // profile=undefined enquanto a chamada mais nova ainda está em voo.
       if (lastFetchRequestRef.current === controller) {
         setLoading(false)
       }

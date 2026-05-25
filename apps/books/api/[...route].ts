@@ -15,7 +15,7 @@ import taxCalculationsRouter from './routes/_taxCalculations'
 import invitesRouter from './routes/_invites'
 import transactionsRouter from './routes/_transactions'
 
-export const config = { runtime: 'edge' }
+export const config = { runtime: 'nodejs' }
 
 const app = new Hono<{ Variables: HonoVariables }>().basePath('/api')
 

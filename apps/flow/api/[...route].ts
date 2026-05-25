@@ -16,7 +16,7 @@ import sefazCredentialsRouter from './routes/_sefazCredentials'
 import fiscalDocumentsRouter from './routes/_fiscalDocuments'
 import pluggyRouter from './routes/_pluggy'
 
-export const config = { runtime: 'edge' }
+export const config = { runtime: 'nodejs' }
 
 const app = new Hono<{ Variables: HonoVariables }>().basePath('/api')
 

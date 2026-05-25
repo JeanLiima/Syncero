@@ -1,13 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase, LANDING_URL } from './utils'
 import { useAuthStore } from './store'
 
+// Module-level singletons — bootstrap runs once for the entire app lifetime
+const fetchGenRef = { current: 0 }
+let authBootstrapped = false
+
 export function useAuth() {
-  const { user, profile, activeCompany, setUser, setProfile, setActiveCompany, clear } = useAuthStore()
-  const [loading, setLoading] = useState(true)
-  const fetchGenRef = useRef(0)
+  const { user, profile, activeCompany, loading, setUser, setProfile, setActiveCompany, setLoading, clear } = useAuthStore()
 
   useEffect(() => {
+    if (authBootstrapped) return
+    authBootstrapped = true
+
     const bootstrapAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
@@ -20,7 +25,7 @@ export function useAuth() {
 
     bootstrapAuth()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION') return
 
       setUser(session?.user ?? null)
@@ -30,14 +35,9 @@ export function useAuth() {
       } else {
         fetchGenRef.current++
         clear()
-        setLoading(false)
       }
     })
-
-    return () => {
-      subscription.unsubscribe()
-      fetchGenRef.current++
-    }
+    // Subscription persists for app lifetime — intentionally not unsubscribed on unmount
   }, [])
 
   const fetchProfile = async (_userId: string, attempt = 0) => {

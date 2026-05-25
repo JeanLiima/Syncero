@@ -21,9 +21,11 @@ interface AuthState {
   user: User | null
   profile: Profile | null | undefined
   activeCompany: ActiveCompany | null
+  loading: boolean
   setUser: (user: User | null) => void
   setProfile: (profile: Profile | null | undefined) => void
   setActiveCompany: (company: ActiveCompany | null) => void
+  setLoading: (loading: boolean) => void
   clear: () => void
 }
 
@@ -33,10 +35,12 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       profile: undefined,
       activeCompany: null,
+      loading: true,
       setUser: (user) => set({ user }),
       setProfile: (profile) => set({ profile }),
       setActiveCompany: (activeCompany) => set({ activeCompany }),
-      clear: () => set({ user: null, profile: undefined, activeCompany: null }),
+      setLoading: (loading) => set({ loading }),
+      clear: () => set({ user: null, profile: undefined, activeCompany: null, loading: false }),
     }),
     {
       name: 'syncero-auth',

@@ -41,6 +41,7 @@ export async function apiFetch<T = any>(
 
   const url = `${import.meta.env.VITE_API_URL || ''}${endpoint}`
   const response = await fetch(url, {
+    cache: 'no-store',
     ...options,
     headers: {
       'Content-Type': 'application/json',

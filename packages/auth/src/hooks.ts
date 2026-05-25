@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import { supabase, apiFetch, LANDING_URL } from './utils'
+import { supabase, LANDING_URL } from './utils'
 import { useAuthStore } from './store'
 
 export function useAuth() {
   const { user, profile, activeCompany, setUser, setProfile, setActiveCompany, clear } = useAuthStore()
   const [loading, setLoading] = useState(true)
-  const lastFetchedUserId = useRef<string | null>(null)
-  const lastFetchRequestRef = useRef<AbortController | null>(null)
+  const fetchGenRef = useRef(0)
 
   useEffect(() => {
     const bootstrapAuth = async () => {
-      // detectSessionInUrl: true — o SDK já processou #access_token= ou ?code= ao inicializar.
-      // getSession() retorna a sessão resultante (OAuth recém-chegado ou localStorage).
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser(session.user)
@@ -24,17 +21,14 @@ export function useAuth() {
     bootstrapAuth()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      // INITIAL_SESSION é coberto pelo bootstrapAuth acima.
       if (event === 'INITIAL_SESSION') return
 
       setUser(session?.user ?? null)
       if (session?.user) {
-        // Reativa loading para cobrir o caso email/senha onde bootstrapAuth
-        // já zerou loading (sem sessão inicial) antes do SIGNED_IN chegar.
         setLoading(true)
         fetchProfile(session.user.id)
       } else {
-        lastFetchedUserId.current = null
+        fetchGenRef.current++
         clear()
         setLoading(false)
       }
@@ -42,47 +36,54 @@ export function useAuth() {
 
     return () => {
       subscription.unsubscribe()
-      lastFetchedUserId.current = null
+      fetchGenRef.current++
     }
   }, [])
 
   const fetchProfile = async (_userId: string, attempt = 0) => {
-    if (lastFetchRequestRef.current) {
-      lastFetchRequestRef.current.abort()
-    }
-
-    const controller = new AbortController()
-    lastFetchRequestRef.current = controller
+    const gen = ++fetchGenRef.current
+    let willRetry = false
 
     try {
-      const data = await apiFetch<{
-        profile: { id: string; full_name: string; email: string; user_type: 'company_user' | 'accountant'; avatar_url: string | null } | null
-        activeCompany: { id: string; name: string; role: string } | null
-      }>('/api/me', {}, controller.signal)
-      setProfile(data.profile)
-      if (data.profile?.user_type === 'company_user' && !useAuthStore.getState().activeCompany && data.activeCompany) {
-        setActiveCompany(data.activeCompany)
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, user_type, avatar_url')
+        .eq('id', _userId)
+        .maybeSingle()
+
+      if (gen !== fetchGenRef.current) return
+      if (error) throw error
+
+      setProfile(profile as any)
+
+      if (profile?.user_type === 'company_user' && !useAuthStore.getState().activeCompany) {
+        const { data: member } = await supabase
+          .from('company_members')
+          .select('role, companies!inner(id, name)')
+          .eq('user_id', _userId)
+          .eq('status', 'accepted')
+          .maybeSingle()
+
+        if (gen !== fetchGenRef.current) return
+        if (member?.companies) {
+          const co = member.companies as unknown as { id: string; name: string }
+          setActiveCompany({ id: co.id, name: co.name, role: member.role })
+        }
       }
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return
+      if (gen !== fetchGenRef.current) return
       console.error('Profile fetch failed:', err)
-      lastFetchedUserId.current = null
-      // Tenta mais uma vez após 2s antes de desistir — cobre erros transitórios de rede.
-      // O finally ainda roda (loading=false, profile=undefined), mas o router mostra
-      // <Loader /> enquanto o retry não resolve (graças ao check profile===undefined).
-      if (attempt < 1 && lastFetchRequestRef.current === controller) {
-        setTimeout(() => {
-          // Só faz retry se nenhuma outra chamada assumiu o controle.
-          if (lastFetchRequestRef.current === controller) {
-            fetchProfile(_userId, attempt + 1)
-          }
-        }, 2000)
+      if (attempt < 1) {
+        willRetry = true
       }
     } finally {
-      // Não finaliza o loading se esta chamada foi substituída por uma mais recente.
-      if (lastFetchRequestRef.current === controller) {
+      if (gen === fetchGenRef.current && !willRetry) {
         setLoading(false)
       }
+    }
+
+    if (willRetry) {
+      setTimeout(() => fetchProfile(_userId, attempt + 1), 2000)
     }
   }
 
@@ -106,8 +107,15 @@ export function useAuth() {
   const createProfile = async (userType: 'company_user' | 'accountant') => {
     if (!user) return { error: new Error('Usuário não autenticado') }
     try {
-      await apiFetch('/api/me', { method: 'POST', body: JSON.stringify({ user_type: userType }) })
-      lastFetchedUserId.current = null
+      const email = user.email ?? ''
+      const full_name = user.user_metadata?.full_name ?? user.user_metadata?.name ?? email
+      const avatar_url = user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({ id: user.id, user_type: userType, email, full_name, avatar_url }, { onConflict: 'id' })
+
+      if (error) throw error
       await fetchProfile(user.id)
       return { error: null }
     } catch (err) {
@@ -149,7 +157,6 @@ export function usePWAInstall() {
   const [showBanner, setShowBanner] = useState(false)
 
   useEffect(() => {
-    // Detecta se já está instalado como PWA
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as any).standalone === true
@@ -159,15 +166,12 @@ export function usePWAInstall() {
       return
     }
 
-    // Captura o evento nativo de instalação (Chrome/Edge/Android)
     const handler = (e: Event) => {
       e.preventDefault()
       setInstallPrompt(e as BeforeInstallPromptEvent)
     }
     window.addEventListener('beforeinstallprompt', handler)
 
-    // Detecta redimensionamento: se a janela ficar pequena (< 768px de largura
-    // ou numa proporção de tela móvel), exibe o banner sugerindo instalar
     const checkShouldSuggest = () => {
       const isMobileViewport = window.innerWidth < 768
       const isLandscapePhone =

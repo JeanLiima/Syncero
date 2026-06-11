@@ -1,4 +1,4 @@
-# Finflow
+# Syncero
 
 Controle financeiro empresarial — PWA multi-tenant com módulo fiscal para contadores.
 
